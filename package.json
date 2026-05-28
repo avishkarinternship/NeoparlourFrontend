@@ -14,20 +14,14 @@
     "aos": "^2.3.4",
     "axios": "^1.16.1",
     "html5-qrcode": "^2.3.8",
-<<<<<<< HEAD
-    "lucide-react": "^0.469.0",
-=======
->>>>>>> 9bf1e6482a7e5daf48a5dadcf6b3416f90ade8cf
+    "lucide-react": "^1.16.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-fast-marquee": "^1.6.5",
     "react-hot-toast": "^2.6.0",
     "react-redux": "^9.2.0",
-<<<<<<< HEAD
     "react-router-dom": "^7.15.1",
     "recharts": "^3.8.1"
-=======
-    "react-router-dom": "^7.15.1"
->>>>>>> 9bf1e6482a7e5daf48a5dadcf6b3416f90ade8cf
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
