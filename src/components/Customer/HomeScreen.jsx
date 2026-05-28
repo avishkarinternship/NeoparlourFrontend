@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    searchSalonsByLocation
+} from '../../redux/slices/customerSlice';
+import axiosInstance from '../../api/axiosInstance';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -74,18 +79,43 @@ import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
 import Drawer from './Drawer';
 
 const HomeScreen = () => {
+    const dispatch = useDispatch();
+    const { loading, salonResults } = useSelector((state) => state.customer);
+
+    const [searchData, setSearchData] = useState({
+        cityName: '',
+        areaName: '',
+    });
+
     const navigate = useNavigate();
+    
+    const handleLocationSearch = async () => {
+    console.log(searchData);
+
+    if (!searchData.cityName && !searchData.areaName) return;
+
+    try {
+        await dispatch(
+            searchSalonsByLocation({
+                cityName: searchData.cityName,
+                areaName: searchData.areaName,
+            })
+        ).unwrap();
+    } catch (error) {
+        console.log(error);
+    }
+};
+
     const location = useLocation();
     const currentPath = location.pathname;
     const [activeFaq, setActiveFaq] = useState(null);
 
     const navLinkClass = (paths) => {
         const isActive = paths.some(p => currentPath === p);
-        return `pb-1 transition-colors ${
-            isActive
-                ? 'text-orange-500 border-b-2 border-orange-500'
-                : 'hover:text-gray-900'
-        }`;
+        return `pb-1 transition-colors ${isActive
+            ? 'text-orange-500 border-b-2 border-orange-500'
+            : 'hover:text-gray-900'
+            }`;
     };
 
     const recommendedSalons = [
@@ -214,16 +244,38 @@ const HomeScreen = () => {
                         Not Just A Salon Platform, Your Complete Beauty Ecosystem. Explore Services, Manage Appointments, And Unlock Exclusive Deals, All Under One Roof.
                     </p>
 
+
                     <div className="w-full max-w-4xl bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
                         <div className="flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200">
                             <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
-                            <input type="text" placeholder="SELECT CITY" className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                            <input
+                                type="text"
+                                placeholder="SELECT CITY"
+                                value={searchData.cityName}
+                                onChange={(e) =>
+                                    setSearchData((prev) => ({
+                                        ...prev,
+                                        cityName: e.target.value,
+                                    }))
+                                }
+                                className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
                         </div>
 
                         <div className="flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
                             <div className="flex items-center gap-3 w-full">
                                 <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
-                                <input type="text" placeholder="SELECT AREA" className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                                <input
+                                    type="text"
+                                    placeholder="SELECT AREA"
+                                    value={searchData.areaName}
+                                    onChange={(e) =>
+                                        setSearchData((prev) => ({
+                                            ...prev,
+                                            areaName: e.target.value,
+                                        }))
+                                    }
+                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
+                                />
                             </div>
                             <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" />
                         </div>
@@ -236,10 +288,36 @@ const HomeScreen = () => {
                             <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" />
                         </div> */}
 
-                        <button className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0">
-                            SEARCH
+                        <button
+                            onClick={handleLocationSearch}
+                            className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0"
+                        >
+                            {loading ? 'Searching...' : 'SEARCH'}
                         </button>
                     </div>
+                </div>
+
+                <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    {salonResults?.map((salon, index) => (
+                        <div
+                            key={index}
+                            className="bg-white p-5 rounded-2xl shadow"
+                        >
+                            <h2 className="text-lg font-bold">
+                                {salon.salonName}
+                            </h2>
+
+                            <p className="text-gray-500 text-sm">
+                                {salon.areaName}, {salon.cityName}
+                            </p>
+
+                            <p className="text-gray-400 text-sm mt-2">
+                                {salon.address}
+                            </p>
+                        </div>
+                    ))}
+
                 </div>
 
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-30 cursor-pointer hover:scale-105 transition-transform duration-200 select-none">

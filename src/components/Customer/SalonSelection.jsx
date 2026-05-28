@@ -53,7 +53,7 @@ const SalonSelection = () => {
       AOS.refresh();
     }, 200);
     return () => clearTimeout(timer);
-  }, [uiState.mode, uiState.results]);
+  }, [uiState.mode, salonResults]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

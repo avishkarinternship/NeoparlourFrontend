@@ -32,6 +32,7 @@ import ProductDetails from '../components/Customer/ProductDetails'
 import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
 import ProductBillDetails from '../components/Customer/ProductBillDetails'
 import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
+import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
 
 export let routes = createBrowserRouter([
     {
@@ -179,6 +180,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/signup',
                 element: <CustomerRegister />
+            },
+            {
+                path: '/owner/term-condition',
+                element: <OwnerTermsAndConditions />
             },
             {
                 path: '*',
