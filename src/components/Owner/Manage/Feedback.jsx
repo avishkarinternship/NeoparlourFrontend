@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 
 // Custom Asset Icons (matching your directory path convention)
 import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg'; // Reuse for consistency if needed
-
-import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
 import ManageSideBar from "../Layouts/ManageSideBar";
