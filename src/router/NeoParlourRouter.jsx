@@ -33,6 +33,7 @@ import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
 import ProductBillDetails from '../components/Customer/ProductBillDetails'
 import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
 import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
+import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
 
 export let routes = createBrowserRouter([
     {
@@ -63,6 +64,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner/dashboard',
                 element: <OwnerDashboard />
+            },
+            {
+                path : '/customer/terms&conditions',
+                element : <CustomerTermsAndConditions/>
             },
             // {
             //     path: '/owner/manage',

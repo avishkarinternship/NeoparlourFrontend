@@ -77,6 +77,17 @@ import subSixImg from '../../assets/Customer/HomeScreen/Review/sub_six_img.svg';
 import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
 
 import Drawer from './Drawer';
+import Marquee from 'react-fast-marquee';
+
+const partners = [
+    { src: oliviaImg, alt: "Olivia" },
+    { src: kapilImg, alt: "Kapil's" },
+    { src: natulasImg, alt: "Naturals" },
+    { src: mariaImg, alt: "Marie Claire" },
+    { src: toniaguyImg, alt: "Toni & Guy" },
+    { src: vlccImg, alt: "VLCC" },
+    { src: biguineImg, alt: "Jean-Claude Biguine" },
+];
 
 const HomeScreen = () => {
     const dispatch = useDispatch();
@@ -641,45 +652,55 @@ const HomeScreen = () => {
                         Partners
                     </h2>
 
-                    <div className="flex flex-col gap-8 w-full max-w-[100vw]">
-                        {[1, 2, 3].map((rowIdx) => (
-                            <div
-                                key={rowIdx}
-                                className="flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_10%,white_90%,transparent)]"
-                            >
-                                <div
-                                    className={`flex gap-16 items-center shrink-0 min-w-full justify-around px-4 animate-[marquee_30s_linear_infinite] ${rowIdx === 2 ? '[animation-direction:reverse]' : ''
-                                        }`}
-                                >
-                                    {/* Row Track Loop 1 */}
-                                    <img src={oliviaImg} alt="Oliva" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={kapilImg} alt="Kapil's" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={natulasImg} alt="Naturals" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={mariaImg} alt="Marie Claire" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={toniaguyImg} alt="Toni & Guy" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={vlccImg} alt="VLCC" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={biguineImg} alt="Jean-Claude Biguine" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
+                    <div className="flex flex-col gap-10">
+                        {/* First Row - Left to Right */}
+                        <Marquee
+                            speed={40}
+                            gradient={false}
+                            pauseOnHover={true}
+                        >
+                            {partners.map((partner, idx) => (
+                                <img
+                                    key={idx}
+                                    src={partner.src}
+                                    alt={partner.alt}
+                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                />
+                            ))}
+                        </Marquee>
 
-                                    {/* Row Track Loop 2 */}
-                                    <img src={oliviaImg} alt="Oliva" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={kapilImg} alt="Kapil's" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={natulasImg} alt="Naturals" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={mariaImg} alt="Marie Claire" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={toniaguyImg} alt="Toni & Guy" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={vlccImg} alt="VLCC" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={biguineImg} alt="Jean-Claude Biguine" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
+                        {/* Second Row - Right to Left */}
+                        <Marquee
+                            speed={35}
+                            direction="right"
+                            gradient={false}
+                            pauseOnHover={true}
+                        >
+                            {partners.map((partner, idx) => (
+                                <img
+                                    key={idx}
+                                    src={partner.src}
+                                    alt={partner.alt}
+                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                />
+                            ))}
+                        </Marquee>
 
-                                    {/* Row Track Loop 3 */}
-                                    <img src={oliviaImg} alt="Oliva" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={kapilImg} alt="Kapil's" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={natulasImg} alt="Naturals" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={mariaImg} alt="Marie Claire" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={toniaguyImg} alt="Toni & Guy" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={vlccImg} alt="VLCC" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                    <img src={biguineImg} alt="Jean-Claude Biguine" className="h-7 sm:h-9 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                                </div>
-                            </div>
-                        ))}
+                        {/* Third Row - Left to Right (optional) */}
+                        <Marquee
+                            speed={45}
+                            gradient={false}
+                            pauseOnHover={true}
+                        >
+                            {partners.map((partner, idx) => (
+                                <img
+                                    key={idx}
+                                    src={partner.src}
+                                    alt={partner.alt}
+                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                />
+                            ))}
+                        </Marquee>
                     </div>
                 </div>
             </section>
