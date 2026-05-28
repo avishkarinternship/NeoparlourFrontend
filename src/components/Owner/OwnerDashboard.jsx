@@ -1,5 +1,4 @@
 import React from 'react';
-import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
 import Sidebar from './Layouts/SideBar';
 
