@@ -1,0 +1,190 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from '../../api/axiosInstance';
+
+// Async thunk for owner login
+export const loginOwner = createAsyncThunk(
+  'ownerStaff/loginOwner',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/login', credentials);
+      if (response.data.token) {
+        localStorage.setItem('ownerStaffToken', response.data.token);
+        localStorage.setItem('ownerStaffUser', JSON.stringify(response.data));
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Owner login failed.');
+    }
+  }
+);
+
+// Async thunk for owner/staff logout (Server-side)
+export const logoutOwnerStaffServer = createAsyncThunk(
+  'ownerStaff/logoutServer',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().ownerStaff;
+      if (token) {
+        await axiosInstance.post('/auth/logout', {});
+      }
+      localStorage.removeItem('ownerStaffToken');
+      localStorage.removeItem('ownerStaffUser');
+      return true;
+    } catch (error) {
+      localStorage.removeItem('ownerStaffToken');
+      localStorage.removeItem('ownerStaffUser');
+      return rejectWithValue(error.response?.data?.message || 'Server-side logout failed.');
+    }
+  }
+);
+
+// Async thunk to send registration OTP
+export const sendRegisterOtp = createAsyncThunk(
+  'ownerStaff/sendOtp',
+  async ({ mobile, type }, { rejectWithValue }) => {
+    try {
+      let response;
+      if (type === 'CUSTOMER') {
+        response = await axiosInstance.post(`/customer/send-otp?mobile=${mobile}`);
+      } else {
+        response = await axiosInstance.post(`/auth/register/send-otp?mobile=${mobile}`);
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.response?.data?.message || 'Failed to send OTP.');
+    }
+  }
+);
+
+// Async thunk to register with OTP
+export const registerWithOtp = createAsyncThunk(
+  'ownerStaff/registerWithOtp',
+  async ({ userDTO, otp, type }, { rejectWithValue }) => {
+    try {
+      let response;
+      if (type === 'CUSTOMER') {
+        const customerDTO = {
+          fullName: userDTO.name,
+          mobile: userDTO.phone,
+          email: userDTO.email,
+          password: userDTO.password,
+          address: userDTO.specificAddress || ''
+        };
+        response = await axiosInstance.post(`/customer/register-with-otp?otp=${otp}`, customerDTO);
+      } else {
+        response = await axiosInstance.post(`/auth/register-with-otp?otp=${otp}`, userDTO);
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Registration failed.');
+    }
+  }
+);
+
+const initialState = {
+  user: JSON.parse(localStorage.getItem('ownerStaffUser')) || null,
+  token: localStorage.getItem('ownerStaffToken') || null,
+  isAuthenticated: !!localStorage.getItem('ownerStaffToken'),
+  loading: false,
+  otpSent: false,
+  error: null,
+  activeTab: 'CUSTOMER',
+};
+
+const ownerStaffSlice = createSlice({
+  name: 'ownerStaff',
+  initialState,
+  reducers: {
+    setActiveTab: (state, action) => {
+      state.activeTab = action.payload;
+    },
+    resetRegistration: (state) => {
+      state.otpSent = false;
+      state.error = null;
+    },
+    logoutOwnerStaff: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem('ownerStaffToken');
+      localStorage.removeItem('ownerStaffUser');
+    },
+    clearOwnerStaffError: (state) => {
+      state.error = null;
+    },
+    updateOwnerSession: (state, action) => {
+      const { token, salonId, salonName } = action.payload;
+      state.token = token;
+      state.isAuthenticated = true;
+      if (state.user) {
+        state.user.token = token;
+        state.user.salonId = salonId;
+        if (salonName) {
+          state.user.salonName = salonName;
+        }
+      }
+      localStorage.setItem('ownerStaffToken', token);
+      localStorage.setItem('ownerStaffUser', JSON.stringify(state.user));
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Owner Login
+      .addCase(loginOwner.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginOwner.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.token = action.payload.token;
+      })
+      .addCase(loginOwner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Send OTP
+      .addCase(sendRegisterOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendRegisterOtp.fulfilled, (state) => {
+        state.loading = false;
+        state.otpSent = true;
+      })
+      .addCase(sendRegisterOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Register with OTP
+      .addCase(registerWithOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerWithOtp.fulfilled, (state) => {
+        state.loading = false;
+        state.otpSent = false;
+      })
+      .addCase(registerWithOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Server Logout handling
+      .addCase(logoutOwnerStaffServer.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+      })
+      .addCase(logoutOwnerStaffServer.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+      });
+  },
+});
+
+export const { setActiveTab, logoutOwnerStaff, clearOwnerStaffError, resetRegistration, updateOwnerSession } = ownerStaffSlice.actions;
+export default ownerStaffSlice.reducer;

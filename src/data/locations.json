@@ -1,0 +1,24 @@
+{
+  "cities": [
+    {
+      "name": "Pune",
+      "areas": ["Hinjewadi", "Kothrud", "Baner", "Viman Nagar", "Magarpatta", "Hadapsar", "Wakad", "Pimple Saudagar", "Kalyani Nagar", "Aundh"]
+    },
+    {
+      "name": "Mumbai",
+      "areas": ["Andheri", "Bandra", "Borivali", "Colaba", "Dadar", "Goregaon", "Juhu", "Malad", "Powai", "Worli", "Thane", "Navi Mumbai"]
+    },
+    {
+      "name": "Bangalore",
+      "areas": ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "Electronic City", "Jayanagar", "JP Nagar", "Marathahalli", "BTM Layout"]
+    },
+    {
+      "name": "Hyderabad",
+      "areas": ["Gachibowli", "Hitech City", "Madhapur", "Jubilee Hills", "Banjara Hills", "Kukatpally", "Secunderabad", "Kondapur"]
+    },
+    {
+      "name": "Delhi",
+      "areas": ["Connaught Place", "South Extension", "Karol Bagh", "Hauz Khas", "Rohini", "Dwarka", "Janakpuri", "Lajpat Nagar"]
+    }
+  ]
+}
