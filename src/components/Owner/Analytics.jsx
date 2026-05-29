@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 
 import Sidebar from './Layouts/SideBar';
-import Navbar from './Layouts/NavBar';
+import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
 
 const Analytics = () => {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
 
