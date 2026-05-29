@@ -17,10 +17,10 @@ const App = () => {
   return (
     <div className="app-container overflow-x-hidden">
       <Toaster position="top-right" />
-
       <Outlet />
     </div>
   );
 }
 
-export default App;
+export default App; 
+

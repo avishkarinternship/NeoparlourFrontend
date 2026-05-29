@@ -34,6 +34,7 @@ import ProductBillDetails from '../components/Customer/ProductBillDetails'
 import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
 import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
 import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
+import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
 
 export let routes = createBrowserRouter([
     {
@@ -172,11 +173,14 @@ export let routes = createBrowserRouter([
             {
                 path: 'customer/appointment-success',
                 element: <AppointmentSuccess />
-            },
-           
+            },   
             {
                 path: '/customer/about',
                 element: <AboutUs />
+            },
+            {
+                path: '/customer/privacy-policy',
+                element: <PrivacyPolicy />
             },
             {
                 path: '/settings',
