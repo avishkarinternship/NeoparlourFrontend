@@ -66,7 +66,7 @@ export let routes = createBrowserRouter([
                 element: <OwnerDashboard />
             },
             {
-                path : '/customer/terms&conditions',
+                path : '/customer/term-condition',
                 element : <CustomerTermsAndConditions/>
             },
             // {
