@@ -35,6 +35,7 @@ import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
 import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
 import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
 import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
+import PrivacyPolicyScreen from '../components/Owner/PrivacyPolicy'
 
 export let routes = createBrowserRouter([
     {
@@ -181,6 +182,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/customer/privacy-policy',
                 element: <PrivacyPolicy />
+            },
+            {
+                path: '/owner/privacy-policy',
+                element: <PrivacyPolicyScreen />
             },
             {
                 path: '/settings',
