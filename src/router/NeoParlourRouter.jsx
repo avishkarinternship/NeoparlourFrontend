@@ -66,7 +66,7 @@ export let routes = createBrowserRouter([
                 element: <OwnerDashboard />
             },
             {
-                path : '/customer/term-condition',
+                path : '/customer/terms-and-conditions',
                 element : <CustomerTermsAndConditions/>
             },
             // {
@@ -187,7 +187,7 @@ export let routes = createBrowserRouter([
                 element: <CustomerRegister />
             },
             {
-                path: '/owner/term-condition',
+                path: '/owner/terms-and-conditions',
                 element: <OwnerTermsAndConditions />
             },
             {
