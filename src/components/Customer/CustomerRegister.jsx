@@ -40,6 +40,7 @@ const CustomerRegister = () => {
     showConfirmPassword: false,
     showCityDropdown: false,
     showAreaDropdown: false,
+    tncAccepted: false,
   });
 
   const cityDropdownRef = useRef(null);
@@ -101,6 +102,14 @@ const CustomerRegister = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    if (!uiState.tncAccepted) {
+      toast.error('Please accept the Terms & Conditions to proceed.', {
+        duration: 3000,
+        style: { background: '#1c1c1e', color: '#fff', borderRadius: '16px' }
+      });
+      return;
+    }
+
     if (uiState.formData.password !== uiState.formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
@@ -121,6 +130,9 @@ const CustomerRegister = () => {
       role: activeTab === 'OWNER' ? 'SALON_OWNER' : 'CUSTOMER',
       openingTime: uiState.formData.openingTime + ':00',
       closingTime: uiState.formData.closingTime + ':00',
+      tncAccepted: true,
+      tncAcceptedAt: new Date().toISOString(),
+      tncVersion: '1.0',
     };
 
     dispatch(registerWithOtp({ userDTO, otp: uiState.otp, type: activeTab })).unwrap()
@@ -517,10 +529,29 @@ const CustomerRegister = () => {
             </form>
 
             <div className="mt-12 pt-8">
-              <div className="flex items-center gap-5 mb-8">
-                <input type="checkbox" id="terms" className="w-7 h-7 accent-[#ff0b01] cursor-pointer" defaultChecked />
-                <label htmlFor="terms" className="text-[15px] text-gray-400 cursor-pointer font-medium">I agree with terms of use</label>
+              <div className="flex items-center gap-5 mb-4">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  className="w-7 h-7 accent-[#ff0b01] cursor-pointer" 
+                  checked={uiState.tncAccepted}
+                  onChange={(e) => setUiState(p => ({ ...p, tncAccepted: e.target.checked }))}
+                />
+                <label htmlFor="terms" className="text-[15px] text-gray-400 cursor-pointer font-medium">
+                  I agree with the{' '}
+                  <Link 
+                    to={activeTab === 'OWNER' ? '/owner/terms-and-conditions' : '/customer/terms-and-conditions'} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[#ff0b01] font-bold hover:underline"
+                  >
+                    Terms & Conditions
+                  </Link>
+                </label>
               </div>
+              {!uiState.tncAccepted && (
+                <p className="text-[13px] text-red-400 mb-6 ml-12">* You must accept the Terms & Conditions to register</p>
+              )}
               <p className="text-[16px] text-gray-400 text-center lg:text-left">
                 Already have account? <Link to="/login" className="text-[#ff0b01] font-extrabold hover:underline ml-3">Login Now</Link>
               </p>

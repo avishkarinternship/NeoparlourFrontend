@@ -68,11 +68,20 @@ export const registerWithOtp = createAsyncThunk(
           mobile: userDTO.phone,
           email: userDTO.email,
           password: userDTO.password,
-          address: userDTO.specificAddress || ''
+          address: userDTO.specificAddress || '',
+          tncAccepted: userDTO.tncAccepted || false,
+          tncAcceptedAt: userDTO.tncAcceptedAt || null,
+          tncVersion: userDTO.tncVersion || null,
         };
         response = await axiosInstance.post(`/customer/register-with-otp?otp=${otp}`, customerDTO);
       } else {
-        response = await axiosInstance.post(`/auth/register-with-otp?otp=${otp}`, userDTO);
+        const ownerDTO = {
+          ...userDTO,
+          tncAccepted: userDTO.tncAccepted || false,
+          tncAcceptedAt: userDTO.tncAcceptedAt || null,
+          tncVersion: userDTO.tncVersion || null,
+        };
+        response = await axiosInstance.post(`/auth/register-with-otp?otp=${otp}`, ownerDTO);
       }
       return response.data;
     } catch (error) {

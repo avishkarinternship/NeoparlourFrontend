@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 // Assets (Ensure these paths match your project structure)
 import logoIcon from '../assets/CustomerRegister/logo_icon.svg';
@@ -9,8 +10,8 @@ import passwordIcon from '../assets/CustomerRegister/password_icon.svg';
 import rightBackground from '../assets/OwnerRegister/right_background.jpg';
 
 const OwnerRegister = () => {
-  // Initializing state to 'OWNER' as per image_94659a.jpg
   const [activeTab, setActiveTab] = useState('OWNER');
+  const [tncAccepted, setTncAccepted] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-8 px-6 pb-6 font-sans">
@@ -188,12 +189,24 @@ const OwnerRegister = () => {
                   type="checkbox" 
                   id="terms" 
                   className="w-[14px] h-[14px] text-[#ff0b01] border-gray-300 rounded focus:ring-[#ff0b01] accent-[#ff0b01] cursor-pointer" 
-                  defaultChecked 
+                  checked={tncAccepted}
+                  onChange={(e) => setTncAccepted(e.target.checked)}
                 />
                 <label htmlFor="terms" className="text-[10px] text-gray-400 cursor-pointer">
-                  I agree with terms of use
+                  I agree with the{' '}
+                  <Link 
+                    to={activeTab === 'OWNER' ? '/owner/terms-and-conditions' : '/customer/terms-and-conditions'} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[#ff0b01] font-bold hover:underline"
+                  >
+                    Terms & Conditions
+                  </Link>
                 </label>
               </div>
+              {!tncAccepted && (
+                <p className="text-[9px] text-red-400 ml-5">* You must accept the Terms & Conditions to register</p>
+              )}
 
               <div className="text-[10px] text-gray-400 pt-1">
                 Already have account? <a href="#" className="text-[#ff0b01] font-bold hover:underline">Login</a>
