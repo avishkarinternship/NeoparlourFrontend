@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 // false => Localhost API (http://localhost:9090/api)
 const USE_PRODUCTION = true;
 
-const baseURL = USE_PRODUCTION 
-  ? 'https://sb.neoparlour.com/api' 
+const baseURL = USE_PRODUCTION
+  ? 'https://uat.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
@@ -20,9 +20,9 @@ axiosInstance.interceptors.request.use(
     // Check for customer token first, then owner token
     const customerToken = localStorage.getItem('customerToken');
     const ownerToken = localStorage.getItem('ownerStaffToken');
-    
+
     const token = customerToken || ownerToken;
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,10 +38,10 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     const errorData = error.response?.data;
-    
+
     // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... }
     const errorMessage = errorData?.message || error.message || 'Something went wrong';
-    
+
     // Show toast notification
     toast.error(errorMessage, {
       duration: 5000, // Increased duration

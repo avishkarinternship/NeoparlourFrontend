@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    searchSalonsByLocation
+    searchSalonsByLocation,
+    switchTenant
 } from '../../redux/slices/customerSlice';
 import axiosInstance from '../../api/axiosInstance';
+import searchService from '../../services/searchService';
+import { toast } from 'react-hot-toast';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -47,6 +51,10 @@ import manageInventoryImg from '../../assets/Customer/HomeScreen/SalonGrowthSect
 import easyAppointmentImg from '../../assets/Customer/HomeScreen/SalonGrowthSection/easy_appointment.jpg';
 import leadMagnetImg from '../../assets/Customer/HomeScreen/SalonGrowthSection/lead_magnet.png';
 import aiPoweredFeatureImg from '../../assets/Customer/HomeScreen/SalonGrowthSection/ai_powered_feature.png';
+
+// Compare Slider Face Images
+import colorFace1 from '../../assets/Customer/HomeScreen/Compare/color_face_1.png';
+import colorFace2 from '../../assets/Customer/HomeScreen/Compare/color_face_2.png';
 
 // 5. Partners Section Image Imports
 import oliviaImg from '../../assets/Customer/HomeScreen/Partners/olivia_img.png';
@@ -98,24 +106,107 @@ const HomeScreen = () => {
         areaName: '',
     });
 
+    const [citySuggestions, setCitySuggestions] = useState([]);
+    const [areaSuggestions, setAreaSuggestions] = useState([]);
+    const [isLoadingCities, setIsLoadingCities] = useState(false);
+    const [isLoadingAreas, setIsLoadingAreas] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+    const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+
+    const cityDropdownRef = useRef(null);
+    const areaDropdownRef = useRef(null);
+
     const navigate = useNavigate();
+
+    // Click outside dropdowns handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+                setShowCityDropdown(false);
+            }
+            if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+                setShowAreaDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // OpenStreetMap City autocomplete with debouncing
+    useEffect(() => {
+        if (!searchData.cityName || searchData.cityName.trim().length < 2) {
+            setCitySuggestions([]);
+            return;
+        }
+
+        setIsLoadingCities(true);
+        const delayDebounce = setTimeout(async () => {
+            try {
+                const results = await searchService.searchExternalLocations(searchData.cityName, 'city');
+                setCitySuggestions(results);
+            } catch (err) {
+                console.error("OSM City Search Error:", err);
+            } finally {
+                setIsLoadingCities(false);
+            }
+        }, 450);
+
+        return () => clearTimeout(delayDebounce);
+    }, [searchData.cityName]);
+
+    // OpenStreetMap Area autocomplete with debouncing (scoped by city if present)
+    useEffect(() => {
+        if (!searchData.areaName || searchData.areaName.trim().length < 2) {
+            setAreaSuggestions([]);
+            return;
+        }
+
+        setIsLoadingAreas(true);
+        const delayDebounce = setTimeout(async () => {
+            try {
+                const results = await searchService.searchExternalLocations(
+                    searchData.areaName,
+                    'area',
+                    searchData.cityName
+                );
+                setAreaSuggestions(results);
+            } catch (err) {
+                console.error("OSM Area Search Error:", err);
+            } finally {
+                setIsLoadingAreas(false);
+            }
+        }, 450);
+
+        return () => clearTimeout(delayDebounce);
+    }, [searchData.areaName, searchData.cityName]);
     
     const handleLocationSearch = async () => {
-    console.log(searchData);
+        console.log(searchData);
 
-    if (!searchData.cityName && !searchData.areaName) return;
+        if (!searchData.cityName && !searchData.areaName) return;
 
-    try {
-        await dispatch(
-            searchSalonsByLocation({
-                cityName: searchData.cityName,
-                areaName: searchData.areaName,
-            })
-        ).unwrap();
-    } catch (error) {
-        console.log(error);
-    }
-};
+        try {
+            await dispatch(
+                searchSalonsByLocation({
+                    cityName: searchData.cityName,
+                    areaName: searchData.areaName,
+                })
+            ).unwrap();
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const isOpen = (opening, closing) => {
+        if (!opening || !closing) return true;
+        const now = new Date();
+        const [openH, openM] = opening.split(':').map(Number);
+        const [closeH, closeM] = closing.split(':').map(Number);
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const openTime = openH * 60 + openM;
+        const closeTime = closeH * 60 + closeM;
+        return currentTime >= openTime && currentTime <= closeTime;
+    };
 
     const location = useLocation();
     const currentPath = location.pathname;
@@ -257,38 +348,82 @@ const HomeScreen = () => {
 
 
                     <div className="w-full max-w-4xl bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
-                        <div className="flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200">
+                        <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
                             <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder="SELECT CITY"
                                 value={searchData.cityName}
-                                onChange={(e) =>
+                                onChange={(e) => {
                                     setSearchData((prev) => ({
                                         ...prev,
                                         cityName: e.target.value,
-                                    }))
-                                }
+                                    }));
+                                    setShowCityDropdown(true);
+                                }}
+                                onFocus={() => setShowCityDropdown(true)}
                                 className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                            {showCityDropdown && searchData.cityName && (
+                                <div className="absolute left-0 top-full z-40 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                    {isLoadingCities ? (
+                                        <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                            <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                            Locating...
+                                        </div>
+                                    ) : citySuggestions.length > 0 ? (
+                                        citySuggestions.map((city, idx) => (
+                                            <div key={idx} onClick={() => {
+                                                setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
+                                                setShowCityDropdown(false);
+                                            }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
+                                        ))
+                                    ) : (
+                                        <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
+                        <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2" ref={areaDropdownRef}>
                             <div className="flex items-center gap-3 w-full">
                                 <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
                                     placeholder="SELECT AREA"
                                     value={searchData.areaName}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setSearchData((prev) => ({
                                             ...prev,
                                             areaName: e.target.value,
-                                        }))
-                                    }
+                                        }));
+                                        setShowAreaDropdown(true);
+                                    }}
+                                    onFocus={() => setShowAreaDropdown(true)}
                                     className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
                                 />
                             </div>
-                            <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" />
+                            <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
+                            {showAreaDropdown && searchData.areaName && (
+                                <div className="absolute left-0 top-full z-40 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                    {isLoadingAreas ? (
+                                        <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                            <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                            Locating...
+                                        </div>
+                                    ) : areaSuggestions.length > 0 ? (
+                                        areaSuggestions.map((area, idx) => (
+                                            <div key={idx} onClick={() => {
+                                                setSearchData(p => ({ ...p, areaName: area.name }));
+                                                setShowAreaDropdown(false);
+                                            }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
+                                                {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* <div className="flex items-center justify-between px-4 py-2 w-full gap-2">
@@ -306,29 +441,70 @@ const HomeScreen = () => {
                             {loading ? 'Searching...' : 'SEARCH'}
                         </button>
                     </div>
-                </div>
 
-                <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Render results grid inside this flex-col-centered container so it stacks perfectly below the search bar */}
+                    {salonResults && salonResults.length > 0 && (
+                        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl text-left animate-fade-in z-30">
+                            {salonResults.map((salon, index) => {
+                                const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
+                                return (
+                                    <div
+                                        key={salon.salonId || index}
+                                        onClick={() => {
+                                            const token = localStorage.getItem('token') || '';
+                                            const payload = {
+                                                token: token,
+                                                tenantId: salon.salonCode,
+                                                salonName: salon.salonName
+                                            };
+                                            dispatch(switchTenant(payload)).unwrap().then(() => {
+                                                toast.success(`Switched to ${salon.salonName}!`);
+                                                window.location.reload();
+                                            });
+                                        }}
+                                        className="group flex flex-col p-6 rounded-[28px] bg-white border border-gray-100 hover:border-[#FF2A14]/30 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative overflow-hidden shadow-sm hover:-translate-y-0.5 active:scale-[0.98]"
+                                    >
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="w-14 h-14 bg-gray-50 rounded-2xl overflow-hidden border-2 border-white shadow group-hover:scale-105 transition-transform duration-300">
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-[#FF2A14] text-xl font-black">
+                                                    {salon.salonName ? salon.salonName[0] : 'S'}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className="px-2 py-0.5 bg-gray-50 rounded-md border border-gray-200 text-[8px] font-black text-gray-400 group-hover:text-gray-900 group-hover:border-[#FF2A14]/20 transition-all uppercase tracking-widest">{salon.salonCode}</span>
+                                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${currentlyOpen ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'} text-[7px] font-black uppercase tracking-widest shadow-sm`}>
+                                                    <div className={`h-1 w-1 rounded-full ${currentlyOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                                                    {currentlyOpen ? 'Open' : 'Closed'}
+                                                </div>
+                                            </div>
+                                        </div>
 
-                    {salonResults?.map((salon, index) => (
-                        <div
-                            key={index}
-                            className="bg-white p-5 rounded-2xl shadow"
-                        >
-                            <h2 className="text-lg font-bold">
-                                {salon.salonName}
-                            </h2>
+                                        <div className="space-y-2 flex-1">
+                                            <h4 className="text-base font-black text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-tight uppercase truncate">{salon.salonName}</h4>
+                                            <div className="space-y-1">
+                                                <p className="text-xs text-gray-500 font-medium">
+                                                    {salon.address || 'Address updating...'}
+                                                </p>
+                                                <p className="text-[10px] font-black text-gray-300 tracking-wider uppercase">
+                                                    {salon.areaName} • {salon.cityName}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                            <p className="text-gray-500 text-sm">
-                                {salon.areaName}, {salon.cityName}
-                            </p>
-
-                            <p className="text-gray-400 text-sm mt-2">
-                                {salon.address}
-                            </p>
+                                        <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-bold">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <span>{salon.openingTime} - {salon.closingTime}</span>
+                                            </div>
+                                            <div className="h-7 w-7 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 group-hover:bg-[#FF2A14] group-hover:text-white transition-all duration-300 shadow-sm">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    ))}
-
+                    )}
                 </div>
 
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-30 cursor-pointer hover:scale-105 transition-transform duration-200 select-none">
@@ -583,15 +759,165 @@ const HomeScreen = () => {
 
                     {/* Feature 4 - AI Powered Features */}
                     <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
-                        {/* Left/Right Container for Image */}
+                        {/* Right Container - Compare Slider with Floating Labels */}
                         <div className="flex-1 w-full">
-                            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
-                                <img
-                                    src={aiPoweredFeatureImg}
-                                    alt="AI Powered Feature"
-                                    className="w-full h-auto object-cover max-h-[400px]"
-                                />
+                            <div className="relative">
+                                {/* Compare Slider */}
+                                <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white h-[320px] md:h-[420px]">
+                                    <ReactCompareSlider
+                                        itemOne={
+                                            <ReactCompareSliderImage
+                                                src={colorFace1}
+                                                alt="Before - Original Look"
+                                                style={{ objectFit: 'cover' }}
+                                            />
+                                        }
+                                        itemTwo={
+                                            <ReactCompareSliderImage
+                                                src={colorFace2}
+                                                alt="After - AI Suggested Look"
+                                                style={{ objectFit: 'cover' }}
+                                            />
+                                        }
+                                        position={50}
+                                        style={{ height: '100%' }}
+                                        handle={
+                                            <div className="flex flex-col items-center justify-center h-full">
+                                                <div className="w-[3px] h-full bg-white shadow-lg"></div>
+                                                <div className="absolute w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#FF2A14]">
+                                                    <svg className="w-5 h-5 text-[#FF2A14]" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        }
+                                    />
+                                </div>
+
+                                {/* Floating AI Feature Labels */}
+                                {/* Top Left - AI Assistant */}
+                                <div className="hidden md:flex absolute top-8 -left-4 md:-left-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3s'}}>
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Assistant</span>
+                                </div>
+
+                                {/* Top Right - Haircut Suggestions */}
+                                <div className="hidden md:flex absolute top-4 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3.5s'}}>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Haircut Suggestions</span>
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Middle Left - Beard Suggestions */}
+                                <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-4 md:-left-10 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '2.8s'}}>
+                                    <div className="w-7 h-7 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase block">Beard</span>
+                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase block">Suggestions</span>
+                                    </div>
+                                </div>
+
+                                {/* Middle Right - Chatbot */}
+                                <div className="hidden md:flex absolute top-[40%] -right-2 md:-right-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3.2s'}}>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Chatbot</span>
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Right - WhatsApp Booking */}
+                                <div className="hidden md:flex absolute bottom-8 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '2.5s'}}>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Booking</span>
+                                    <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Left - Style Matcher Icon */}
+                                <div className="hidden md:flex absolute bottom-12 -left-2 md:-left-4 w-9 h-9 bg-[#FF2A14] rounded-full items-center justify-center shadow-lg animate-bounce" style={{animationDuration: '2s'}}>
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                </div>
                             </div>
+
+                            {/* Mobile-only AI Feature Checkpoints */}
+                            <div className="grid grid-cols-2 gap-3 mt-6 md:hidden px-2">
+                                {/* AI Assistant */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Assistant</span>
+                                </div>
+
+                                {/* Haircut Suggestions */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase font-sans">Haircut Suggests</span>
+                                </div>
+
+                                {/* Beard Suggestions */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Beard Suggests</span>
+                                </div>
+
+                                {/* Chatbot */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Chatbot</span>
+                                </div>
+
+                                {/* WhatsApp Booking */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Book</span>
+                                    </div>
+
+                                    {/* Style Matcher */}
+                                    <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                        <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Style Matcher</span>
+                                    </div>
+                                </div>
                         </div>
 
                         {/* Content Container styled exactly to the design layout */}

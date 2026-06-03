@@ -6,7 +6,7 @@ import {
   switchTenant,
   searchSalonsByLocation
  } from '../../redux/slices/customerSlice';
-import locationData from '../../data/locations.json';
+import searchService from '../../services/searchService';
 import AOS from 'aos';
 import { Html5Qrcode } from "html5-qrcode";
 import { toast } from 'react-hot-toast';
@@ -33,6 +33,11 @@ const SalonSelection = () => {
     showAreaDropdown: false,
     showScanner: false,
   });
+
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [areaSuggestions, setAreaSuggestions] = useState([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isLoadingAreas, setIsLoadingAreas] = useState(false);
 
   const cityDropdownRef = useRef(null);
   const areaDropdownRef = useRef(null);
@@ -112,17 +117,53 @@ const SalonSelection = () => {
     }
   };
 
-  // const handleLocationSearch = async () => {
-  //   if (!uiState.cityName && !uiState.areaName) return;
-  //   setUiState(prev => ({ ...prev, isSearching: true, results: [] }));
-  //   try {
-  //     const response = await axiosInstance.get(`/salons/location-search?cityName=${uiState.cityName}&areaName=${uiState.areaName}`);
-  //     setUiState(prev => ({ ...prev, results: response.data || [], isSearching: false }));
-  //   } catch (error) {
-  //     console.error("Search failed", error);
-  //     setUiState(prev => ({ ...prev, isSearching: false, results: [] }));
-  //   }
-  // };
+  // OpenStreetMap City search debounce hook
+  useEffect(() => {
+    if (!uiState.cityName || uiState.cityName.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    setIsLoadingCities(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(uiState.cityName, 'city');
+        setCitySuggestions(results);
+      } catch (err) {
+        console.error("City search failure:", err);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(delayDebounce);
+  }, [uiState.cityName]);
+
+  // OpenStreetMap Area search debounce hook (scoped by city if present)
+  useEffect(() => {
+    if (!uiState.areaName || uiState.areaName.trim().length < 2) {
+      setAreaSuggestions([]);
+      return;
+    }
+
+    setIsLoadingAreas(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(
+          uiState.areaName,
+          'area',
+          uiState.cityName
+        );
+        setAreaSuggestions(results);
+      } catch (err) {
+        console.error("Area search failure:", err);
+      } finally {
+        setIsLoadingAreas(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(delayDebounce);
+  }, [uiState.areaName, uiState.cityName]);
 
   const handleLocationSearch = async () => {
     if (!uiState.cityName && !uiState.areaName) return;
@@ -153,14 +194,6 @@ const SalonSelection = () => {
     if (!uiState.salonId) return;
     handleSalonSelect({ salonCode: uiState.salonId, salonName: 'Direct Access' });
   };
-
-  const filteredCities = locationData.cities.filter(city =>
-    city.name.toLowerCase().includes(uiState.cityName.toLowerCase())
-  );
-  const selectedCityData = locationData.cities.find(c => c.name.toLowerCase() === uiState.cityName.toLowerCase());
-  const filteredAreas = selectedCityData ? selectedCityData.areas.filter(area =>
-    area.toLowerCase().includes(uiState.areaName.toLowerCase())
-  ) : [];
 
   const isOpen = (opening, closing) => {
     if (!opening || !closing) return true;
@@ -231,9 +264,18 @@ const SalonSelection = () => {
                       />
                       {uiState.showCityDropdown && uiState.cityName && (
                         <div className="absolute z-40 w-full mt-2 bg-white border border-gray-100 rounded-[20px] shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
-                          {filteredCities.map((city, idx) => (
-                            <div key={idx} onClick={() => setUiState(p => ({ ...p, cityName: city.name, showCityDropdown: false, areaName: '' }))} className="px-6 py-3 rounded-[14px] hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer transition-all font-bold text-gray-700 text-sm">{city.name}</div>
-                          ))}
+                          {isLoadingCities ? (
+                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                              <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                              Locating...
+                            </div>
+                          ) : citySuggestions.length > 0 ? (
+                            citySuggestions.map((city, idx) => (
+                              <div key={idx} onClick={() => setUiState(p => ({ ...p, cityName: city.name, showCityDropdown: false, areaName: '' }))} className="px-6 py-3 rounded-[14px] hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer transition-all font-bold text-gray-700 text-sm">{city.name}</div>
+                            ))
+                          ) : (
+                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -249,9 +291,20 @@ const SalonSelection = () => {
                       />
                       {uiState.showAreaDropdown && uiState.areaName && (
                         <div className="absolute z-40 w-full mt-2 bg-white border border-gray-100 rounded-[20px] shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
-                          {filteredAreas.map((area, idx) => (
-                            <div key={idx} onClick={() => setUiState(p => ({ ...p, areaName: area, showAreaDropdown: false }))} className="px-6 py-3 rounded-[14px] hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer transition-all font-bold text-gray-700 text-sm">{area}</div>
-                          ))}
+                          {isLoadingAreas ? (
+                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                              <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                              Locating...
+                            </div>
+                          ) : areaSuggestions.length > 0 ? (
+                            areaSuggestions.map((area, idx) => (
+                              <div key={idx} onClick={() => setUiState(p => ({ ...p, areaName: area.name, showAreaDropdown: false }))} className="px-6 py-3 rounded-[14px] hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer transition-all font-bold text-gray-700 text-sm">
+                                {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                          )}
                         </div>
                       )}
                     </div>

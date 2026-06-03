@@ -1,12 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
 import Sidebar from './Layouts/SideBar';
+import axiosInstance from '../../api/axiosInstance';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // 1. Asset Imports with explicit folder pathways
 import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/upcoming_appointment_icon.svg';
 import todaysAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/todays_appointment_icon.svg';
 import appointmentActivityIcon from '../../assets/Owner/Dashboard/CenterScreen/appointment_activity.svg';
+
+// Helper to format X-axis labels based on the view type
+const formatLabel = (label, viewType) => {
+    if (!label) return '';
+    try {
+        // The API returns labels like "2026-06-01 09:00:00.0"
+        const cleanLabel = label.replace('.0', '');
+        const date = new Date(cleanLabel.replace(' ', 'T'));
+        if (isNaN(date.getTime())) return label;
+
+        switch (viewType) {
+            case 'day':
+                return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            case 'week':
+                return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' });
+            case 'month':
+                return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            case 'year':
+                return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+            default:
+                return label;
+        }
+    } catch {
+        return label;
+    }
+};
+
+// Custom Tooltip for the chart
+const CustomTooltip = ({ active, payload, label, viewType }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-gray-900 text-white px-4 py-3 rounded-lg shadow-xl text-xs border border-gray-700">
+                <p className="font-medium text-gray-300 mb-1">{formatLabel(label, viewType)}</p>
+                <p className="font-bold text-base">₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            </div>
+        );
+    }
+    return null;
+};
+
+const VIEW_TYPES = ['day', 'week', 'month', 'year'];
 
 const OwnerDashboard = () => {
     // Mock data for Top Services
@@ -17,12 +60,38 @@ const OwnerDashboard = () => {
         { name: 'Hair Coloring', thisMonth: 1, lastMonth: 1 },
     ];
 
-    // Mock chart data distribution matching image levels
-    const chartBars = [
-        { s: 50, a: 30 }, { s: 35, a: 45 }, { s: 40, a: 55 }, { s: 70, a: 35 },
-        { s: 80, a: 45 }, { s: 60, a: 50 }, { s: 75, a: 65 }, { s: 30, a: 80 },
-        { s: 55, a: 40 }, { s: 65, a: 70 }, { s: 20, a: 45 }, { s: 40, a: 25 }
-    ]; 
+    // Revenue graph state
+    const [viewType, setViewType] = useState('day');
+    const [revenueData, setRevenueData] = useState([]);
+    const [revenueLoading, setRevenueLoading] = useState(false);
+    const [totalRevenue, setTotalRevenue] = useState(0);
+
+    const fetchRevenueData = useCallback(async (type) => {
+        setRevenueLoading(true);
+        try {
+            const response = await axiosInstance.get(`/appointments/revenue/graph`, {
+                params: { viewType: type, onlyOffers: false }
+            });
+            const data = response.data || [];
+            setRevenueData(data);
+            const total = data.reduce((sum, item) => sum + (item.revenue || 0), 0);
+            setTotalRevenue(total);
+        } catch (error) {
+            console.error('Failed to fetch revenue data:', error);
+            setRevenueData([]);
+            setTotalRevenue(0);
+        } finally {
+            setRevenueLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRevenueData(viewType);
+    }, [viewType, fetchRevenueData]);
+
+    const handleViewTypeChange = (type) => {
+        setViewType(type);
+    };
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
@@ -44,38 +113,89 @@ const OwnerDashboard = () => {
                     {/* Balanced Responsive Workspace Display Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-                        {/* 1. Recent Sales Data Card with Graphical Simulation */}
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[300px]">
+                        {/* 1. Revenue Graph Card */}
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[340px]">
                             <div>
-                                <div className="flex justify-between items-start">
+                                <div className="flex justify-between items-start mb-1">
                                     <div>
-                                        <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Recent Sales</h3>
-                                        <p className="text-[11px] text-gray-400 font-medium">Last 7 days</p>
+                                        <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Revenue</h3>
+                                        <p className="text-[11px] text-gray-400 font-medium capitalize">{viewType} view</p>
                                     </div>
-                                    <div className="text-right text-[11px] font-semibold text-gray-500 space-y-0.5">
-                                        <p>Appointments: <span className="text-gray-900 font-bold">12</span></p>
-                                        <p>Appointments Value: <span className="text-gray-900 font-bold">1200</span></p>
+                                    <div className="text-right">
+                                        <p className="text-[11px] text-gray-400 font-medium">Total Revenue</p>
+                                        <p className="text-xl font-bold text-[#ff0b01]">₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                     </div>
                                 </div>
-                                <div className="text-2xl font-bold text-red-600 mt-3 mb-4">₹ 0.0</div>
+
+                                {/* View Type Filter Tabs */}
+                                <div className="flex gap-1.5 mb-5 mt-3">
+                                    {VIEW_TYPES.map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => handleViewTypeChange(type)}
+                                            className={`px-4 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
+                                                viewType === type
+                                                    ? 'bg-[#ff0b01] text-white shadow-md shadow-red-200'
+                                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                                            }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
-                            {/* Graphic Chart Simulation Visuals */}
-                            <div className="h-28 flex items-end justify-between px-2 pt-4 relative border-b border-gray-200">
-                                {chartBars.map((item, i) => (
-                                    <div key={i} className="flex space-x-[2px] items-end h-full w-full justify-center mx-0.5">
-                                        <div style={{ height: `${item.s}%` }} className="w-1.5 bg-[#B176CE] rounded-t-sm"></div>
-                                        <div style={{ height: `${item.a}%` }} className="w-1.5 bg-[#4B49EC] rounded-t-sm"></div>
+                            {/* Revenue Chart */}
+                            <div className="h-[200px] w-full">
+                                {revenueLoading ? (
+                                    <div className="h-full flex items-center justify-center">
+                                        <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
                                     </div>
-                                ))}
-                            </div>
-                            <div className="flex items-center space-x-5 mt-4 text-[11px] font-bold text-gray-500 pl-2">
-                                <span className="flex items-center">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-[#B176CE] mr-2"></span> Sales
-                                </span>
-                                <span className="flex items-center"> 
-                                    <span className="w-2.5 h-2.5 rounded-full bg-[#4B49EC] mr-2"></span> Appointments
-                                </span>
+                                ) : revenueData.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-center">
+                                        <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                        </svg>
+                                        <p className="text-[12px] font-semibold text-gray-400">No revenue data available</p>
+                                        <p className="text-[11px] text-gray-300 mt-0.5">Try a different time range</p>
+                                    </div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.02} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                                            <XAxis
+                                                dataKey="label"
+                                                tickFormatter={(val) => formatLabel(val, viewType)}
+                                                tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }}
+                                                axisLine={{ stroke: '#e5e7eb' }}
+                                                tickLine={false}
+                                                interval="preserveStartEnd"
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }}
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tickFormatter={(val) => `₹${val}`}
+                                            />
+                                            <Tooltip content={<CustomTooltip viewType={viewType} />} />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="revenue"
+                                                stroke="#ff0b01"
+                                                strokeWidth={2.5}
+                                                fill="url(#revenueGradient)"
+                                                dot={{ r: 4, fill: '#ff0b01', stroke: '#fff', strokeWidth: 2 }}
+                                                activeDot={{ r: 6, fill: '#ff0b01', stroke: '#fff', strokeWidth: 2 }}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                         </div>
 
