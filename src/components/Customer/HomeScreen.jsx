@@ -100,6 +100,13 @@ const partners = [
     { src: biguineImg, alt: "Jean-Claude Biguine" },
 ];
 
+const recommendedSalons = [
+    { name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
+    { name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
+    { name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
+    { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
+];
+
 const HomeScreen = () => {
     const dispatch = useDispatch();
     const { token, loading, salonResults, user, isAuthenticated, profile } = useSelector((state) => state.customer);
@@ -131,6 +138,8 @@ const HomeScreen = () => {
     const navigate = useNavigate();
     const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [locationPermission, setLocationPermission] = useState('prompt');
+    const [recommendedList, setRecommendedList] = useState(recommendedSalons);
 
     // Click outside dropdowns handler
     useEffect(() => {
@@ -243,6 +252,120 @@ const HomeScreen = () => {
         );
     };
 
+    const fetchCitySalons = async (cityName) => {
+        try {
+            const response = await axiosInstance.get(`/salons/by-city`, {
+                params: { cityName }
+            });
+            return response.data?.content || [];
+        } catch (err) {
+            console.error("Error fetching salons by city:", err);
+            return [];
+        }
+    };
+
+    const requestLocationAndFetchSalons = (isClickTriggered = false) => {
+        if (!navigator.geolocation) {
+            if (isClickTriggered) {
+                toast.error("Geolocation is not supported by your browser");
+            }
+            setLocationPermission('denied');
+            setRecommendedList(recommendedSalons);
+            return;
+        }
+
+        if (isClickTriggered) {
+            setIsDetectingLocation(true);
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                setLocationPermission('granted');
+                try {
+                    const result = await searchService.reverseGeocode(latitude, longitude);
+                    const detectedCity = result.city || "Pune";
+
+                    // Fetch salons from city
+                    const apiSalons = await fetchCitySalons(detectedCity);
+
+                    // Format and map cover images and ratings
+                    const coverImages = [salonOneIcon, salonTwoIcon, salonThreeIcon, salonFourIcon];
+                    const formatted = apiSalons.map((s, index) => ({
+                        name: s.salonName,
+                        location: s.areaName || s.cityName,
+                        img: coverImages[index % 4],
+                        rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
+                        isApiSalon: true,
+                        originalSalon: s
+                    }));
+
+                    // Sort by rating descending (top-rated first)
+                    formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+
+                    setRecommendedList(formatted);
+
+                    // Also auto-populate search bar if detecting location
+                    setSearchData({
+                        cityName: result.city || detectedCity,
+                        areaName: result.area || ''
+                    });
+
+                    if (isClickTriggered) {
+                        toast.success(`Location detected: ${detectedCity}! Recommended list updated.`);
+                    }
+                } catch (error) {
+                    console.error("Error retrieving salons:", error);
+                    setRecommendedList(recommendedSalons);
+                    if (isClickTriggered) {
+                        toast.error("Error identifying location details.");
+                    }
+                } finally {
+                    if (isClickTriggered) {
+                        setIsDetectingLocation(false);
+                    }
+                }
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                setLocationPermission('denied');
+                setRecommendedList(recommendedSalons);
+                if (isClickTriggered) {
+                    let msg = "Location permission denied.";
+                    if (error.code === error.PERMISSION_DENIED) {
+                        msg = "Location permission denied. Please allow location access in your browser settings to see nearby salons.";
+                    }
+                    toast.error(msg);
+                    setIsDetectingLocation(false);
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    // Website loaded first geolocation trigger
+    useEffect(() => {
+        requestLocationAndFetchSalons(false);
+    }, []);
+
+    const handleRecommendedCardClick = (salon) => {
+        if (locationPermission !== 'granted') {
+            requestLocationAndFetchSalons(true);
+        } else if (salon.isApiSalon) {
+            handleSalonSelect(salon.originalSalon);
+        } else {
+            requestLocationAndFetchSalons(true);
+        }
+    };
+
+    const handleServiceCardClick = (service) => {
+        if (locationPermission !== 'granted') {
+            requestLocationAndFetchSalons(true);
+        } else {
+            toast.success(`Exploring ${service.name} services near you!`);
+        }
+    };
+
     const handleLocationSearch = async () => {
         console.log(searchData);
 
@@ -306,12 +429,6 @@ const HomeScreen = () => {
             }`;
     };
 
-    const recommendedSalons = [
-        { name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
-        { name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
-        { name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
-        { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
-    ];
 
     const servicesData = [
         { name: 'Salon', img: salonImg },
@@ -722,8 +839,12 @@ const HomeScreen = () => {
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
                 <h3 className="text-2xl font-bold mb-4">Recommended</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {recommendedSalons.map((salon, idx) => (
-                        <div key={idx} className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group">
+                    {recommendedList.map((salon, idx) => (
+                        <div 
+                            key={idx} 
+                            onClick={() => handleRecommendedCardClick(salon)}
+                            className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
+                        >
                             <div className="h-48 relative overflow-hidden">
                                 <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                                 <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
@@ -744,7 +865,11 @@ const HomeScreen = () => {
                 <h3 className="text-2xl font-bold mb-4">Services</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {servicesData.map((service) => (
-                        <div key={service.name} className="relative h-64 rounded-2xl overflow-hidden group bg-gray-100">
+                        <div 
+                            key={service.name} 
+                            onClick={() => handleServiceCardClick(service)}
+                            className="relative h-64 rounded-2xl overflow-hidden group bg-gray-100 cursor-pointer"
+                        >
                             <img src={service.img} alt={service.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
                             <div className="absolute bottom-6 left-6 text-white text-xl font-bold z-10">{service.name}</div>
