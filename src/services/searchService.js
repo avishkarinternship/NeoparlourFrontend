@@ -120,11 +120,16 @@ const searchService = {
         } else if (featureClass === 'area') {
           const normSelectedCity = normalizeCity(cityName);
           
-          // Verify if result belongs to selected metropolitan boundaries
-          const matchesCity = !cityName || 
-            normalizeCity(city).includes(normSelectedCity) || 
-            normSelectedCity.includes(normalizeCity(city)) || 
-            rawName.toLowerCase().includes(cityName.toLowerCase());
+          // Verify if result belongs to selected metropolitan boundaries (broad check across all address fields)
+          const matchesCity = !cityName || [
+            props.city,
+            props.town,
+            props.district,
+            props.state_district,
+            props.county,
+            props.state,
+            rawName
+          ].some(val => val && normalizeCity(val).includes(normSelectedCity));
           
           // Skip if suggestions are exactly duplicate of the city name
           if (cleanName.toLowerCase() === cityName.toLowerCase()) {
@@ -132,12 +137,16 @@ const searchService = {
           }
 
           if (cleanName && matchesCity) {
-            const uniqueKey = `${cleanName.toLowerCase()}_${city.toLowerCase()}`;
+            const subLocality = props.district || props.locality || props.suburb || '';
+            const parentCity = city && normalizeCity(city) !== normSelectedCity ? `${city}, ${cityName}` : (city || cityName);
+            const displayCity = subLocality ? `${subLocality}, ${parentCity}` : parentCity;
+
+            const uniqueKey = `${cleanName.toLowerCase()}_${displayCity.toLowerCase()}`;
             if (!seen.has(uniqueKey)) {
               seen.add(uniqueKey);
               results.push({ 
                 name: cleanName, 
-                city: city || cityName, 
+                city: displayCity, 
                 type: 'area' 
               });
             }
@@ -179,6 +188,77 @@ const searchService = {
     } catch (error) {
       console.error('Error searching external locations via Photon:', error);
       return [];
+    }
+  },
+
+  /**
+   * Reverse geocode coordinates to find city and area names using Komoot Photon API
+   * @param {number} lat - Latitude
+   * @param {number} lon - Longitude
+   * @returns {Promise<{city: string, area: string}>} Geocoded location result
+   */
+  reverseGeocode: async (lat, lon) => {
+    try {
+      const url = `https://photon.komoot.io/reverse`;
+      const response = await axios.get(url, {
+        params: { lat, lon }
+      });
+      
+      const features = response.data?.features || [];
+      if (features.length === 0) {
+        return { city: '', area: '' };
+      }
+      
+      const props = features[0].properties || {};
+      
+      // Helper to extract a clean city name from county or city properties
+      const extractCleanCity = (p) => {
+        const candidates = [p.county, p.city, p.town, p.state_district, p.district];
+        const stopwords = [
+          /\bsubdistrict\b/gi,
+          /\bdistrict\b/gi,
+          /\bcity\b/gi,
+          /\burban\b/gi,
+          /\bsuburban\b/gi,
+          /\btown\b/gi,
+          /\bdivision\b/gi,
+          /\bcorporation\b/gi,
+          /\bmunicipal\b/gi
+        ];
+        
+        for (const candidate of candidates) {
+          if (!candidate) continue;
+          
+          let name = candidate.split(',').pop().trim();
+          for (const regex of stopwords) {
+            name = name.replace(regex, '');
+          }
+          name = name.replace(/\s+/g, ' ').trim();
+          
+          if (name && name.length > 2) {
+            const lower = name.toLowerCase();
+            if (lower === 'bengaluru' || lower === 'bangalore') return 'Bengaluru';
+            if (lower === 'mumbai' || lower === 'bombay') return 'Mumbai';
+            if (lower === 'calcutta' || lower === 'kolkata') return 'Kolkata';
+            if (lower === 'madras' || lower === 'chennai') return 'Chennai';
+            return name;
+          }
+        }
+        return '';
+      };
+      
+      const city = extractCleanCity(props) || props.city || '';
+      
+      // Extract broader area name (prioritizing locality, suburb, or district over POI/building name)
+      const area = props.locality || props.suburb || props.district || props.name || props.street || '';
+      
+      return {
+        city: city.trim(),
+        area: area.trim()
+      };
+    } catch (error) {
+      console.error('Error reverse geocoding via Photon:', error);
+      throw error;
     }
   }
 };

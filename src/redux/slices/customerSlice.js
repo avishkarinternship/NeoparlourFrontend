@@ -54,8 +54,23 @@ export const searchSalonsByLocation = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch customer profile
+export const fetchCustomerProfile = createAsyncThunk(
+  'customer/fetchProfile',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/customer/${id}`);
+      localStorage.setItem('customerProfile', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer profile.');
+    }
+  }
+);
+
 const initialState = {
   user: JSON.parse(localStorage.getItem('customerUser')) || null,
+  profile: JSON.parse(localStorage.getItem('customerProfile')) || null,
   token: localStorage.getItem('customerToken') || null,
   isAuthenticated: !!localStorage.getItem('customerToken'),
   loading: false,
@@ -69,10 +84,12 @@ const customerSlice = createSlice({
   reducers: {
     logoutCustomer: (state) => {
       state.user = null;
+      state.profile = null;
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('customerToken');
       localStorage.removeItem('customerUser');
+      localStorage.removeItem('customerProfile');
     },
     clearCustomerError: (state) => {
       state.error = null;
@@ -124,6 +141,19 @@ const customerSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.salonResults = [];
+      })
+      // Fetch Profile
+      .addCase(fetchCustomerProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCustomerProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(fetchCustomerProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
   },
 });

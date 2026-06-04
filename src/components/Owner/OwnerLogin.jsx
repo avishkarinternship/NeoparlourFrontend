@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginCustomer, clearCustomerError } from '../../redux/slices/customerSlice';
+import { loginOwner, clearOwnerStaffError } from '../../redux/slices/ownerStaffSlice';
 import { User, Lock, Sparkles, AlertCircle } from 'lucide-react';
 
 // Using existing assets
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import rightBackground from '../../assets/CustomerLogin/right_background.jpg';
 
-const CustomerLogin = () => {
+const OwnerLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Pulling customer state from redux
-  const { loading, error } = useSelector((state) => state.customer);
+  // Pulling state from ownerStaff slice
+  const { loading, error } = useSelector((state) => state.ownerStaff);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -23,7 +23,7 @@ const CustomerLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    dispatch(clearCustomerError());
+    dispatch(clearOwnerStaffError());
   }, [dispatch]);
 
   const handleInputChange = (e) => {
@@ -33,8 +33,8 @@ const CustomerLogin = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(loginCustomer(formData)).unwrap().then(() => {
-      navigate('/');
+    dispatch(loginOwner(formData)).unwrap().then(() => {
+      navigate('/owner/dashboard');
     });
   };
 
@@ -54,13 +54,13 @@ const CustomerLogin = () => {
           {/* Heading */}
           <div className="mb-8">
             <span className="text-[10px] font-black tracking-[0.2em] text-[#ff0b01]/80 uppercase mb-2 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Premium Grooming
+              <Sparkles className="w-3.5 h-3.5" /> Management Portal
             </span>
             <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none mb-2">
-              Customer Login
+              Owner & Staff Login
             </h2>
             <p className="text-gray-400 font-medium text-xs">
-              Sign in to view nearby salons, book appointments, and manage your beauty services.
+              Sign in to manage your salon's dashboard, bookings, and services.
             </p>
           </div>
 
@@ -83,7 +83,7 @@ const CustomerLogin = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                placeholder="Username / Phone" 
+                placeholder="Username / Mobile" 
                 required
                 className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
               />
@@ -151,10 +151,10 @@ const CustomerLogin = () => {
             <div className="text-xs space-y-2 border-t pt-4">
               <a href="#" className="text-[#ff0b01] font-bold block hover:underline">Forgot Password?</a>
               <p className="text-gray-400 font-semibold">
-                Are you an Owner or Staff? <Link to="/owner/login" className="text-[#ff0b01] font-black hover:underline ml-1.5">Owner Login</Link>
+                Are you a Customer? <Link to="/customer/login" className="text-[#ff0b01] font-black hover:underline ml-1.5">Customer Login</Link>
               </p>
               <p className="text-gray-400 font-semibold">
-                Don't have account? <Link to="/register" className="text-[#ff0b01] font-black hover:underline ml-1.5">Create Account</Link>
+                New Salon Partner? <Link to="/owner/register" className="text-[#ff0b01] font-black hover:underline ml-1.5">Register Salon</Link>
               </p>
             </div>
           </div>
@@ -184,4 +184,4 @@ const CustomerLogin = () => {
   );
 };
 
-export default CustomerLogin;
+export default OwnerLogin;

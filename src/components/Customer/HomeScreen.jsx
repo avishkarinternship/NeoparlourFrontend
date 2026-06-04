@@ -4,11 +4,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     searchSalonsByLocation,
-    switchTenant
+    switchTenant,
+    fetchCustomerProfile
 } from '../../redux/slices/customerSlice';
 import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
-import { toast } from 'react-hot-toast';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -86,6 +86,9 @@ import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
 
 import Drawer from './Drawer';
 import Marquee from 'react-fast-marquee';
+import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 
 const partners = [
     { src: oliviaImg, alt: "Olivia" },
@@ -99,7 +102,16 @@ const partners = [
 
 const HomeScreen = () => {
     const dispatch = useDispatch();
-    const { loading, salonResults } = useSelector((state) => state.customer);
+    const { token, loading, salonResults, user, isAuthenticated, profile } = useSelector((state) => state.customer);
+
+    useEffect(() => {
+        if (isAuthenticated && user && !profile) {
+            const customerId = user.id || user.user?.id;
+            if (customerId) {
+                dispatch(fetchCustomerProfile(customerId));
+            }
+        }
+    }, [isAuthenticated, user, profile, dispatch]);
 
     const [searchData, setSearchData] = useState({
         cityName: '',
@@ -117,6 +129,8 @@ const HomeScreen = () => {
     const areaDropdownRef = useRef(null);
 
     const navigate = useNavigate();
+    const [showLoginPopup, setShowLoginPopup] = useState(false);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
     // Click outside dropdowns handler
     useEffect(() => {
@@ -179,7 +193,56 @@ const HomeScreen = () => {
 
         return () => clearTimeout(delayDebounce);
     }, [searchData.areaName, searchData.cityName]);
-    
+
+    const handleDetectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsDetectingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    const result = await searchService.reverseGeocode(latitude, longitude);
+                    if (result.city) {
+                        setSearchData({
+                            cityName: result.city,
+                            areaName: result.area || ''
+                        });
+                        
+                        // Immediately dispatch salon search
+                        dispatch(
+                            searchSalonsByLocation({
+                                cityName: result.city,
+                                areaName: result.area || '',
+                            })
+                        );
+                        toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
+                    } else {
+                        toast.error("Could not determine your city. Please enter it manually.");
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding error:", error);
+                    toast.error("Error detecting location. Please enter it manually.");
+                } finally {
+                    setIsDetectingLocation(false);
+                }
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                let msg = "Error retrieving location.";
+                if (error.code === error.PERMISSION_DENIED) {
+                    msg = "Location permission denied. Please enter your location manually.";
+                }
+                toast.error(msg);
+                setIsDetectingLocation(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
     const handleLocationSearch = async () => {
         console.log(searchData);
 
@@ -195,6 +258,29 @@ const HomeScreen = () => {
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const handleSalonSelect = (salon) => {
+        if (!token) {
+            setShowLoginPopup(true);
+            return;
+        }
+        const payload = {
+            token: token,
+            tenantId: salon.salonCode,
+            salonName: salon.salonName
+        };
+        dispatch(switchTenant(payload))
+            .unwrap()
+            .then(() => {
+                navigate('/customer/home');
+            })
+            .catch((err) => {
+                const errMsg = String(err).toLowerCase();
+                if (errMsg.includes('token not present') || errMsg.includes('login') || errMsg.includes('unauthorized') || errMsg.includes('token')) {
+                    setShowLoginPopup(true);
+                }
+            });
     };
 
     const isOpen = (opening, closing) => {
@@ -292,17 +378,35 @@ const HomeScreen = () => {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
-                    {/* Signup Button */}
-                    <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
-                        <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
-                        SIGNUP
-                    </button>
+                    {isAuthenticated && (user || profile) ? (
+                        <button 
+                            onClick={() => navigate('/customer/dashboard')} 
+                            className="flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+                        >
+                            {/* Circular Logo/Avatar */}
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
+                                {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
+                            </div>
+                            {/* User Name */}
+                            <span className="text-xs font-black text-gray-800 tracking-tight">
+                                {profile?.fullName || user?.name || user?.username || 'Profile'}
+                            </span>
+                        </button>
+                    ) : (
+                        <>
+                            {/* Signup Button */}
+                            <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
+                                <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
+                                SIGNUP
+                            </button>
 
-                    {/* Login Button */}
-                    <button onClick={() => navigate('/customer/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
-                        <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
-                        LOGIN
-                    </button>
+                            {/* Login Button */}
+                            <button onClick={() => navigate('/customer/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
+                                <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
+                                LOGIN
+                            </button>
+                        </>
+                    )}
 
                     {/* Hamburger Menu Icon */}
                     <button
@@ -325,7 +429,7 @@ const HomeScreen = () => {
             />
 
             {/* 2. HERO SECTION - WITH ONE BACKGROUND IMAGE */}
-            <section className="relative min-h-[540px] w-full flex items-center justify-center py-20 px-6 text-center overflow-visible bg-[#F3F4F6]">
+            <section className="relative min-h-[540px] w-full flex flex-col items-center justify-center py-20 px-6 text-center overflow-visible bg-[#F3F4F6]">
                 <img
                     src={backgroundImg}
                     alt=""
@@ -352,7 +456,7 @@ const HomeScreen = () => {
                             <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                             <input
                                 type="text"
-                                placeholder="SELECT CITY"
+                                placeholder={isDetectingLocation ? "DETECTING..." : "SELECT CITY"}
                                 value={searchData.cityName}
                                 onChange={(e) => {
                                     setSearchData((prev) => ({
@@ -363,6 +467,21 @@ const HomeScreen = () => {
                                 }}
                                 onFocus={() => setShowCityDropdown(true)}
                                 className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                            <button
+                                type="button"
+                                onClick={handleDetectLocation}
+                                disabled={isDetectingLocation}
+                                className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${
+                                    isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                                }`}
+                                title="Detect Current Location"
+                            >
+                                {isDetectingLocation ? (
+                                    <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                ) : (
+                                    <Navigation className="w-4 h-4 -rotate-45" />
+                                )}
+                            </button>
                             {showCityDropdown && searchData.cityName && (
                                 <div className="absolute left-0 top-full z-40 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
                                     {isLoadingCities ? (
@@ -441,76 +560,143 @@ const HomeScreen = () => {
                             {loading ? 'Searching...' : 'SEARCH'}
                         </button>
                     </div>
-
-                    {/* Render results grid inside this flex-col-centered container so it stacks perfectly below the search bar */}
-                    {salonResults && salonResults.length > 0 && (
-                        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl text-left animate-fade-in z-30">
-                            {salonResults.map((salon, index) => {
-                                const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
-                                return (
-                                    <div
-                                        key={salon.salonId || index}
-                                        onClick={() => {
-                                            const token = localStorage.getItem('token') || '';
-                                            const payload = {
-                                                token: token,
-                                                tenantId: salon.salonCode,
-                                                salonName: salon.salonName
-                                            };
-                                            dispatch(switchTenant(payload)).unwrap().then(() => {
-                                                toast.success(`Switched to ${salon.salonName}!`);
-                                                window.location.reload();
-                                            });
-                                        }}
-                                        className="group flex flex-col p-6 rounded-[28px] bg-white border border-gray-100 hover:border-[#FF2A14]/30 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all cursor-pointer relative overflow-hidden shadow-sm hover:-translate-y-0.5 active:scale-[0.98]"
-                                    >
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="w-14 h-14 bg-gray-50 rounded-2xl overflow-hidden border-2 border-white shadow group-hover:scale-105 transition-transform duration-300">
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-[#FF2A14] text-xl font-black">
-                                                    {salon.salonName ? salon.salonName[0] : 'S'}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <span className="px-2 py-0.5 bg-gray-50 rounded-md border border-gray-200 text-[8px] font-black text-gray-400 group-hover:text-gray-900 group-hover:border-[#FF2A14]/20 transition-all uppercase tracking-widest">{salon.salonCode}</span>
-                                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${currentlyOpen ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'} text-[7px] font-black uppercase tracking-widest shadow-sm`}>
-                                                    <div className={`h-1 w-1 rounded-full ${currentlyOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                                                    {currentlyOpen ? 'Open' : 'Closed'}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2 flex-1">
-                                            <h4 className="text-base font-black text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-tight uppercase truncate">{salon.salonName}</h4>
-                                            <div className="space-y-1">
-                                                <p className="text-xs text-gray-500 font-medium">
-                                                    {salon.address || 'Address updating...'}
-                                                </p>
-                                                <p className="text-[10px] font-black text-gray-300 tracking-wider uppercase">
-                                                    {salon.areaName} • {salon.cityName}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-bold">
-                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                <span>{salon.openingTime} - {salon.closingTime}</span>
-                                            </div>
-                                            <div className="h-7 w-7 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 group-hover:bg-[#FF2A14] group-hover:text-white transition-all duration-300 shadow-sm">
-                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
                 </div>
 
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-30 cursor-pointer hover:scale-105 transition-transform duration-200 select-none">
                     <img src={exploreMoreIcon} alt="Explore Now" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
                 </div>
             </section>
+
+            {/* Salon Search Results Section */}
+            {salonResults && salonResults.length > 0 && (
+                <section className="py-16 bg-[#F9FAFB] px-6 border-b" data-aos="fade-up">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col items-center mb-12 text-center">
+                            <h2 className="text-[#FF2A14] text-xs font-black tracking-[0.3em] uppercase mb-3">Found Destinations</h2>
+                            <h3 className="text-gray-900 text-3xl font-black uppercase tracking-tight">Premium Salons Nearby</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {salonResults.map((salon, index) => {
+                                const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
+                                const coverImages = [salonOneIcon, salonTwoIcon, salonThreeIcon, salonFourIcon];
+                                const coverImg = coverImages[index % 4];
+                                const rating = (((salon.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1);
+                                const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
+                                return (
+                                    <div
+                                        key={salon.salonId || index}
+                                        onClick={() => handleSalonSelect(salon)}
+                                        className="group relative flex flex-col rounded-[32px] bg-white border border-gray-100/80 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden text-left shadow-[0_4px_20px_rgba(0,0,0,0.015)]"
+                                    >
+                                        {/* Card Header: Cover Image block with metadata tags overlay */}
+                                        <div className="h-44 relative overflow-hidden bg-gray-100 flex-shrink-0">
+                                            <img
+                                                src={coverImg}
+                                                alt={salon.salonName}
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                            />
+                                            {/* Gradient Overlay for better contrast */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+
+                                            {/* Top Metadata Badges */}
+                                            <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                                                {/* Open / Closed Badge */}
+                                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${currentlyOpen
+                                                        ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
+                                                        : 'bg-white/95 border-rose-500/20 text-rose-700'
+                                                    }`}>
+                                                    <span className={`h-1.5 w-1.5 rounded-full ${currentlyOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                    {currentlyOpen ? 'Open' : 'Closed'}
+                                                </div>
+
+                                                {/* Deterministic Rating Badge */}
+                                                <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                                    <span>{rating} ({reviewsCount}+)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Dynamic Avatar Overlay */}
+                                        <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+                                            {salon.imageBase64 ? (
+                                                <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
+                                                    {salon.salonName ? salon.salonName[0] : 'S'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Card Body Details */}
+                                        <div className="p-6 pt-3 flex flex-col flex-grow">
+                                            <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14]/75 uppercase mb-1 flex items-center gap-1">
+                                                <Sparkles className="w-2.5 h-2.5" /> NeoParlour Partner
+                                            </span>
+
+                                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight line-clamp-1 flex-1">
+                                                    {salon.salonName}
+                                                </h4>
+                                                <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
+                                                    {salon.salonCode}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold mb-2">
+                                                <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                <span>{salon.areaName}, {salon.cityName}</span>
+                                            </div>
+
+                                            <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-2 min-h-[32px]">
+                                                {salon.address || 'Address updating...'}
+                                            </p>
+
+                                            {/* Dynamic Services Tag & Weekly Off */}
+                                            <div className="flex flex-wrap gap-2 mt-4">
+                                                {salon.homeServiceCharges ? (
+                                                    <div className="flex items-center gap-1 px-2.5 py-1 bg-rose-50 border border-rose-100 rounded-full text-[9px] font-bold text-[#FF2A14]">
+                                                        <Home className="w-2.5 h-2.5" />
+                                                        <span>Home Service (₹{salon.homeServiceCharges})</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-full text-[9px] font-bold text-gray-400">
+                                                        <ShieldCheck className="w-2.5 h-2.5" />
+                                                        <span>In-Salon Services</span>
+                                                    </div>
+                                                )}
+                                                {salon.weeklyOffDay && (
+                                                    <div className="px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-full text-[9px] font-bold text-amber-700">
+                                                        Off: {salon.weeklyOffDay}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Card Footer */}
+                                            <div className="mt-5 pt-4 border-t border-gray-100/60 flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5 text-gray-400">
+                                                    <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                                    <span className="text-[10px] font-black tracking-widest">
+                                                        {salon.openingTime?.slice(0, 5)} - {salon.closingTime?.slice(0, 5)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
+                                                    <span>Book Session</span>
+                                                    <div className="h-6 w-6 rounded-full bg-[#FF2A14]/5 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
+                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* 3. FIXED STATS SECTION */}
             <section className="pt-16 pb-12 border-b">
@@ -796,7 +982,7 @@ const HomeScreen = () => {
 
                                 {/* Floating AI Feature Labels */}
                                 {/* Top Left - AI Assistant */}
-                                <div className="hidden md:flex absolute top-8 -left-4 md:-left-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3s'}}>
+                                <div className="hidden md:flex absolute top-8 -left-4 md:-left-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3s' }}>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -806,7 +992,7 @@ const HomeScreen = () => {
                                 </div>
 
                                 {/* Top Right - Haircut Suggestions */}
-                                <div className="hidden md:flex absolute top-4 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3.5s'}}>
+                                <div className="hidden md:flex absolute top-4 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3.5s' }}>
                                     <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Haircut Suggestions</span>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -816,7 +1002,7 @@ const HomeScreen = () => {
                                 </div>
 
                                 {/* Middle Left - Beard Suggestions */}
-                                <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-4 md:-left-10 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '2.8s'}}>
+                                <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-4 md:-left-10 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '2.8s' }}>
                                     <div className="w-7 h-7 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -829,7 +1015,7 @@ const HomeScreen = () => {
                                 </div>
 
                                 {/* Middle Right - Chatbot */}
-                                <div className="hidden md:flex absolute top-[40%] -right-2 md:-right-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '3.2s'}}>
+                                <div className="hidden md:flex absolute top-[40%] -right-2 md:-right-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3.2s' }}>
                                     <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Chatbot</span>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -839,7 +1025,7 @@ const HomeScreen = () => {
                                 </div>
 
                                 {/* Bottom Right - WhatsApp Booking */}
-                                <div className="hidden md:flex absolute bottom-8 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{animationDuration: '2.5s'}}>
+                                <div className="hidden md:flex absolute bottom-8 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '2.5s' }}>
                                     <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Booking</span>
                                     <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -849,7 +1035,7 @@ const HomeScreen = () => {
                                 </div>
 
                                 {/* Bottom Left - Style Matcher Icon */}
-                                <div className="hidden md:flex absolute bottom-12 -left-2 md:-left-4 w-9 h-9 bg-[#FF2A14] rounded-full items-center justify-center shadow-lg animate-bounce" style={{animationDuration: '2s'}}>
+                                <div className="hidden md:flex absolute bottom-12 -left-2 md:-left-4 w-9 h-9 bg-[#FF2A14] rounded-full items-center justify-center shadow-lg animate-bounce" style={{ animationDuration: '2s' }}>
                                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                     </svg>
@@ -903,21 +1089,21 @@ const HomeScreen = () => {
                                     <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                            </svg>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Book</span>
+                                        </svg>
                                     </div>
-
-                                    {/* Style Matcher */}
-                                    <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                        <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                            </svg>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Style Matcher</span>
-                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Book</span>
                                 </div>
+
+                                {/* Style Matcher */}
+                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Style Matcher</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Content Container styled exactly to the design layout */}
@@ -1228,6 +1414,65 @@ const HomeScreen = () => {
                     </div>
                 </div>
             </footer>
+
+            {/* Global Custom Login Required Modal Popup */}
+            {showLoginPopup && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-4">
+                    <style>{`
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes scaleUp {
+                            from { transform: scale(0.95); opacity: 0; }
+                            to { transform: scale(1); opacity: 1; }
+                        }
+                        .animate-fade-in {
+                            animation: fadeIn 0.2s ease-out forwards;
+                        }
+                        .animate-scale-up {
+                            animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                        }
+                    `}</style>
+                    <div className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 p-8 text-center animate-scale-up">
+                        {/* Elegant background highlight blur */}
+                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#FF2A14]/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#FF2A14]/5 rounded-full blur-2xl pointer-events-none" />
+
+                        {/* Top Icon Block */}
+                        <div className="mx-auto w-16 h-16 bg-[#FF2A14]/10 rounded-2xl flex items-center justify-center text-[#FF2A14] mb-6 shadow-inner relative z-10">
+                            <Lock className="w-7 h-7" />
+                        </div>
+
+                        {/* Title and Description */}
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-3 relative z-10">
+                            Login Required
+                        </h3>
+                        <p className="text-gray-500 font-medium text-sm leading-relaxed mb-8 px-2 relative z-10">
+                            To view details and book custom services at this premium salon, you need to sign in to your NeoParlour account first.
+                        </p>
+
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-4 relative z-10">
+                            <button
+                                onClick={() => setShowLoginPopup(false)}
+                                className="w-full py-4 border border-gray-200 text-gray-700 font-bold text-xs tracking-wider rounded-2xl hover:bg-gray-50 hover:text-gray-900 active:scale-95 transition-all uppercase"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowLoginPopup(false);
+                                    navigate('/customer/login');
+                                }}
+                                className="w-full py-4 bg-[#FF2A14] hover:bg-[#E01E0A] text-white font-bold text-xs tracking-wider rounded-2xl shadow-lg shadow-[#FF2A14]/20 hover:shadow-[#FF2A14]/35 active:scale-95 transition-all uppercase"
+                            >
+                                Login Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

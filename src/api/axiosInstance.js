@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://uat.neoparlour.com/api'
+  ? 'https://sb.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
@@ -36,14 +36,43 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    const errorData = error.response?.data;
+  async (error) => {
+    // Bypass global toast notifications for canceled/aborted requests
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
+    let errorData = error.response?.data;
+
+    // Handle Blob error responses (e.g. when responseType is 'blob' but an error occurred)
+    if (errorData instanceof Blob) {
+      try {
+        const text = await errorData.text();
+        errorData = JSON.parse(text);
+      } catch (e) {
+        // Fallback if parsing fails
+      }
+    }
+
+    // Force default rate limit message for status 429
+    if (error.response?.status === 429) {
+      const message = errorData?.message || "Rate limit exceeded. Please try again later.";
+      errorData = { ...errorData, message };
+    }
 
     // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... }
     const errorMessage = errorData?.message || error.message || 'Something went wrong';
 
-    // Show toast notification
-    toast.error(errorMessage, {
+    // Bypass global toast for switch-tenant errors (so they can show popup instead)
+    const isSwitchTenant = error.config?.url?.includes('/customer/switch-tenant');
+    const isTokenNotPresent = errorMessage?.toLowerCase().includes('token not present') || errorMessage?.toLowerCase().includes('customer token not present');
+    const is400Error = error.response?.status === 400;
+
+    if (isSwitchTenant && (is400Error || isTokenNotPresent)) {
+      return Promise.reject(error);
+    }
+
+    const toastOptions = {
       duration: 5000, // Increased duration
       style: {
         background: '#1a1a1a',
@@ -60,7 +89,15 @@ axiosInstance.interceptors.response.use(
         primary: '#ff0b01',
         secondary: '#fff',
       },
-    });
+    };
+
+    // Deduplicate rate limit toasts to prevent stacking multiple alerts
+    if (error.response?.status === 429) {
+      toastOptions.id = 'rate-limit-exceeded';
+    }
+
+    // Show toast notification
+    toast.error(errorMessage, toastOptions);
 
     return Promise.reject(error);
   }

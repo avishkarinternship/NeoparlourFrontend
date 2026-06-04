@@ -11,7 +11,24 @@ import appointmentActivityIcon from '../../assets/Owner/Dashboard/CenterScreen/a
 
 const Dashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const getFirstDayOfMonth = () => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month}-01`;
+    };
+
+    const getTodayDateString = () => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const [viewType, setViewType] = useState('week');
+    const [customStartDate, setCustomStartDate] = useState(getFirstDayOfMonth());
+    const [customEndDate, setCustomEndDate] = useState(getTodayDateString());
     const [graphData, setGraphData] = useState([]);
     const [loadingGraph, setLoadingGraph] = useState(true);
 
@@ -20,23 +37,47 @@ const Dashboard = () => {
 
     useEffect(() => {
         let isMounted = true;
-        setLoadingGraph(true);
-        axiosInstance.get(`/revenue/graph?viewType=${viewType}`)
-            .then(res => {
-                if (isMounted && res.data) {
-                    setGraphData(res.data);
-                }
-            })
-            .catch(err => {
-                console.error("Failed to fetch revenue graph data:", err);
-            })
-            .finally(() => {
-                if (isMounted) setLoadingGraph(false);
-            });
+        
+        let shouldCall = true;
+        let effectiveEndDate = customEndDate;
+        
+        if (viewType === 'custom') {
+            if (!customStartDate) {
+                shouldCall = false;
+            } else if (!customEndDate) {
+                effectiveEndDate = getTodayDateString();
+            }
+        }
+        
+        if (shouldCall) {
+            setLoadingGraph(true);
+            const params = { viewType };
+            if (viewType === 'custom') {
+                if (customStartDate) params.startDate = customStartDate;
+                if (effectiveEndDate) params.endDate = effectiveEndDate;
+            }
+            
+            axiosInstance.get(`/revenue/graph`, { params })
+                .then(res => {
+                    if (isMounted && res.data) {
+                        setGraphData(res.data);
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to fetch revenue graph data:", err);
+                })
+                .finally(() => {
+                    if (isMounted) setLoadingGraph(false);
+                });
+        } else {
+            setGraphData([]);
+            setLoadingGraph(false);
+        }
+        
         return () => {
             isMounted = false;
         };
-    }, [viewType]);
+    }, [viewType, customStartDate, customEndDate]);
 
     useEffect(() => {
         let isMounted = true;
@@ -123,7 +164,7 @@ const Dashboard = () => {
                                         <p className="text-[11px] text-gray-400 font-medium">Revenue Analysis</p>
                                     </div>
                                     <div className="flex bg-gray-100 p-0.5 rounded-lg text-[10px] font-bold">
-                                        {['day', 'week', 'month', 'year'].map((type) => (
+                                        {['day', 'week', 'month', 'year', 'custom'].map((type) => (
                                             <button
                                                 key={type}
                                                 type="button"
@@ -139,6 +180,29 @@ const Dashboard = () => {
                                         ))}
                                     </div>
                                 </div>
+                                {viewType === 'custom' && (
+                                    <div className="flex items-center space-x-3 mt-3 bg-gray-50 border border-gray-200 p-3 rounded-xl max-w-xs">
+                                        <div className="flex-1">
+                                            <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 block">From</label>
+                                            <input 
+                                                type="date"
+                                                value={customStartDate}
+                                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded-md text-[10px] font-semibold px-2 py-1 focus:outline-none focus:border-red-500 text-gray-700"
+                                            />
+                                        </div>
+                                        <div className="text-gray-300 text-[10px] mt-3">to</div>
+                                        <div className="flex-1">
+                                            <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 block">To</label>
+                                            <input 
+                                                type="date"
+                                                value={customEndDate}
+                                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                                className="w-full bg-white border border-gray-200 rounded-md text-[10px] font-semibold px-2 py-1 focus:outline-none focus:border-red-500 text-gray-700"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="text-2xl font-bold text-red-600 mt-3 mb-4">
                                     ₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>

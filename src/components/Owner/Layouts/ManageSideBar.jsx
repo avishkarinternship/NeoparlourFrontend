@@ -79,7 +79,7 @@ const ManageSideBar = () => {
             <button
               key={idx}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-tight transition-all duration-150 relative
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-tight transition-all duration-150 relative sidebar-btn
               
               ${isActive
                   ? 'bg-red-50 text-red-600 shadow-sm'
@@ -95,8 +95,8 @@ const ManageSideBar = () => {
               <img
                 src={item.icon}
                 alt={item.label}
-                className={`w-[18px] h-[18px] object-contain transition-opacity
-                ${isActive ? 'opacity-100' : 'opacity-60'}`}
+                className={`w-[18px] h-[18px] object-contain transition-opacity sidebar-icon
+                ${isActive ? 'active-icon-glow opacity-100' : 'opacity-60'}`}
               />
 
               <span>{item.label}</span>

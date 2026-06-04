@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Scissors,
     Search,
@@ -15,6 +15,8 @@ import {
     Menu
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchCustomerProfile } from '../../redux/slices/customerSlice';
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import signupIcon from '../../assets/Customer/Navbar/signup_icon.svg';
@@ -36,6 +38,17 @@ const AboutUs = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const currentPath = location.pathname;
+    const dispatch = useDispatch();
+    const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
+
+    useEffect(() => {
+        if (isAuthenticated && user && !profile) {
+            const customerId = user.id || user.user?.id;
+            if (customerId) {
+                dispatch(fetchCustomerProfile(customerId));
+            }
+        }
+    }, [isAuthenticated, user, profile, dispatch]);
 
     const navLinkClass = (paths) => {
         const isActive = paths.some(p => currentPath === p);
@@ -71,17 +84,35 @@ const AboutUs = () => {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
-                    {/* Signup Button */}
-                    <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
-                        <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
-                        SIGNUP
-                    </button>
+                    {isAuthenticated && (user || profile) ? (
+                        <button 
+                            onClick={() => navigate('/customer/dashboard')} 
+                            className="flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+                        >
+                            {/* Circular Logo/Avatar */}
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
+                                {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
+                            </div>
+                            {/* User Name */}
+                            <span className="text-xs font-black text-gray-800 tracking-tight">
+                                {profile?.fullName || user?.name || user?.username || 'Profile'}
+                            </span>
+                        </button>
+                    ) : (
+                        <>
+                            {/* Signup Button */}
+                            <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
+                                <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
+                                SIGNUP
+                            </button>
 
-                    {/* Login Button */}
-                    <button onClick={() => navigate('/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
-                        <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
-                        LOGIN
-                    </button>
+                            {/* Login Button */}
+                            <button onClick={() => navigate('/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
+                                <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
+                                LOGIN
+                            </button>
+                        </>
+                    )}
 
                     {/* Hamburger Menu Icon */}
                     <button

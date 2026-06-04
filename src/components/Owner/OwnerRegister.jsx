@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
+import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration, loginOwner } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Lock, Building, MapPin, Clock, ShieldCheck, Sparkles } from 'lucide-react';
+
+// Locations Data
+import locationData from '../../data/locations.json';
 
 // Using existing assets
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
-const CustomerRegister = () => {
+const OwnerRegister = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, otpSent } = useSelector((state) => state.ownerStaff);
@@ -18,6 +21,12 @@ const CustomerRegister = () => {
     name: '',
     email: '',
     phone: '',
+    salonName: '',
+    cityName: '',
+    areaName: '',
+    specificAddress: '',
+    openingTime: '09:00',
+    closingTime: '21:00',
     password: '',
     confirmPassword: '',
   });
@@ -25,7 +34,25 @@ const CustomerRegister = () => {
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
+
+  const cityDropdownRef = useRef(null);
+  const areaDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setShowCityDropdown(false);
+      }
+      if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+        setShowAreaDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -39,12 +66,23 @@ const CustomerRegister = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Search logic for City
+  const filteredCities = locationData.cities.filter(city => 
+    city.name.toLowerCase().includes(formData.cityName.toLowerCase())
+  );
+
+  // Search logic for Area
+  const selectedCityData = locationData.cities.find(c => c.name.toLowerCase() === formData.cityName.toLowerCase());
+  const filteredAreas = selectedCityData ? selectedCityData.areas.filter(area => 
+    area.toLowerCase().includes(formData.areaName.toLowerCase())
+  ) : [];
+
   const handleSendOtp = () => {
     if (!formData.phone) {
       toast.error('Please enter a mobile number first.');
       return;
     }
-    dispatch(sendRegisterOtp({ mobile: formData.phone, type: 'CUSTOMER' })).unwrap().then(() => {
+    dispatch(sendRegisterOtp({ mobile: formData.phone, type: 'OWNER' })).unwrap().then(() => {
       toast.success('OTP sent successfully!');
     });
   };
@@ -74,16 +112,41 @@ const CustomerRegister = () => {
 
     const userDTO = {
       ...formData,
-      role: 'CUSTOMER',
+      role: 'SALON_OWNER',
+      openingTime: formData.openingTime + ':00',
+      closingTime: formData.closingTime + ':00',
       tncAccepted: true,
       tncAcceptedAt: new Date().toISOString(),
       tncVersion: '1.0',
     };
 
-    dispatch(registerWithOtp({ userDTO, otp, type: 'CUSTOMER' })).unwrap()
+    dispatch(registerWithOtp({ userDTO, otp, type: 'OWNER' })).unwrap()
       .then(() => {
-        toast.success('Registration successful! Please login.');
-        navigate('/customer/login');
+        const salonDetails = {
+          salonName: formData.salonName,
+          salonAddress: `${formData.specificAddress || ''}, ${formData.areaName || ''}, ${formData.cityName || ''}`,
+          salonEmail: formData.email,
+          openingTime: formData.openingTime + ':00',
+          closingTime: formData.closingTime + ':00',
+          latitude: 0.0,
+          longitude: 0.0,
+          homeServiceCharges: 0.0,
+          imageBase64: ""
+        };
+        localStorage.setItem('tempSalonDetails', JSON.stringify(salonDetails));
+        localStorage.setItem('tempRegisterPhone', formData.phone);
+        localStorage.setItem('tempRegisterPassword', formData.password);
+
+        dispatch(loginOwner({ username: formData.phone, password: formData.password })).unwrap()
+          .then(() => {
+            toast.success('Registration successful! Redirecting to Subscription Plans...');
+            navigate('/subscription-plans', { state: { salonDetails } });
+          })
+          .catch((err) => {
+            console.error('Auto login failed:', err);
+            toast.error('Registration succeeded, but auto-login failed. Please login.');
+            navigate('/owner/login');
+          });
       })
       .catch((err) => {
         console.error('Registration failed:', err);
@@ -106,15 +169,15 @@ const CustomerRegister = () => {
         </div>
 
         {/* Scrollable Form Content */}
-        <div className="flex-1 overflow-y-auto px-8 sm:px-12 lg:px-16 py-10 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-8 sm:px-12 lg:px-16 py-8 custom-scrollbar">
           <div className="w-full max-w-[540px] mx-auto lg:mx-0">
             
             <div className="mb-8">
               <span className="text-[10px] font-black tracking-[0.2em] text-[#ff0b01]/80 uppercase mb-2 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Luxury Grooming Awaits
+                <Sparkles className="w-3.5 h-3.5" /> Premium Partner Network
               </span>
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase mb-1">Create Customer Account</h2>
-              <p className="text-gray-400 font-medium text-xs">Join NeoParlour to discover and book sessions at Pune's premium salons.</p>
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase mb-1">Owner & Salon Registration</h2>
+              <p className="text-gray-400 font-medium text-xs">Establish your luxury presence on NeoParlour and reach new customers.</p>
             </div>
 
             {error && (
@@ -125,9 +188,9 @@ const CustomerRegister = () => {
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               
-              {/* Profile Details */}
+              {/* Profile Information Section */}
               <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-gray-300 tracking-[0.25em] uppercase border-b pb-1.5">Personal Details</h3>
+                <h3 className="text-[10px] font-black text-gray-300 tracking-[0.25em] uppercase border-b pb-1.5">Owner Details</h3>
                 
                 {/* User Name */}
                 <div className="relative group">
@@ -139,43 +202,194 @@ const CustomerRegister = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Full Name" 
+                    placeholder="Owner Full Name" 
                     required
                     className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                   />
                 </div>
 
-                {/* Email Id */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Email Id */}
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
+                      <Mail className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Email Address" 
+                      required
+                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                    />
+                  </div>
+
+                  {/* Mobile Number */}
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
+                      <Phone className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="tel" 
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Mobile Number" 
+                      required
+                      disabled={otpSent}
+                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold disabled:opacity-50" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Salon Details Section */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-[10px] font-black text-gray-300 tracking-[0.25em] uppercase border-b pb-1.5">Salon Information</h3>
+                
+                {/* Salon Name */}
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
-                    <Mail className="w-5 h-5 stroke-[2]" />
+                    <Building className="w-5 h-5 stroke-[2]" />
                   </div>
                   <input 
-                    type="email" 
-                    name="email"
-                    value={formData.email}
+                    type="text" 
+                    name="salonName"
+                    value={formData.salonName}
                     onChange={handleInputChange}
-                    placeholder="Email Address" 
+                    placeholder="Salon Name" 
                     required
                     className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                   />
                 </div>
 
-                {/* Mobile Number */}
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
-                    <Phone className="w-5 h-5 stroke-[2]" />
+                {/* Cities Dropdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative" ref={cityDropdownRef}>
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
+                      <MapPin className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="cityName"
+                      value={formData.cityName}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        setShowCityDropdown(true);
+                      }}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Select City" 
+                      required
+                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                    />
+                    {showCityDropdown && formData.cityName && (
+                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                        {filteredCities.length > 0 ? (
+                          filteredCities.map((city, idx) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
+                                setShowCityDropdown(false);
+                              }}
+                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                            >
+                              {city.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <input 
-                    type="tel" 
-                    name="phone"
-                    value={formData.phone}
+
+                  {/* Areas Dropdown */}
+                  <div className="relative" ref={areaDropdownRef}>
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
+                      <MapPin className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="areaName"
+                      value={formData.areaName}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        setShowAreaDropdown(true);
+                      }}
+                      onFocus={() => setShowAreaDropdown(true)}
+                      placeholder="Select Area" 
+                      required
+                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                    />
+                    {showAreaDropdown && formData.areaName && (
+                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                        {filteredAreas.length > 0 ? (
+                          filteredAreas.map((area, idx) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, areaName: area }));
+                                setShowAreaDropdown(false);
+                              }}
+                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                            >
+                              {area}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Specific Address */}
+                <div className="relative group">
+                  <div className="absolute top-4 left-5 text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
+                    <MapPin className="w-5 h-5 stroke-[2]" />
+                  </div>
+                  <textarea 
+                    name="specificAddress"
+                    value={formData.specificAddress}
                     onChange={handleInputChange}
-                    placeholder="Mobile Number" 
+                    placeholder="Specific Address (Shop No, Building, Landmark...)" 
                     required
-                    disabled={otpSent}
-                    className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold disabled:opacity-50" 
+                    rows="2"
+                    className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold resize-none" 
                   />
+                </div>
+
+                {/* Times */}
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="text-[9px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[#ff0b01]" /> Opening Time
+                    </label>
+                    <input 
+                      type="time" 
+                      name="openingTime"
+                      value={formData.openingTime}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white font-bold"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-[9px] font-black text-gray-400 mb-1.5 block uppercase tracking-widest flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[#ff0b01]" /> Closing Time
+                    </label>
+                    <input 
+                      type="time" 
+                      name="closingTime"
+                      value={formData.closingTime}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white font-bold"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -287,7 +501,7 @@ const CustomerRegister = () => {
                 <label htmlFor="terms" className="text-xs text-gray-400 cursor-pointer font-bold">
                   I agree with the{' '}
                   <Link 
-                    to="/customer/terms-and-conditions" 
+                    to="/owner/terms-and-conditions" 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-[#ff0b01] font-black hover:underline"
@@ -300,7 +514,7 @@ const CustomerRegister = () => {
                 <p className="text-[10px] text-red-500 mb-4 ml-9 font-semibold">* You must accept the Terms & Conditions to register</p>
               )}
               <p className="text-sm text-gray-400 text-center lg:text-left">
-                Already have account? <Link to="/customer/login" className="text-[#ff0b01] font-black hover:underline ml-2">Login Now</Link>
+                Already have account? <Link to="/owner/login" className="text-[#ff0b01] font-black hover:underline ml-2">Login Now</Link>
               </p>
             </div>
           </div>
@@ -319,10 +533,10 @@ const CustomerRegister = () => {
           
           <div className="absolute bottom-24 left-24 text-white max-w-xl" data-aos="fade-up" data-aos-delay="600">
             <h2 className="text-5xl font-black mb-6 leading-tight tracking-tighter">
-              Experience Premium Grooming.
+              Join the NeoParlour Network.
             </h2>
             <p className="text-lg text-white/90 font-medium tracking-wide leading-relaxed">
-              Discover local salons, read genuine customer reviews, book appointments instantly, and check in securely.
+              Take your salon business to the next level with our advanced management tools and reach premium clients in your area.
             </p>
           </div>
         </div>
@@ -332,4 +546,4 @@ const CustomerRegister = () => {
   );
 };
 
-export default CustomerRegister;
+export default OwnerRegister;

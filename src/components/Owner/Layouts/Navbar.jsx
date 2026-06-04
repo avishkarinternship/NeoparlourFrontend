@@ -1,17 +1,169 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../../api/axiosInstance';
 
 // 1. Keep these correct relative imports (climbing out of your layout folder to src/assets)
 import logoIcon from '../../../assets/Owner/logo_icon.svg';
 import profileIcon from '../../../assets/Owner/profile.jpg';
 
+const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
+  const [src, setSrc] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!imagePath) {
+      setSrc(null);
+      setError(true);
+      return;
+    }
+
+    let isMounted = true;
+    const controller = new AbortController();
+    setLoading(true);
+    setError(false);
+
+    const fetchImage = async () => {
+      try {
+        const response = await axiosInstance.get(`/images/${imagePath}`, {
+          responseType: 'blob',
+          signal: controller.signal
+        });
+        
+        if (isMounted) {
+          const blobUrl = URL.createObjectURL(response.data);
+          setSrc(blobUrl);
+        }
+      } catch (err) {
+        if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+          console.error("Failed to load async image:", err);
+          if (isMounted) {
+            setError(true);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchImage();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [imagePath]);
+
+  useEffect(() => {
+    return () => {
+      if (src) {
+        URL.revokeObjectURL(src);
+      }
+    };
+  }, [src]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
+        <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error || !src) {
+    return <span className="font-bold text-gray-800 text-[10px]">{fallbackText}</span>;
+  }
+
+  return <img src={src} alt={alt} className={className} />;
+};
+
 export default function Navbar() {
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  const [query, setQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [staffResults, setStaffResults] = useState([]);
+  const [appointmentResults, setAppointmentResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search trigger
+  useEffect(() => {
+    if (!query.trim()) {
+      setStaffResults([]);
+      setAppointmentResults([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    setSearching(true);
+
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const searchTerm = query.trim();
+        const isNumeric = /^\d+$/.test(searchTerm);
+        const isEmail = searchTerm.includes('@');
+
+        // Build search parameters dynamically based on input format
+        const staffParams = { page: 0, size: 5 };
+        if (isEmail) staffParams.email = searchTerm;
+        else if (isNumeric) staffParams.phone = searchTerm;
+        else staffParams.name = searchTerm;
+
+        const staffPromise = axiosInstance.get('/staff/search', {
+          params: staffParams,
+          signal: controller.signal
+        });
+
+        let appointmentPromise = Promise.resolve({ data: { content: [] } });
+        if (isNumeric) {
+          appointmentPromise = axiosInstance.get('/appointments/search/advanced', {
+            params: { mobile: searchTerm, page: 0, size: 5 },
+            signal: controller.signal
+          });
+        }
+
+        const [staffRes, appointmentRes] = await Promise.all([
+          staffPromise,
+          appointmentPromise
+        ]);
+
+        setStaffResults(staffRes.data?.content || []);
+        setAppointmentResults(appointmentRes.data?.content || []);
+      } catch (err) {
+        if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+          console.error("Universal search failed:", err);
+        }
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(delayDebounce);
+      controller.abort();
+    };
+  }, [query]);
+
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between sticky top-0 z-50">
 
       {/* Left Logo Area */}
       <div className="w-20 md:w-64 h-full flex items-center px-6 border-r border-gray-200">
-        <div className="flex items-center space-x-2.5 cursor-pointer">
-          {/* FIX: Changed src="/Owner/..." to src={logoIcon} */}
+        <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => navigate('/owner/dashboard')}>
           <img
             src={logoIcon}
             alt="NeoParlour Logo"
@@ -26,19 +178,145 @@ export default function Navbar() {
       {/* Right Container Elements */}
       <div className="flex items-center justify-end flex-1 px-6 space-x-6">
 
-        {/* Pill-Shaped Inline Search Field */}
-        <div className="relative w-full max-w-xs sm:max-w-md border border-gray-300 rounded-full p-1 pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-shadow">
-          <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full bg-transparent text-xs sm:text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
-          />
-          <button className="bg-red-600 text-white px-5 py-1.5 text-[10px] sm:text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150">
-            Search
-          </button>
+        {/* Pill-Shaped Inline Search Field with Dropdown container */}
+        <div ref={dropdownRef} className="relative w-full max-w-xs sm:max-w-md">
+          <div className="border border-gray-300 rounded-full p-1 pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-shadow">
+            <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search staff, appointments..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              className="w-full bg-transparent text-xs sm:text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+            />
+            {query && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  setShowDropdown(false);
+                }}
+                className="text-gray-400 hover:text-gray-600 mr-2 text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
+            <button className="bg-red-600 text-white px-5 py-1.5 text-[10px] sm:text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
+              Search
+            </button>
+          </div>
+
+          {/* Absolute Search Dropdown results */}
+          {showDropdown && (query.trim().length > 0 || searching) && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
+              {searching && staffResults.length === 0 && appointmentResults.length === 0 ? (
+                <div className="flex items-center justify-center py-6 gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Searching...</span>
+                </div>
+              ) : staffResults.length === 0 && appointmentResults.length === 0 ? (
+                <div className="text-center py-6 text-xs text-gray-400 font-bold">
+                  No matching records found.
+                </div>
+              ) : (
+                <>
+                  {/* Category 1: Staff Stylists */}
+                  {staffResults.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Team Stylists
+                      </h4>
+                      <div className="space-y-1.5">
+                        {staffResults.map(staff => {
+                          const nameInitial = staff.name?.charAt(0).toUpperCase() || 'S';
+                          return (
+                            <button
+                              key={staff.id}
+                              onClick={() => {
+                                navigate('/owner/manage/staff');
+                                setShowDropdown(false);
+                              }}
+                              className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
+                            >
+                              <div className="flex items-center space-x-2.5">
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
+                                  {staff.imagePath ? (
+                                    <AsyncImage 
+                                      imagePath={staff.imagePath} 
+                                      alt={staff.name} 
+                                      className="w-full h-full object-cover" 
+                                      fallbackText={nameInitial} 
+                                    />
+                                  ) : (
+                                    nameInitial
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold text-gray-900 truncate group-hover:text-[#ff0b01]">{staff.name}</div>
+                                  <div className="text-[9px] text-gray-400 font-semibold">{staff.phone}</div>
+                                </div>
+                              </div>
+                              <span className="text-[8px] bg-red-50 text-[#ff0b01] px-1.5 py-0.5 rounded font-bold capitalize">
+                                {staff.staffStatus}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category 2: Appointments */}
+                  {appointmentResults.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Appointments
+                      </h4>
+                      <div className="space-y-1.5">
+                        {appointmentResults.map(appt => (
+                          <button
+                            key={appt.id}
+                            onClick={() => {
+                              navigate('/owner/manage/schedule');
+                              setShowDropdown(false);
+                            }}
+                            className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
+                          >
+                            <div className="flex justify-between items-start w-full">
+                              <span className="text-xs font-bold text-gray-900 group-hover:text-[#ff0b01] truncate">
+                                {appt.customerName}
+                              </span>
+                              <span className="text-[9px] font-bold text-gray-400">
+                                ₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between w-full mt-1">
+                              <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[150px]">
+                                {appt.serviceNames?.join(', ') || 'Grooming'}
+                              </span>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
+                                appt.status === 'booked' ? 'bg-red-50 text-[#ff0b01]' :
+                                appt.status === 'completed' ? 'bg-[#E3F9EC] text-[#299764]' :
+                                'bg-gray-100 text-gray-500'
+                              }`}>
+                                {appt.status === 'booked' ? 'scheduled' : appt.status}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Notification Bell with Badge */}
@@ -55,7 +333,6 @@ export default function Navbar() {
         <div className="flex items-center space-x-2 cursor-pointer group">
           {/* Circular image frame container */}
           <div className="h-8 w-8 rounded-full border border-gray-900 flex items-center justify-center overflow-hidden">
-            {/* FIX: Changed src="/Owner/..." to src={profileIcon} */}
             <img
               src={profileIcon}
               alt="Prowin Wadkar Profile"

@@ -17,27 +17,96 @@ import {
 import Sidebar from './Layouts/SideBar';
 import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
+import axiosInstance from '../../api/axiosInstance';
 
 const Analytics = () => {
+  const getFirstDayOfMonth = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
+  };
+
+  const getTodayDateString = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Global View Settings
   const [activeTab, setActiveTab] = useState('REVENUE');
   const [globalTimeframe, setGlobalTimeframe] = useState('Daily');
-  const [startDate, setStartDate] = useState('2026-05-13');
-  const [endDate, setEndDate] = useState('2026-05-18');
+  const [startDate, setStartDate] = useState(getFirstDayOfMonth());
+  const [endDate, setEndDate] = useState(getTodayDateString());
+  const [loading, setLoading] = useState(false);
 
   // --- API RESPONSE INTEGRATION MATRIX ---
-  // This state mirrors your API response directly.
-  const [revenueApiResponse, setRevenueApiResponse] = useState([
-    { "label": "2026-05-13", "revenue": 2050.00, "startDate": null },
-    { "label": "2026-05-14", "revenue": 800.00, "startDate": null },
-    { "label": "2026-05-15", "revenue": 6450.00, "startDate": null },
-    { "label": "2026-05-16", "revenue": 9350.00, "startDate": null },
-    { "label": "2026-05-17", "revenue": 700.00, "startDate": null },
-    { "label": "2026-05-18", "revenue": 1400.00, "startDate": null }
-  ]);
+  const [revenueApiResponse, setRevenueApiResponse] = useState([]);
+
+  const mapTimeframeToViewType = (tf) => {
+    switch (tf) {
+      case 'Daily': return 'day';
+      case 'Weekly': return 'week';
+      case 'Monthly': return 'month';
+      case 'Custom': return 'custom';
+      default: return 'day';
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    let shouldCall = true;
+    let effectiveEndDate = endDate;
+    const viewType = mapTimeframeToViewType(globalTimeframe);
+
+    if (viewType === 'custom') {
+      if (!startDate) {
+        shouldCall = false;
+      } else if (!endDate) {
+        effectiveEndDate = getTodayDateString();
+      }
+    }
+
+    if (shouldCall) {
+      setLoading(true);
+      const params = { viewType, onlyOffers: false };
+      if (viewType === 'custom') {
+        params.startDate = startDate;
+        params.endDate = effectiveEndDate;
+      }
+
+      axiosInstance.get(`/revenue/graph`, { params, signal: controller.signal })
+        .then(res => {
+          if (isMounted && res.data) {
+            setRevenueApiResponse(res.data);
+          }
+        })
+        .catch(err => {
+          if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+            console.error("Failed to fetch analytics revenue graph:", err);
+            setRevenueApiResponse([]);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setRevenueApiResponse([]);
+      setLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [globalTimeframe, startDate, endDate]);
 
   // Derive total metrics dynamically from your API data array
-  const totalRevenueSum = revenueApiResponse.reduce((acc, curr) => acc + curr.revenue, 0);
+  const totalRevenueSum = revenueApiResponse.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
 
   // --- DATA GRAPH MATRICES FOR SUB-CARDS ---
   // Dynamic datasets that sync structure based on the current API sequence shape
@@ -47,16 +116,16 @@ const Analytics = () => {
       '#A5FFD3', '#A5FFF3', '#A5D3FF', '#D3A5FF', '#FFA5F3'
     ];
     return {
-      name: item.label,
-      value: item.revenue,
+      name: item.label || '',
+      value: item.revenue || 0,
       color: colorPalette[idx % colorPalette.length]
     };
   });
 
   const productSalesLineData = revenueApiResponse.map((item) => ({
-    name: item.label.substring(5), 
-    "Current Revenue": item.revenue,
-    "Target Revenue": item.revenue * 1.2 
+    name: item.label ? (item.label.includes('week') ? item.label : item.label.substring(5)) : '', 
+    "Current Revenue": item.revenue || 0,
+    "Target Revenue": (item.revenue || 0) * 1.2 
   }));
 
   const totalAppointmentsStaffData = [
@@ -115,32 +184,37 @@ const Analytics = () => {
                   <option value="Daily">Daily</option>
                   <option value="Weekly">Weekly</option>
                   <option value="Monthly">Monthly</option>
+                  <option value="Custom">Custom</option>
                 </select>
                 <span className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-[6px] text-gray-500">▼</span>
               </div>
 
-              {/* CALENDAR DATE RANGE PICKER FIELDS */}
-              <div className="relative flex items-center border border-gray-300 rounded-lg bg-white px-3 py-1.5 shadow-2xs">
-                <span className="mr-2 text-gray-400 text-xs">📅</span>
-                <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="focus:outline-none bg-transparent text-gray-700" 
-                />
-              </div>
-              
-              <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-tight mx-0.5">To</span>
-              
-              <div className="relative flex items-center border border-gray-300 rounded-lg bg-white px-3 py-1.5 shadow-2xs">
-                <span className="mr-2 text-gray-400 text-xs">📅</span>
-                <input 
-                  type="date" 
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="focus:outline-none bg-transparent text-gray-700" 
-                />
-              </div>
+              {globalTimeframe === 'Custom' && (
+                <>
+                  {/* CALENDAR DATE RANGE PICKER FIELDS */}
+                  <div className="relative flex items-center border border-gray-300 rounded-lg bg-white px-3 py-1.5 shadow-2xs">
+                    <span className="mr-2 text-gray-400 text-xs">📅</span>
+                    <input 
+                      type="date" 
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="focus:outline-none bg-transparent text-gray-700" 
+                    />
+                  </div>
+                  
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-tight mx-0.5">To</span>
+                  
+                  <div className="relative flex items-center border border-gray-300 rounded-lg bg-white px-3 py-1.5 shadow-2xs">
+                    <span className="mr-2 text-gray-400 text-xs">📅</span>
+                    <input 
+                      type="date" 
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="focus:outline-none bg-transparent text-gray-700" 
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -165,25 +239,50 @@ const Analytics = () => {
               </div>
 
               {/* BAR CHART DISPLAYING DIRECT API METRICS SHAPE */}
-              <div className="w-full h-56 mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueApiResponse} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
-                    <XAxis 
-                      dataKey="label" 
-                      tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
-                      axisLine={false} 
-                      tickLine={false} 
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
-                      axisLine={false} 
-                      tickLine={false} 
-                    />
-                    <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
-                    <Bar dataKey="revenue" fill="#9BA2FF" radius={[3, 3, 0, 0]} barSize={14} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="w-full h-56 mt-4 relative">
+                {loading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin h-8 w-8 border-2 border-[#9BA2FF] border-t-transparent rounded-full"></div>
+                  </div>
+                ) : revenueApiResponse.length === 0 ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <svg className="w-8 h-8 text-gray-300 mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    </svg>
+                    <p className="text-[10px] font-semibold text-gray-400">No revenue data available</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={revenueApiResponse} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
+                      <XAxis 
+                        dataKey="label" 
+                        tickFormatter={(val) => {
+                          if (!val) return '';
+                          if (typeof val === 'string' && val.toLowerCase().includes('week')) return val;
+                          const parts = val.split('-');
+                          if (parts.length === 3) {
+                            const dateObj = new Date(val);
+                            if (!isNaN(dateObj.getTime())) {
+                              return dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                            }
+                          }
+                          return val;
+                        }}
+                        tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                      />
+                      <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
+                      <Bar dataKey="revenue" fill="#9BA2FF" radius={[3, 3, 0, 0]} barSize={14} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
               
               <div className="flex items-center space-x-4 justify-start mt-2 text-[9px] font-bold text-gray-600">

@@ -3,7 +3,9 @@ import { createBrowserRouter } from 'react-router-dom'
 import App from '../App'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
+import OwnerLogin from '../components/Owner/OwnerLogin'
 import CustomerRegister from '../components/Customer/CustomerRegister'
+import OwnerRegister from '../components/Owner/OwnerRegister'
 import SalonSelection from '../components/Customer/SalonSelection'
 import Appointments from '../components/Customer/Appointments'
 import SubscriptionPlans from '../components/Owner/SubscriptionPlans'
@@ -51,8 +53,32 @@ export let routes = createBrowserRouter([
                 element: <CustomerLogin />
             },
             {
+                path: '/login',
+                element: <CustomerLogin />
+            },
+            {
+                path: '/owner/login',
+                element: <OwnerLogin />
+            },
+            {
+                path: '/owner-login',
+                element: <OwnerLogin />
+            },
+            {
                 path: '/register',
                 element: <CustomerRegister />
+            },
+            {
+                path: '/signup',
+                element: <CustomerRegister />
+            },
+            {
+                path: '/owner/register',
+                element: <OwnerRegister />
+            },
+            {
+                path: '/owner-signup',
+                element: <OwnerRegister />
             },
             {
                 path: '/subscription-plans',

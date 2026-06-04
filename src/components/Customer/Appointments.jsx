@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
@@ -41,49 +41,48 @@ const Appointments = () => {
     { id: 4, name: 'Karan', role: 'Senior Barber', rating: '4.9', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80' },
   ];
 
-  const lastFetchRef = useRef({ tab: '', page: 0 });
-
   // Fetch Appointments
-  const fetchAppointments = async () => {
-    // Prevent duplicate fetches if the tab and page are already being/have been fetched
-    if (lastFetchRef.current.tab === activeTab && lastFetchRef.current.page === page) {
-      return;
-    }
-    lastFetchRef.current = { tab: activeTab, page };
-
+  const fetchAppointments = async (signal) => {
     setLoading(true);
     try {
       const customerFilter = isCustomer ? `&customerId=${customerId}` : '';
       
+      let response;
       if (activeTab === 'SCHEDULED') {
         // Fetch booked appointments (which already include rescheduled ones)
-        const response = await axiosInstance.get(`/appointments/search/advanced?status=booked${customerFilter}&page=${page}&size=10`);
-        setAppointments(response.data?.content || []);
-        setTotalElements(response.data?.page?.totalElements || 0);
-        setTotalPages(response.data?.page?.totalPages || 1);
+        response = await axiosInstance.get(`/appointments/search/advanced?status=booked${customerFilter}&page=${page}&size=10`, { signal });
       } else {
         const statusParam = activeTab.toLowerCase(); // 'cancelled' or 'completed'
-        const response = await axiosInstance.get(`/appointments/search/advanced?status=${statusParam}${customerFilter}&page=${page}&size=10`);
+        response = await axiosInstance.get(`/appointments/search/advanced?status=${statusParam}${customerFilter}&page=${page}&size=10`, { signal });
+      }
+      
+      if (!signal?.aborted) {
         setAppointments(response.data?.content || []);
         setTotalElements(response.data?.page?.totalElements || 0);
         setTotalPages(response.data?.page?.totalPages || 1);
       }
     } catch (error) {
-      // Clear ref on error to allow manual/auto retries
-      lastFetchRef.current = { tab: '', page: 0 };
-      console.error('Failed to fetch appointments', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Could not load appointments. Please check your network.';
-      toast.error(errorMessage, {
-        duration: 6000,
-        style: { background: '#1c1c1e', color: '#fff', borderRadius: '16px' }
-      });
+      if (error.name !== 'CanceledError' && error.message !== 'canceled' && !axiosInstance.isCancel?.(error)) {
+        console.error('Failed to fetch appointments', error);
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Could not load appointments. Please check your network.';
+        toast.error(errorMessage, {
+          duration: 6000,
+          style: { background: '#1c1c1e', color: '#fff', borderRadius: '16px' }
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchAppointments();
+    const controller = new AbortController();
+    fetchAppointments(controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, [activeTab, page]);
 
   // Actions
