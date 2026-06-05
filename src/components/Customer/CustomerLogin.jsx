@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginCustomer, clearCustomerError } from '../../redux/slices/customerSlice';
 import { User, Lock, Sparkles, AlertCircle } from 'lucide-react';
+import PasswordResetModal from './PasswordResetModal';
 
 // Using existing assets
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
@@ -21,6 +22,7 @@ const CustomerLogin = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
 
   useEffect(() => {
     dispatch(clearCustomerError());
@@ -149,7 +151,13 @@ const CustomerLogin = () => {
             </div>
             
             <div className="text-xs space-y-2 border-t pt-4">
-              <a href="#" className="text-[#ff0b01] font-bold block hover:underline">Forgot Password?</a>
+              <button 
+                type="button" 
+                onClick={() => setIsPasswordResetOpen(true)} 
+                className="text-[#ff0b01] font-bold block hover:underline cursor-pointer text-left"
+              >
+                Forgot Password?
+              </button>
               <p className="text-gray-400 font-semibold">
                 Are you an Owner or Staff? <Link to="/owner/login" className="text-[#ff0b01] font-black hover:underline ml-1.5">Owner Login</Link>
               </p>
@@ -179,6 +187,12 @@ const CustomerLogin = () => {
           </div>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal 
+        isOpen={isPasswordResetOpen} 
+        onClose={() => setIsPasswordResetOpen(false)} 
+      />
 
     </div>
   );

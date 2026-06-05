@@ -20,6 +20,8 @@ import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../redux/slices/customerSlice';
+import ProfilePopup from './ProfilePopup';
+import PasswordResetModal from './PasswordResetModal';
 import Footer from './Layouts/Footer';
 
 const Features = () => {
@@ -27,6 +29,8 @@ const Features = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const dispatch = useDispatch();
   const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
 
@@ -63,7 +67,7 @@ const Features = () => {
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
-          <a href="#" className="hover:text-gray-900 transition-colors">PARTNER WITH US</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
           <a href="#" className="hover:text-gray-900 transition-colors">GIFTCARD</a>
           <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
             OFFERS
@@ -75,8 +79,8 @@ const Features = () => {
         <div className="flex items-center gap-3">
           {isAuthenticated && (user || profile) ? (
             <button 
-              onClick={() => navigate('/customer/dashboard')} 
-              className="flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+              onClick={() => setIsProfileOpen(true)} 
+              className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
             >
               {/* Circular Logo/Avatar */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
@@ -120,10 +124,24 @@ const Features = () => {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+        onProfileClick={() => setIsProfileOpen(true)}
+        onChangePasswordClick={() => setIsPasswordResetOpen(true)}
         setCurrentView={(view) => {
           if (view === 'home') navigate('/customer/home');
           if (view === 'about') navigate('/customer/about');
         }}
+      />
+
+      {/* Customer Profile Popup Modal */}
+      <ProfilePopup
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal 
+        isOpen={isPasswordResetOpen} 
+        onClose={() => setIsPasswordResetOpen(false)} 
       />
 
 

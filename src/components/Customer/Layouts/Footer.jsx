@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Owner/logo_icon.svg';
 
 const Footer = () => {
+    const navigate = useNavigate();
     return (
         <footer className="bg-[#EAEAEA] text-gray-900 pt-16 pb-8 px-6 md:px-12 font-sans w-full">
             {/* Main Footer Container */}
@@ -26,7 +28,7 @@ const Footer = () => {
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• Careers</li>
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
+                        <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
                     </ul>

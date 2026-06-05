@@ -38,6 +38,8 @@ import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions
 import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
 import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
 import PrivacyPolicyScreen from '../components/Owner/PrivacyPolicy'
+import Support from '../components/Customer/Support'
+import PartnerWithUs from '../components/Customer/PartnerWithUs'
 
 export let routes = createBrowserRouter([
     {
@@ -204,6 +206,14 @@ export let routes = createBrowserRouter([
             {
                 path: '/customer/about',
                 element: <AboutUs />
+            },
+            {
+                path: '/customer/support',
+                element: <Support />
+            },
+            {
+                path: '/customer/partner-with-us',
+                element: <PartnerWithUs />
             },
             {
                 path: '/customer/privacy-policy',

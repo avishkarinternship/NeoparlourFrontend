@@ -182,8 +182,8 @@ const SalonSelection = () => {
   const handleSalonSelect = (salon) => {
     const payload = {
       token: token,
-      tenantId: salon.salonCode,
-      salonName: salon.salonName
+      salonId: salon.salonId || salon.id,
+      salonName: salon.salonName || salon.name
     };
     dispatch(switchTenant(payload)).unwrap().then(() => {
       navigate('/customer/home');
@@ -192,7 +192,12 @@ const SalonSelection = () => {
 
   const handleDirectIdSubmit = () => {
     if (!uiState.salonId) return;
-    handleSalonSelect({ salonCode: uiState.salonId, salonName: 'Direct Access' });
+    const isNum = /^\d+$/.test(uiState.salonId);
+    handleSalonSelect({ 
+      salonId: isNum ? parseInt(uiState.salonId, 10) : null,
+      salonCode: uiState.salonId, 
+      salonName: 'Direct Access' 
+    });
   };
 
   const isOpen = (opening, closing) => {

@@ -405,6 +405,7 @@ export default function ProductPaymentMethod() {
 }
 
 function FooterLinkGroup({ title, links }) {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col">
       <h4 className="font-poppins text-base font-bold capitalize text-black mb-4">
@@ -412,7 +413,17 @@ function FooterLinkGroup({ title, links }) {
       </h4>
       <ul className="space-y-3">
         {links.map((link, index) => (
-          <li key={index} className="flex items-start text-sm font-medium text-[#505050] hover:text-black transition cursor-pointer select-none">
+          <li 
+            key={index} 
+            onClick={() => {
+              if (link === 'Partner with us') {
+                navigate('/customer/partner-with-us');
+              } else if (link === 'About Us') {
+                navigate('/customer/about');
+              }
+            }}
+            className="flex items-start text-sm font-medium text-[#505050] hover:text-black transition cursor-pointer select-none"
+          >
             <span className="mr-2 text-xs text-neutral-400">•</span>
             <span>{link}</span>
           </li>

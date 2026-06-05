@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
 import { Search, MapPin, ChevronDown, Calendar, UserPlus, LogIn } from 'lucide-react';
 import Drawer from '../Drawer'; // Adjust path based on your file structure
+import ProfilePopup from '../ProfilePopup';
+import PasswordResetModal from '../PasswordResetModal';
 
 const SearchNavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
+
+  useEffect(() => {
+      if (isAuthenticated && user && !profile) {
+          const customerId = user.id || user.user?.id;
+          if (customerId) {
+              dispatch(fetchCustomerProfile(customerId));
+          }
+      }
+  }, [isAuthenticated, user, profile, dispatch]);
 
   return (
     <header className="w-full border-b border-[#E8E8E8] px-4 md:px-12 py-4 flex items-center justify-between bg-white sticky top-0 z-50 shadow-sm">
@@ -50,15 +67,39 @@ const SearchNavBar = () => {
 
       {/* Session Profiles / Control Triggers Block */}
       <div className="flex items-center space-x-3 flex-shrink-0">
-        <button className="flex items-center space-x-2 border border-[#909090] rounded-lg px-4 py-2 text-[#909090] hover:bg-gray-50 transition-colors text-[13px] font-semibold uppercase">
-          <UserPlus className="w-4 h-4" />
-          <span className="hidden sm:inline">Signup</span>
-        </button>
-        
-        <button className="flex items-center space-x-2 bg-[#FF0B01] border border-[#909090] rounded-lg px-4 py-2 text-white hover:opacity-95 transition-opacity text-[13px] font-semibold uppercase">
-          <LogIn className="w-4 h-4" />
-          <span>Login</span>
-        </button>
+        {isAuthenticated && (user || profile) ? (
+          <button 
+              onClick={() => setIsProfileOpen(true)} 
+              className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+          >
+              {/* Circular Logo/Avatar */}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
+                  {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
+              </div>
+              {/* User Name */}
+              <span className="text-xs font-black text-gray-800 tracking-tight">
+                  {profile?.fullName || user?.name || user?.username || 'Profile'}
+              </span>
+          </button>
+        ) : (
+          <>
+            <button 
+              onClick={() => navigate('/register')}
+              className="flex items-center space-x-2 border border-[#909090] rounded-lg px-4 py-2 text-[#909090] hover:bg-gray-50 transition-colors text-[13px] font-semibold uppercase"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Signup</span>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/customer/login')}
+              className="flex items-center space-x-2 bg-[#FF0B01] border border-[#909090] rounded-lg px-4 py-2 text-white hover:opacity-95 transition-opacity text-[13px] font-semibold uppercase"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Login</span>
+            </button>
+          </>
+        )}
 
         {/* Hamburger Menu Icon - Visible across all screens */}
         <button 
@@ -76,10 +117,24 @@ const SearchNavBar = () => {
       <Drawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
+        onProfileClick={() => setIsProfileOpen(true)}
+        onChangePasswordClick={() => setIsPasswordResetOpen(true)}
         setCurrentView={(view) => {
-          if (view === 'about') navigate('/about');
+          if (view === 'about') navigate('/customer/about');
           if (view === 'home') navigate('/customer/home');
         }} 
+      />
+
+      {/* Customer Profile Popup Modal */}
+      <ProfilePopup 
+          isOpen={isProfileOpen} 
+          onClose={() => setIsProfileOpen(false)} 
+      />
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal 
+          isOpen={isPasswordResetOpen} 
+          onClose={() => setIsPasswordResetOpen(false)} 
       />
     </header>
   );

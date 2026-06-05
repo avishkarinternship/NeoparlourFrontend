@@ -88,6 +88,9 @@ import Drawer from './Drawer';
 import Marquee from 'react-fast-marquee';
 import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ProfilePopup from './ProfilePopup';
+import PasswordResetModal from './PasswordResetModal';
+
 
 
 const partners = [
@@ -140,6 +143,8 @@ const HomeScreen = () => {
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [locationPermission, setLocationPermission] = useState('prompt');
     const [recommendedList, setRecommendedList] = useState(recommendedSalons);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
 
     // Click outside dropdowns handler
     useEffect(() => {
@@ -252,6 +257,15 @@ const HomeScreen = () => {
         );
     };
 
+    const getSalonImageSrc = (imageUrl, fallbackImg) => {
+        if (!imageUrl) return fallbackImg;
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            return imageUrl;
+        }
+        const base = axiosInstance.defaults.baseURL || 'https://sb.neoparlour.com/api';
+        return `${base}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    };
+
     const fetchCitySalons = async (cityName) => {
         try {
             const response = await axiosInstance.get(`/salons/by-city`, {
@@ -294,7 +308,7 @@ const HomeScreen = () => {
                     const formatted = apiSalons.map((s, index) => ({
                         name: s.salonName,
                         location: s.areaName || s.cityName,
-                        img: coverImages[index % 4],
+                        img: s.imageUrl ? getSalonImageSrc(s.imageUrl, coverImages[index % 4]) : coverImages[index % 4],
                         rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
                         isApiSalon: true,
                         originalSalon: s
@@ -390,8 +404,8 @@ const HomeScreen = () => {
         }
         const payload = {
             token: token,
-            tenantId: salon.salonCode,
-            salonName: salon.salonName
+            salonId: salon.salonId || salon.id,
+            salonName: salon.salonName || salon.name
         };
         dispatch(switchTenant(payload))
             .unwrap()
@@ -485,7 +499,7 @@ const HomeScreen = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
-                    <a href="#" className="hover:text-gray-900 transition-colors">PARTNER WITH US</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
                     <a href="#" className="hover:text-gray-900 transition-colors">GIFTCARD</a>
                     <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
                         OFFERS
@@ -497,8 +511,8 @@ const HomeScreen = () => {
                 <div className="flex items-center gap-3">
                     {isAuthenticated && (user || profile) ? (
                         <button 
-                            onClick={() => navigate('/customer/dashboard')} 
-                            className="flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+                            onClick={() => setIsProfileOpen(true)} 
+                            className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
                         >
                             {/* Circular Logo/Avatar */}
                             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
@@ -542,7 +556,21 @@ const HomeScreen = () => {
             <Drawer
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
+                onProfileClick={() => setIsProfileOpen(true)}
+                onChangePasswordClick={() => setIsPasswordResetOpen(true)}
                 setCurrentView={setCurrentView}
+            />
+
+            {/* Customer Profile Popup Modal */}
+            <ProfilePopup
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+            />
+
+            {/* Password Reset Modal */}
+            <PasswordResetModal 
+                isOpen={isPasswordResetOpen} 
+                onClose={() => setIsPasswordResetOpen(false)} 
             />
 
             {/* 2. HERO SECTION - WITH ONE BACKGROUND IMAGE */}
@@ -697,7 +725,7 @@ const HomeScreen = () => {
                             {salonResults.map((salon, index) => {
                                 const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
                                 const coverImages = [salonOneIcon, salonTwoIcon, salonThreeIcon, salonFourIcon];
-                                const coverImg = coverImages[index % 4];
+                                const coverImg = salon.imageUrl ? getSalonImageSrc(salon.imageUrl, coverImages[index % 4]) : coverImages[index % 4];
                                 const rating = (((salon.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1);
                                 const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
                                 return (
@@ -1462,7 +1490,7 @@ const HomeScreen = () => {
                             <li onClick={() => setCurrentView('about')} className="cursor-pointer hover:text-gray-900 transition-colors">
                                 • About Us
                             </li>
-                            <li className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
+                            <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
                             <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
                             <li className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
                         </ul>

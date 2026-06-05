@@ -386,7 +386,7 @@ const ProductDetails = () => {
                 <li className="hover:text-black cursor-pointer transition-colors">• Influencer Program</li>
                 <li className="hover:text-black cursor-pointer transition-colors">• Careers</li>
                 <li className="hover:text-black cursor-pointer transition-colors">• About Us</li>
-                <li className="hover:text-black cursor-pointer transition-colors">• Partner with us</li>
+                <li onClick={() => navigate('/customer/partner-with-us')} className="hover:text-black cursor-pointer transition-colors">• Partner with us</li>
                 <li className="hover:text-black cursor-pointer transition-colors">• Buy gift card</li>
                 <li className="hover:text-black cursor-pointer transition-colors">• Blogs</li>
               </ul>

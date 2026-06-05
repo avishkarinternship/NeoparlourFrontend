@@ -24,8 +24,8 @@ export const switchTenant = createAsyncThunk(
   'customer/switchTenant',
   async (payload, { rejectWithValue }) => {
     try {
-      // Payload: { token: string, tenantId: string (salonCode), salonName: string }
-      const response = await axiosInstance.post('/customer/switch-tenant', payload);
+      // Payload: { token: string, salonId: number, salonName: string }
+      const response = await axiosInstance.post('/customer/switch-salon', payload);
       
       if (response.data.token) {
         localStorage.setItem('customerToken', response.data.token);
@@ -67,6 +67,37 @@ export const fetchCustomerProfile = createAsyncThunk(
     }
   }
 );
+
+// Async thunk to logout customer via API
+export const logoutCustomerApi = createAsyncThunk(
+  'customer/logoutApi',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/customer/logout');
+      dispatch(logoutCustomer());
+    } catch (error) {
+      // Clear local storage and log out client even if API request fails
+      dispatch(logoutCustomer());
+      return rejectWithValue(error.response?.data?.message || 'Logout API failed.');
+    }
+  }
+);
+
+
+// Async thunk to update customer profile
+export const updateCustomerProfile = createAsyncThunk(
+  'customer/updateProfile',
+  async ({ id, profileData }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/customer/${id}`, profileData);
+      localStorage.setItem('customerProfile', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update customer profile.');
+    }
+  }
+);
+
 
 const initialState = {
   user: JSON.parse(localStorage.getItem('customerUser')) || null,
@@ -152,6 +183,19 @@ const customerSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(fetchCustomerProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Update Profile
+      .addCase(updateCustomerProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCustomerProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(updateCustomerProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
