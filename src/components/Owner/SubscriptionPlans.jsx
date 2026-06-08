@@ -53,6 +53,21 @@ const SubscriptionPlans = () => {
     fetchPlans();
   }, []);
 
+  // Attempt auto-login on mount if not authenticated but registration details exist
+  useEffect(() => {
+    if (!ownerToken) {
+      const savedPhone = localStorage.getItem('tempRegisterPhone');
+      const savedPassword = localStorage.getItem('tempRegisterPassword');
+      if (savedPhone && savedPassword) {
+        dispatch(loginOwner({ username: savedPhone, password: savedPassword }))
+          .unwrap()
+          .catch((loginErr) => {
+            console.error('Auto login attempt on mount failed:', loginErr);
+          });
+      }
+    }
+  }, [ownerToken, dispatch]);
+
   const handleSkip = () => {
     toast('Subscription skipped. You can purchase a plan later from your dashboard.', {
       icon: 'ℹ️',
@@ -62,6 +77,12 @@ const SubscriptionPlans = () => {
   };
 
   const handleSubscribe = async (plan) => {
+    if (!ownerUser) {
+      toast.error('You must be logged in to purchase a subscription. Redirecting to login...');
+      navigate('/owner/login');
+      return;
+    }
+
     if (!window.Razorpay) {
       toast.error('Razorpay SDK failed to load. Please refresh the page and try again.');
       return;
@@ -96,7 +117,9 @@ const SubscriptionPlans = () => {
 
             // 3. Verify Payment on backend using @RequestParam query params
             const verifyResponse = await axiosInstance.post(
-              `/subscriptions/verify-payment?razorpayOrderId=${encodeURIComponent(orderId)}&razorpayPaymentId=${encodeURIComponent(paymentId)}&razorpaySignature=${encodeURIComponent(signature)}&userId=${ownerUser?.id || ''}`
+              `/subscriptions/verify-payment?razorpayOrderId=${encodeURIComponent(orderId)}&razorpayPaymentId=${encodeURIComponent(paymentId)}&razorpaySignature=${encodeURIComponent(signature)}&userId=${ownerUser?.id || ''}`,
+              null,
+              { skipGlobalToast: true }
             );
 
             const { success, message } = verifyResponse.data;

@@ -50,8 +50,7 @@ const SalonSelection = () => {
       once: true,
       offset: 50
     });
-    if (!token) navigate('/login');
-  }, [token, navigate]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -180,9 +179,24 @@ const SalonSelection = () => {
   };
 
   const handleSalonSelect = (salon) => {
+    const salonId = salon.salonId || salon.id;
+    
+    if (!salonId) {
+      toast.error('Please login to access salon by code.');
+      navigate('/customer/login');
+      return;
+    }
+
+    localStorage.setItem('activeSalonId', salonId);
+
+    if (!token) {
+      navigate('/customer/salon');
+      return;
+    }
+
     const payload = {
       token: token,
-      salonId: salon.salonId || salon.id,
+      salonId: salonId,
       salonName: salon.salonName || salon.name
     };
     dispatch(switchTenant(payload)).unwrap().then(() => {

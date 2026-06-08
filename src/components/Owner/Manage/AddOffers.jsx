@@ -14,6 +14,7 @@ import percentageIcon from '../../../assets/Owner/Manage/Offers/percentage_icon.
 import ManageSideBar from "../Layouts/ManageSideBar";
 
 const AddOffers = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Controlled Form State variables 
     const [offerDetails, setOfferDetails] = useState('');
     const [couponCode, setCouponCode] = useState('');
@@ -64,13 +65,13 @@ const AddOffers = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVBAR */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
 
                 {/* LEVEL 1: PRIMARY APP SIDEBAR */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
                 <ManageSideBar activeTab="Add Offers" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />

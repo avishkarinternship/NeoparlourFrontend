@@ -120,6 +120,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 };
 
 const Schedule = ()  => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -260,12 +261,12 @@ const Schedule = ()  => {
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
       {/* NAVBAR */}
-      <Navbar />
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       {/* SYSTEM GRID FRAMEWORK */}
       <div className="flex flex-1 w-full">
         {/* LEVEL 1 GENERAL SIDEBAR */}
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
         {/* LEVEL 2 SUB-SIDEBAR (Contextual options) */}
         <ManageSideBar activeTab="Schedule" onTabChange={(tab) => console.log(`Navigating to ${tab}`)} />

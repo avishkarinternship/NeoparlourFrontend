@@ -1,8 +1,23 @@
 import React from 'react';
 import { X, Check } from 'lucide-react';
 
-const AppointmentBooked = ({ isOpen, onClose }) => {
+const AppointmentBooked = ({ 
+  isOpen, 
+  onClose, 
+  selectedServices = [], 
+  date = '', 
+  time = '', 
+  expert = null, 
+  customerName = '', 
+  customerPhone = '',
+  selectedOffer = null,
+  discountAmount = 0
+}) => {
   if (!isOpen) return null;
+
+  const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
+  const taxAndCharges = Math.round((serviceTotal - discountAmount) * 0.18); // 18% GST on discounted total
+  const grandTotal = Math.max(0, serviceTotal - discountAmount + taxAndCharges);
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans antialiased">
@@ -40,25 +55,50 @@ const AppointmentBooked = ({ isOpen, onClose }) => {
 
           {/* Booking Data Matrix Grid */}
           <div className="w-full space-y-3.5 text-xs font-medium text-gray-600 mb-5">
-            <div className="flex justify-between items-center">
-              <span>Service Name</span>
-              <span className="text-gray-900 font-semibold">Haircut</span>
-            </div>
+            {selectedOffer ? (
+              <>
+                <div className="flex justify-between items-start">
+                  <span>Offer Services</span>
+                  <span className="text-gray-950 font-black text-right max-w-[200px] line-clamp-2 uppercase">
+                    {selectedServices.filter(s => selectedOffer.services?.some(os => os.id === s.id)).map(s => s.name || s.title).join(', ') || 'None'}
+                  </span>
+                </div>
+                {selectedServices.filter(s => !selectedOffer.services?.some(os => os.id === s.id)).length > 0 && (
+                  <div className="flex justify-between items-start">
+                    <span>Regular Services</span>
+                    <span className="text-gray-950 font-black text-right max-w-[200px] line-clamp-2 uppercase">
+                      {selectedServices.filter(s => !selectedOffer.services?.some(os => os.id === s.id)).map(s => s.name || s.title).join(', ') || 'None'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-green-600 font-bold">
+                  <span>Offer Discount</span>
+                  <span>-₹ {discountAmount}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between items-start">
+                <span>Service(s)</span>
+                <span className="text-gray-900 font-semibold text-right max-w-[200px] line-clamp-2 uppercase">
+                  {selectedServices.map(s => s.name || s.title).join(', ') || 'None Selected'}
+                </span>
+              </div>
+            )}
             
             <div className="flex justify-between items-center">
               <span>Date And Time</span>
-              <span className="text-gray-900 font-semibold">25-04-2026 12:30PM</span>
+              <span className="text-gray-900 font-semibold">{date} at {time}</span>
             </div>
             
             <div className="flex justify-between items-center">
               <span>Stylist Name</span>
-              <span className="text-gray-900 font-semibold">Akshay</span>
+              <span className="text-gray-900 font-semibold">{expert?.name || 'Any Stylist'}</span>
             </div>
 
             {/* Total Highlight Row */}
-            <div className="flex justify-between items-center text-sm font-bold text-gray-900 pt-2">
+            <div className="flex justify-between items-center text-sm font-bold text-gray-900 pt-2 border-t border-dashed border-gray-150">
               <span>Grand Total</span>
-              <span className="text-base font-extrabold text-gray-900">₹ 250</span>
+              <span className="text-base font-extrabold text-gray-900">₹ {grandTotal}</span>
             </div>
           </div>
 
@@ -71,7 +111,7 @@ const AppointmentBooked = ({ isOpen, onClose }) => {
               Personal Details
             </h3>
             <p className="text-xs font-medium text-gray-600 tracking-wide">
-              Prowin Wadkar - 7057577012
+              {customerName} - {customerPhone}
             </p>
           </div>
 

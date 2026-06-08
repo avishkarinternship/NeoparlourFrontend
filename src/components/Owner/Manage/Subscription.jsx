@@ -11,6 +11,7 @@ import billingIcon from '../../../assets/Owner/Manage/Subscription/billing_icon.
 import ManageSideBar from '../Layouts/ManageSideBar';
 
 const Subscription = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Subscription tiers configuration map arranged in a 2x2 presentation grid layout
     const [subscriptionPlans] = useState([
         {
@@ -78,13 +79,13 @@ const Subscription = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVIGATION PANEL */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE COLUMN INTEGRATION BODY WRAPPER CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
                 
                 {/* LEVEL 1: APPLICATION WORKSPACE PRIMARY NAVIGATION CONTROL */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT DRAWER ACTIONS CONTROLLER */}
                 <ManageSideBar activeTab="Subscription" onTabChange={(tab) => console.log(`Redirecting UI Context: ${tab}`)} />

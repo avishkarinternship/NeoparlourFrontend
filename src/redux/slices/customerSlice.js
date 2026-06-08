@@ -30,6 +30,7 @@ export const switchTenant = createAsyncThunk(
       if (response.data.token) {
         localStorage.setItem('customerToken', response.data.token);
         localStorage.setItem('customerUser', JSON.stringify(response.data));
+        localStorage.setItem('activeSalonId', payload.salonId);
       }
       return response.data;
     } catch (error) {
@@ -51,6 +52,14 @@ export const searchSalonsByLocation = createAsyncThunk(
         error.response?.data?.message || 'Search failed.'
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { customer } = getState();
+      if (customer.loading) {
+        return false;
+      }
+    }
   }
 );
 
@@ -64,6 +73,14 @@ export const fetchCustomerProfile = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer profile.');
+    }
+  },
+  {
+    condition: (id, { getState }) => {
+      const { customer } = getState();
+      if (customer.loading || (customer.profile && (customer.profile.id === id || customer.profile.customerId === id))) {
+        return false;
+      }
     }
   }
 );
@@ -121,6 +138,7 @@ const customerSlice = createSlice({
       localStorage.removeItem('customerToken');
       localStorage.removeItem('customerUser');
       localStorage.removeItem('customerProfile');
+      localStorage.removeItem('activeSalonId');
     },
     clearCustomerError: (state) => {
       state.error = null;

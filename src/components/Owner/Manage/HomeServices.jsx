@@ -6,6 +6,7 @@ import Footer from '../Layouts/Footer';
 import ManageSideBar from "../Layouts/ManageSideBar";
 
 const HomeServices = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [enableBookings, setEnableBookings] = useState(false);
     const [serviceCharge, setServiceCharge] = useState('0.0');
 
@@ -21,13 +22,13 @@ const HomeServices = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVBAR */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
 
                 {/* LEVEL 1: PRIMARY APP SIDEBAR */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
                 <ManageSideBar activeTab="Home Services" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />

@@ -43,9 +43,9 @@ const Navbar = () => {
             <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans">
                 
                 {/* Logo Section */}
-                <div onClick={() => navigate('/customer/home')} className="flex items-center gap-2 cursor-pointer">
-                    <img src={logoIcon} alt="NeoParlour" className="h-8 object-contain" />
-                    <span className="text-xl font-black tracking-tight text-gray-900">NeoParlour</span>
+                <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
+                    <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
+                    <span className="text-lg sm:text-xl font-black tracking-tight text-gray-900">NeoParlour</span>
                 </div>
 
                 {/* Desktop Navigation Links */}
@@ -54,7 +54,7 @@ const Navbar = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-                    <a href="#" className="hover:text-gray-900 transition-colors">GIFTCARD</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
                     <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
                         OFFERS
                         <img src={offersIcon} alt="Offers" className="w-4 h-4 object-contain" />
@@ -62,7 +62,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     {isAuthenticated && (user || profile) ? (
                         <button 
                             onClick={() => setIsProfileOpen(true)} 
@@ -80,15 +80,15 @@ const Navbar = () => {
                     ) : (
                         <>
                             {/* Signup Button */}
-                            <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
+                            <button onClick={() => navigate('/register')} className="px-2 sm:px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-1.5 hover:bg-gray-50 transition text-gray-500">
                                 <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
-                                SIGNUP
+                                <span className="hidden sm:inline">SIGNUP</span>
                             </button>
                             
                             {/* Login Button */}
-                            <button onClick={() => navigate('/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
+                            <button onClick={() => navigate('/login')} className="px-2 sm:px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-1.5 hover:bg-red-700 transition">
                                 <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
-                                LOGIN
+                                <span className="hidden sm:inline">LOGIN</span>
                             </button>
                         </>
                     )}

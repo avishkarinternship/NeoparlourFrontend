@@ -28,7 +28,8 @@ import AddPackages from '../components/Owner/Manage/AddPackages'
 import Features from '../components/Customer/Features'
 import HomeScreen from '../components/Customer/HomeScreen'
 import AboutUs from '../components/Customer/AboutUs'
-import Booking from '../components/Customer/Booking'
+import SalonPage from '../components/Customer/SalonPage'
+import SelectService from '../components/Customer/SelectService'
 import ProductSearch from '../components/Customer/ProductSearch'
 import ProductDetails from '../components/Customer/ProductDetails'
 import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
@@ -40,6 +41,7 @@ import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
 import PrivacyPolicyScreen from '../components/Owner/PrivacyPolicy'
 import Support from '../components/Customer/Support'
 import PartnerWithUs from '../components/Customer/PartnerWithUs'
+import SalonsListing from '../components/Customer/SalonsListing'
 
 export let routes = createBrowserRouter([
     {
@@ -180,8 +182,12 @@ export let routes = createBrowserRouter([
                 element: <Features />
             },
             {
-                path: 'customer/booking',
-                element: <Booking />
+                path: 'customer/salon',
+                element: <SalonPage />
+            },
+            {
+                path: 'customer/book-service',
+                element: <SelectService />
             },
             {
                 path: 'customer/product-search',
@@ -214,6 +220,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/customer/partner-with-us',
                 element: <PartnerWithUs />
+            },
+            {
+                path: '/customer/salons',
+                element: <SalonsListing />
             },
             {
                 path: '/customer/privacy-policy',

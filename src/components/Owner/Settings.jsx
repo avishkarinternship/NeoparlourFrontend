@@ -4,6 +4,7 @@ import Sidebar from './Layouts/SideBar';
 import Footer from './Layouts/Footer';
 
 const Settings = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // --- STATE MANAGEMENT ---
     const [businessName, setBusinessName] = useState('');
     const [adminEmail, setAdminEmail] = useState('');
@@ -57,12 +58,12 @@ const Settings = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
 
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             <div className="flex flex-1 w-full items-stretch">
 
                 {/* --- SIDEBAR PANEL --- */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
 
                 {/* --- MAIN FORM CONFIGURATOR ENV --- */}

@@ -109,7 +109,7 @@ const PartnerWithUs = () => {
                 {/* Hero Section */}
                 <section className="relative w-full max-w-7xl mx-auto px-6 md:px-12 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
                     {/* Background Radial Light Accent */}
-                    <div className="absolute top-10 right-10 w-96 h-96 bg-red-50/60 rounded-full blur-3xl -z-10" />
+                    <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-red-100/40 rounded-full blur-[120px] -z-10" />
 
                     {/* Left Details */}
                     <div className="flex-1 space-y-6 lg:max-w-xl">
@@ -145,8 +145,11 @@ const PartnerWithUs = () => {
 
                     {/* Right Media Frame */}
                     <div className="flex-1 w-full max-w-lg lg:max-w-none flex justify-center">
-                        <div className="relative group p-3 bg-white border border-gray-100 rounded-[32px] shadow-2xl shadow-gray-200 hover:-translate-y-1 transition duration-300">
-                            <div className="absolute inset-0 bg-red-100/30 rounded-[32px] blur-xl -z-10 group-hover:scale-105 transition duration-300" />
+                        <div className="relative group p-3 bg-white border border-gray-100 rounded-[32px] shadow-[0_20px_50px_rgba(255,42,20,0.12)] hover:shadow-[0_25px_60px_rgba(255,42,20,0.22)] hover:-translate-y-1 transition duration-300">
+                            {/* Layered glowing elements behind the image */}
+                            <div className="absolute -inset-10 bg-gradient-to-tr from-[#FF2A14]/20 to-[#FF2A14]/5 rounded-[40px] blur-3xl -z-10 opacity-70 group-hover:opacity-90 group-hover:scale-110 transition duration-500" />
+                            <div className="absolute -inset-2 bg-gradient-to-tr from-[#FF2A14]/30 via-[#FF2A14]/15 to-transparent rounded-[36px] blur-xl -z-10 group-hover:scale-105 transition duration-300" />
+                            
                             <div className="relative rounded-2xl overflow-hidden aspect-video w-full sm:w-[500px]">
                                 <img 
                                     src={partnerUs1} 
@@ -190,41 +193,138 @@ const PartnerWithUs = () => {
                         <div className="w-12 h-1 bg-[#FF2A14] mx-auto rounded-full" />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                        {/* Left Benefits List */}
-                        <div className="lg:col-span-4 space-y-8 lg:text-right order-2 lg:order-1">
-                            {benefitsLeft.map((item) => (
-                                <div key={item.id} className="flex items-center lg:justify-end gap-4 group">
-                                    <span className="text-gray-700 font-extrabold text-base tracking-tight lg:order-1 group-hover:text-[#FF2A14] transition-colors">{item.text}</span>
-                                    <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-md shadow-red-500/10 lg:order-2 shrink-0">
-                                        {item.id}
-                                    </span>
-                                </div>
-                            ))}
+                    {/* Desktop View Circular Layout with SVG Connecting Lines & Arc Tracks */}
+                    <div className="relative w-full max-w-5xl mx-auto h-[600px] hidden lg:block select-none">
+                        
+                        {/* Background SVG Arcs & Dotted Connecting Lines */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            {/* Dotted red connecting lines radiating from center (500, 300) to each number position */}
+                            {/* Left Column lines */}
+                            <line x1="500" y1="300" x2="320" y2="150" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="270" y2="250" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="270" y2="350" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="320" y2="450" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+
+                            {/* Right Column lines */}
+                            <line x1="500" y1="300" x2="680" y2="150" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="730" y2="250" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="730" y2="350" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+                            <line x1="500" y1="300" x2="680" y2="450" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
+
+                            {/* Circular concentric track arcs centered at (500, 300) */}
+                            {/* Inner concentric tracks (radius 195) */}
+                            <path d="M 402.5 127 A 195 195 0 0 0 402.5 473" fill="none" stroke="#E5E7EB" strokeWidth="2" />
+                            <path d="M 597.5 127 A 195 195 0 0 1 597.5 473" fill="none" stroke="#E5E7EB" strokeWidth="2" />
+
+                            {/* Outer concentric tracks (radius 235) */}
+                            <path d="M 382.5 97 A 235 235 0 0 0 382.5 503" fill="none" stroke="#E5E7EB" strokeWidth="1.5" />
+                            <path d="M 617.5 97 A 235 235 0 0 1 617.5 503" fill="none" stroke="#E5E7EB" strokeWidth="1.5" />
+                        </svg>
+
+                        {/* Central Decorative Circular Avatar */}
+                        <div 
+                            className="absolute w-[280px] h-[280px] rounded-full bg-white p-3 border-2 border-dashed border-red-100 shadow-2xl flex items-center justify-center z-10"
+                            style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+                        >
+                            <div className="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-lg bg-white">
+                                <img 
+                                    src={partnerUs2} 
+                                    alt="Salon Stylist Benefits" 
+                                    className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                                />
+                            </div>
                         </div>
 
+                        {/* absolutely positioned benefit markers */}
+                        {/* LEFT COLUMN - Numbers 1 to 4 */}
+                        <div className="absolute flex items-center justify-end" style={{ left: '32%', top: '25%', transform: 'translate(-50%, -50%)' }}>
+                            <div className="absolute right-12 whitespace-nowrap text-right pr-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">More Appointments</span>
+                            </div>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">1</span>
+                        </div>
+
+                        <div className="absolute flex items-center justify-end" style={{ left: '27%', top: '41.7%', transform: 'translate(-50%, -50%)' }}>
+                            <div className="absolute right-12 whitespace-nowrap text-right pr-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Online Presence</span>
+                            </div>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">2</span>
+                        </div>
+
+                        <div className="absolute flex items-center justify-end" style={{ left: '27%', top: '58.3%', transform: 'translate(-50%, -50%)' }}>
+                            <div className="absolute right-12 whitespace-nowrap text-right pr-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Customer Management</span>
+                            </div>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">3</span>
+                        </div>
+
+                        <div className="absolute flex items-center justify-end" style={{ left: '32%', top: '75%', transform: 'translate(-50%, -50%)' }}>
+                            <div className="absolute right-12 whitespace-nowrap text-right pr-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Staff Management</span>
+                            </div>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">4</span>
+                        </div>
+
+                        {/* RIGHT COLUMN - Numbers 5 to 8 */}
+                        <div className="absolute flex items-center justify-start" style={{ left: '68%', top: '25%', transform: 'translate(-50%, -50%)' }}>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">5</span>
+                            <div className="absolute left-12 whitespace-nowrap text-left pl-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Automated Reminders</span>
+                            </div>
+                        </div>
+
+                        <div className="absolute flex items-center justify-start" style={{ left: '73%', top: '41.7%', transform: 'translate(-50%, -50%)' }}>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">6</span>
+                            <div className="absolute left-12 whitespace-nowrap text-left pl-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Payment Tracking</span>
+                            </div>
+                        </div>
+
+                        <div className="absolute flex items-center justify-start" style={{ left: '73%', top: '58.3%', transform: 'translate(-50%, -50%)' }}>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">7</span>
+                            <div className="absolute left-12 whitespace-nowrap text-left pl-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Reports & Analytics</span>
+                            </div>
+                        </div>
+
+                        <div className="absolute flex items-center justify-start" style={{ left: '68%', top: '75%', transform: 'translate(-50%, -50%)' }}>
+                            <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">8</span>
+                            <div className="absolute left-12 whitespace-nowrap text-left pl-2">
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Marketing Support</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Mobile View Stacked List Layout */}
+                    <div className="block lg:hidden px-4">
                         {/* Center Decorative Circular Avatar */}
-                        <div className="lg:col-span-4 flex justify-center order-1 lg:order-2">
-                            <div className="relative p-6 rounded-full border-2 border-dashed border-red-100 bg-[#FF2A14]/10 shadow-inner">
-                                <div className="absolute inset-4 rounded-full bg-white -z-10" />
-                                <div className="w-60 h-60 rounded-full overflow-hidden border-[6px] border-white shadow-2xl">
+                        <div className="flex justify-center mb-12">
+                            <div className="relative p-4 rounded-full border-2 border-dashed border-red-100 bg-[#FF2A14]/5 shadow-inner">
+                                <div className="absolute inset-3 rounded-full bg-white -z-10" />
+                                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-xl">
                                     <img 
                                         src={partnerUs2} 
                                         alt="Salon Stylist Benefits" 
-                                        className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                                        className="w-full h-full object-cover" 
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Benefits List */}
-                        <div className="lg:col-span-4 space-y-8 text-left order-3">
-                            {benefitsRight.map((item) => (
-                                <div key={item.id} className="flex items-center justify-start gap-4 group">
-                                    <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-md shadow-red-500/10 shrink-0">
+                        {/* Benefits Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[...benefitsLeft, ...benefitsRight].map((item) => (
+                                <div 
+                                    key={item.id} 
+                                    className="flex items-center gap-4 p-4 bg-gray-50/70 border border-gray-100 rounded-2xl hover:bg-red-50/50 hover:border-red-100 transition duration-300 group"
+                                >
+                                    <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-md shadow-red-500/10 shrink-0 group-hover:scale-105 transition-transform select-none">
                                         {item.id}
                                     </span>
-                                    <span className="text-gray-700 font-extrabold text-base tracking-tight group-hover:text-[#FF2A14] transition-colors">{item.text}</span>
+                                    <span className="text-gray-900 font-extrabold text-sm sm:text-base tracking-tight group-hover:text-[#FF2A14] transition-colors">
+                                        {item.text}
+                                    </span>
                                 </div>
                             ))}
                         </div>

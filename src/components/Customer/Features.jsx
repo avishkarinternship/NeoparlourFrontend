@@ -68,7 +68,7 @@ const Features = () => {
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
           <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-          <a href="#" className="hover:text-gray-900 transition-colors">GIFTCARD</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
           <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
             OFFERS
             <img src={offersIcon} alt="Offers" className="w-4 h-4 object-contain" />

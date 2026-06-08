@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
-import { loginCustomer, clearCustomerError } from '../../redux/slices/customerSlice';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { loginCustomer, clearCustomerError, switchTenant } from '../../redux/slices/customerSlice';
 import { User, Lock, Sparkles, AlertCircle } from 'lucide-react';
 import PasswordResetModal from './PasswordResetModal';
 
@@ -12,6 +12,7 @@ import rightBackground from '../../assets/CustomerLogin/right_background.jpg';
 const CustomerLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Pulling customer state from redux
   const { loading, error } = useSelector((state) => state.customer);
@@ -35,8 +36,26 @@ const CustomerLogin = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(loginCustomer(formData)).unwrap().then(() => {
-      navigate('/');
+    dispatch(loginCustomer(formData)).unwrap().then((res) => {
+      const customerToken = res?.token;
+      const activeSalonId = localStorage.getItem('activeSalonId');
+      
+      if (activeSalonId && customerToken) {
+        dispatch(switchTenant({
+          token: customerToken,
+          salonId: activeSalonId,
+          salonName: 'Selected Salon'
+        })).unwrap().then(() => {
+          const from = location.state?.from || '/';
+          navigate(from, { state: location.state?.bookingState });
+        }).catch(() => {
+          const from = location.state?.from || '/';
+          navigate(from);
+        });
+      } else {
+        const from = location.state?.from || '/';
+        navigate(from);
+      }
     });
   };
 

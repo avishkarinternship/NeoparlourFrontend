@@ -53,6 +53,15 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
             action: () => navigate('/customer/support')
         },
         { 
+            label: 'Salons', 
+            icon: (
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            ),
+            action: () => navigate('/customer/salons')
+        },
+        { 
             label: 'My Bookings', 
             icon: (
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -118,7 +127,7 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
             />
 
             {/* Drawer Panel */}
-            <div className={`absolute right-0 top-0 h-full w-[360px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+            <div className={`absolute right-0 top-0 h-full w-full max-w-[360px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
                 
                 {/* User Info Header Section */}
                 <div className="flex items-center gap-4 p-6 border-b border-gray-100 relative">

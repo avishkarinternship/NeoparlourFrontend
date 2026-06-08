@@ -17,6 +17,7 @@ import percentageIcon from '../../../assets/Owner/Manage/Products/percentage_ico
 import rateIcon from '../../../assets/Owner/Manage/Products/rate_icon.svg';
 
 const AddPackages = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Controlled Form Inputs State Management
     const [packageDetails, setPackageDetails] = useState('');
     const [couponCode, setCouponCode] = useState('');
@@ -57,13 +58,13 @@ const AddPackages = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVIGATION PANEL */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE COLUMN INTEGRATION BODY WRAPPER CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
                 
                 {/* LEVEL 1: APPLICATION WORKSPACE PRIMARY NAVIGATION CONTROL */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT DRAWER ACTIONS CONTROLLER */}
                 <ManageSideBar activeTab="Add Packages" onTabChange={(tab) => console.log(`Redirecting UI Context: ${tab}`)} />

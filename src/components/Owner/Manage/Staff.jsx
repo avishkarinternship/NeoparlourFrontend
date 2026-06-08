@@ -93,6 +93,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 };
 
 const Staff = () => {    
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Controlled input form states for adding a new staff member
     const [name, setName] = useState('');
     const [gender, setGender] = useState('');
@@ -215,13 +216,13 @@ const Staff = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVBAR */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
                 
                 {/* LEVEL 1: PRIMARY APP SIDEBAR */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
                 <ManageSideBar activeTab="Staff" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />

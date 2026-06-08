@@ -1,0 +1,1277 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    Scissors,
+    Search,
+    MapPin,
+    Calendar,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Star,
+    Check,
+    Plus,
+    Share2,
+    Clock,
+    Sparkles,
+    Shield,
+    Smartphone,
+    Compass,
+    Info,
+    CheckCircle2,
+    Map
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import axiosInstance from '../../api/axiosInstance';
+
+// Imported Layout Components
+import Footer from './Layouts/Footer.jsx';
+import BillDetails from './BillDetails.jsx';
+import AppointmentBooked from './AppointmentBooked.jsx';
+import SearchNavBar from './Layouts/SearchNavBar.jsx';
+
+// Local SVG and Image Assets
+import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
+import hairSpaIcon from '../../assets/Customer/BookingScreen/hair_spa.svg';
+import hairStylingIcon from '../../assets/Customer/BookingScreen/hair_styling.svg';
+import hairWashIcon from '../../assets/Customer/BookingScreen/hair_wash.svg';
+import coloringIcon from '../../assets/Customer/BookingScreen/coloring.svg';
+import shavingIcon from '../../assets/Customer/BookingScreen/shaving.svg';
+import straighteningIcon from '../../assets/Customer/BookingScreen/straightning.svg';
+import appleIcon from '../../assets/Customer/BookingScreen/apple_icon.svg';
+import playstoreIcon from '../../assets/Customer/BookingScreen/playstore_icon.svg';
+
+import expertOneImg from '../../assets/Customer/BookingScreen/Expert_One.png';
+import expertTwoImg from '../../assets/Customer/BookingScreen/Expert_Two.png';
+import expertThreeImg from '../../assets/Customer/BookingScreen/Expert_Three.png';
+
+// --- LOCAL ASYNC IMAGE COMPONENT ---
+const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
+  const [src, setSrc] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!imagePath) {
+      setSrc(null);
+      setError(true);
+      return;
+    }
+
+    let isMounted = true;
+    const controller = new AbortController();
+    setLoading(true);
+    setError(false);
+
+    const fetchImage = async () => {
+      try {
+        const response = await axiosInstance.get(`/images/${imagePath}`, {
+          responseType: 'blob',
+          signal: controller.signal
+        });
+        
+        if (isMounted) {
+          const blobUrl = URL.createObjectURL(response.data);
+          setSrc(blobUrl);
+        }
+      } catch (err) {
+        if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+          console.error("Failed to load async image:", err);
+          if (isMounted) {
+            setError(true);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchImage();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [imagePath]);
+
+  useEffect(() => {
+    return () => {
+      if (src) {
+        URL.revokeObjectURL(src);
+      }
+    };
+  }, [src]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
+        <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error || !src) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 font-extrabold text-sm uppercase">
+        {fallbackText}
+      </div>
+    );
+  }
+
+  return <img src={src} alt={alt} className={className} />;
+};
+
+// Helper to generate dynamic days
+const getNextDays = () => {
+    const days = [];
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < 14; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        days.push({
+            day: weekdays[d.getDay()],
+            num: d.getDate(),
+            month: d.toLocaleString('default', { month: 'long' }),
+            year: d.getFullYear(),
+            fullDate: `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`
+        });
+    }
+    return days;
+};
+
+const SelectService = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const activeSalonId = localStorage.getItem('activeSalonId');
+    const { isAuthenticated, token } = useSelector((state) => state.customer);
+
+    // --- STATE ---
+    const [salon, setSalon] = useState(null);
+    const [services, setServices] = useState([]);
+    const [allServices, setAllServices] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [staffList, setStaffList] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Track loaded statuses to prevent multiple calls
+    const [servicesLoaded, setServicesLoaded] = useState(false);
+    const [staffLoaded, setStaffLoaded] = useState(false);
+
+    // Refs for scrolling lazy-load
+    const servicesSectionRef = useRef(null);
+    const staffSectionRef = useRef(null);
+
+    const [selectedCategory, setSelectedCategory] = useState(location.state?.selectedCategory || '');
+    const [selectedGender, setSelectedGender] = useState('All');
+    const [selectedOffer, setSelectedOffer] = useState(location.state?.selectedOffer || null);
+    const [addedServices, setAddedServices] = useState(() => {
+        if (location.state?.addedServices) {
+            return location.state.addedServices;
+        }
+        const offer = location.state?.selectedOffer;
+        if (offer && offer.services) {
+            return offer.services.map(s => s.id);
+        }
+        return [];
+    });
+    
+    // Date & Time states
+    const nextDays = getNextDays();
+    const [selectedDateObj, setSelectedDateObj] = useState(() => {
+        return location.state?.selectedDateObj || nextDays[0];
+    });
+    const [selectedTime, setSelectedTime] = useState(() => {
+        return location.state?.selectedTime || null;
+    });
+    const [selectedSlot, setSelectedSlot] = useState(null); // Full slot object {startTime, displayTime}
+
+    // --- API-BASED SLOT & AVAILABILITY STATE ---
+    const [salonSlots, setSalonSlots] = useState([]);       // All salon slots for the day
+    const [staffSlots, setStaffSlots] = useState([]);       // Slots filtered for selected staff
+    const [availableStaffList, setAvailableStaffList] = useState([]); // Staff available at selected time
+    const [slotsLoading, setSlotsLoading] = useState(false);
+    const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
+
+    // Derive the time slots to display: staffSlots if a specific expert is selected, otherwise salonSlots
+    const displayedSlots = (selectedExpert && selectedExpert !== 'any' && staffSlots.length > 0) ? staffSlots : salonSlots;
+    const [selectedExpert, setSelectedExpert] = useState(() => {
+        return location.state?.selectedExpert || 'any';
+    });
+
+    // --- MODAL STATE ---
+    const [isBillOpen, setIsBillOpen] = useState(false);
+    const [isBookedOpen, setIsBookedOpen] = useState(false);
+    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+    // --- HELPERS ---
+    // Convert dateObj {day, num, month, year, fullDate:'06-06-2026'} → ISO Instant string
+    const dateObjToInstant = (dateObj) => {
+        if (!dateObj) return null;
+        const [dd, mm, yyyy] = dateObj.fullDate.split('-');
+        return `${yyyy}-${mm}-${dd}T00:00:00Z`;
+    };
+
+    // Helper to get the set of available staff IDs for quick lookup
+    const availableStaffIds = useMemo(() => {
+        return new Set(availableStaffList.map(s => s.staffId));
+    }, [availableStaffList]);
+
+    // --- BASEURL PATH UTILITY ---
+    const getSalonImageSrc = (imageUrl, fallbackImg) => {
+        if (!imageUrl) return fallbackImg;
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            return imageUrl;
+        }
+        const base = axiosInstance.defaults.baseURL || 'https://sb.neoparlour.com/api';
+        let cleanedUrl = imageUrl;
+        if (cleanedUrl.startsWith('/api')) {
+            const domain = base.replace(/\/api$/, '');
+            return `${domain}${cleanedUrl}`;
+        }
+        if (cleanedUrl.startsWith('api')) {
+            const domain = base.replace(/\/api$/, '');
+            return `${domain}/${cleanedUrl}`;
+        }
+        return `${base}${cleanedUrl.startsWith('/') ? '' : '/'}${cleanedUrl}`;
+    };
+
+    // Load Salon Details immediately on mount
+    useEffect(() => {
+        if (!activeSalonId) {
+            toast.error('No active salon selected. Redirecting to search.');
+            navigate('/customer/salons');
+            return;
+        }
+
+        const fetchSalonDetails = async () => {
+            setLoading(true);
+            try {
+                const salonRes = await axiosInstance.get(`/salons/${activeSalonId}`);
+                setSalon(salonRes.data);
+            } catch (error) {
+                console.error("Error loading salon details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchAllServices = async () => {
+            try {
+                const res = await axiosInstance.get('/services/active', {
+                    params: { salonId: activeSalonId }
+                });
+                const activeSrv = res.data || [];
+                setAllServices(activeSrv);
+            } catch (error) {
+                console.error("Error loading active services:", error);
+            }
+        };
+
+        fetchSalonDetails();
+        fetchAllServices();
+    }, [activeSalonId, navigate]);
+
+    // --- Compute durationMinutes from selected services ---
+    const durationMinutes = useMemo(() => {
+        const objs = allServices.length > 0
+            ? allServices.filter(s => addedServices.includes(s.id))
+            : [];
+        const total = objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
+        return total || 30;
+    }, [addedServices, allServices]);
+
+    // --- FETCH SALON SLOTS on mount / date change ---
+    useEffect(() => {
+        if (!activeSalonId) return;
+        const fetchSalonSlots = async () => {
+            setSlotsLoading(true);
+            try {
+                const dateInstant = dateObjToInstant(selectedDateObj);
+                const params = { salonId: activeSalonId };
+                if (dateInstant) params.selectedDate = dateInstant;
+                const res = await axiosInstance.get('/appointments/public/salon-slots', { params });
+                setSalonSlots(res.data || []);
+            } catch (error) {
+                console.error('[SelectService] Error fetching salon slots:', error);
+                setSalonSlots([]);
+            } finally {
+                setSlotsLoading(false);
+            }
+        };
+        fetchSalonSlots();
+    }, [activeSalonId, selectedDateObj]);
+
+    // --- FETCH STAFF-SPECIFIC SLOTS when expert selected ---
+    useEffect(() => {
+        if (!activeSalonId || !selectedExpert || selectedExpert === 'any') {
+            setStaffSlots([]);
+            return;
+        }
+        const fetchStaffSlots = async () => {
+            setSlotsLoading(true);
+            try {
+                const dateInstant = dateObjToInstant(selectedDateObj);
+                const params = {
+                    salonId: activeSalonId,
+                    durationMinutes: durationMinutes
+                };
+                if (dateInstant) params.selectedDate = dateInstant;
+                const res = await axiosInstance.get(`/appointments/public/staff/${selectedExpert}/available-slots`, { params });
+                setStaffSlots(res.data || []);
+            } catch (error) {
+                console.error('[SelectService] Error fetching staff slots:', error);
+                setStaffSlots([]);
+            } finally {
+                setSlotsLoading(false);
+            }
+        };
+        fetchStaffSlots();
+    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes]);
+
+    // --- FETCH AVAILABLE STAFF when time slot selected ---
+    useEffect(() => {
+        if (!activeSalonId || !selectedSlot?.startTime) {
+            setAvailableStaffList([]);
+            return;
+        }
+        const fetchAvailableStaff = async () => {
+            setAvailableStaffLoading(true);
+            try {
+                const res = await axiosInstance.get('/appointments/public/available-staff', {
+                    params: {
+                        salonId: activeSalonId,
+                        selectedTime: selectedSlot.startTime,
+                        durationMinutes: durationMinutes
+                    }
+                });
+                setAvailableStaffList(res.data || []);
+            } catch (error) {
+                console.error('[SelectService] Error fetching available staff:', error);
+                setAvailableStaffList([]);
+            } finally {
+                setAvailableStaffLoading(false);
+            }
+        };
+        fetchAvailableStaff();
+    }, [activeSalonId, selectedSlot, durationMinutes]);
+
+    const fetchServices = async () => {
+        if (servicesLoaded) return;
+        try {
+            console.log("[SelectService] Scroll down triggered: Fetching categories from API...");
+            const res = await axiosInstance.get('/services/categories', {
+                params: { salonId: activeSalonId }
+            });
+            const cats = res.data || [];
+            setCategories(cats);
+
+            // Initialize category
+            const initialCat = location.state?.selectedCategory || cats[0] || '';
+            if (initialCat) {
+                setSelectedCategory(initialCat);
+            }
+            setServicesLoaded(true);
+        } catch (error) {
+            console.error("Error fetching categories dynamically:", error);
+        }
+    };
+
+    // Lazy load Staff using search API
+    const fetchStaff = async () => {
+        if (staffLoaded) return;
+        try {
+            console.log("[SelectService] Scroll down triggered: Fetching staff search list from API...");
+            const staffRes = await axiosInstance.get('/staff/search', {
+                params: { size: 50, salonId: activeSalonId }
+            });
+            const staffData = staffRes.data?.content || staffRes.data || [];
+            setStaffList(staffData);
+            setStaffLoaded(true);
+        } catch (error) {
+            console.error("Error fetching staff dynamically:", error);
+        }
+    };
+
+    // Fetch services by selected category
+    // Filter services by selected category (checking local cache first, fallback to API)
+    useEffect(() => {
+        if (!selectedCategory) return;
+
+        if (allServices.length > 0) {
+            const activeSrv = allServices.filter(s => s.category?.toLowerCase() === selectedCategory?.toLowerCase());
+            setServices(activeSrv);
+        } else {
+            const fetchServicesByCategory = async () => {
+                try {
+                    console.log(`[SelectService] Fallback Fetching services for category: ${selectedCategory} ...`);
+                    const res = await axiosInstance.get('/services/by-category', {
+                        params: { category: selectedCategory, salonId: activeSalonId }
+                    });
+                    const fetchedServices = res.data || [];
+                    const activeSrv = fetchedServices.filter(s => s.active !== false);
+                    setServices(activeSrv);
+                } catch (error) {
+                    console.error(`Error fetching services fallback by category ${selectedCategory}:`, error);
+                }
+            };
+            fetchServicesByCategory();
+        }
+    }, [selectedCategory, allServices]);
+
+    // Setup IntersectionObservers for lazy loading
+    useEffect(() => {
+        if (loading) return; // Wait until initial salon details are ready
+
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '120px', // Load slightly before they enter the screen
+            threshold: 0.05
+        };
+
+        const servicesObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                fetchServices();
+                servicesObserver.disconnect();
+            }
+        }, observerOptions);
+
+        const staffObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                fetchStaff();
+                staffObserver.disconnect();
+            }
+        }, observerOptions);
+
+        if (servicesSectionRef.current && !servicesLoaded) servicesObserver.observe(servicesSectionRef.current);
+        if (staffSectionRef.current && !staffLoaded) staffObserver.observe(staffSectionRef.current);
+
+        return () => {
+            servicesObserver.disconnect();
+            staffObserver.disconnect();
+        };
+    }, [loading, servicesLoaded, staffLoaded]);
+
+    // Timings Formatting Utility
+    const formatTimeStr = (timeStr) => {
+        if (!timeStr) return '';
+        const parts = timeStr.split(':');
+        if (parts.length < 2) return timeStr;
+        let hours = parseInt(parts[0], 10);
+        const minutes = parts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    };
+
+    const isSalonOpenNow = () => {
+        if (!salon) return false;
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const todayDayName = daysOfWeek[new Date().getDay()];
+        if (salon.weeklyOffDay && salon.weeklyOffDay.toLowerCase() === todayDayName.toLowerCase()) {
+            return false;
+        }
+        if (!salon.openingTime || !salon.closingTime) return true;
+        
+        const now = new Date();
+        const [openH, openM] = salon.openingTime.split(':').map(Number);
+        const [closeH, closeM] = salon.closingTime.split(':').map(Number);
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const openTime = openH * 60 + openM;
+        const closeTime = closeH * 60 + closeM;
+        return currentTime >= openTime && currentTime <= closeTime;
+    };
+
+    // --- ACTIONS ---
+    const handleDiscardOffer = () => {
+        if (selectedOffer && selectedOffer.services) {
+            const offerServiceIds = selectedOffer.services.map(s => s.id);
+            setAddedServices(prev => prev.filter(sid => !offerServiceIds.includes(sid)));
+        }
+        setSelectedOffer(null);
+        toast.success('Offer and related services discarded.');
+    };
+
+    const handleServiceToggle = (id) => {
+        if (addedServices.includes(id)) {
+            setAddedServices(addedServices.filter(sid => sid !== id));
+        } else {
+            setAddedServices([...addedServices, id]);
+        }
+    };
+
+    const handleBookClick = () => {
+        if (addedServices.length === 0) {
+            toast.error('Please select at least one service to proceed.');
+            return;
+        }
+        if (!token) {
+            setShowLoginPrompt(true);
+            return;
+        }
+        setIsBillOpen(true);
+    };
+
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: salon?.name || 'Neoparlour Salon',
+                text: `Book appointment at ${salon?.name || 'Neoparlour'}`,
+                url: window.location.href,
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Link copied to clipboard!');
+        }
+    };
+
+    // Category mapping helper
+    const categoryIcons = {
+        'haircut': hairCutIcon,
+        'hair cut': hairCutIcon,
+        'coloring': coloringIcon,
+        'hair coloring': coloringIcon,
+        'hairspa': hairSpaIcon,
+        'hair spa': hairSpaIcon,
+        'hairstyling': hairStylingIcon,
+        'hair styling': hairStylingIcon,
+        'shaving': shavingIcon,
+        'hair wash': hairWashIcon,
+        'hairwash': hairWashIcon,
+        'straightening': straighteningIcon,
+        'straightning': straighteningIcon,
+    };
+
+    // Filtered services
+    const filteredServicesList = services.filter(s => {
+        const matchesCategory = s.category === selectedCategory;
+        if (!matchesCategory) return false;
+        
+        if (selectedGender !== 'All') {
+            const nameLower = (s.name || '').toLowerCase();
+            if (selectedGender === 'Male') {
+                return !nameLower.includes('women') && !nameLower.includes('female');
+            } else if (selectedGender === 'Female') {
+                return !nameLower.includes('men') && !nameLower.includes('male');
+            }
+        }
+        return true;
+    });
+
+    // Selected Expert details
+    const selectedExpertObj = staffList.find(s => s.id === selectedExpert) || (selectedExpert === 'any' ? { name: 'Any Stylist (Auto Assign)' } : { name: 'Stylist' });
+
+    // Customer details from cache
+    const customerUser = JSON.parse(localStorage.getItem('customerUser')) || {};
+    const customerProfile = JSON.parse(localStorage.getItem('customerProfile')) || {};
+    const customerName = customerProfile.name || customerUser.name || 'Valued Customer';
+    const customerPhone = customerProfile.phone || customerUser.phone || 'N/A';
+
+    // Services selected objects (looking up in allServices cache for cross-category selection persistence)
+    const selectedServiceObjects = allServices.length > 0 
+        ? allServices.filter(s => addedServices.includes(s.id))
+        : services.filter(s => addedServices.includes(s.id));
+
+    // Real-time Billing & Offer Discount Calculations
+    const serviceSubtotal = selectedServiceObjects.reduce((sum, s) => sum + (s.price || 0), 0);
+    let discountAmount = 0;
+    let offerServiceIds = [];
+    if (selectedOffer && selectedOffer.services) {
+        offerServiceIds = selectedOffer.services.map(s => s.id);
+        const offerServicesTotal = selectedServiceObjects
+            .filter(s => offerServiceIds.includes(s.id))
+            .reduce((sum, s) => sum + (s.price || 0), 0);
+        discountAmount = Math.round(offerServicesTotal * ((selectedOffer.percentage || 0) / 100));
+    }
+    const taxAndCharges = Math.round((serviceSubtotal - discountAmount) * 0.18); // 18% GST on discounted subtotal
+    const grandTotal = serviceSubtotal - discountAmount + taxAndCharges;
+
+    // Staff avatar fallback map
+    const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
+    const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
+                <SearchNavBar />
+                <div className="flex-1 flex flex-col items-center justify-center py-32">
+                    <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
+                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Booking Portal...</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
+
+            {/* ==================== NAVBAR ==================== */}
+            <SearchNavBar />
+
+            {/* ==================== BREADCRUMBS ==================== */}
+            <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
+                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span>&gt;</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>Salon Description</span>
+                    <span>&gt;</span>
+                    <span className="text-slate-900 font-black">Select Service</span>
+                </div>
+            </nav>
+
+            {/* ==================== MAIN CONTENT ==================== */}
+            <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
+
+                {/* Header Block */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight uppercase">
+                            {salon?.name || salon?.salonName || 'Salon Details'}
+                        </h1>
+                        <p className="text-xs text-slate-400 font-bold mt-1.5 flex items-center gap-1.5 uppercase">
+                            <MapPin className="w-4 h-4 text-red-500 shrink-0" />
+                            {[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                        <div className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
+                            isSalonOpenNow() 
+                                ? 'bg-green-50 border border-green-200 text-green-700' 
+                                : 'bg-red-50 border border-red-200 text-red-600'
+                        }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
+                            {isSalonOpenNow() ? 'Open Now' : 'Closed'} | {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} To {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}
+                        </div>
+                        <button 
+                            type="button" 
+                            onClick={handleShare}
+                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-600 transition shadow-sm"
+                            title="Share Salon"
+                        >
+                            <Share2 className="w-4.5 h-4.5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Master Two-Column Grid Setup */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+                    {/* LEFT CONTAINER CANVAS (2/3 Width) */}
+                    <div className="lg:col-span-2 space-y-8">
+
+                        {/* Services Picker Section */}
+                        <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
+                            {!servicesLoaded ? (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <div className="animate-spin h-8 w-8 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading catalog...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                        <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                            <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Services
+                                        </h3>
+                                        {/* Gender filter dropdown */}
+                                        <div className="relative">
+                                            <select 
+                                                value={selectedGender} 
+                                                onChange={(e) => setSelectedGender(e.target.value)}
+                                                className="appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-xs font-bold text-slate-700 outline-none focus:border-red-500 cursor-pointer shadow-sm hover:bg-white transition-all"
+                                            >
+                                                <option value="All">All Genders</option>
+                                                <option value="Male">Male Only</option>
+                                                <option value="Female">Female Only</option>
+                                            </select>
+                                            <ChevronDown className="w-4 h-4 text-slate-450 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    {/* Category icons slider strip */}
+                                    {categories.length > 0 ? (
+                                        <div className="flex items-center gap-3.5 overflow-x-auto pb-4 mb-6 border-b border-slate-100 scrollbar-none">
+                                            {categories.map((catName) => {
+                                                const catLower = catName.toLowerCase();
+                                                const isActive = selectedCategory === catName;
+                                                const catIcon = categoryIcons[catLower] || hairCutIcon;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={catName}
+                                                        onClick={() => setSelectedCategory(catName)}
+                                                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 min-w-[90px] h-[90px] transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                                                            isActive
+                                                                ? 'border-[#FF0B01] bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                                : 'border-slate-100 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        <img
+                                                            src={catIcon}
+                                                            alt={catName}
+                                                            className={`w-7 h-7 object-contain mb-1.5 ${isActive ? 'invert brightness-0' : ''}`}
+                                                        />
+                                                        <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">{catName}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">No Categories Found.</div>
+                                    )}
+
+                                    {/* Services List Rendering */}
+                                    <div className="space-y-4">
+                                        {filteredServicesList.map((service) => {
+                                            const isAdded = addedServices.includes(service.id);
+                                            return (
+                                                <div
+                                                    key={service.id}
+                                                    className={`flex gap-4 p-5 rounded-2xl bg-white border transition-all duration-300 ${
+                                                        isAdded 
+                                                            ? 'border-[#FF0B01] bg-[#FF0B01]/[0.02] shadow-sm shadow-[#FF0B01]/5 ring-1 ring-[#FF0B01]/10' 
+                                                            : 'border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/50'
+                                                    }`}
+                                                >
+                                                    <div className="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center shrink-0">
+                                                        <Scissors className="w-7 h-7 text-slate-400" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <h4 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight uppercase leading-tight">{service.name}</h4>
+                                                            <span className="bg-slate-100 text-slate-500 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                                {service.category}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
+                                                            <Clock className="w-3.5 h-3.5 text-slate-450" />
+                                                            Approx. {service.duration || 30} Min duration
+                                                        </p>
+                                                        <p className="text-base font-black text-slate-900 mt-2">₹{service.price}</p>
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleServiceToggle(service.id)}
+                                                            className={`flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-300 w-24 hover:scale-105 active:scale-95 shadow-sm ${
+                                                                isAdded
+                                                                    ? 'bg-[#FF0B01] text-white hover:bg-red-700 shadow-red-500/10'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                            }`}
+                                                        >
+                                                            {isAdded ? (
+                                                                <>
+                                                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                                                    <span>Added</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                                                    <span>Add</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {filteredServicesList.length === 0 && (
+                                            <div className="text-center py-8 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                                No services found matching filters.
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </section>
+
+                        {/* Calendar Selector Component */}
+                        <section className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
+                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Date and Time
+                            </h3>
+                            
+                            {/* Months Indicator header */}
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700">
+                                <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                                        Year {selectedDateObj?.year || '2026'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Scroller Days Container */}
+                            <div className="flex gap-2.5 overflow-x-auto pb-4 border-b border-slate-100 scrollbar-none">
+                                {nextDays.map((d, idx) => {
+                                    const isSelectedDate = selectedDateObj?.fullDate === d.fullDate;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() => {
+                                                setSelectedDateObj(d);
+                                                setSelectedTime(null);
+                                                setSelectedSlot(null);
+                                                setAvailableStaffList([]);
+                                            }}
+                                            className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
+                                                isSelectedDate
+                                                    ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                    : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
+                                            }`}
+                                        >
+                                            <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
+                                            <span className="text-sm font-black">{d.num}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Time Slots grid */}
+                            {slotsLoading ? (
+                                <div className="flex flex-col items-center justify-center py-8 mt-5">
+                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading available slots...</p>
+                                </div>
+                            ) : displayedSlots.length === 0 ? (
+                                <div className="text-center py-8 mt-5">
+                                    <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
+                                    {selectedExpert && selectedExpert !== 'any' && (
+                                        <p className="text-[10px] text-slate-350 font-medium mt-1">Try selecting a different date or "Auto Assign"</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
+                                    {displayedSlots.map((slot, idx) => {
+                                        const isSelectedTime = selectedSlot?.startTime === slot.startTime;
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={slot.startTime || idx}
+                                                onClick={() => {
+                                                    setSelectedTime(slot.displayTime);
+                                                    setSelectedSlot(slot);
+                                                }}
+                                                className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${
+                                                    isSelectedTime
+                                                        ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
+                                                        : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {slot.displayTime}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Booking Trigger button and disclaimer */}
+                        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm text-center space-y-4">
+                            <button
+                                type="button"
+                                onClick={handleBookClick}
+                                className="w-full max-w-md bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
+                            >
+                                Book and Pay After Services
+                            </button>
+                            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                                By booking an appointment, you agree to our{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
+                                and{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    {/* RIGHT CONTAINER SIDEBAR (1/3 Width) */}
+                    <div className="space-y-6 lg:sticky lg:top-6">
+
+                        {/* Real-time Booking Summary Card */}
+                        <section className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                                <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Booking Summary
+                            </h3>
+                            {selectedServiceObjects.length === 0 ? (
+                                <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                    No services selected yet.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Grouped Services List */}
+                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                                        {/* Group 1: Offer Services */}
+                                        {selectedOffer ? (
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between bg-red-50/50 border border-red-100/50 rounded-xl p-2.5">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-[#FF0B01] tracking-wider">
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                        <span className="line-clamp-1">{selectedOffer.name} ({selectedOffer.percentage}% OFF)</span>
+                                                    </div>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={handleDiscardOffer}
+                                                        className="text-[9px] font-black uppercase text-red-500 hover:text-red-700 bg-red-100/50 hover:bg-red-100 px-2 py-1 rounded-lg transition-colors shrink-0"
+                                                        title="Discard offer and related services"
+                                                    >
+                                                        Discard
+                                                    </button>
+                                                </div>
+                                                <div className="pl-2 border-l-2 border-red-200 space-y-2">
+                                                    {selectedServiceObjects.filter(s => offerServiceIds.includes(s.id)).map(s => (
+                                                        <div key={s.id} className="flex justify-between items-center text-xs">
+                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
+                                                            <span className="font-extrabold text-slate-900">₹{s.price}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+
+                                        {/* Group 2: Regular Services */}
+                                        {selectedServiceObjects.filter(s => !offerServiceIds.includes(s.id)).length > 0 ? (
+                                            <div className="space-y-2 pt-2">
+                                                {selectedOffer && (
+                                                    <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                                        Regular Services
+                                                    </div>
+                                                )}
+                                                <div className="space-y-2">
+                                                    {selectedServiceObjects.filter(s => !offerServiceIds.includes(s.id)).map(s => (
+                                                        <div key={s.id} className="flex justify-between items-center text-xs">
+                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
+                                                            <span className="font-extrabold text-slate-900">₹{s.price}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    {/* Cost breakdown ledger */}
+                                    <div className="border-t border-slate-100 pt-3 space-y-2 text-xs font-semibold text-slate-500">
+                                        <div className="flex justify-between">
+                                            <span>Subtotal</span>
+                                            <span className="text-slate-800 font-bold">₹{serviceSubtotal}</span>
+                                        </div>
+                                        
+                                        {discountAmount > 0 && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span className="flex items-center gap-1">
+                                                    <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Offer Discount
+                                                </span>
+                                                <span className="font-bold">-₹{discountAmount}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between">
+                                            <span>GST (18% Charges)</span>
+                                            <span className="text-slate-800 font-bold">₹{taxAndCharges}</span>
+                                        </div>
+
+                                        <div className="flex justify-between text-sm font-black text-slate-950 pt-2 border-t border-dashed border-slate-100">
+                                            <span>Grand Total</span>
+                                            <span className="text-base text-[#FF0B01] font-black">₹{grandTotal}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Promo Download App callout */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm text-center">
+                            <Smartphone className="w-8 h-8 text-[#FF0B01] mx-auto mb-3" />
+                            <h4 className="text-sm font-black text-slate-900 tracking-tight uppercase">
+                                Get Into Neoparlour App Today!
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium mt-2 leading-relaxed">
+                                Your All in One Solution for Salons, Spas, and Wellness right in your pocket.
+                            </p>
+
+                            <div className="flex flex-col gap-2.5 mt-5">
+                                {/* App Store Badge */}
+                                <a
+                                    href="#"
+                                    className="flex items-center bg-black text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
+                                >
+                                    <img src={appleIcon} alt="App Store" className="w-5 h-5 mr-2" />
+                                    <div className="text-left leading-none">
+                                        <span className="text-[8px] uppercase tracking-wider block text-gray-400">Download on</span>
+                                        <span className="text-xs font-bold font-sans block mt-0.5">App Store</span>
+                                    </div>
+                                </a>
+
+                                {/* Google Play Badge */}
+                                <a
+                                    href="#"
+                                    className="flex items-center bg-[#FF0B01] text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
+                                >
+                                    <img src={playstoreIcon} alt="Google Play" className="w-5 h-5 mr-2" />
+                                    <div className="text-left leading-none">
+                                        <span className="text-[8px] uppercase tracking-wider block text-red-200">Get it on</span>
+                                        <span className="text-xs font-bold font-sans block mt-0.5">Google Play</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Select Expert Section */}
+                        <section ref={staffSectionRef} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                                <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Expert
+                            </h3>
+                            {!staffLoaded ? (
+                                <div className="flex flex-col items-center justify-center py-8">
+                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading roster...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Auto-Assign slot */}
+                                    <div 
+                                        onClick={() => {
+                                            setSelectedExpert('any');
+                                            setStaffSlots([]);
+                                        }}
+                                        className={`relative bg-white border-2 rounded-2xl p-4 shadow-sm flex items-center gap-4 cursor-pointer transition-all duration-300 ${
+                                            selectedExpert === 'any' 
+                                                ? 'border-[#FF0B01] bg-red-50/[0.01]' 
+                                                : 'border-slate-100 hover:border-slate-200'
+                                        }`}
+                                    >
+                                        <div className={`w-20 h-24 rounded-xl flex flex-col items-center justify-center border-2 transition-all shrink-0 ${
+                                            selectedExpert === 'any' ? 'border-[#FF0B01] bg-red-50 text-[#FF0B01]' : 'border-dashed border-slate-300 bg-slate-50 text-slate-400'
+                                        }`}>
+                                            <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-slate-400'}`} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-xs font-black text-slate-900 uppercase">Auto Assign</h4>
+                                            <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-relaxed">System will auto-assign the best available expert for your services.</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
+                                            <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                Instant
+                                            </span>
+                                            <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
+                                                selectedExpert === 'any' ? 'bg-[#FF0B01] text-white shadow-sm' : 'bg-slate-100 text-slate-600'
+                                            }`}>
+                                                {selectedExpert === 'any' ? 'Selected' : 'Select'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Stylists roster list */}
+                                    {staffList.map((staff, index) => {
+                                        const isSelectedExp = selectedExpert === staff.id;
+                                        const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
+                                        return (
+                                            <div 
+                                                key={staff.id} 
+                                                className={`relative bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all duration-300 ${
+                                                    isSelectedExp ? 'ring-1 ring-[#FF0B01]/30 border-[#FF0B01]/50' : ''
+                                                }`}
+                                            >
+                                                {/* Stylist Image left block */}
+                                                <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 relative shrink-0">
+                                                    {staff.imagePath ? (
+                                                        <AsyncImage 
+                                                            imagePath={staff.imagePath} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                            fallbackText={staff.name?.[0] || 'S'} 
+                                                        />
+                                                    ) : (
+                                                        <img 
+                                                            src={getExpertImg(index)} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                        />
+                                                    )}
+                                                    {/* bottom name overlay inside image */}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 text-center">
+                                                        <span className="text-[9px] font-bold text-white block truncate">{staff.name}</span>
+                                                        <span className="text-[7px] text-slate-350 block truncate leading-none mt-0.5">{role}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Center details */}
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-xs font-black text-slate-900 truncate uppercase">{staff.name}</h4>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5 font-bold uppercase">{role}</p>
+                                                    
+                                                    {/* Star Rating - use actual rating */}
+                                                    {staff.rating != null && (
+                                                        <div className="flex items-center gap-1 mt-1.5">
+                                                            <div className="flex items-center">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <Star key={i} className={`w-3 h-3 ${
+                                                                        i < Math.round(parseFloat(staff.rating))
+                                                                            ? 'text-amber-400 fill-amber-400'
+                                                                            : 'text-slate-200'
+                                                                    }`} />
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-slate-600">{parseFloat(staff.rating).toFixed(1)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Right selection button */}
+                                                <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
+                                                    {/* Dynamic Availability status */}
+                                                    {availableStaffLoading ? (
+                                                        <span className="flex items-center gap-1 text-[8px] font-black uppercase text-slate-400">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></span>
+                                                            Checking...
+                                                        </span>
+                                                    ) : selectedSlot && availableStaffList.length > 0 ? (
+                                                        availableStaffIds.has(staff.id) ? (
+                                                            <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                Available
+                                                            </span>
+                                                        ) : (
+                                                            <span className="flex items-center gap-1 text-[8px] font-black uppercase text-slate-400">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                                                Unavailable
+                                                            </span>
+                                                        )
+                                                    ) : (
+                                                        <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                            Available
+                                                        </span>
+                                                    )}
+                                                    
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedExpert(staff.id)}
+                                                        className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all duration-300 w-16 shadow-sm ${
+                                                            isSelectedExp
+                                                                ? 'bg-[#FF0B01] text-white hover:bg-red-700'
+                                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                        }`}
+                                                    >
+                                                        {isSelectedExp ? 'Added' : 'Add'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {staffList.length === 0 && (
+                                        <div className="text-center py-6 text-xs text-slate-450 font-bold uppercase tracking-wider">
+                                            No stylists currently rostered.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </section>
+
+                    </div>
+                </div>
+            </main>
+
+            {/* ==================== FOOTER ==================== */}
+            <Footer />
+
+            {/* ==================== BILL DETAILS MODAL ==================== */}
+            <BillDetails
+                isOpen={isBillOpen}
+                onClose={() => setIsBillOpen(false)}
+                onConfirm={() => {
+                    setIsBillOpen(false);
+                    setIsBookedOpen(true);
+                }}
+                selectedServices={selectedServiceObjects}
+                date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}
+                time={selectedTime}
+                expert={selectedExpertObj}
+                customerName={customerName}
+                customerPhone={customerPhone}
+                selectedOffer={selectedOffer}
+                discountAmount={discountAmount}
+            />
+
+            {/* ==================== APPOINTMENT BOOKED MODAL ==================== */}
+            <AppointmentBooked
+                isOpen={isBookedOpen}
+                onClose={() => setIsBookedOpen(false)}
+                selectedServices={selectedServiceObjects}
+                date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}
+                time={selectedTime}
+                expert={selectedExpertObj}
+                customerName={customerName}
+                customerPhone={customerPhone}
+                selectedOffer={selectedOffer}
+                discountAmount={discountAmount}
+            />
+
+            {/* ==================== LOGIN PROMPT MODAL ==================== */}
+            {showLoginPrompt && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl p-8 max-w-md w-full relative overflow-hidden transition-all duration-300 transform scale-100">
+                        {/* Decorative background accent */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-[80px]" />
+                        
+                        <div className="flex flex-col items-center text-center space-y-6">
+                            {/* Icon container */}
+                            <div className="w-16 h-16 bg-red-50 rounded-[24px] flex items-center justify-center shadow-lg shadow-red-500/10 shrink-0">
+                                <Sparkles className="w-8 h-8 text-[#FF0B01] animate-pulse" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Login Required</h3>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                    To confirm your slot and book this appointment, please log in to your account. We will preserve your selected services and booking details!
+                                </p>
+                            </div>
+
+                            {/* CTAs */}
+                            <div className="w-full space-y-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowLoginPrompt(false);
+                                        navigate('/customer/login', {
+                                            state: {
+                                                from: location.pathname,
+                                                bookingState: {
+                                                    addedServices,
+                                                    selectedDateObj,
+                                                    selectedTime,
+                                                    selectedExpert,
+                                                    selectedOffer
+                                                }
+                                            }
+                                        });
+                                    }}
+                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
+                                >
+                                    Log In Now
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLoginPrompt(false)}
+                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+export default SelectService;

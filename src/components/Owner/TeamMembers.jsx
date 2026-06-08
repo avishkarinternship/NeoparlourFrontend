@@ -9,6 +9,7 @@ import filterIcon from '../../assets/Owner/TeamMembers/filter_icon.svg';
 import customOrderIcon from '../../assets/Owner/TeamMembers/custom_order_icon.svg';
 
 const TeamMembers = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Team dataset matching your specified parameters
     const [teamList, setTeamList] = useState([
         {
@@ -46,13 +47,13 @@ const TeamMembers = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVIGATION PANEL */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* TWO COLUMN INTEGRATION BODY WRAPPER CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
                 
                 {/* PRIMARY WORKSPACE FLOW NAVIGATION CONTROL */}
-                <Sidebar activeTab="Team" />
+                <Sidebar activeTab="Team" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* ACTIVE SUBSYSTEM MONITOR DISPLAY CANVAS ENVIRONMENT */}
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-6">

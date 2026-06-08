@@ -120,6 +120,7 @@ const getTodayDateString = () => {
 
 const OwnerDashboard = () => {
     const navigate = useNavigate();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // API states
     const [viewType, setViewType] = useState('day');
     const [customStartDate, setCustomStartDate] = useState(getFirstDayOfMonth());
@@ -268,13 +269,13 @@ const OwnerDashboard = () => {
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
 
             {/* --- TOP NAVBAR --- */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* --- MAIN LAYOUT WRAPPER --- */}
             <div className="flex flex-1">
 
                 {/* --- SIDEBAR --- */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* --- MAIN GRID DASHBOARD CANVAS --- */}
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">

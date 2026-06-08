@@ -13,6 +13,7 @@ import amountIcon from '../../assets/Owner/Billing/amount_icon.svg';
 import downloadIcon from '../../assets/Owner/Billing/download_icon.svg';
 
 const Billing = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Form structural inputs state management
     const [searchClient, setSearchClient] = useState('');
     const [selectedService, setSelectedService] = useState('');
@@ -49,13 +50,13 @@ const Billing = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVIGATION PANEL */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* TWO COLUMN INTEGRATION BODY WRAPPER CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
                 
                 {/* PRIMARY WORKSPACE FLOW NAVIGATION CONTROL */}
-                <Sidebar activeTab="Billing" />
+                <Sidebar activeTab="Billing" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* ACTIVE SUBSYSTEM MONITOR DISPLAY CANVAS ENVIRONMENT */}
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-8">

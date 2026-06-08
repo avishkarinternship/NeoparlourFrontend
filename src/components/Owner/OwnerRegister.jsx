@@ -12,6 +12,18 @@ import locationData from '../../data/locations.json';
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
+const convertToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64String = reader.result.split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const OwnerRegister = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,6 +49,58 @@ const OwnerRegister = () => {
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
+
+  const [profileImageBase64, setProfileImageBase64] = useState('');
+  const [profileImagePreview, setProfileImagePreview] = useState('');
+  const [salonImagesBase64, setSalonImagesBase64] = useState([]);
+  const [salonImagesPreviews, setSalonImagesPreviews] = useState([]);
+
+  const handleProfileImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Profile image size must be under 2MB.');
+        return;
+      }
+      try {
+        const base64 = await convertToBase64(file);
+        setProfileImageBase64(base64);
+        setProfileImagePreview(URL.createObjectURL(file));
+      } catch (err) {
+        toast.error('Failed to process image file.');
+      }
+    }
+  };
+
+  const handleGalleryImagesChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + salonImagesBase64.length > 5) {
+      toast.error('You can upload up to 5 salon images.');
+      return;
+    }
+    const newBase64s = [];
+    const newPreviews = [];
+    for (const file of files) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 2MB).`);
+        continue;
+      }
+      try {
+        const base64 = await convertToBase64(file);
+        newBase64s.push(base64);
+        newPreviews.push(URL.createObjectURL(file));
+      } catch (err) {
+        toast.error(`Failed to process ${file.name}`);
+      }
+    }
+    setSalonImagesBase64(prev => [...prev, ...newBase64s]);
+    setSalonImagesPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeGalleryImage = (index) => {
+    setSalonImagesBase64(prev => prev.filter((_, i) => i !== index));
+    setSalonImagesPreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
   const cityDropdownRef = useRef(null);
   const areaDropdownRef = useRef(null);
@@ -118,6 +182,8 @@ const OwnerRegister = () => {
       tncAccepted: true,
       tncAcceptedAt: new Date().toISOString(),
       tncVersion: '1.0',
+      imageBase64: profileImageBase64 || null,
+      salonImagesBase64: salonImagesBase64.length > 0 ? salonImagesBase64 : null,
     };
 
     dispatch(registerWithOtp({ userDTO, otp, type: 'OWNER' })).unwrap()
@@ -131,7 +197,7 @@ const OwnerRegister = () => {
           latitude: 0.0,
           longitude: 0.0,
           homeServiceCharges: 0.0,
-          imageBase64: ""
+          imageBase64: profileImageBase64 || ""
         };
         localStorage.setItem('tempSalonDetails', JSON.stringify(salonDetails));
         localStorage.setItem('tempRegisterPhone', formData.phone);
@@ -144,8 +210,8 @@ const OwnerRegister = () => {
           })
           .catch((err) => {
             console.error('Auto login failed:', err);
-            toast.error('Registration succeeded, but auto-login failed. Please login.');
-            navigate('/owner/login');
+            toast.error('Auto-login failed, but registration succeeded. Redirecting to Subscription Plans...');
+            navigate('/subscription-plans', { state: { salonDetails } });
           });
       })
       .catch((err) => {
@@ -389,6 +455,77 @@ const OwnerRegister = () => {
                       className="w-full px-4 py-3 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white font-bold"
                       required
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Salon Media Section */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-[10px] font-black text-gray-300 tracking-[0.25em] uppercase border-b pb-1.5">Salon Media</h3>
+                
+                {/* Main Salon Image */}
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block font-bold">Main Salon Image</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative group w-24 h-24 bg-[#fafafa] border border-dashed border-gray-200 rounded-2xl overflow-hidden flex items-center justify-center hover:bg-gray-50 transition-colors">
+                      {profileImagePreview ? (
+                        <img src={profileImagePreview} alt="Main Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center p-2">
+                          <Building className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                          <span className="text-[9px] font-bold text-gray-400 block uppercase">Upload</span>
+                        </div>
+                      )}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleProfileImageChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                    {profileImagePreview && (
+                      <button 
+                        type="button" 
+                        onClick={() => { setProfileImagePreview(''); setProfileImageBase64(''); }} 
+                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-wider"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Salon Gallery Images */}
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block font-bold">Salon Gallery (Max 5)</label>
+                  <div className="flex flex-wrap gap-3">
+                    {/* Gallery Previews */}
+                    {salonImagesPreviews.map((preview, index) => (
+                      <div key={index} className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-100 group">
+                        <img src={preview} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                        <button 
+                          type="button" 
+                          onClick={() => removeGalleryImage(index)}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {/* Add Gallery Button */}
+                    {salonImagesPreviews.length < 5 && (
+                      <div className="relative w-16 h-16 bg-[#fafafa] border border-dashed border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer">
+                        <span className="text-xl font-bold text-gray-400">+</span>
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept="image/*" 
+                          onChange={handleGalleryImagesChange}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

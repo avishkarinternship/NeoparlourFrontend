@@ -1,243 +1,665 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
-
-// Custom assets imports based on your naming patterns
-import cameraIcon from '../../../assets/Owner/Manage/Services/camera_icon.svg';
-import categoryIcon from '../../../assets/Owner/Manage/Services/category_icon.svg';
-import galleryIcon from '../../../assets/Owner/Manage/Services/gallery_icon.svg';
-import openCameraIcon from '../../../assets/Owner/Manage/Services/open_camera_icon.svg';
-import priceIcon from '../../../assets/Owner/Manage/Services/price_icon.svg';
-import serviceNameIcon from '../../../assets/Owner/Manage/Services/service_name_icon.svg'; 
-import durationIcon from '../../../assets/Owner/Manage/Services/duration_icon.svg'; 
-import assignStaff from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
 import ManageSideBar from "../Layouts/ManageSideBar";
+import axiosInstance from '../../../api/axiosInstance';
+import toast from 'react-hot-toast';
+
+// Icons
+import priceIcon from '../../../assets/Owner/Manage/Services/price_icon.svg';
+import serviceNameIcon from '../../../assets/Owner/Manage/Services/service_name_icon.svg';
+import durationIcon from '../../../assets/Owner/Manage/Services/duration_icon.svg';
+import assignStaff from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
+
+const toastStyle = {
+    style: {
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        fontSize: '15px',
+        fontWeight: '600',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+        minWidth: '350px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+};
+
+// Enums
+const UNIT_TYPES = ['PIECE', 'ML', 'LITER', 'KG', 'GRAM', 'BOTTLE'];
+const PRODUCT_TYPES = ['consumable', 'tool', 'equipment', 'chemical', 'cosmetic', 'accessory', 'retail', 'supply'];
+const SWAP_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
 
 const Inventory = () => {
-    // Form management state variables
-    const [itemName, setItemName] = useState('');
-    const [category, setCategory] = useState('');
-    const [price, setPrice] = useState('');
-    const [quantity, setQuantity] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('add'); // 'add' | 'view' | 'swaps'
 
-    // Active bottom list filter selection state
+    // ==================== ADD INVENTORY STATES ====================
+    const [itemName, setItemName] = useState('');
+    const [costPrice, setCostPrice] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [unitType, setUnitType] = useState('PIECE');
+    const [productType, setProductType] = useState('consumable');
+    const [reorderLevel, setReorderLevel] = useState('');
+    const [loadingAdd, setLoadingAdd] = useState(false);
+
+    // ==================== VIEW INVENTORY STATES ====================
+    const [inventoryItems, setInventoryItems] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [activeFilter, setActiveFilter] = useState('All');
 
-    // Preloaded inventory database state matching design records
-    const [inventoryItems, setInventoryItems] = useState([
-        { id: 1, name: 'Trimmer', category: 'Tools', qty: 100 },
-        { id: 2, name: 'Shampoo', category: 'Tools', qty: 100 },
-        { id: 3, name: 'Hair gel', category: 'Tools', qty: 100 }
-    ]);
+    // ==================== STAFF LIST ====================
+    const [staffList, setStaffList] = useState([]);
+    const [loadingStaff, setLoadingStaff] = useState(false);
 
-    const handleSave = (e) => {
-        e.preventDefault();
-        if (!itemName || !quantity) return alert("Please fill out required fields!");
+    // ==================== ASSIGN MODAL ====================
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [selectedInventory, setSelectedInventory] = useState(null);
+    const [selectedStaffId, setSelectedStaffId] = useState('');
+    const [allocatedQuantity, setAllocatedQuantity] = useState('');
+    const [notes, setNotes] = useState('');
+    const [assignLoading, setAssignLoading] = useState(false);
 
-        const newItem = {
-            id: Date.now(),
-            name: itemName,
-            category: category || 'Others',
-            qty: parseInt(quantity) || 0
-        };
+    // ==================== VIEW ASSIGNED MODAL ====================
+    const [showAssignedModal, setShowAssignedModal] = useState(false);
+    const [assignedStaffList, setAssignedStaffList] = useState([]);
+    const [currentItemName, setCurrentItemName] = useState('');
 
-        setInventoryItems([newItem, ...inventoryItems]);
-        
-        // Reset Inputs
-        setItemName('');
-        setCategory('');
-        setPrice('');
-        setQuantity('');
+    // ==================== EDIT ASSIGNMENT MODAL ====================
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [newAllocatedQuantity, setNewAllocatedQuantity] = useState('');
+    const [editNotes, setEditNotes] = useState('');
+    const [editLoading, setEditLoading] = useState(false);
+
+    // ==================== SWAP REQUESTS STATES ====================
+    const [swapRequests, setSwapRequests] = useState([]);
+    const [loadingSwaps, setLoadingSwaps] = useState(false);
+    const [processingId, setProcessingId] = useState(null);
+    const [activeSwapStatus, setActiveSwapStatus] = useState('PENDING');
+
+    const fetchStaffList = async () => {
+        try {
+            setLoadingStaff(true);
+            const response = await axiosInstance.get('/staff');
+            setStaffList(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load staff list', toastStyle);
+        } finally {
+            setLoadingStaff(false);
+        }
     };
 
-    // Filter filtering engine logic block
-    const filteredItems = inventoryItems.filter(item => {
-        if (activeFilter === 'All') return true;
-        return item.category.toLowerCase() === activeFilter.toLowerCase();
-    });
+    const fetchInventory = async () => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.get('/inventory');
+            setInventoryItems(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load inventory', toastStyle);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSwapRequests = async (status = activeSwapStatus) => {
+        try {
+            setLoadingSwaps(true);
+            const response = await axiosInstance.get(`/staff-inventory/search?status=${status}`);
+            setSwapRequests(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load swap requests', toastStyle);
+            setSwapRequests([]);
+        } finally {
+            setLoadingSwaps(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchInventory();
+        fetchStaffList();
+        fetchSwapRequests();
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'swaps') {
+            fetchSwapRequests(activeSwapStatus);
+        }
+    }, [activeTab, activeSwapStatus]);
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        if (!itemName || !quantity || !costPrice) {
+            toast.error("Please fill required fields (Name, Quantity, Price)", toastStyle);
+            return;
+        }
+
+        setLoadingAdd(true);
+        try {
+            const payload = {
+                name: itemName.trim(),
+                category: productType,
+                currentStock: parseInt(quantity),
+                reorderLevel: reorderLevel ? parseInt(reorderLevel) : 10,
+                costPrice: parseFloat(costPrice),
+                unitType,
+                productType,
+            };
+
+            await axiosInstance.post('/inventory', payload);
+            toast.success('Inventory item added successfully!', toastStyle);
+
+            setItemName('');
+            setCostPrice('');
+            setQuantity('');
+            setReorderLevel('');
+            setUnitType('PIECE');
+            setProductType('consumable');
+            fetchInventory();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add inventory', toastStyle);
+        } finally {
+            setLoadingAdd(false);
+        }
+    };
+
+    const openAssignModal = (item) => {
+        setSelectedInventory(item);
+        setSelectedStaffId('');
+        setAllocatedQuantity('');
+        setNotes('');
+        setShowAssignModal(true);
+    };
+
+    const handleAssignToStaff = async () => {
+        if (!selectedStaffId || !allocatedQuantity) {
+            toast.error("Please select staff and quantity", toastStyle);
+            return;
+        }
+
+        setAssignLoading(true);
+        try {
+            const payload = {
+                staffId: parseInt(selectedStaffId),
+                inventoryId: selectedInventory.id,
+                allocatedQuantity: parseFloat(allocatedQuantity),
+                assignedBy: "Owner",
+                notes: notes || "",
+            };
+
+            await axiosInstance.post('/staff-inventory/assign', payload);
+            toast.success('Inventory assigned successfully!', toastStyle);
+            setShowAssignModal(false);
+            fetchInventory();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to assign inventory', toastStyle);
+        } finally {
+            setAssignLoading(false);
+        }
+    };
+
+    const openViewAssigned = async (item) => {
+        try {
+            const response = await axiosInstance.get(`/staff-inventory/inventory/${item.id}`);
+            setAssignedStaffList(response.data || []);
+            setCurrentItemName(item.name);
+            setShowAssignedModal(true);
+        } catch (error) {
+            toast.error('Failed to fetch assigned staff', toastStyle);
+        }
+    };
+
+    const openEditModal = (assignment) => {
+        setSelectedAssignment(assignment);
+        setNewAllocatedQuantity(assignment.allocatedQuantity?.toString() || '');
+        setEditNotes(assignment.notes || '');
+        setShowEditModal(true);
+    };
+
+    const handleUpdateAssignment = async () => {
+        if (!newAllocatedQuantity) {
+            toast.error("New allocated quantity is required", toastStyle);
+            return;
+        }
+
+        setEditLoading(true);
+        try {
+            const payload = {
+                newAllocatedQuantity: parseFloat(newAllocatedQuantity),
+                notes: editNotes || "",
+            };
+
+            await axiosInstance.put(`/staff-inventory/${selectedAssignment.id}/reassign`, payload);
+            toast.success('Assignment updated successfully!', toastStyle);
+            setShowEditModal(false);
+
+            if (selectedInventory) {
+                setTimeout(async () => {
+                    const response = await axiosInstance.get(`/staff-inventory/inventory/${selectedInventory.id}`);
+                    setAssignedStaffList(response.data || []);
+                }, 400);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update assignment', toastStyle);
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
+    const handleApproveSwap = async (id) => {
+        setProcessingId(id);
+        try {
+            await axiosInstance.post(`/staff-inventory/${id}/approve`);
+            toast.success('Swap request approved successfully!', toastStyle);
+            fetchSwapRequests();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to approve swap', toastStyle);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleRejectSwap = async (id) => {
+        setProcessingId(id);
+        try {
+            await axiosInstance.post(`/staff-inventory/${id}/reject`);
+            toast.success('Swap request rejected!', toastStyle);
+            fetchSwapRequests();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to reject swap', toastStyle);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const filteredItems = inventoryItems.filter(item =>
+        activeFilter === 'All' || item.category?.toLowerCase() === activeFilter.toLowerCase()
+    );
+
+    const categories = ['All', 'Tools', 'Consumable', 'Products', 'Others'];
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             <div className="flex flex-1 w-full">
-                <Sidebar />
-                <ManageSideBar activeTab="Inventory" onTabChange={(tab) => console.log(`Navigating to: ${tab}`)} />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                <ManageSideBar activeTab="Inventory" onTabChange={() => { }} />
 
-                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200">
-                    
-                    {/* Active Feature Headline Block Element */}
-                    <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
-                        <div className="flex items-center space-x-2 text-gray-900">
-                            <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
-                            <span className="text-[13px] font-bold uppercase tracking-wider">Add Inventory</span>
-                        </div>
-                    </div>
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-white border-l border-gray-200 overflow-auto">
+                    <div className="max-w-7xl mx-auto">
+                        <h1 className="text-3xl font-light tracking-tight mb-8">Inventory Management</h1>
 
-                    {/* MANAGE WORKFLOW SUBMISSION CONTAINER */}
-                    <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-                        <form onSubmit={handleSave} className="space-y-5">
-                            
-                            {/* Media File Stream Dropzone Upload Workspace Component */}
-                            <div className="border border-dashed border-gray-300 rounded-xl p-6 bg-[#FAFAFA] flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 transition-colors cursor-pointer group">
-                                <div className="w-10 h-10 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
-                                    <img src={cameraIcon} alt="Dropzone" className="w-8 h-8 object-contain" />
-                                </div>
-                                <span className="text-[11px] font-bold text-gray-400">Add image</span>
-                                <div className="flex items-center space-x-6 pt-1 text-xs font-bold text-gray-500 tracking-tight">
-                                    <button type="button" className="flex items-center space-x-1.5 hover:text-gray-900 transition-colors">
-                                        <img src={openCameraIcon} alt="Camera feed stream" className="w-4 h-4 object-contain" />
-                                        <span>Camera</span>
-                                    </button>
-                                    <button type="button" className="flex items-center space-x-1.5 hover:text-gray-900 transition-colors">
-                                        <img src={galleryIcon} alt="Local asset gallery" className="w-4 h-4 object-contain" />
-                                        <span>Gallery</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* DOCK FLEX FIELDS DATA CAPTURE INPUT SECTIONS ARRAY */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                
-                                {/* Form Item field: Item Name */}
-                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-gray-900 transition-colors">
-                                    <img src={serviceNameIcon} alt="Product Tag" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Item Name"
-                                        value={itemName}
-                                        onChange={(e) => setItemName(e.target.value)}
-                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
-                                    />
-                                </div>
-
-                                {/* Form Item field: Category selector panel context menu */}
-                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-gray-900 transition-colors">
-                                    <img src={categoryIcon} alt="Group Label" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
-                                    <select 
-                                        value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full text-xs font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer placeholder-gray-400"
-                                    >
-                                        <option value="" disabled hidden>Category</option>
-                                        <option value="Tools">Tools</option>
-                                        <option value="Consumable">Consumable</option>
-                                        <option value="Products">Products</option>
-                                        <option value="Others">Others</option>
-                                    </select>
-                                    <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
-                                </div>
-
-                                {/* Form Item field: Price numerical identifier node */}
-                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-gray-900 transition-colors">
-                                    <img src={priceIcon} alt="Financial Evaluation ledger currency" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
-                                    <input 
-                                        type="number" 
-                                        placeholder="Price"
-                                        value={price}
-                                        onChange={(e) => setPrice(e.target.value)}
-                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
-                                    />
-                                </div>
-
-                                {/* Form Item field: Quantity numeric data store stream tracker */}
-                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-gray-900 transition-colors">
-                                    <img src={durationIcon} alt="Stock count representation matrix" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
-                                    <input 
-                                        type="number" 
-                                        placeholder="Quantity"
-                                        value={quantity}
-                                        onChange={(e) => setQuantity(e.target.value)}
-                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
-                                    />
-                                </div>
-
-                            </div>
-
-                            {/* EXECUTION LAYER FORM LOGISTICS ACTION ROW */}
-                            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 text-xs font-bold uppercase tracking-wider">
-                                <button 
-                                    type="submit" 
-                                    className="w-full sm:flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-colors shadow-sm"
-                                >
-                                    Save
-                                </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => { setItemName(''); setCategory(''); setPrice(''); setQuantity(''); }}
-                                    className="w-full sm:flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-
-                        </form>
-                    </div>
-
-                    {/* LOWER TRACKING SECTION FRAME: DETAILED DATA TABLE LIST */}
-                    <div className="max-w-3xl">
-                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-900 mb-3">Inventory Details</h3>
-                        
-                        {/* CATEGORICAL PILLED HORIZONTAL NAVIGATION BADGE BUTTON MATRIX */}
-                        <div className="flex flex-wrap items-center gap-2 mb-6">
-                            {['All', 'Comsumable', 'Products', 'Tools', 'Others'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveFilter(tab)}
-                                    className={`px-5 py-1.5 rounded-lg border text-xs font-bold transition-all ${
-                                        activeFilter === tab
-                                            ? 'bg-red-600 border-red-600 text-white shadow-sm'
-                                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
+                        {/* Tab Navigation */}
+                        <div className="flex border-b border-gray-200 mb-8 overflow-x-auto">
+                            <button
+                                onClick={() => setActiveTab('add')}
+                                className={`px-8 py-4 font-medium flex items-center gap-2 border-b-2 whitespace-nowrap ${activeTab === 'add' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <span className="text-xl">+</span> ADD NEW ITEM
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('view')}
+                                className={`px-8 py-4 font-medium border-b-2 whitespace-nowrap ${activeTab === 'view' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                VIEW INVENTORY
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('swaps')}
+                                className={`px-8 py-4 font-medium border-b-2 whitespace-nowrap ${activeTab === 'swaps' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                SWAP REQUESTS
+                            </button>
                         </div>
 
-                        {/* LINE RECORD TABLE CONTAINER ITEMS */}
-                        <div className="space-y-3.5">
-                            {filteredItems.map((item) => (
-                                <div 
-                                    key={item.id}
-                                    className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl hover:border-gray-200 transition-colors"
-                                >
-                                    {/* Left Wing Container: Textual Metadata context descriptions */}
-                                    <div className="flex items-center space-x-3">
-                                        {/* Pure Letter Avatar Profile Badge Element representation matrix logic */}
-                                        <div className="w-10 h-10 rounded-full border border-gray-300 bg-white text-gray-900 flex items-center justify-center font-bold text-sm tracking-tight shadow-sm">
-                                            {item.name.charAt(0).toUpperCase()}
+                        {/* ==================== ADD TAB ==================== */}
+                        {activeTab === 'add' && (
+                            <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
+                                <form onSubmit={handleSave} className="space-y-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <img src={serviceNameIcon} alt="Name" className="w-4 h-4 mr-2.5 opacity-70" />
+                                            <input type="text" placeholder="Item Name" value={itemName} onChange={(e) => setItemName(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
                                         </div>
-                                        <div>
-                                            <h4 className="text-[13px] font-extrabold text-gray-900 tracking-tight leading-snug">{item.name}</h4>
-                                            <p className="text-[10px] font-bold text-gray-400 mt-0.5 tracking-tight flex items-center space-x-1.5">
-                                                <span>Category : {item.category}</span>
-                                                <span className="text-gray-300">|</span>
-                                                <span>Qty : {item.qty}</span>
-                                            </p>
+
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <img src={durationIcon} alt="Product Type" className="w-4 h-4 mr-2.5 opacity-70" />
+                                            <select value={productType} onChange={(e) => setProductType(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required>
+                                                <option value="" disabled>Product Type</option>
+                                                {PRODUCT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <img src={durationIcon} alt="Unit Type" className="w-4 h-4 mr-2.5 opacity-70" />
+                                            <select value={unitType} onChange={(e) => setUnitType(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required>
+                                                <option value="" disabled>Unit Type</option>
+                                                {UNIT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <img src={priceIcon} alt="Price" className="w-4 h-4 mr-2.5 opacity-70" />
+                                            <input type="number" placeholder="Cost Price" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
+                                        </div>
+
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <img src={durationIcon} alt="Quantity" className="w-4 h-4 mr-2.5 opacity-70" />
+                                            <input type="number" placeholder="Current Stock" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
+                                        </div>
+
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 sm:col-span-2 md:col-span-1">
+                                            <input type="number" placeholder="Reorder Level" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" />
                                         </div>
                                     </div>
 
-                                    {/* Right Wing Action Panel Box Component anchor points link */}
-                                    <div>
-                                        <button className="flex items-center space-x-1 border border-gray-300 rounded-lg px-2.5 py-1 text-[9px] font-extrabold tracking-wider uppercase text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors">
-                                            <img src={assignStaff} alt="assign staff" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
-                                            <span>Assign Staff</span>
+                                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                                        <button type="submit" disabled={loadingAdd} className="flex-1 bg-red-600 text-white py-3.5 rounded-xl hover:bg-red-700 font-bold disabled:opacity-70">
+                                            {loadingAdd ? 'Saving...' : 'Save Item'}
+                                        </button>
+                                        <button type="button" onClick={() => {
+                                            setItemName(''); setCostPrice(''); setQuantity(''); setReorderLevel('');
+                                            setUnitType('PIECE'); setProductType('consumable');
+                                        }} className="flex-1 border border-gray-300 py-3.5 rounded-xl hover:bg-gray-50">
+                                            Cancel
                                         </button>
                                     </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {/* ==================== VIEW INVENTORY TAB ==================== */}
+                        {activeTab === 'view' && (
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">ALL INVENTORY ITEMS</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {categories.map(cat => (
+                                            <button key={cat} onClick={() => setActiveFilter(cat)} className={`px-5 py-2 rounded-full border text-xs font-bold ${activeFilter === cat ? 'bg-red-600 text-white' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
 
+                                {loading ? <div className="py-20 text-center">Loading...</div> : (
+                                    <div className="space-y-3">
+                                        {filteredItems.map(item => (
+                                            <div key={item.id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+                                                <div className="flex items-center gap-4 flex-1">
+                                                    <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center text-red-600 font-bold text-xl">
+                                                        {item.name?.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-lg">{item.name}</h4>
+                                                        <p className="text-sm text-gray-500">{item.productType} • {item.unitType}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-10 md:gap-16">
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-semibold text-gray-400 uppercase">STOCK</p>
+                                                        <p className="text-3xl font-extrabold">{item.currentStock}</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-semibold text-gray-400 uppercase">PRICE</p>
+                                                        <p className="text-2xl font-bold">₹{item.costPrice}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-3 md:ml-auto">
+                                                    <button onClick={() => openAssignModal(item)} className="flex items-center gap-2 border border-gray-300 rounded-xl px-5 py-3 text-xs font-bold hover:bg-gray-50">
+                                                        <img src={assignStaff} alt="" className="w-4 h-4" /> ASSIGN STAFF
+                                                    </button>
+                                                    <button onClick={() => openViewAssigned(item)} className="border border-gray-300 rounded-xl px-5 py-3 text-xs font-bold hover:bg-gray-50">
+                                                        VIEW ASSIGNED
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ==================== SWAP REQUESTS TAB ==================== */}
+                        {activeTab === 'swaps' && (
+                            <div>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">SWAP REQUESTS</h3>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {SWAP_STATUSES.map(status => (
+                                            <button
+                                                key={status}
+                                                onClick={() => setActiveSwapStatus(status)}
+                                                className={`px-5 py-2 rounded-full border text-xs font-bold transition-all ${activeSwapStatus === status
+                                                    ? 'bg-red-600 text-white border-red-600'
+                                                    : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                                            >
+                                                {status}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => fetchSwapRequests(activeSwapStatus)}
+                                        className="text-xs px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50"
+                                    >
+                                        ↻ Refresh
+                                    </button>
+                                </div>
+
+                                {loadingSwaps ? (
+                                    <div className="py-20 text-center">Loading swap requests...</div>
+                                ) : swapRequests.length === 0 ? (
+                                    <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-2xl">
+                                        No {activeSwapStatus.toLowerCase()} swap requests found.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {swapRequests.map((req) => (
+                                            <div key={req.id} className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm">
+                                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-start gap-4">
+                                                            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
+                                                                ↔
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center justify-between">
+                                                                    <p className="font-bold text-xl">{req.productName}</p>
+                                                                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${req.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                                        req.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                                                            'bg-red-100 text-red-700'
+                                                                        }`}>
+                                                                        {req.status}
+                                                                    </span>
+                                                                </div>
+
+                                                                <p className="text-sm text-gray-600 mt-1">
+                                                                    To: <span className="font-semibold">{req.toStaff}</span>
+                                                                </p>
+
+                                                                <div className="mt-3 text-sm">
+                                                                    <span className="font-medium">Quantity:</span> {req.quantity}
+                                                                </div>
+
+                                                                {req.notes && (
+                                                                    <div className="mt-2 text-sm text-gray-600 italic">
+                                                                        Note: {req.notes}
+                                                                    </div>
+                                                                )}
+
+                                                                <p className="text-xs text-gray-400 mt-3">
+                                                                    Requested by {req.requestedBy} • {new Date(req.requestedAt).toLocaleString()}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {req.status === 'PENDING' && (
+                                                        <div className="flex gap-3 lg:flex-col">
+                                                            <button
+                                                                onClick={() => handleApproveSwap(req.id)}
+                                                                disabled={processingId === req.id}
+                                                                className="flex-1 lg:flex-none px-8 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
+                                                            >
+                                                                {processingId === req.id ? 'Processing...' : '✅ Approve'}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleRejectSwap(req.id)}
+                                                                disabled={processingId === req.id}
+                                                                className="flex-1 lg:flex-none px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
+                                                            >
+                                                                {processingId === req.id ? 'Processing...' : '✕ Reject'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-
                 </main>
             </div>
+
+            {/* ==================== ASSIGN MODAL ==================== */}
+            {showAssignModal && selectedInventory && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+                        <h3 className="text-2xl font-semibold mb-1">Assign Inventory</h3>
+                        <p className="text-gray-600 mb-6">{selectedInventory.name}</p>
+
+                        <div className="space-y-5">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-2">Select Staff Member</label>
+                                <select value={selectedStaffId} onChange={(e) => setSelectedStaffId(e.target.value)} className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base">
+                                    <option value="">Select Staff</option>
+                                    {staffList.map(staff => (
+                                        <option key={staff.id} value={staff.id}>
+                                            {staff.name} (ID: {staff.id})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-2">Allocated Quantity</label>
+                                <input type="number" value={allocatedQuantity} onChange={(e) => setAllocatedQuantity(e.target.value)} className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base" placeholder="Quantity" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-2">Notes (Optional)</label>
+                                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full border border-gray-300 rounded-xl px-4 py-3 h-28" placeholder="Add notes..." />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <button onClick={() => setShowAssignModal(false)} className="flex-1 py-3.5 border border-gray-300 rounded-xl">Cancel</button>
+                            <button onClick={handleAssignToStaff} disabled={assignLoading} className="flex-1 bg-red-600 text-white py-3.5 rounded-xl font-bold">Assign Now</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ==================== VIEW ASSIGNED MODAL ==================== */}
+            {showAssignedModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-semibold">Staff Assignments - {currentItemName}</h3>
+                            <button onClick={() => setShowAssignedModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+
+                        {assignedStaffList.length > 0 ? (
+                            assignedStaffList.map((staff, index) => (
+                                <div key={index} className="mb-6 border border-gray-100 rounded-2xl p-5 shadow-sm">
+                                    <div className="flex justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                                                {staff.staffName?.charAt(0) || 'S'}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-xl">{staff.staffName}</h4>
+                                                <p className="text-sm text-gray-500">Assigned by: {staff.assignedBy || 'Owner'}</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => openEditModal(staff)} className="text-red-600 hover:text-red-700">✏️ Edit</button>
+                                    </div>
+
+                                    <div className="grid grid-cols-5 gap-4 text-center border-t border-b py-4 text-sm">
+                                        <div><p className="text-gray-400 text-xs">Allocated</p><p className="font-bold">{staff.allocatedQuantity}</p></div>
+                                        <div><p className="text-gray-400 text-xs">Used</p><p className="font-bold">{staff.usedQuantity || 0}</p></div>
+                                        <div><p className="text-gray-400 text-xs">Remaining</p><p className="font-bold text-green-600">{staff.remainingQuantity}</p></div>
+                                        <div><p className="text-gray-400 text-xs">Appointments</p><p className="font-bold">{staff.appointmentCount || 0}</p></div>
+                                        <div><p className="text-gray-400 text-xs">Unit</p><p className="font-bold">{staff.unitType || 'PIECE'}</p></div>
+                                    </div>
+
+                                    {staff.notes && <div className="mt-3"><p className="text-xs text-gray-500">Notes:</p><p>{staff.notes}</p></div>}
+
+                                    <div className="flex justify-between mt-4 text-xs">
+                                        <p>Assigned: {staff.assignedAt ? new Date(staff.assignedAt).toLocaleString() : 'N/A'}</p>
+                                        <button className="border border-red-600 text-red-600 px-5 py-2 rounded-full text-xs font-medium hover:bg-red-50">View Usage</button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center py-16 text-gray-500">No assignments found.</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ==================== EDIT ASSIGNMENT MODAL ==================== */}
+            {showEditModal && selectedAssignment && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6">
+                        <h3 className="text-xl font-bold mb-6">Update Assignment - {selectedAssignment.staffName}</h3>
+
+                        <div className="space-y-5">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">Total Used Quantity</label>
+                                <input type="number" value={selectedAssignment.usedQuantity || 0} disabled className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50" />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">New Total Allocated Quantity</label>
+                                <input
+                                    type="number"
+                                    value={newAllocatedQuantity}
+                                    onChange={(e) => setNewAllocatedQuantity(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-1">Notes</label>
+                                <textarea
+                                    value={editNotes}
+                                    onChange={(e) => setEditNotes(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-3 h-24"
+                                    placeholder="Update notes..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <button onClick={() => setShowEditModal(false)} className="flex-1 py-3 border border-gray-300 rounded-xl">Cancel</button>
+                            <button onClick={handleUpdateAssignment} disabled={editLoading} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold">
+                                {editLoading ? 'Updating...' : 'Update'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>
     );
-}
+};
 
 export default Inventory;

@@ -26,6 +26,14 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Attach salonId headers if available in localStorage
+    const activeSalonId = localStorage.getItem('activeSalonId');
+    if (activeSalonId) {
+      config.headers['X-Salon-Id'] = activeSalonId;
+      config.headers['salonId'] = activeSalonId;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -37,6 +45,37 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
+    // Handle 401 Unauthorized globally for stale tokens
+    if (error.response?.status === 401) {
+      const hasAuthHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
+      const isLoginRequest = error.config?.url?.includes('/customer/login');
+      
+      if (hasAuthHeader && !isLoginRequest) {
+        console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request...");
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('customerUser');
+        localStorage.removeItem('customerProfile');
+        localStorage.removeItem('ownerStaffToken');
+        localStorage.removeItem('ownerStaffUser');
+        
+        // Remove authorization header
+        if (error.config.headers) {
+          delete error.config.headers.Authorization;
+          delete error.config.headers.authorization;
+        }
+        
+        // Retry the request
+        return axiosInstance(error.config);
+      } else {
+        console.error("[axiosInstance] Received 401 for request without stale token (or login request). URL:", error.config?.url);
+      }
+    }
+
+    // Bypass global toast notifications if custom config skipGlobalToast is set
+    if (error.config?.skipGlobalToast) {
+      return Promise.reject(error);
+    }
+
     // Bypass global toast notifications for canceled/aborted requests
     if (axios.isCancel(error)) {
       return Promise.reject(error);

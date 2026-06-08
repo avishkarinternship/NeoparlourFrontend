@@ -79,7 +79,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
   return <img src={src} alt={alt} className={className} />;
 };
 
-export default function Navbar() {
+export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
@@ -162,7 +162,16 @@ export default function Navbar() {
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between sticky top-0 z-50">
 
       {/* Left Logo Area */}
-      <div className="w-20 md:w-64 h-full flex items-center px-6 border-r border-gray-200">
+      <div className="w-20 lg:w-64 h-full flex items-center px-4 lg:px-6 border-r border-gray-200">
+        <button
+          onClick={onToggleSidebar}
+          className="mr-3 p-1 text-gray-500 hover:text-gray-900 lg:hidden focus:outline-none"
+          aria-label="Toggle Sidebar"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => navigate('/owner/dashboard')}>
           <img
             src={logoIcon}

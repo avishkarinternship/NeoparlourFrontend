@@ -28,6 +28,8 @@ import salonThreeIcon from '../../assets/Customer/HomeScreen/Recommended/salon_t
 import salonFourIcon from '../../assets/Customer/HomeScreen/Recommended/salon_four.jpg';
 
 
+
+
 // Main Screen Form Elements Icons
 import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
 import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
@@ -110,8 +112,12 @@ const recommendedSalons = [
     { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
 ];
 
+let initialGeoFetched = false;
+
 const HomeScreen = () => {
     const dispatch = useDispatch();
+    const isUserTypingCityRef = useRef(false);
+    const isUserTypingAreaRef = useRef(false);
     const { token, loading, salonResults, user, isAuthenticated, profile } = useSelector((state) => state.customer);
 
     useEffect(() => {
@@ -162,6 +168,7 @@ const HomeScreen = () => {
 
     // OpenStreetMap City autocomplete with debouncing
     useEffect(() => {
+        if (!isUserTypingCityRef.current) return;
         if (!searchData.cityName || searchData.cityName.trim().length < 2) {
             setCitySuggestions([]);
             return;
@@ -184,6 +191,7 @@ const HomeScreen = () => {
 
     // OpenStreetMap Area autocomplete with debouncing (scoped by city if present)
     useEffect(() => {
+        if (!isUserTypingAreaRef.current) return;
         if (!searchData.areaName || searchData.areaName.trim().length < 2) {
             setAreaSuggestions([]);
             return;
@@ -304,11 +312,10 @@ const HomeScreen = () => {
                     const apiSalons = await fetchCitySalons(detectedCity);
 
                     // Format and map cover images and ratings
-                    const coverImages = [salonOneIcon, salonTwoIcon, salonThreeIcon, salonFourIcon];
                     const formatted = apiSalons.map((s, index) => ({
                         name: s.salonName,
                         location: s.areaName || s.cityName,
-                        img: s.imageUrl ? getSalonImageSrc(s.imageUrl, coverImages[index % 4]) : coverImages[index % 4],
+                        img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
                         rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
                         isApiSalon: true,
                         originalSalon: s
@@ -359,7 +366,10 @@ const HomeScreen = () => {
 
     // Website loaded first geolocation trigger
     useEffect(() => {
-        requestLocationAndFetchSalons(false);
+        if (!initialGeoFetched) {
+            initialGeoFetched = true;
+            requestLocationAndFetchSalons(false);
+        }
     }, []);
 
     const handleRecommendedCardClick = (salon) => {
@@ -398,13 +408,16 @@ const HomeScreen = () => {
     };
 
     const handleSalonSelect = (salon) => {
+        const salonId = salon.salonId || salon.id;
+        localStorage.setItem('activeSalonId', salonId);
+        
         if (!token) {
-            setShowLoginPopup(true);
+            navigate('/customer/salon');
             return;
         }
         const payload = {
             token: token,
-            salonId: salon.salonId || salon.id,
+            salonId: salonId,
             salonName: salon.salonName || salon.name
         };
         dispatch(switchTenant(payload))
@@ -500,7 +513,7 @@ const HomeScreen = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-                    <a href="#" className="hover:text-gray-900 transition-colors">GIFTCARD</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
                     <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
                         OFFERS
                         <img src={offersIcon} alt="Offers" className="w-4 h-4 object-contain" />
@@ -604,6 +617,7 @@ const HomeScreen = () => {
                                 placeholder={isDetectingLocation ? "DETECTING..." : "SELECT CITY"}
                                 value={searchData.cityName}
                                 onChange={(e) => {
+                                    isUserTypingCityRef.current = true;
                                     setSearchData((prev) => ({
                                         ...prev,
                                         cityName: e.target.value,
@@ -637,6 +651,8 @@ const HomeScreen = () => {
                                     ) : citySuggestions.length > 0 ? (
                                         citySuggestions.map((city, idx) => (
                                             <div key={idx} onClick={() => {
+                                                isUserTypingCityRef.current = false;
+                                                isUserTypingAreaRef.current = false;
                                                 setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
                                                 setShowCityDropdown(false);
                                             }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
@@ -656,6 +672,7 @@ const HomeScreen = () => {
                                     placeholder="SELECT AREA"
                                     value={searchData.areaName}
                                     onChange={(e) => {
+                                        isUserTypingAreaRef.current = true;
                                         setSearchData((prev) => ({
                                             ...prev,
                                             areaName: e.target.value,
@@ -677,6 +694,8 @@ const HomeScreen = () => {
                                     ) : areaSuggestions.length > 0 ? (
                                         areaSuggestions.map((area, idx) => (
                                             <div key={idx} onClick={() => {
+                                                isUserTypingCityRef.current = false;
+                                                isUserTypingAreaRef.current = false;
                                                 setSearchData(p => ({ ...p, areaName: area.name }));
                                                 setShowAreaDropdown(false);
                                             }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
@@ -724,8 +743,8 @@ const HomeScreen = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {salonResults.map((salon, index) => {
                                 const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
-                                const coverImages = [salonOneIcon, salonTwoIcon, salonThreeIcon, salonFourIcon];
-                                const coverImg = salon.imageUrl ? getSalonImageSrc(salon.imageUrl, coverImages[index % 4]) : coverImages[index % 4];
+                                const hasImage = !!salon.imageUrl;
+                                const coverImg = hasImage ? getSalonImageSrc(salon.imageUrl, null) : null;
                                 const rating = (((salon.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1);
                                 const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
                                 return (
@@ -735,14 +754,21 @@ const HomeScreen = () => {
                                         className="group relative flex flex-col rounded-[32px] bg-white border border-gray-100/80 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden text-left shadow-[0_4px_20px_rgba(0,0,0,0.015)]"
                                     >
                                         {/* Card Header: Cover Image block with metadata tags overlay */}
-                                        <div className="h-44 relative overflow-hidden bg-gray-100 flex-shrink-0">
-                                            <img
-                                                src={coverImg}
-                                                alt={salon.salonName}
-                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                                            />
+                                        <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
+                                            {hasImage ? (
+                                                <img
+                                                    src={coverImg}
+                                                    alt={salon.salonName}
+                                                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                                    <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
+                                                    <span className="text-[11px] font-semibold text-gray-400">No image available</span>
+                                                </div>
+                                            )}
                                             {/* Gradient Overlay for better contrast */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+                                            {hasImage && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />}
 
                                             {/* Top Metadata Badges */}
                                             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
@@ -865,7 +891,18 @@ const HomeScreen = () => {
 
             {/* 4. RECOMMENDED SECTION */}
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
-                <h3 className="text-2xl font-bold mb-4">Recommended</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold">Recommended</h3>
+                    <button 
+                        onClick={() => navigate('/customer/salons')}
+                        className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer"
+                    >
+                        See More
+                        <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {recommendedList.map((salon, idx) => (
                         <div 
@@ -873,8 +910,15 @@ const HomeScreen = () => {
                             onClick={() => handleRecommendedCardClick(salon)}
                             className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
                         >
-                            <div className="h-48 relative overflow-hidden">
-                                <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                            <div className="h-48 relative overflow-hidden bg-gray-50">
+                                {salon.img ? (
+                                    <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                        <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
+                                        <span className="text-[11px] font-semibold text-gray-400">No image available</span>
+                                    </div>
+                                )}
                                 <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
                                     ⭐ {salon.rating}
                                 </div>

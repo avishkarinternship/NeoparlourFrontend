@@ -8,6 +8,7 @@ import Footer from '../Layouts/Footer';
 import ManageSideBar from "../Layouts/ManageSideBar";
 
 const Feedback = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // Initial mock data matching your feedback screen design
     const [feedbackList, setFeedbackList] = useState([
         {
@@ -46,13 +47,13 @@ const Feedback = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             {/* GLOBAL TOP NAVBAR */}
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
 
                 {/* LEVEL 1: PRIMARY APP SIDEBAR */}
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
                 {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
                 <ManageSideBar activeTab="Feedback" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />
