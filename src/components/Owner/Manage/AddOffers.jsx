@@ -1,265 +1,408 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
+import ManageSideBar from "../Layouts/ManageSideBar";
+import axiosInstance from '../../../api/axiosInstance';
+import toast from 'react-hot-toast';
 
-// SVG Icon Asset Imports (Updated relative paths to reach src/assets)
-import cameraIcon from '../../../assets/Owner/Manage/Services/camera_icon.svg';
-import openCameraIcon from '../../../assets/Owner/Manage/Services/open_camera_icon.svg';
-import galleryIcon from '../../../assets/Owner/Manage/Services/gallery_icon.svg';
+// Icons
 import couponCodeIcon from '../../../assets/Owner/Manage/Offers/coupon_code.svg';
 import offerDetailsIcon from '../../../assets/Owner/Manage/Offers/offer_details_icon.svg';
 import percentageIcon from '../../../assets/Owner/Manage/Offers/percentage_icon.svg';
-import ManageSideBar from "../Layouts/ManageSideBar";
+
+const toastStyle = {
+    style: {
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        fontSize: '15px',
+        fontWeight: '600',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+        minWidth: '350px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+};
+
+const DISCOUNT_TYPES = [
+    { value: 'PERCENTAGE', label: 'Percentage Off' },
+    { value: 'FIXED_AMOUNT', label: 'Fixed Amount Off' }
+];
 
 const AddOffers = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    // Controlled Form State variables 
-    const [offerDetails, setOfferDetails] = useState('');
-    const [couponCode, setCouponCode] = useState('');
-    const [percentageOff, setPercentageOff] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all');
 
-    // Offer List Mock Data 
-    const [offersList, setOffersList] = useState([
-        {
-            id: '1',
-            title: '1ST BOOKING SPECIAL',
-            description: 'Get 50% Off On Your First booking',
-            badgeText: '50% OFF',
-            code: 'FIRST50',
-            validity: 'Valid Till 20 May 2026',
-            isRed: true
-        },
-        {
-            id: '2',
-            title: 'WEEKEND BEAUTY DEAL',
-            description: 'Weekend Bookings Get Extra Discount On All Services',
-            badgeText: '30% OFF',
-            code: 'WEEKEND30',
-            validity: 'Valid Till 20 May 2026',
-            isRed: false
-        },
-        {
-            id: '3',
-            title: 'HAPPY HOUR SPECIAL',
-            description: 'Get 50% Off On Your First booking',
-            badgeText: '50% OFF',
-            code: 'FIRST50',
-            validity: 'Valid Till 30 May 2026',
-            isRed: true
+    // Form States
+    const [offerName, setOfferName] = useState('');
+    const [description, setDescription] = useState('');
+    const [discountType, setDiscountType] = useState('PERCENTAGE');
+    const [discountValue, setDiscountValue] = useState('');
+    const [validFrom, setValidFrom] = useState('');
+    const [validTo, setValidTo] = useState('');
+    const [usageLimitPerCustomer, setUsageLimitPerCustomer] = useState('');
+    const [totalUsageLimit, setTotalUsageLimit] = useState('');
+    const [selectedServices, setSelectedServices] = useState([]);
+
+    const [activeServices, setActiveServices] = useState([]);
+    const [loadingServices, setLoadingServices] = useState(false);
+    const [loadingSubmit, setLoadingSubmit] = useState(false);
+
+    const [offers, setOffers] = useState([]);
+    const [loadingOffers, setLoadingOffers] = useState(false);
+
+    // Fetch Active Services
+    const fetchActiveServices = async () => {
+        try {
+            setLoadingServices(true);
+            const response = await axiosInstance.get('/services/active');
+            setActiveServices(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load services', toastStyle);
+        } finally {
+            setLoadingServices(false);
         }
-    ]);
+    };
 
-    const handleSave = (e) => {
+    // Fetch Offers
+    const fetchOffers = async () => {
+        try {
+            setLoadingOffers(true);
+            let url = '/offers/search';
+            if (activeFilter === 'active') url += '?active=true';
+            else if (activeFilter === 'inactive') url += '?active=false';
+
+            const response = await axiosInstance.get(url);
+            setOffers(response.data?.content || response.data || []);
+        } catch (error) {
+            toast.error('Failed to load offers', toastStyle);
+            setOffers([]);
+        } finally {
+            setLoadingOffers(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchActiveServices();
+        fetchOffers();
+    }, [activeFilter]);
+
+    const toggleService = (serviceId) => {
+        if (selectedServices.includes(serviceId)) {
+            setSelectedServices(selectedServices.filter(id => id !== serviceId));
+        } else {
+            setSelectedServices([...selectedServices, serviceId]);
+        }
+    };
+
+    // Calculate total original price of selected services
+    const totalOriginalPrice = selectedServices.reduce((sum, id) => {
+        const service = activeServices.find(s => s.id === id);
+        return sum + (service?.price || 0);
+    }, 0);
+
+    // Calculate discount amount
+    const discountAmount = discountType === 'PERCENTAGE' && discountValue
+        ? (totalOriginalPrice * parseFloat(discountValue)) / 100
+        : (parseFloat(discountValue) || 0);
+
+    const toInstant = (datetimeLocal) => {
+        if (!datetimeLocal) return null;
+        return datetimeLocal + ':00Z';
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting Offer payload:', { offerDetails, couponCode, percentageOff });
+
+        if (!offerName || !discountValue || !validFrom || !validTo || selectedServices.length === 0) {
+            toast.error("Please fill all required fields and select at least one service", toastStyle);
+            return;
+        }
+
+        setLoadingSubmit(true);
+
+        const payload = {
+            name: offerName.trim(),
+            description: description.trim(),
+            discountType: discountType,
+            discountValue: parseFloat(discountValue),
+            validFrom: toInstant(validFrom),
+            validTo: toInstant(validTo),
+            active: true,
+            applicableServiceIds: selectedServices,
+            usageLimitPerCustomer: usageLimitPerCustomer ? parseInt(usageLimitPerCustomer) : null,
+            totalUsageLimit: totalUsageLimit ? parseInt(totalUsageLimit) : null,
+        };
+
+        try {
+            await axiosInstance.post('/offers', payload);
+            toast.success('Offer created successfully!', toastStyle);
+
+            // Reset form
+            setOfferName('');
+            setDescription('');
+            setDiscountValue('');
+            setValidFrom('');
+            setValidTo('');
+            setUsageLimitPerCustomer('');
+            setTotalUsageLimit('');
+            setSelectedServices([]);
+
+            fetchOffers();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to create offer', toastStyle);
+        } finally {
+            setLoadingSubmit(false);
+        }
     };
 
     const handleCancel = () => {
-        setOfferDetails('');
-        setCouponCode('');
-        setPercentageOff('');
+        setOfferName('');
+        setDescription('');
+        setDiscountValue('');
+        setValidFrom('');
+        setValidTo('');
+        setUsageLimitPerCustomer('');
+        setTotalUsageLimit('');
+        setSelectedServices([]);
     };
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            {/* GLOBAL TOP NAVBAR */}
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-            {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
-
-                {/* LEVEL 1: PRIMARY APP SIDEBAR */}
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                <ManageSideBar activeTab="Add Offers" onTabChange={() => { }} />
 
-                {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
-                <ManageSideBar activeTab="Add Offers" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />
-
-                {/* LEVEL 3: WORKING PANELS CANVAS */}
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200">
-
-                    {/* Section Form Headline Title */}
-                    <div className="inline-block border-b-2 border-red-600 pb-1 mb-6">
-                        <div className="flex items-center text-gray-900 space-x-1.5">
-                            <span className="text-sm font-bold text-gray-800">+</span>
-                            <span className="text-[12px] font-bold uppercase tracking-wider">
-                                Add Offer
-                            </span>
+                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="inline-block border-b-2 border-red-600 pb-1 mb-8">
+                            <span className="text-[13px] font-bold uppercase tracking-wider">Add New Offer</span>
                         </div>
-                    </div>
 
-                    {/* INTERACTIVE DATA CAPTURE CARD FRAME */}
-                    <div className="max-w-4xl bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-10">
-                        <form onSubmit={handleSave} className="space-y-5">
-                            
-                            {/* Media Upload Canvas Panel Box */}
-                            <div className="border border-gray-300 rounded-lg p-6 bg-white flex flex-col items-center justify-center space-y-3">
-                                <div className="flex flex-col items-center justify-center text-gray-400">
-                                    <img src={cameraIcon} alt="Camera Icon" className="w-8 h-8 mb-1 opacity-70" />
-                                    <span className="text-[10px] font-bold text-gray-400 tracking-tight">Add Image</span>
-                                </div>
-                                
-                                {/* Device Sourced Route Triggers */}
-                                <div className="flex items-center space-x-6 pt-1 text-[11px] text-gray-700 font-bold">
-                                    <button type="button" className="flex items-center space-x-1.5 hover:text-gray-900">
-                                        <img src={openCameraIcon} alt="Open Camera" className="w-4 h-4" />
-                                        <span>Camera</span>
-                                    </button>
-                                    <button type="button" className="flex items-center space-x-1.5 hover:text-gray-900">
-                                        <img src={galleryIcon} alt="Gallery" className="w-4 h-4" />
-                                        <span>Gallery</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Form Input Block Elements */}
-                            <div className="space-y-4">
-                                {/* Row 1: Full-Width Details Field */}
-                                <div className="relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
-                                        <img src={offerDetailsIcon} alt="Offer Details" className="w-4 h-4 opacity-60" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={offerDetails}
-                                        onChange={(e) => setOfferDetails(e.target.value)}
-                                        placeholder="Offer Details"
-                                        className="block w-full rounded-lg border border-gray-300 bg-white py-3 ps-10 pe-4 text-xs text-gray-800 placeholder-gray-400 focus:border-gray-400 focus:outline-none transition-colors"
-                                    />
-                                </div>
-
-                                {/* Row 2: Coupon Code and Percentage Fields side-by-side */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="relative rounded-md shadow-sm">
-                                        <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
-                                            <img src={couponCodeIcon} alt="Coupon Code" className="w-4 h-4 opacity-60" />
+                        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-12">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Basic Info */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-3.5">
+                                            <img src={offerDetailsIcon} alt="Details" className="w-4 h-4 opacity-70" />
                                         </div>
                                         <input
                                             type="text"
-                                            value={couponCode}
-                                            onChange={(e) => setCouponCode(e.target.value)}
-                                            placeholder="Coupon Code"
-                                            className="block w-full rounded-lg border border-gray-300 bg-white py-3 ps-10 pe-4 text-xs text-gray-800 placeholder-gray-400 focus:border-gray-400 focus:outline-none transition-colors"
+                                            value={offerName}
+                                            onChange={(e) => setOfferName(e.target.value)}
+                                            placeholder="Offer Name *"
+                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            required
                                         />
                                     </div>
 
-                                    <div className="relative rounded-md shadow-sm">
-                                        <div className="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
-                                            <img src={percentageIcon} alt="Percentage Off" className="w-4 h-4 opacity-60" />
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-3.5">
+                                            <img src={couponCodeIcon} alt="Coupon" className="w-4 h-4 opacity-70" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Description"
+                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Discount & Limits */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-3.5">
+                                            <img src={percentageIcon} alt="%" className="w-4 h-4 opacity-70" />
                                         </div>
                                         <select
-                                            value={percentageOff}
-                                            onChange={(e) => setPercentageOff(e.target.value)}
-                                            className="block w-full rounded-lg border border-gray-300 bg-white py-3 ps-10 pe-10 text-xs text-gray-400 appearance-none focus:border-gray-400 focus:outline-none transition-colors"
+                                            value={discountType}
+                                            onChange={(e) => setDiscountType(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
                                         >
-                                            <option value="">Percentage Off</option>
-                                            <option value="10">10% Off</option>
-                                            <option value="20">20% Off</option>
-                                            <option value="30">30% Off</option>
-                                            <option value="50">50% Off</option>
+                                            {DISCOUNT_TYPES.map(dt => (
+                                                <option key={dt.value} value={dt.value}>{dt.label}</option>
+                                            ))}
                                         </select>
-                                        <div className="absolute inset-y-0 end-0 flex items-center pe-4 pointer-events-none text-gray-400 text-[10px]">
-                                            ▼
-                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <input
+                                            type="number"
+                                            value={discountValue}
+                                            onChange={(e) => setDiscountValue(e.target.value)}
+                                            placeholder="Discount Value *"
+                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <input
+                                            type="number"
+                                            value={usageLimitPerCustomer}
+                                            onChange={(e) => setUsageLimitPerCustomer(e.target.value)}
+                                            placeholder="Usage Limit per Customer"
+                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                        />
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Processing Interface Actions Layout Block */}
-                            <div className="flex items-center justify-center space-x-4 pt-4 max-w-xl mx-auto">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-[#FF0B01] text-white text-xs font-bold uppercase tracking-widest py-3 rounded-lg hover:bg-red-700 transition-colors shadow-sm text-center"
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleCancel}
-                                    className="flex-1 border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-widest py-3 rounded-lg bg-white hover:bg-gray-50 transition-colors text-center"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        value={totalUsageLimit}
+                                        onChange={(e) => setTotalUsageLimit(e.target.value)}
+                                        placeholder="Total Usage Limit (Optional)"
+                                        className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                    />
+                                </div>
 
-                        </form>
-                    </div>
+                                {/* Validity */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-500 mb-2 block">Valid From *</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={validFrom}
+                                            onChange={(e) => setValidFrom(e.target.value)}
+                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-500 mb-2 block">Valid To *</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={validTo}
+                                            onChange={(e) => setValidTo(e.target.value)}
+                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                    {/* LIVE PRESENTATION PREVIEW GRID BLOCKS */}
-                    <div className="max-w-4xl space-y-4">
-                        <div className="text-xs font-bold text-gray-900 tracking-wider uppercase mb-1">
-                            Offer Details
-                        </div>
+                                {/* Service Selection + Live Preview */}
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 mb-3 block">
+                                        Applicable Services * ({selectedServices.length} selected)
+                                    </label>
+                                    <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        {loadingServices ? (
+                                            <p className="text-gray-500">Loading services...</p>
+                                        ) : activeServices.length === 0 ? (
+                                            <p className="text-gray-500">No active services available</p>
+                                        ) : (
+                                            activeServices.map(service => (
+                                                <label
+                                                    key={service.id}
+                                                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer border border-transparent hover:border-gray-200"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedServices.includes(service.id)}
+                                                            onChange={() => toggleService(service.id)}
+                                                            className="w-4 h-4 accent-red-600"
+                                                        />
+                                                        <span className="text-sm">{service.name}</span>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700">₹{service.price || 0}</span>
+                                                </label>
+                                            ))
+                                        )}
+                                    </div>
 
-                        {/* Flex Grid Display Workspace Row Panel */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {offersList.map((offer) => (
-                                <div
-                                    key={offer.id}
-                                    className={`relative rounded-2xl p-5 text-white flex flex-col justify-between aspect-[1.8/1] shadow-sm overflow-hidden select-none ${
-                                        offer.isRed ? 'bg-[#FF0B01]' : 'bg-[#A3A6AC]'
-                                    }`}
-                                >
-                                    {/* Top Content Row Info */}
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1 max-w-[70%]">
-                                            <h4 className="text-[12px] font-extrabold tracking-tight leading-tight">
-                                                {offer.title}
-                                            </h4>
-                                            <p className="text-[9px] font-medium opacity-85 leading-tight">
-                                                {offer.description}
+                                    {/* Live Savings Preview */}
+                                    {selectedServices.length > 0 && discountValue && (
+                                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                            <p className="text-sm font-medium text-green-700">
+                                                Estimated Savings: ₹{discountAmount.toFixed(2)}
+                                                {discountType === 'PERCENTAGE' && ` (${discountValue}%)`}
+                                            </p>
+                                            <p className="text-xs text-green-600 mt-1">
+                                                Original Total: ₹{totalOriginalPrice.toFixed(2)} →
+                                                After Discount: ₹{(totalOriginalPrice - discountAmount).toFixed(2)}
                                             </p>
                                         </div>
-
-                                        {/* Styled Circular Dotted Multiplier Badge */}
-                                        <div className="bg-white text-gray-900 rounded-full w-16 h-16 min-w-[64px] min-h-[64px] flex flex-col items-center justify-center text-center p-2 border border-dashed border-gray-300 shadow-sm flex-shrink-0">
-                                            <span className="text-[11px] font-black leading-none uppercase tracking-tighter">
-                                                {offer.badgeText.split(' ')[0]}
-                                            </span>
-                                            <span className="text-[9px] font-bold leading-none tracking-tighter text-gray-500 mt-1">
-                                                {offer.badgeText.split(' ')[1]}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Info and Code Claim row */}
-                                    <div className="flex justify-between items-end pt-4">
-                                        <div className="space-y-1">
-                                            <button 
-                                                type="button"
-                                                className="text-[8px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-black/20 hover:bg-black/30 text-white border border-white/20 transition-colors"
-                                            >
-                                                Claim Offer
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="text-right space-y-0.5">
-                                            <div className="text-[9px] font-extrabold tracking-wide">
-                                                Code - <span className="underline">{offer.code}</span>
-                                            </div>
-                                            <div className="text-[8px] font-medium opacity-75 tracking-tight">
-                                                {offer.validity}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Gift Box Silhouette Overlay Graphic Accent */}
-                                    <div className="absolute right-20 bottom-5 opacity-15 pointer-events-none text-xl">
-                                        🎁
-                                    </div>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    </div>
 
+                                <div className="flex gap-4 pt-6">
+                                    <button
+                                        type="submit"
+                                        disabled={loadingSubmit}
+                                        className="flex-1 bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 disabled:opacity-70"
+                                    >
+                                        {loadingSubmit ? 'Creating Offer...' : 'Create Offer'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancel}
+                                        className="flex-1 border border-gray-300 py-4 rounded-xl font-bold hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Existing Offers */}
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold">Existing Offers</h3>
+                            <div className="flex gap-2">
+                                {['all', 'active', 'inactive'].map((filter) => (
+                                    <button
+                                        key={filter}
+                                        onClick={() => setActiveFilter(filter)}
+                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {loadingOffers ? (
+                            <div className="text-center py-12">Loading offers...</div>
+                        ) : offers.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500 bg-white border border-gray-100 rounded-2xl">
+                                No offers found
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {offers.map((offer) => (
+                                    <div key={offer.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-all">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="font-bold text-lg">{offer.name}</h4>
+                                            <span className={`px-4 py-1 text-xs font-bold rounded-full ${offer.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {offer.active ? 'ACTIVE' : 'INACTIVE'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{offer.description}</p>
+                                        <div className="mt-4 text-sm font-semibold text-red-600">
+                                            {offer.discountType === 'PERCENTAGE'
+                                                ? `${offer.discountValue}% OFF`
+                                                : `₹${offer.discountValue} OFF`}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </main>
             </div>
 
-            {/* GLOBAL FOOTER */}
             <Footer />
         </div>
     );
-}
+};
 
 export default AddOffers;

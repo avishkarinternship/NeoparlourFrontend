@@ -1,140 +1,209 @@
-import React, { useState } from 'react';
-
-// Custom Asset Icons (matching your directory path convention)
-import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg'; // Reuse for consistency if needed
+import React, { useState, useEffect } from 'react';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
 import ManageSideBar from "../Layouts/ManageSideBar";
+import axiosInstance from '../../../api/axiosInstance';
+import toast from 'react-hot-toast';
+
+const toastStyle = {
+    style: {
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        fontSize: '15px',
+        fontWeight: '600',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+        minWidth: '350px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+};
 
 const Feedback = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    // Initial mock data matching your feedback screen design
-    const [feedbackList, setFeedbackList] = useState([
-        {
-            id: '1',
-            name: 'Mitesh Waghmode',
-            comment: 'service is good and staff behaviour is better',
-            rating: '4.5',
-            initial: 'M'
-        },
-        {
-            id: '2',
-            name: 'Avishkar bansode',
-            comment: 'service is good and staff behaviour is better',
-            rating: '4.5',
-            initial: 'A'
-        },
-        {
-            id: '3',
-            name: 'Pravin Ithape',
-            comment: 'service is good and staff behaviour is better',
-            rating: '4.5',
-            initial: 'P'
+    const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved'
+    const [pendingFeedbacks, setPendingFeedbacks] = useState([]);
+    const [approvedFeedbacks, setApprovedFeedbacks] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [processingId, setProcessingId] = useState(null);
+
+    // Fetch Pending Feedbacks
+    const fetchPendingFeedbacks = async () => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.get('/feedback/pending');
+            setPendingFeedbacks(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load pending feedbacks', toastStyle);
+            setPendingFeedbacks([]);
+        } finally {
+            setLoading(false);
         }
-    ]);
-
-    const handleApprove = (id) => {
-        console.log(`Approved feedback ID: ${id}`);
-        // Handle production approval workflow logic here
     };
 
-    const handleReject = (id) => {
-        console.log(`Rejected feedback ID: ${id}`);
-        // Handle production rejection workflow logic here
+    // Fetch Approved Feedbacks
+    const fetchApprovedFeedbacks = async () => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.get('/feedback/approved');
+            setApprovedFeedbacks(response.data || []);
+        } catch (error) {
+            toast.error('Failed to load approved feedbacks', toastStyle);
+            setApprovedFeedbacks([]);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        if (activeTab === 'pending') {
+            fetchPendingFeedbacks();
+        } else {
+            fetchApprovedFeedbacks();
+        }
+    }, [activeTab]);
+
+    const handleApprove = async (feedbackId) => {
+        setProcessingId(feedbackId);
+        try {
+            await axiosInstance.put(`/feedback/${feedbackId}/approve`);
+            toast.success('Feedback approved successfully!', toastStyle);
+            fetchPendingFeedbacks(); // Refresh pending list
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to approve feedback', toastStyle);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleReject = async (feedbackId) => {
+        setProcessingId(feedbackId);
+        try {
+            await axiosInstance.delete(`/feedback/${feedbackId}/reject`);
+            toast.success('Feedback rejected successfully!', toastStyle);
+            fetchPendingFeedbacks(); // Refresh pending list
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to reject feedback', toastStyle);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const currentFeedbacks = activeTab === 'pending' ? pendingFeedbacks : approvedFeedbacks;
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            {/* GLOBAL TOP NAVBAR */}
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <Navbar />
 
-            {/* THREE-COLUMN LAYOUT FRAMEWORK CONTAINER */}
             <div className="flex flex-1 w-full items-stretch">
+                <Sidebar />
+                <ManageSideBar activeTab="Feedback" onTabChange={() => { }} />
 
-                {/* LEVEL 1: PRIMARY APP SIDEBAR */}
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-                {/* LEVEL 2: SUB-MANAGEMENT APP SIDEBAR */}
-                <ManageSideBar activeTab="Feedback" onTabChange={(tab) => console.log(`Routing to workspace: ${tab}`)} />
-
-                {/* LEVEL 3: WORKING PANELS CANVAS */}
-                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200">
-
-                    {/* Active Feature Headline Indicator */}
-                    <div className="inline-block border-b-2 border-red-600 pb-2 mb-8">
-                        <div className="flex items-center text-gray-900">
-                            <span className="text-[13px] font-bold uppercase tracking-wider">
-                                Feedback
-                            </span>
+                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="inline-block border-b-2 border-red-600 pb-2 mb-8">
+                            <span className="text-[13px] font-bold uppercase tracking-wider text-gray-900">Feedback Management</span>
                         </div>
-                    </div>
 
-                    {/* FEEDBACK LIST WORKSPACE PANELS */}
-                    <div className="max-w-4xl space-y-4">
-                        {feedbackList.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border-b border-dashed border-gray-200 pb-5 gap-4"
+                        {/* Tab Navigation */}
+                        <div className="flex border-b border-gray-200 mb-8">
+                            <button
+                                onClick={() => setActiveTab('pending')}
+                                className={`px-8 py-4 font-medium border-b-2 transition-colors ${activeTab === 'pending'
+                                    ? 'border-red-600 text-red-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                {/* Left Section: Avatar Initials & Content inline side-by-side */}
-                                <div className="flex items-center space-x-4">
-                                    {/* Circle Initials Avatar Holder */}
-                                    <div className="w-10 h-10 min-w-[40px] rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-800 font-bold text-sm shadow-sm">
-                                        {item.initial}
-                                    </div>
+                                Pending Feedbacks
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('approved')}
+                                className={`px-8 py-4 font-medium border-b-2 transition-colors ${activeTab === 'approved'
+                                    ? 'border-red-600 text-red-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Approved Feedbacks
+                            </button>
+                        </div>
 
-                                    {/* Text Stack Details */}
-                                    <div className="flex flex-col justify-center">
-                                        {/* Name Header Line */}
-                                        <h4 className="text-[13px] font-bold text-gray-900 tracking-tight leading-none mb-1">
-                                            {item.name}
-                                        </h4>
+                        {/* Feedback List */}
+                        {loading ? (
+                            <div className="py-20 text-center text-gray-500">Loading feedbacks...</div>
+                        ) : currentFeedbacks.length === 0 ? (
+                            <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-2xl">
+                                No {activeTab} feedbacks found.
+                            </div>
+                        ) : (
+                            <div className="space-y-5">
+                                {currentFeedbacks.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition-shadow"
+                                    >
+                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+                                            {/* Left: Avatar + Details */}
+                                            <div className="flex gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600 font-bold text-xl flex-shrink-0">
+                                                    {item.customerName?.charAt(0) || item.name?.charAt(0) || 'U'}
+                                                </div>
 
-                                        {/* Metadata Inline Row (Comment | ★ Rating) */}
-                                        <div className="flex items-center text-[11px] text-gray-400 font-medium tracking-tight whitespace-nowrap">
-                                            <span>{item.comment}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-lg text-gray-900">
+                                                        {item.customerName || item.name || 'Anonymous'}
+                                                    </h4>
+                                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                                                        {item.comment || item.feedback}
+                                                    </p>
 
-                                            {/* Separator Pipe */}
-                                            <span className="mx-2 text-gray-300 font-light text-[10px]">|</span>
+                                                    <div className="flex items-center gap-2 mt-3">
+                                                        <span className="text-amber-500 text-xl">★</span>
+                                                        <span className="font-semibold text-gray-700">{item.rating || item.averageRating || '4.5'}</span>
+                                                        {item.appointmentId && (
+                                                            <span className="text-xs text-gray-400 ml-2">
+                                                                Appointment #{item.appointmentId}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                            {/* Rating Display */}
-                                            <div className="flex items-center space-x-1">
-                                                <span className="text-amber-500 text-sm leading-none -mt-0.5">★</span>
-                                                <span className="text-[10px] text-gray-500 font-bold">{item.rating}</span>
+                                            {/* Right: Status + Action Buttons */}
+                                            <div className="flex flex-col items-end gap-3">
+                                                {activeTab === 'pending' ? (
+                                                    <div className="flex gap-3">
+                                                        <button
+                                                            onClick={() => handleApprove(item.id)}
+                                                            disabled={processingId === item.id}
+                                                            className="bg-[#FF0B01] hover:bg-red-700 text-white text-sm font-bold px-7 py-2.5 rounded-xl transition disabled:opacity-70"
+                                                        >
+                                                            {processingId === item.id ? 'Approving...' : 'Approve'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleReject(item.id)}
+                                                            disabled={processingId === item.id}
+                                                            className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-bold px-7 py-2.5 rounded-xl transition disabled:opacity-70"
+                                                        >
+                                                            {processingId === item.id ? 'Rejecting...' : 'Reject'}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="px-4 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                                        APPROVED
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                </div> {/* <-- Correctly closes the Left Section container */}
-
-                                {/* Right Section: Interactive Action Panel Buttons */}
-                                <div className="flex items-center space-x-3 self-end sm:self-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleApprove(item.id)}
-                                        className="bg-[#FF0B01] text-white text-[10px] font-bold uppercase tracking-wider px-6 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm min-w-[90px]"
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleReject(item.id)}
-                                        className="border border-gray-300 text-gray-500 text-[10px] font-bold uppercase tracking-wider px-6 py-2 rounded-md bg-white hover:bg-gray-50 transition-colors min-w-[90px]"
-                                    >
-                                        Reject
-                                    </button>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-
                 </main>
             </div>
 
-            {/* GLOBAL FOOTER */}
             <Footer />
         </div>
     );
-}
+};
 
 export default Feedback;
