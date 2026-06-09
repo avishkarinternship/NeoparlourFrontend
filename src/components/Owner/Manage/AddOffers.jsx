@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import couponCodeIcon from '../../../assets/Owner/Manage/Offers/coupon_code.svg';
 import offerDetailsIcon from '../../../assets/Owner/Manage/Offers/offer_details_icon.svg';
 import percentageIcon from '../../../assets/Owner/Manage/Offers/percentage_icon.svg';
+import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg';
 
 const toastStyle = {
     style: {
@@ -28,7 +29,7 @@ const toastStyle = {
 
 const DISCOUNT_TYPES = [
     { value: 'PERCENTAGE', label: 'Percentage Off' },
-    { value: 'FIXED_AMOUNT', label: 'Fixed Amount Off' }
+    { value: 'FLAT', label: 'Flat Amount Off' }
 ];
 
 const AddOffers = () => {
@@ -36,6 +37,8 @@ const AddOffers = () => {
     const [activeFilter, setActiveFilter] = useState('all');
 
     // Form States
+    const [editingOfferId, setEditingOfferId] = useState(null);
+
     const [offerName, setOfferName] = useState('');
     const [description, setDescription] = useState('');
     const [discountType, setDiscountType] = useState('PERCENTAGE');
@@ -49,9 +52,10 @@ const AddOffers = () => {
     const [activeServices, setActiveServices] = useState([]);
     const [loadingServices, setLoadingServices] = useState(false);
     const [loadingSubmit, setLoadingSubmit] = useState(false);
+    const [loadingOffers, setLoadingOffers] = useState(false);
+    const [loadingEdit, setLoadingEdit] = useState(false);
 
     const [offers, setOffers] = useState([]);
-    const [loadingOffers, setLoadingOffers] = useState(false);
 
     // Fetch Active Services
     const fetchActiveServices = async () => {
@@ -66,7 +70,7 @@ const AddOffers = () => {
         }
     };
 
-    // Fetch Offers
+    // Fetch Offers List
     const fetchOffers = async () => {
         try {
             setLoadingOffers(true);
@@ -97,20 +101,68 @@ const AddOffers = () => {
         }
     };
 
-    // Calculate total original price of selected services
     const totalOriginalPrice = selectedServices.reduce((sum, id) => {
         const service = activeServices.find(s => s.id === id);
         return sum + (service?.price || 0);
     }, 0);
 
-    // Calculate discount amount
     const discountAmount = discountType === 'PERCENTAGE' && discountValue
         ? (totalOriginalPrice * parseFloat(discountValue)) / 100
         : (parseFloat(discountValue) || 0);
 
+    const finalPrice = Math.max(0, totalOriginalPrice - discountAmount);
+
     const toInstant = (datetimeLocal) => {
         if (!datetimeLocal) return null;
         return datetimeLocal + ':00Z';
+    };
+
+    const resetForm = () => {
+        setOfferName('');
+        setDescription('');
+        setDiscountType('PERCENTAGE');
+        setDiscountValue('');
+        setValidFrom('');
+        setValidTo('');
+        setUsageLimitPerCustomer('');
+        setTotalUsageLimit('');
+        setSelectedServices([]);
+        setEditingOfferId(null);
+    };
+
+    // Fetch Full Offer Data for Editing + Pre-select Services
+    const handleEdit = async (offer) => {
+        setLoadingEdit(true);
+        try {
+            const response = await axiosInstance.get(`/offers/${offer.id}`);
+            const fullOffer = response.data;
+
+            setEditingOfferId(fullOffer.id);
+            setOfferName(fullOffer.name || '');
+            setDescription(fullOffer.description || '');
+            setDiscountType(fullOffer.discountType || 'PERCENTAGE');
+            setDiscountValue(fullOffer.discountValue?.toString() || fullOffer.percentage?.toString() || '');
+            setUsageLimitPerCustomer(fullOffer.usageLimitPerCustomer?.toString() || '');
+            setTotalUsageLimit(fullOffer.totalUsageLimit?.toString() || '');
+
+            if (fullOffer.validFrom) {
+                setValidFrom(fullOffer.validFrom.slice(0, 16));
+            }
+            if (fullOffer.validTo) {
+                setValidTo(fullOffer.validTo.slice(0, 16));
+            }
+
+            const serviceIds = fullOffer.applicableServices
+                ? fullOffer.applicableServices.map(s => s.id)
+                : [];
+            setSelectedServices(serviceIds);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            toast.error('Failed to load offer details', toastStyle);
+        } finally {
+            setLoadingEdit(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -137,36 +189,35 @@ const AddOffers = () => {
         };
 
         try {
-            await axiosInstance.post('/offers', payload);
-            toast.success('Offer created successfully!', toastStyle);
+            if (editingOfferId) {
+                await axiosInstance.put(`/offers/${editingOfferId}`, payload);
+            } else {
+                await axiosInstance.post('/offers', payload);
+            }
 
-            // Reset form
-            setOfferName('');
-            setDescription('');
-            setDiscountValue('');
-            setValidFrom('');
-            setValidTo('');
-            setUsageLimitPerCustomer('');
-            setTotalUsageLimit('');
-            setSelectedServices([]);
-
+            resetForm();
             fetchOffers();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create offer', toastStyle);
+            toast.error(error.response?.data?.message || 'Failed to save offer', toastStyle);
         } finally {
             setLoadingSubmit(false);
         }
     };
 
     const handleCancel = () => {
-        setOfferName('');
-        setDescription('');
-        setDiscountValue('');
-        setValidFrom('');
-        setValidTo('');
-        setUsageLimitPerCustomer('');
-        setTotalUsageLimit('');
-        setSelectedServices([]);
+        resetForm();
+    };
+
+    // Helper to get discount value safely (handles both discountValue and percentage)
+    const getDiscountDisplay = (offer) => {
+        if (!offer) return '';
+
+        const value = offer.discountValue ?? offer.percentage ?? 0;
+
+        if (offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined) {
+            return `${value}% OFF`;
+        }
+        return `₹${value} OFF`;
     };
 
     return (
@@ -180,7 +231,9 @@ const AddOffers = () => {
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-8">
-                            <span className="text-[13px] font-bold uppercase tracking-wider">Add New Offer</span>
+                            <span className="text-[13px] font-bold uppercase tracking-wider">
+                                {editingOfferId ? 'Edit Offer' : 'Add New Offer'}
+                            </span>
                         </div>
 
                         <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-12">
@@ -215,7 +268,7 @@ const AddOffers = () => {
                                     </div>
                                 </div>
 
-                                {/* Discount & Limits */}
+                                {/* Discount */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="relative">
                                         <div className="absolute left-4 top-3.5">
@@ -288,7 +341,7 @@ const AddOffers = () => {
                                     </div>
                                 </div>
 
-                                {/* Service Selection + Live Preview */}
+                                {/* Services + Price Breakdown */}
                                 <div>
                                     <label className="text-xs font-semibold text-gray-500 mb-3 block">
                                         Applicable Services * ({selectedServices.length} selected)
@@ -319,17 +372,24 @@ const AddOffers = () => {
                                         )}
                                     </div>
 
-                                    {/* Live Savings Preview */}
                                     {selectedServices.length > 0 && discountValue && (
-                                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                            <p className="text-sm font-medium text-green-700">
-                                                Estimated Savings: ₹{discountAmount.toFixed(2)}
-                                                {discountType === 'PERCENTAGE' && ` (${discountValue}%)`}
-                                            </p>
-                                            <p className="text-xs text-green-600 mt-1">
-                                                Original Total: ₹{totalOriginalPrice.toFixed(2)} →
-                                                After Discount: ₹{(totalOriginalPrice - discountAmount).toFixed(2)}
-                                            </p>
+                                        <div className="mt-6 p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl">
+                                            <h4 className="font-semibold text-green-800 mb-3">Price Breakdown</h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Original Total</span>
+                                                    <span className="font-medium">₹{totalOriginalPrice.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-red-600">
+                                                    <span>Discount Amount</span>
+                                                    <span>- ₹{discountAmount.toFixed(2)}</span>
+                                                </div>
+                                                <hr className="border-gray-200 my-2" />
+                                                <div className="flex justify-between font-bold text-lg text-gray-900">
+                                                    <span>Final Price After Discount</span>
+                                                    <span>₹{finalPrice.toFixed(2)}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -337,17 +397,17 @@ const AddOffers = () => {
                                 <div className="flex gap-4 pt-6">
                                     <button
                                         type="submit"
-                                        disabled={loadingSubmit}
+                                        disabled={loadingSubmit || loadingEdit}
                                         className="flex-1 bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 disabled:opacity-70"
                                     >
-                                        {loadingSubmit ? 'Creating Offer...' : 'Create Offer'}
+                                        {loadingSubmit ? 'Saving...' : editingOfferId ? 'Update Offer' : 'Create Offer'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleCancel}
                                         className="flex-1 border border-gray-300 py-4 rounded-xl font-bold hover:bg-gray-50"
                                     >
-                                        Cancel
+                                        Discard
                                     </button>
                                 </div>
                             </form>
@@ -361,8 +421,7 @@ const AddOffers = () => {
                                     <button
                                         key={filter}
                                         onClick={() => setActiveFilter(filter)}
-                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'
-                                            }`}
+                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
                                     >
                                         {filter.charAt(0).toUpperCase() + filter.slice(1)}
                                     </button>
@@ -388,10 +447,17 @@ const AddOffers = () => {
                                         </div>
                                         <p className="text-sm text-gray-600 mt-2 line-clamp-2">{offer.description}</p>
                                         <div className="mt-4 text-sm font-semibold text-red-600">
-                                            {offer.discountType === 'PERCENTAGE'
-                                                ? `${offer.discountValue}% OFF`
-                                                : `₹${offer.discountValue} OFF`}
+                                            {getDiscountDisplay(offer)}
                                         </div>
+
+                                        <button
+                                            onClick={() => handleEdit(offer)}
+                                            disabled={loadingEdit}
+                                            className="mt-4 flex items-center gap-2 text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-60"
+                                        >
+                                            <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                            {loadingEdit ? 'Loading...' : 'Edit Offer'}
+                                        </button>
                                     </div>
                                 ))}
                             </div>

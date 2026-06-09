@@ -129,10 +129,29 @@ const Inventory = () => {
         }
     }, [activeTab, activeSwapStatus]);
 
+    // Safe number parsing to prevent "e" and integer overflow
+    const safeParseInt = (value, defaultValue = 0) => {
+        if (!value) return defaultValue;
+        const num = parseInt(value, 10);
+        if (isNaN(num) || num < 0) return defaultValue;
+        return Math.min(num, 2147483647);
+    };
+
+    const safeParseFloat = (value, defaultValue = 0) => {
+        if (!value) return defaultValue;
+        const num = parseFloat(value);
+        if (isNaN(num) || num < 0) return defaultValue;
+        return num;
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!itemName || !quantity || !costPrice) {
-            toast.error("Please fill required fields (Name, Quantity, Price)", toastStyle);
+        if (!itemName.trim()) {
+            toast.error("Item Name is required", toastStyle);
+            return;
+        }
+        if (!costPrice || !quantity) {
+            toast.error("Cost Price and Quantity are required", toastStyle);
             return;
         }
 
@@ -141,16 +160,17 @@ const Inventory = () => {
             const payload = {
                 name: itemName.trim(),
                 category: productType,
-                currentStock: parseInt(quantity),
-                reorderLevel: reorderLevel ? parseInt(reorderLevel) : 10,
-                costPrice: parseFloat(costPrice),
-                unitType,
-                productType,
+                currentStock: safeParseInt(quantity),
+                reorderLevel: safeParseInt(reorderLevel, 10),
+                costPrice: safeParseFloat(costPrice),
+                unitType: unitType,
+                productType: productType,
             };
 
             await axiosInstance.post('/inventory', payload);
             toast.success('Inventory item added successfully!', toastStyle);
 
+            // Reset form
             setItemName('');
             setCostPrice('');
             setQuantity('');
@@ -184,7 +204,7 @@ const Inventory = () => {
             const payload = {
                 staffId: parseInt(selectedStaffId),
                 inventoryId: selectedInventory.id,
-                allocatedQuantity: parseFloat(allocatedQuantity),
+                allocatedQuantity: safeParseFloat(allocatedQuantity),
                 assignedBy: "Owner",
                 notes: notes || "",
             };
@@ -227,7 +247,7 @@ const Inventory = () => {
         setEditLoading(true);
         try {
             const payload = {
-                newAllocatedQuantity: parseFloat(newAllocatedQuantity),
+                newAllocatedQuantity: safeParseFloat(newAllocatedQuantity),
                 notes: editNotes || "",
             };
 
@@ -236,10 +256,9 @@ const Inventory = () => {
             setShowEditModal(false);
 
             if (selectedInventory) {
-                setTimeout(async () => {
-                    const response = await axiosInstance.get(`/staff-inventory/inventory/${selectedInventory.id}`);
-                    setAssignedStaffList(response.data || []);
-                }, 400);
+                setTimeout(() => {
+                    openViewAssigned(selectedInventory);
+                }, 500);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to update assignment', toastStyle);
@@ -321,13 +340,12 @@ const Inventory = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
                                             <img src={serviceNameIcon} alt="Name" className="w-4 h-4 mr-2.5 opacity-70" />
-                                            <input type="text" placeholder="Item Name" value={itemName} onChange={(e) => setItemName(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
+                                            <input type="text" placeholder="Item Name *" value={itemName} onChange={(e) => setItemName(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
                                         </div>
 
                                         <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
                                             <img src={durationIcon} alt="Product Type" className="w-4 h-4 mr-2.5 opacity-70" />
                                             <select value={productType} onChange={(e) => setProductType(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required>
-                                                <option value="" disabled>Product Type</option>
                                                 {PRODUCT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                                             </select>
                                         </div>
@@ -335,23 +353,45 @@ const Inventory = () => {
                                         <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
                                             <img src={durationIcon} alt="Unit Type" className="w-4 h-4 mr-2.5 opacity-70" />
                                             <select value={unitType} onChange={(e) => setUnitType(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required>
-                                                <option value="" disabled>Unit Type</option>
                                                 {UNIT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                                             </select>
                                         </div>
 
                                         <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
                                             <img src={priceIcon} alt="Price" className="w-4 h-4 mr-2.5 opacity-70" />
-                                            <input type="number" placeholder="Cost Price" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
+                                            <input
+                                                type="text"
+                                                placeholder="Cost Price *"
+                                                value={costPrice}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                                                    if ((value.match(/\./g) || []).length <= 1) setCostPrice(value);
+                                                }}
+                                                className="w-full text-xs font-semibold outline-none bg-transparent"
+                                                required
+                                            />
                                         </div>
 
                                         <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
                                             <img src={durationIcon} alt="Quantity" className="w-4 h-4 mr-2.5 opacity-70" />
-                                            <input type="number" placeholder="Current Stock" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" required />
+                                            <input
+                                                type="text"
+                                                placeholder="Current Stock *"
+                                                value={quantity}
+                                                onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
+                                                className="w-full text-xs font-semibold outline-none bg-transparent"
+                                                required
+                                            />
                                         </div>
 
-                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 sm:col-span-2 md:col-span-1">
-                                            <input type="number" placeholder="Reorder Level" value={reorderLevel} onChange={(e) => setReorderLevel(e.target.value)} className="w-full text-xs font-semibold outline-none bg-transparent" />
+                                        <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900">
+                                            <input
+                                                type="text"
+                                                placeholder="Reorder Level"
+                                                value={reorderLevel}
+                                                onChange={(e) => setReorderLevel(e.target.value.replace(/[^0-9]/g, ''))}
+                                                className="w-full text-xs font-semibold outline-none bg-transparent"
+                                            />
                                         </div>
                                     </div>
 
@@ -370,7 +410,7 @@ const Inventory = () => {
                             </div>
                         )}
 
-                        {/* ==================== VIEW INVENTORY TAB ==================== */}
+                        {/* VIEW INVENTORY TAB */}
                         {activeTab === 'view' && (
                             <div>
                                 <div className="flex justify-between items-center mb-6">
@@ -424,7 +464,7 @@ const Inventory = () => {
                             </div>
                         )}
 
-                        {/* ==================== SWAP REQUESTS TAB ==================== */}
+                        {/* SWAP REQUESTS TAB */}
                         {activeTab === 'swaps' && (
                             <div>
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -444,12 +484,7 @@ const Inventory = () => {
                                         ))}
                                     </div>
 
-                                    <button
-                                        onClick={() => fetchSwapRequests(activeSwapStatus)}
-                                        className="text-xs px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50"
-                                    >
-                                        ↻ Refresh
-                                    </button>
+                                    <button onClick={() => fetchSwapRequests(activeSwapStatus)} className="text-xs px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">↻ Refresh</button>
                                 </div>
 
                                 {loadingSwaps ? (
@@ -465,57 +500,27 @@ const Inventory = () => {
                                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                                     <div className="flex-1">
                                                         <div className="flex items-start gap-4">
-                                                            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
-                                                                ↔
-                                                            </div>
+                                                            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">↔</div>
                                                             <div className="flex-1">
                                                                 <div className="flex items-center justify-between">
                                                                     <p className="font-bold text-xl">{req.productName}</p>
                                                                     <span className={`px-3 py-1 text-xs font-bold rounded-full ${req.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                                                                        req.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                                                                            'bg-red-100 text-red-700'
-                                                                        }`}>
+                                                                        req.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                                                         {req.status}
                                                                     </span>
                                                                 </div>
-
-                                                                <p className="text-sm text-gray-600 mt-1">
-                                                                    To: <span className="font-semibold">{req.toStaff}</span>
-                                                                </p>
-
-                                                                <div className="mt-3 text-sm">
-                                                                    <span className="font-medium">Quantity:</span> {req.quantity}
-                                                                </div>
-
-                                                                {req.notes && (
-                                                                    <div className="mt-2 text-sm text-gray-600 italic">
-                                                                        Note: {req.notes}
-                                                                    </div>
-                                                                )}
-
-                                                                <p className="text-xs text-gray-400 mt-3">
-                                                                    Requested by {req.requestedBy} • {new Date(req.requestedAt).toLocaleString()}
-                                                                </p>
+                                                                <p className="text-sm text-gray-600 mt-1">To: <span className="font-semibold">{req.toStaff}</span></p>
+                                                                <div className="mt-3 text-sm"><span className="font-medium">Quantity:</span> {req.quantity}</div>
+                                                                {req.notes && <div className="mt-2 text-sm text-gray-600 italic">Note: {req.notes}</div>}
+                                                                <p className="text-xs text-gray-400 mt-3">Requested by {req.requestedBy} • {new Date(req.requestedAt).toLocaleString()}</p>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {req.status === 'PENDING' && (
                                                         <div className="flex gap-3 lg:flex-col">
-                                                            <button
-                                                                onClick={() => handleApproveSwap(req.id)}
-                                                                disabled={processingId === req.id}
-                                                                className="flex-1 lg:flex-none px-8 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
-                                                            >
-                                                                {processingId === req.id ? 'Processing...' : '✅ Approve'}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleRejectSwap(req.id)}
-                                                                disabled={processingId === req.id}
-                                                                className="flex-1 lg:flex-none px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
-                                                            >
-                                                                {processingId === req.id ? 'Processing...' : '✕ Reject'}
-                                                            </button>
+                                                            <button onClick={() => handleApproveSwap(req.id)} disabled={processingId === req.id} className="flex-1 lg:flex-none px-8 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-70">✅ Approve</button>
+                                                            <button onClick={() => handleRejectSwap(req.id)} disabled={processingId === req.id} className="flex-1 lg:flex-none px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold disabled:opacity-70">✕ Reject</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -529,7 +534,7 @@ const Inventory = () => {
                 </main>
             </div>
 
-            {/* ==================== ASSIGN MODAL ==================== */}
+            {/* Assign Modal */}
             {showAssignModal && selectedInventory && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -566,7 +571,7 @@ const Inventory = () => {
                 </div>
             )}
 
-            {/* ==================== VIEW ASSIGNED MODAL ==================== */}
+            {/* View Assigned Modal */}
             {showAssignedModal && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -614,7 +619,7 @@ const Inventory = () => {
                 </div>
             )}
 
-            {/* ==================== EDIT ASSIGNMENT MODAL ==================== */}
+            {/* Edit Assignment Modal */}
             {showEditModal && selectedAssignment && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl max-w-md w-full p-6">
@@ -629,9 +634,9 @@ const Inventory = () => {
                             <div>
                                 <label className="text-xs font-semibold text-gray-500 block mb-1">New Total Allocated Quantity</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={newAllocatedQuantity}
-                                    onChange={(e) => setNewAllocatedQuantity(e.target.value)}
+                                    onChange={(e) => setNewAllocatedQuantity(e.target.value.replace(/[^0-9.]/g, ''))}
                                     className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500"
                                 />
                             </div>

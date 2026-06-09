@@ -17,6 +17,7 @@ import productDetailsIcon from '../../../assets/Owner/Manage/Products/product_de
 import productQuantityIcon from '../../../assets/Owner/Manage/Products/product_quantity_icon.svg';
 import productTypeIcon from '../../../assets/Owner/Manage/Products/product_type_icon.svg';
 import rateIcon from '../../../assets/Owner/Manage/Products/rate_icon.svg';
+import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg'; // Add this icon import
 
 const toastStyle = {
     style: {
@@ -45,22 +46,20 @@ const AddProducts = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('add'); // 'add' or 'view'
 
+    // Edit Mode State
+    const [editingProductId, setEditingProductId] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+
     // Filter States (for View Products)
     const [filters, setFilters] = useState({
-        name: '',
-        category: '',
-        productType: '',
-        active: null,
-        minPrice: '',
-        maxPrice: '',
-        inStock: null,
-        keyword: ''
+        name: '', category: '', productType: '', active: null,
+        minPrice: '', maxPrice: '', inStock: null, keyword: ''
     });
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Form States for Adding Product
+    // Form States
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
@@ -72,20 +71,21 @@ const AddProducts = () => {
 
     const [mainImageBase64, setMainImageBase64] = useState('');
     const [additionalImagesBase64, setAdditionalImagesBase64] = useState([]);
+    const [existingMainImageUrl, setExistingMainImageUrl] = useState('');
+    const [existingAdditionalImageUrls, setExistingAdditionalImageUrls] = useState([]);
 
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [togglingId, setTogglingId] = useState(null);
+    const [loadingEdit, setLoadingEdit] = useState(false);
 
     // Fetch Products
     const fetchProducts = async (page = 0) => {
         if (activeTab !== 'view') return;
-
         try {
             setLoadingProducts(true);
             let url = `/products/filter?page=${page}&size=10`;
-
             const params = new URLSearchParams();
 
             if (filters.name) params.append('name', filters.name);
@@ -112,12 +112,45 @@ const AddProducts = () => {
         }
     };
 
-    // Load products only when switching to View tab
     useEffect(() => {
         if (activeTab === 'view') {
             fetchProducts(0);
         }
-    }, [activeTab]);
+    }, [activeTab, filters]);
+
+    // Load Product for Editing
+    const handleEdit = async (product) => {
+        setLoadingEdit(true);
+        try {
+            const response = await axiosInstance.get(`/products/${product.id}`);
+            const p = response.data;
+
+            setEditingProductId(p.id);
+            setIsEditMode(true);
+            setActiveTab('add');
+
+            setName(p.name || '');
+            setDescription(p.description || '');
+            setPrice(p.price?.toString() || '');
+            setDiscountPrice(p.discountPrice?.toString() || '');
+            setCategory(p.category || '');
+            setProductType(p.productType || '');
+            setStock(p.stock?.toString() || '');
+            setRestockLevel(p.restockLevel?.toString() || '');
+
+            setExistingMainImageUrl(p.imageUrl || '');
+            setExistingAdditionalImageUrls(p.additionalImageUrls || []);
+
+            setMainImageBase64('');
+            setAdditionalImagesBase64([]);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            toast.error('Failed to load product details', toastStyle);
+        } finally {
+            setLoadingEdit(false);
+        }
+    };
 
     // Image Handlers
     const handleMainImageUpload = (e) => {
@@ -168,12 +201,20 @@ const AddProducts = () => {
         };
 
         try {
-            await axiosInstance.post('/products', payload);
-            toast.success('Product added successfully!', toastStyle);
+            if (isEditMode && editingProductId) {
+                await axiosInstance.put(`/products/${editingProductId}`, payload);
+                toast.success('Product updated successfully!', toastStyle);
+            } else {
+                await axiosInstance.post('/products', payload);
+                toast.success('Product added successfully!', toastStyle);
+            }
+
             resetForm();
             setActiveTab('view');
+            setIsEditMode(false);
+            setEditingProductId(null);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add product', toastStyle);
+            toast.error(error.response?.data?.message || 'Failed to save product', toastStyle);
         } finally {
             setLoadingSubmit(false);
         }
@@ -183,9 +224,15 @@ const AddProducts = () => {
         setName(''); setDescription(''); setPrice(''); setDiscountPrice('');
         setCategory(''); setProductType(''); setStock(''); setRestockLevel('');
         setMainImageBase64(''); setAdditionalImagesBase64([]);
+        setExistingMainImageUrl(''); setExistingAdditionalImageUrls([]);
+        setEditingProductId(null);
+        setIsEditMode(false);
     };
 
-    const handleCancel = resetForm;
+    const handleCancel = () => {
+        resetForm();
+        setActiveTab('view');
+    };
 
     const toggleProductStatus = async (id, currentStatus) => {
         setTogglingId(id);
@@ -212,18 +259,12 @@ const AddProducts = () => {
     };
 
     const resetFilters = () => {
-        setFilters({
-            name: '', category: '', productType: '', active: null,
-            minPrice: '', maxPrice: '', inStock: null, keyword: ''
-        });
+        setFilters({ name: '', category: '', productType: '', active: null, minPrice: '', maxPrice: '', inStock: null, keyword: '' });
         setCurrentPage(0);
     };
 
-    const handleSearch = () => {
-        fetchProducts(0);
-    };
+    const handleSearch = () => fetchProducts(0);
 
-    // Calculate savings in rupees
     const calculateSavings = () => {
         const p = parseFloat(price);
         const d = parseFloat(discountPrice);
@@ -245,10 +286,10 @@ const AddProducts = () => {
                         {/* Tabs */}
                         <div className="flex border-b border-gray-200 mb-8">
                             <button
-                                onClick={() => setActiveTab('add')}
+                                onClick={() => { setActiveTab('add'); setIsEditMode(false); setEditingProductId(null); }}
                                 className={`px-8 py-4 text-sm font-semibold transition-all border-b-2 -mb-px ${activeTab === 'add' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                Add New Product
+                                {isEditMode ? 'Edit Product' : 'Add New Product'}
                             </button>
                             <button
                                 onClick={() => setActiveTab('view')}
@@ -258,11 +299,13 @@ const AddProducts = () => {
                             </button>
                         </div>
 
-                        {/* ==================== ADD PRODUCT TAB ==================== */}
+                        {/* ==================== ADD / EDIT PRODUCT TAB ==================== */}
                         {activeTab === 'add' && (
                             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
                                 <div className="inline-block border-b-2 border-red-600 pb-1 mb-8">
-                                    <span className="text-[13px] font-bold uppercase tracking-wider">Add New Product</span>
+                                    <span className="text-[13px] font-bold uppercase tracking-wider">
+                                        {isEditMode ? 'Edit Product' : 'Add New Product'}
+                                    </span>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -281,28 +324,42 @@ const AddProducts = () => {
                                                 <input type="file" accept="image/*" onChange={handleMainImageUpload} className="hidden" />
                                             </label>
                                         </div>
-                                        {mainImageBase64 && <img src={mainImageBase64} alt="Preview" className="max-h-48 rounded-lg" />}
+
+                                        {(mainImageBase64 || existingMainImageUrl) && (
+                                            <img
+                                                src={mainImageBase64 || existingMainImageUrl}
+                                                alt="Preview"
+                                                className="max-h-48 rounded-lg"
+                                            />
+                                        )}
                                     </div>
 
                                     {/* Additional Images */}
                                     <div className="border border-gray-300 rounded-xl p-6">
-                                        <p className="text-xs font-bold text-gray-500 mb-3">Additional Images ({additionalImagesBase64.length})</p>
+                                        <p className="text-xs font-bold text-gray-500 mb-3">
+                                            Additional Images ({additionalImagesBase64.length + existingAdditionalImageUrls.length})
+                                        </p>
                                         <label className="flex items-center gap-2 hover:text-red-600 cursor-pointer text-sm mb-4">
                                             <img src={galleryIcon} alt="Gallery" className="w-5 h-5" />
                                             <span>Add More Images</span>
                                             <input type="file" accept="image/*" multiple onChange={handleAdditionalImagesUpload} className="hidden" />
                                         </label>
 
-                                        {additionalImagesBase64.length > 0 && (
-                                            <div className="grid grid-cols-4 gap-3">
-                                                {additionalImagesBase64.map((img, index) => (
-                                                    <div key={index} className="relative">
-                                                        <img src={img} alt={`Addl ${index}`} className="w-full h-24 object-cover rounded-lg" />
-                                                        <button type="button" onClick={() => removeAdditionalImage(index)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {/* Existing Images */}
+                                            {existingAdditionalImageUrls.map((url, index) => (
+                                                <div key={`existing-${index}`} className="relative">
+                                                    <img src={url} alt={`Existing ${index}`} className="w-full h-24 object-cover rounded-lg" />
+                                                </div>
+                                            ))}
+                                            {/* New Images */}
+                                            {additionalImagesBase64.map((img, index) => (
+                                                <div key={`new-${index}`} className="relative">
+                                                    <img src={img} alt={`New ${index}`} className="w-full h-24 object-cover rounded-lg" />
+                                                    <button type="button" onClick={() => removeAdditionalImage(index)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     {/* Form Fields */}
@@ -339,7 +396,6 @@ const AddProducts = () => {
                                         </div>
                                     </div>
 
-                                    {/* Savings Display */}
                                     {price && discountPrice && parseFloat(discountPrice) < parseFloat(price) && (
                                         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
                                             <div className="text-green-600 text-xl">💰</div>
@@ -368,10 +424,10 @@ const AddProducts = () => {
 
                                     <div className="flex gap-4 pt-6">
                                         <button type="submit" disabled={loadingSubmit} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 disabled:opacity-70">
-                                            {loadingSubmit ? 'Adding Product...' : 'Add Product'}
+                                            {loadingSubmit ? (isEditMode ? 'Updating...' : 'Adding...') : isEditMode ? 'Update Product' : 'Add Product'}
                                         </button>
                                         <button type="button" onClick={handleCancel} className="flex-1 border border-gray-300 py-4 rounded-xl font-bold hover:bg-gray-50">
-                                            Cancel
+                                            Discard
                                         </button>
                                     </div>
                                 </form>
@@ -386,29 +442,21 @@ const AddProducts = () => {
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold">Search & Filters</h3>
                                         <div className="flex gap-3">
-                                            <button onClick={resetFilters} className="text-red-600 text-sm font-medium hover:underline">
-                                                Reset Filters
-                                            </button>
-                                            <button
-                                                onClick={handleSearch}
-                                                className="bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-red-700 transition"
-                                            >
-                                                Search
-                                            </button>
+                                            <button onClick={resetFilters} className="text-red-600 text-sm font-medium hover:underline">Reset Filters</button>
+                                            <button onClick={handleSearch} className="bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-red-700">Search</button>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {/* Filter inputs remain the same */}
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Keyword / Search</label>
                                             <input type="text" value={filters.keyword} onChange={(e) => setFilters(prev => ({ ...prev, keyword: e.target.value }))} placeholder="Search products..." className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Product Name</label>
                                             <input type="text" value={filters.name} onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))} placeholder="Product name" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Category</label>
                                             <select value={filters.category} onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
@@ -416,7 +464,6 @@ const AddProducts = () => {
                                                 {PRODUCT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                             </select>
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Product Type</label>
                                             <select value={filters.productType} onChange={(e) => setFilters(prev => ({ ...prev, productType: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
@@ -424,7 +471,6 @@ const AddProducts = () => {
                                                 {PRODUCT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                                             </select>
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Min Price</label>
                                             <input type="number" value={filters.minPrice} onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))} placeholder="Min ₹" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
@@ -433,7 +479,6 @@ const AddProducts = () => {
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Max Price</label>
                                             <input type="number" value={filters.maxPrice} onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))} placeholder="Max ₹" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
                                             <select value={filters.active === null ? '' : filters.active.toString()} onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value === '' ? null : e.target.value === 'true' }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
@@ -442,7 +487,6 @@ const AddProducts = () => {
                                                 <option value="false">Inactive</option>
                                             </select>
                                         </div>
-
                                         <div>
                                             <label className="text-xs font-medium text-gray-500 mb-1 block">Stock</label>
                                             <select value={filters.inStock === null ? '' : filters.inStock.toString()} onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.value === '' ? null : e.target.value === 'true' }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
@@ -475,7 +519,7 @@ const AddProducts = () => {
                                                             {imageUrl ? (
                                                                 <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                             ) : (
-                                                                <div className="text-center text-gray-400 text-xs px-4">No Image Present</div>
+                                                                <div className="text-center text-gray-400 text-xs px-4">No Image</div>
                                                             )}
                                                         </div>
                                                         <div className="p-4">
@@ -489,11 +533,19 @@ const AddProducts = () => {
                                                             </div>
                                                             {discount > 0 && <p className="text-xs text-green-600 mt-1">Save ₹{(product.price - product.discountPrice).toFixed(2)} ({discount}%)</p>}
                                                         </div>
-                                                        <div className="px-4 pb-4">
+                                                        <div className="px-4 pb-4 flex gap-2">
+                                                            <button
+                                                                onClick={() => handleEdit(product)}
+                                                                disabled={loadingEdit}
+                                                                className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition"
+                                                            >
+                                                                <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                                                Edit
+                                                            </button>
                                                             <button
                                                                 onClick={() => toggleProductStatus(product.id, product.active)}
                                                                 disabled={togglingId === product.id}
-                                                                className={`w-full py-2 text-xs font-bold rounded-xl transition-colors ${product.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${product.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
                                                             >
                                                                 {togglingId === product.id ? 'Updating...' : product.active ? 'Active' : 'Inactive'}
                                                             </button>
