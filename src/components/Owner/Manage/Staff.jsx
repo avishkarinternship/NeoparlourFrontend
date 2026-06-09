@@ -91,13 +91,17 @@ const Staff = () => {
 
         setFormLoading(true);
         try {
+            // Ensure gender is sent in correct format
+            const payload = { ...formData };
+            if (payload.gender === 'Other') {
+                payload.gender = 'OTHERS';
+            }
+
             if (editingStaffId) {
-                // Update Staff
-                await axiosInstance.put(`staff/${editingStaffId}`, formData);
+                await axiosInstance.put(`staff/${editingStaffId}`, payload);
                 toast.success('Staff updated successfully', toastStyle);
             } else {
-                // Create Staff
-                await axiosInstance.post('staff', formData);
+                await axiosInstance.post('staff', payload);
                 toast.success('Staff created successfully', toastStyle);
             }
             resetForm();
@@ -117,7 +121,7 @@ const Staff = () => {
             password: '', // Don't populate password
             address: staff.address || '',
             birthdate: staff.birthdate ? staff.birthdate.split('T')[0] : '',
-            gender: staff.gender || ''
+            gender: staff.gender || ''   // Backend sends MALE/FEMALE/OTHERS
         });
         setEditingStaffId(staff.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -157,11 +161,16 @@ const Staff = () => {
 
                                 <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
                                     <img src={genderIcon} alt="Gender" className="w-4 h-4 mr-2.5" />
-                                    <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full text-sm outline-none bg-transparent">
+                                    <select
+                                        name="gender"
+                                        value={formData.gender}
+                                        onChange={handleInputChange}
+                                        className="w-full text-sm outline-none bg-transparent"
+                                    >
                                         <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
+                                        <option value="MALE">Male</option>
+                                        <option value="FEMALE">Female</option>
+                                        <option value="OTHERS">Other</option>
                                     </select>
                                 </div>
 
