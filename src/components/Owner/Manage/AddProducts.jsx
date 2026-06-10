@@ -184,6 +184,31 @@ const AddProducts = () => {
             return;
         }
 
+        if (parseFloat(price) <= 0) {
+            toast.error("Price must be greater than 0", toastStyle);
+            return;
+        }
+
+        if (discountPrice && parseFloat(discountPrice) <= 0) {
+            toast.error("Discount price must be greater than 0", toastStyle);
+            return;
+        }
+
+        if (discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
+            toast.error("Discount price must be less than original price", toastStyle);
+            return;
+        }
+
+        if (parseInt(stock) <= 0) {
+            toast.error("Stock must be greater than 0", toastStyle);
+            return;
+        }
+
+        if (restockLevel && parseInt(restockLevel) <= 0) {
+            toast.error("Restock level must be greater than 0", toastStyle);
+            return;
+        }
+
         setLoadingSubmit(true);
 
         const payload = {
@@ -284,16 +309,16 @@ const AddProducts = () => {
                     <div className="max-w-5xl mx-auto">
 
                         {/* Tabs */}
-                        <div className="flex border-b border-gray-200 mb-8">
+                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-md border border-gray-100 shadow-sm">
                             <button
                                 onClick={() => { setActiveTab('add'); setIsEditMode(false); setEditingProductId(null); }}
-                                className={`px-8 py-4 text-sm font-semibold transition-all border-b-2 -mb-px ${activeTab === 'add' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 {isEditMode ? 'Edit Product' : 'Add New Product'}
                             </button>
                             <button
                                 onClick={() => setActiveTab('view')}
-                                className={`px-8 py-4 text-sm font-semibold transition-all border-b-2 -mb-px ${activeTab === 'view' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 View Products
                             </button>
@@ -301,25 +326,33 @@ const AddProducts = () => {
 
                         {/* ==================== ADD / EDIT PRODUCT TAB ==================== */}
                         {activeTab === 'add' && (
-                            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                                <div className="inline-block border-b-2 border-red-600 pb-1 mb-8">
-                                    <span className="text-[13px] font-bold uppercase tracking-wider">
-                                        {isEditMode ? 'Edit Product' : 'Add New Product'}
-                                    </span>
+                            <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300">
+                                <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
+                                    <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
+                                        🛍️
+                                    </div>
+                                    <div>
+                                        <span className="text-[12px] font-extrabold uppercase tracking-widest text-red-600 block">
+                                            {isEditMode ? 'Edit Mode' : 'Creation Mode'}
+                                        </span>
+                                        <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                                            {isEditMode ? 'Edit Product Details' : 'Add New Product'}
+                                        </h2>
+                                    </div>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     {/* Main Image */}
-                                    <div className="border border-gray-300 rounded-xl p-6">
-                                        <p className="text-xs font-bold text-gray-500 mb-3">Main Product Image</p>
+                                    <div className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6">
+                                        <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Main Product Image</p>
                                         <div className="flex gap-6 text-sm mb-4">
-                                            <label className="flex items-center gap-2 hover:text-red-600 cursor-pointer">
-                                                <img src={openCameraIcon} alt="Camera" className="w-5 h-5" />
+                                            <label className="flex items-center gap-2 hover:text-[#FF0B01] cursor-pointer font-semibold">
+                                                <img src={openCameraIcon} alt="Camera" className="w-5 h-5 opacity-60" />
                                                 <span>Camera</span>
                                                 <input type="file" accept="image/*" onChange={handleMainImageUpload} className="hidden" />
                                             </label>
-                                            <label className="flex items-center gap-2 hover:text-red-600 cursor-pointer">
-                                                <img src={galleryIcon} alt="Gallery" className="w-5 h-5" />
+                                            <label className="flex items-center gap-2 hover:text-[#FF0B01] cursor-pointer font-semibold">
+                                                <img src={galleryIcon} alt="Gallery" className="w-5 h-5 opacity-60" />
                                                 <span>Gallery</span>
                                                 <input type="file" accept="image/*" onChange={handleMainImageUpload} className="hidden" />
                                             </label>
@@ -329,14 +362,14 @@ const AddProducts = () => {
                                             <img
                                                 src={mainImageBase64 || existingMainImageUrl}
                                                 alt="Preview"
-                                                className="max-h-48 rounded-lg"
+                                                className="max-h-48 rounded-2xl shadow-sm"
                                             />
                                         )}
                                     </div>
 
                                     {/* Additional Images */}
-                                    <div className="border border-gray-300 rounded-xl p-6">
-                                        <p className="text-xs font-bold text-gray-500 mb-3">
+                                    <div className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6">
+                                        <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">
                                             Additional Images ({additionalImagesBase64.length + existingAdditionalImageUrls.length})
                                         </p>
                                         <label className="flex items-center gap-2 hover:text-red-600 cursor-pointer text-sm mb-4">
@@ -365,13 +398,13 @@ const AddProducts = () => {
                                     {/* Form Fields */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={productDetailsIcon} alt="Name" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product Name *" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" required />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productDetailsIcon} alt="Name" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product Name *" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
                                         </div>
 
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={couponCodeIcon} alt="Category" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="text" list="categoryList" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={couponCodeIcon} alt="Category" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="text" list="categoryList" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
                                             <datalist id="categoryList">
                                                 {PRODUCT_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
                                             </datalist>
@@ -380,16 +413,16 @@ const AddProducts = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={rateIcon} alt="Price" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Original Price *" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" required />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={rateIcon} alt="Price" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Original Price *" min="0.01" step="any" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={percentageIcon} alt="Discount" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="number" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} placeholder="Discount Price (₹)" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={percentageIcon} alt="Discount" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="number" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} placeholder="Discount Price (₹)" min="0.01" step="any" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={productTypeIcon} alt="Type" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="text" list="productTypeList" value={productType} onChange={(e) => setProductType(e.target.value)} placeholder="Product Type" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productTypeIcon} alt="Type" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="text" list="productTypeList" value={productType} onChange={(e) => setProductType(e.target.value)} placeholder="Product Type" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
                                             <datalist id="productTypeList">
                                                 {PRODUCT_TYPES.map(type => <option key={type} value={type} />)}
                                             </datalist>
@@ -397,36 +430,36 @@ const AddProducts = () => {
                                     </div>
 
                                     {price && discountPrice && parseFloat(discountPrice) < parseFloat(price) && (
-                                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                                            <div className="text-green-600 text-xl">💰</div>
+                                        <div className="bg-green-50/50 border border-green-200 rounded-2xl p-5 flex items-center gap-3">
+                                            <div className="text-green-600 text-2xl">💰</div>
                                             <div>
-                                                <p className="font-semibold text-green-700">You will save ₹{calculateSavings()}</p>
-                                                <p className="text-sm text-green-600">Original: ₹{price} → Discounted: ₹{discountPrice}</p>
+                                                <p className="font-extrabold text-green-700">You will save ₹{calculateSavings()}</p>
+                                                <p className="text-xs text-green-600/90 font-medium">Original: ₹{price} → Discounted: ₹{discountPrice}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={productQuantityIcon} alt="Stock" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Current Stock *" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" required />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Stock" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Current Stock *" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-3.5"><img src={productQuantityIcon} alt="Restock" className="w-4 h-4 opacity-70" /></div>
-                                            <input type="number" value={restockLevel} onChange={(e) => setRestockLevel(e.target.value)} placeholder="Restock Level" className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Restock" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="number" value={restockLevel} onChange={(e) => setRestockLevel(e.target.value)} placeholder="Restock Level" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
                                         </div>
                                     </div>
 
                                     <div className="relative">
-                                        <div className="absolute left-4 top-3.5"><img src={productDescriptionIcon} alt="Description" className="w-4 h-4 opacity-70" /></div>
-                                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Product Description" rows="4" className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500 resize-none" />
+                                        <div className="absolute left-4 top-5"><img src={productDescriptionIcon} alt="Description" className="w-5 h-5 opacity-40" /></div>
+                                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Product Description" rows="4" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 resize-none" />
                                     </div>
 
                                     <div className="flex gap-4 pt-6">
-                                        <button type="submit" disabled={loadingSubmit} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 disabled:opacity-70">
+                                        <button type="submit" disabled={loadingSubmit} className="flex-1 bg-[#FF0B01] hover:bg-[#d90900] transition text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg text-sm tracking-wider uppercase active:scale-[0.985]">
                                             {loadingSubmit ? (isEditMode ? 'Updating...' : 'Adding...') : isEditMode ? 'Update Product' : 'Add Product'}
                                         </button>
-                                        <button type="button" onClick={handleCancel} className="flex-1 border border-gray-300 py-4 rounded-xl font-bold hover:bg-gray-50">
+                                        <button type="button" onClick={handleCancel} className="flex-1 border border-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-50 text-sm tracking-wider uppercase transition">
                                             Discard
                                         </button>
                                     </div>
@@ -514,16 +547,21 @@ const AddProducts = () => {
                                                 const imageUrl = getProductImage(product);
                                                 const discount = discountPercent(product.price, product.discountPrice);
                                                 return (
-                                                    <div key={product.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-md transition-all group">
-                                                        <div className="relative aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                                                    <div key={product.id} className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                                                        <div className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                                                             {imageUrl ? (
                                                                 <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                             ) : (
                                                                 <div className="text-center text-gray-400 text-xs px-4">No Image</div>
                                                             )}
+                                                            {discount > 0 && (
+                                                                <div className="absolute top-3 right-3 bg-[#FF0B01] text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase shadow-sm">
+                                                                    {discount}% OFF
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="p-4">
-                                                            <h5 className="text-sm font-medium line-clamp-2 leading-tight mb-2">{product.name}</h5>
+                                                            <h5 className="text-sm font-semibold line-clamp-2 leading-tight mb-2 h-10">{product.name}</h5>
                                                             <div className="flex justify-between items-center">
                                                                 <div>
                                                                     <span className="font-bold text-red-600">₹{product.price}</span>
@@ -531,21 +569,21 @@ const AddProducts = () => {
                                                                 </div>
                                                                 <span className="text-xs text-gray-500">{product.stock} left</span>
                                                             </div>
-                                                            {discount > 0 && <p className="text-xs text-green-600 mt-1">Save ₹{(product.price - product.discountPrice).toFixed(2)} ({discount}%)</p>}
+                                                            {discount > 0 && <p className="text-[10px] text-green-600 font-extrabold tracking-wide uppercase mt-1">Save ₹{(product.price - product.discountPrice).toFixed(2)}</p>}
                                                         </div>
-                                                        <div className="px-4 pb-4 flex gap-2">
+                                                        <div className="px-4 pb-4 flex gap-2 text-xs font-bold">
                                                             <button
                                                                 onClick={() => handleEdit(product)}
                                                                 disabled={loadingEdit}
-                                                                className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition"
+                                                                className="flex-1 flex items-center justify-center gap-1 py-2.5 bg-gray-50 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 border border-gray-100 rounded-xl transition"
                                                             >
-                                                                <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                                                <img src={editIcon} alt="edit" className="w-3.5 h-3.5" />
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 onClick={() => toggleProductStatus(product.id, product.active)}
                                                                 disabled={togglingId === product.id}
-                                                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors ${product.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                                                className={`flex-1 py-2.5 rounded-xl transition-colors ${product.active ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-100' : 'bg-red-50 text-[#FF0B01] hover:bg-red-100 border border-red-100'}`}
                                                             >
                                                                 {togglingId === product.id ? 'Updating...' : product.active ? 'Active' : 'Inactive'}
                                                             </button>

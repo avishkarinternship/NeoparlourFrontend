@@ -290,12 +290,12 @@ const Schedule = () => {
 
         <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
           {/* Sub Tabs */}
-          <div className="flex items-center space-x-6 border-b border-gray-200 pb-3 mb-6 text-xs font-bold uppercase tracking-wider text-gray-400">
+          <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">
             {['Scheduled', 'Cancelled', 'Completed'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setCurrentSubTab(tab)}
-                className={`pb-3 -mb-[14px] transition-all relative ${currentSubTab === tab ? 'text-gray-900 border-b-2 border-gray-900 font-extrabold' : 'hover:text-gray-600'}`}
+                className={`flex-1 px-5 py-3 font-bold text-xs uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${currentSubTab === tab ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
               >
                 {tab}
               </button>
@@ -303,46 +303,49 @@ const Schedule = () => {
           </div>
 
           {/* Advanced Filters */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Advanced Filters</h3>
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-md hover:shadow-lg transition-all duration-300 mb-8">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-gray-900">Advanced Search Filters</h3>
               <div className="flex gap-3">
-                <button onClick={resetFilters} className="text-red-600 text-sm font-medium hover:underline">Reset Filters</button>
-                <button onClick={handleSearch} className="bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-red-700">Search</button>
+                <button onClick={resetFilters} className="text-gray-400 hover:text-[#FF0B01] text-xs font-bold uppercase tracking-wider transition-all">Reset</button>
+                <button onClick={handleSearch} className="bg-[#FF0B01] text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.985]">Search</button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Mobile Number</label>
-                <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm" />
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Mobile Number</label>
+                <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Staff</label>
-                <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm">
-                  <option value="">All Staff</option>
-                  {staffList.map(staff => (
-                    <option key={staff.id} value={staff.id}>
-                      {staff.name} {staff.phone ? `(${staff.phone})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Staff</label>
+                <div className="relative">
+                  <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer">
+                    <option value="">All Staff</option>
+                    {staffList.map(staff => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.name} {staff.phone ? `(${staff.phone})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
+                </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">From Date</label>
-                <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm" />
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">From Date</label>
+                <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">To Date</label>
-                <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm" />
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">To Date</label>
+                <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Min Amount (₹)</label>
-                <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm" />
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Min Amount (₹)</label>
+                <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Max Amount (₹)</label>
-                <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm" />
+                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Max Amount (₹)</label>
+                <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
             </div>
           </div>
@@ -357,7 +360,10 @@ const Schedule = () => {
               {appointments.map((appt) => {
                 const istTime = formatToIST(appt.appointmentAt);
                 return (
-                  <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition-all gap-4">
+                  <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-8 gap-4">
+                    {/* Left status vertical border indicator */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+                    
                     <div className="flex items-center space-x-3.5">
                       <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200">
                         <img src={appt.customerAvatar || profileIcon} alt={appt.customerName} className="w-full h-full object-cover" />
@@ -379,14 +385,14 @@ const Schedule = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full lg:w-auto justify-end text-xs font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-2 w-full lg:w-auto justify-end text-[10px] font-extrabold uppercase tracking-widest">
                       {currentSubTab === 'Scheduled' && (
                         <>
-                          <button onClick={() => openActionModal(appt, 'reschedule')} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Reschedule</button>
-                          <button onClick={() => handleComplete(appt)} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Mark Complete</button>
-                          <button onClick={() => openCancelModal(appt)} className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500">Cancel</button>
-                          <button onClick={() => openStaffModal(appt)} className="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-1">
-                            <img src={assignStaffIcon} alt="Staff" className="w-4 h-4" /> Staff
+                          <button onClick={() => openActionModal(appt, 'reschedule')} className="bg-[#FF0B01] text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition shadow-sm">Reschedule</button>
+                          <button onClick={() => handleComplete(appt)} className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm">Complete</button>
+                          <button onClick={() => openCancelModal(appt)} className="bg-gray-400 text-white px-4 py-2.5 rounded-xl hover:bg-gray-500 transition shadow-sm">Cancel</button>
+                          <button onClick={() => openStaffModal(appt)} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center gap-1 transition">
+                            <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Staff
                           </button>
                         </>
                       )}

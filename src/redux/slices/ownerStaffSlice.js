@@ -10,6 +10,9 @@ export const loginOwner = createAsyncThunk(
       if (response.data.token) {
         localStorage.setItem('ownerStaffToken', response.data.token);
         localStorage.setItem('ownerStaffUser', JSON.stringify(response.data));
+        if (response.data.tenantName) {
+          localStorage.setItem('activeSalonId', response.data.tenantName);
+        }
       }
       return response.data;
     } catch (error) {
@@ -117,6 +120,7 @@ const ownerStaffSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('ownerStaffToken');
       localStorage.removeItem('ownerStaffUser');
+      localStorage.removeItem('activeSalonId');
     },
     clearOwnerStaffError: (state) => {
       state.error = null;

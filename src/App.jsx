@@ -15,7 +15,7 @@ const App = () => {
   }, []);
 
   return (
-    <div className="app-container overflow-x-hidden">
+    <div className="app-container overflow-x-hidden font-sans">
       <Toaster position="top-right" />
       <Outlet />
     </div>

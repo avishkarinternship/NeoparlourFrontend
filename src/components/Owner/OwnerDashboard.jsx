@@ -5,6 +5,7 @@ import Footer from './Layouts/Footer';
 import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import toast from 'react-hot-toast';
 
 // Asset Imports
 import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/upcoming_appointment_icon.svg';
@@ -134,15 +135,19 @@ const OwnerDashboard = () => {
     const [completedAppointments, setCompletedAppointments] = useState([]);
     const [completedLoading, setCompletedLoading] = useState(false);
 
+    // Unallocated appointments states
+    const [unallocatedAppointments, setUnallocatedAppointments] = useState([]);
+    const [unallocatedLoading, setUnallocatedLoading] = useState(false);
+    const [availableStaffMap, setAvailableStaffMap] = useState({});
+    const [staffDropdownLoadingMap, setStaffDropdownLoadingMap] = useState({});
+    const [selectedStaffMap, setSelectedStaffMap] = useState({});
+    const [assigningMap, setAssigningMap] = useState({});
 
 
-    // Mock Stylist availability list (replacing Top Services)
-    const staffStatusList = [
-        { name: 'Mitesh Waghmode', speciality: 'Hair Stylist', rating: '4.9', status: 'Available' },
-        { name: 'Shubham Satpute', speciality: 'Grooming & Shaving', rating: '4.8', status: 'In Session' },
-        { name: 'Shubhada Acharya', speciality: 'Skin Care & Facials', rating: '4.9', status: 'Available' },
-        { name: 'Gaurav Sen', speciality: 'Color Specialist', rating: '4.7', status: 'On Break' }
-    ];
+
+    // Stylist availability list states
+    const [staffStatusList, setStaffStatusList] = useState([]);
+    const [staffAvailabilityLoading, setStaffAvailabilityLoading] = useState(false);
 
     // Fetch Revenue Graph Data
     const fetchRevenueData = useCallback(async (type, startDateVal, endDateVal, signal) => {
@@ -210,6 +215,109 @@ const OwnerDashboard = () => {
         }
     }, []);
 
+    // Fetch Booked Appointments without Allocated Staff
+    const fetchUnallocatedAppointments = useCallback(async (signal) => {
+        setUnallocatedLoading(true);
+        try {
+            const response = await axiosInstance.get('/appointments/search/advanced', {
+                params: { status: 'booked', isStaffAllocated: false, page: 0, size: 10 },
+                signal
+            });
+            setUnallocatedAppointments(response.data?.content || []);
+        } catch (error) {
+            if (error.name !== 'CanceledError' && error.message !== 'canceled' && !axiosInstance.isCancel?.(error)) {
+                console.error('Failed to fetch unallocated appointments:', error);
+                setUnallocatedAppointments([]);
+            }
+        } finally {
+            setUnallocatedLoading(false);
+        }
+    }, []);
+
+    // Fetch Available Staff for a specific appointment time slot dynamically
+    const fetchAvailableStaff = async (apptId, appointmentAt, durationMinutes) => {
+        // Only fetch if we haven't already fetched or if it's currently empty
+        if (availableStaffMap[apptId] && availableStaffMap[apptId].length > 0) return;
+
+        setStaffDropdownLoadingMap(prev => ({ ...prev, [apptId]: true }));
+        try {
+            const response = await axiosInstance.get('/appointments/available-staff', {
+                params: {
+                    selectedTime: appointmentAt,
+                    durationMinutes: durationMinutes || 30
+                }
+            });
+            setAvailableStaffMap(prev => ({ ...prev, [apptId]: response.data || [] }));
+        } catch (error) {
+            console.error('Failed to fetch available staff:', error);
+        } finally {
+            setStaffDropdownLoadingMap(prev => ({ ...prev, [apptId]: false }));
+        }
+    };
+
+    // Assign selected staff member to the appointment
+    const handleAssignStaff = async (apptId) => {
+        const staffId = selectedStaffMap[apptId];
+        if (!staffId) {
+            toast.error('Please select a staff member first');
+            return;
+        }
+
+        setAssigningMap(prev => ({ ...prev, [apptId]: true }));
+        try {
+            const payload = { staffId: parseInt(staffId) };
+            await axiosInstance.put(`/appointments/${apptId}/change-staff`, payload);
+            toast.success('Staff assigned successfully');
+            
+            // Clear maps for this appointment
+            setSelectedStaffMap(prev => {
+                const copy = { ...prev };
+                delete copy[apptId];
+                return copy;
+            });
+            setAvailableStaffMap(prev => {
+                const copy = { ...prev };
+                delete copy[apptId];
+                return copy;
+            });
+
+            // Refresh dashboards lists
+            fetchUnallocatedAppointments();
+            fetchUpcomingAppointments();
+        } catch (error) {
+            console.error('Failed to assign staff:', error);
+        } finally {
+            setAssigningMap(prev => ({ ...prev, [apptId]: false }));
+        }
+    };
+
+    // Fetch Stylist Availability Status
+    const fetchStaffAvailability = useCallback(async (signal) => {
+        const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+        const salonId = localStorage.getItem('activeSalonId') || ownerUser.tenantName || ownerUser.salonId || ownerUser.user?.salonId || ownerUser.salon?.id;
+        if (!salonId) return;
+
+        // Ensure salonId is set in localStorage for subsequent API interceptors
+        if (!localStorage.getItem('activeSalonId')) {
+            localStorage.setItem('activeSalonId', salonId);
+        }
+
+        setStaffAvailabilityLoading(true);
+        try {
+            const response = await axiosInstance.get('/staff/availability', {
+                params: { salonId },
+                signal
+            });
+            setStaffStatusList(response.data || []);
+        } catch (error) {
+            if (error.name !== 'CanceledError' && error.message !== 'canceled' && !axiosInstance.isCancel?.(error)) {
+                console.error('Failed to fetch staff availability:', error);
+            }
+        } finally {
+            setStaffAvailabilityLoading(false);
+        }
+    }, []);
+
     // Trigger API fetches
     useEffect(() => {
         const controller = new AbortController();
@@ -241,10 +349,12 @@ const OwnerDashboard = () => {
         const controller = new AbortController();
         fetchUpcomingAppointments(controller.signal);
         fetchCompletedAppointments(controller.signal);
+        fetchUnallocatedAppointments(controller.signal);
+        fetchStaffAvailability(controller.signal);
         return () => {
             controller.abort();
         };
-    }, [fetchUpcomingAppointments, fetchCompletedAppointments]);
+    }, [fetchUpcomingAppointments, fetchCompletedAppointments, fetchUnallocatedAppointments, fetchStaffAvailability]);
 
     const handleViewTypeChange = (type) => {
         setViewType(type);
@@ -538,54 +648,143 @@ const OwnerDashboard = () => {
                             )}
                         </div>
 
-                        {/* 5. Stylist Status & Availability (Replacing Top Services) */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col justify-between">
+                        {/* 5. Stylist Status & Availability */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col">
                             <div>
                                 <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Stylist Status & Availability</h3>
                                 <p className="text-[11px] text-gray-400 font-medium mb-4">Real-time team active status</p>
                             </div>
-                            <div className="divide-y divide-gray-100 flex-1 flex flex-col justify-around">
-                                {staffStatusList.map((staff, idx) => (
-                                    <div key={idx} className="flex justify-between items-center py-3">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm">
-                                                {staff.name.charAt(0)}
+                            
+                            {staffAvailabilityLoading ? (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                                </div>
+                            ) : staffStatusList.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
+                                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                    <p className="text-[12px] font-semibold text-gray-400">No staff status available</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                    {staffStatusList.map((staff, idx) => (
+                                        <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
+                                                    {staff.imageUrl ? (
+                                                        <img src={staff.imageUrl} alt={staff.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        staff.name ? staff.name.charAt(0) : 'S'
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-[13px] font-bold text-gray-800">{staff.name || 'Stylist'}</h4>
+                                                    <p className="text-[10px] text-gray-400 font-semibold">
+                                                        {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? 'No rating yet' : `★ ${Number(staff.rating).toFixed(1)}`}
+                                                    </p>
+                                                </div>
                                             </div>
                                             <div>
-                                                <h4 className="text-[13px] font-bold text-gray-800">{staff.name}</h4>
-                                                <p className="text-[10px] text-gray-400 font-semibold">{staff.speciality} • ★ {staff.rating}</p>
+                                                <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
+                                                    staff.status === 'Available' ? 'bg-[#E3F9EC] text-[#299764]' :
+                                                    staff.status === 'In Session' ? 'bg-red-50 text-[#ff0b01]' :
+                                                    staff.status === 'On Leave' ? 'bg-amber-50 text-amber-600' :
+                                                    'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {staff.status || 'Offline'}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
-                                                staff.status === 'Available' ? 'bg-[#E3F9EC] text-[#299764]' :
-                                                staff.status === 'In Session' ? 'bg-red-50 text-[#ff0b01]' :
-                                                'bg-gray-100 text-gray-500'
-                                            }`}>
-                                                {staff.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
-                        {/* 6. Top Team Member Panel */}
+                        {/* 6. Unallocated Appointments Panel */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
-                            <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Top Team Member</h3>
-                            <p className="text-[11px] text-gray-400 font-medium mb-4">Stylist performance leader</p>
+                            <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Unallocated Appointments</h3>
+                            <p className="text-[11px] text-gray-400 font-medium mb-4">Appointments waiting for staff allocation</p>
 
-                            <div className="flex flex-col items-center justify-center text-center my-auto pb-4">
-                                <img
-                                    src={todaysAppointmentIcon}
-                                    alt="Top Team Member Icon"
-                                    className="w-12 h-12 object-contain opacity-50"
-                                />
-                                <h4 className="text-[14px] font-bold text-gray-800 mt-3">No Sales Till Now</h4>
-                                <p className="text-[11px] font-semibold text-gray-400 max-w-[240px] mt-1.5 leading-relaxed">
-                                    No completed checkout transactions recorded.
-                                </p>
-                            </div>
+                            {unallocatedLoading ? (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                                </div>
+                            ) : unallocatedAppointments.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
+                                    <img
+                                        src={todaysAppointmentIcon}
+                                        alt="No Unallocated Appointments Icon"
+                                        className="w-12 h-12 object-contain opacity-50"
+                                    />
+                                    <h4 className="text-[14px] font-bold text-gray-800 mt-3">All Staff Allocated</h4>
+                                    <p className="text-[11px] font-semibold text-gray-400 max-w-[240px] mt-1.5 leading-relaxed">
+                                        There are no appointments waiting for staff allocation.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                    {unallocatedAppointments.map((appt) => (
+                                        <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="text-[13px] font-bold text-gray-900 truncate">{appt.customerName || 'Customer'}</h4>
+                                                    {appt.customerMobile && (
+                                                        <>
+                                                            <span className="text-[10px] text-gray-400 font-semibold">•</span>
+                                                            <p className="text-[11px] text-gray-500 font-semibold">{appt.customerMobile}</p>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                                                    {appt.serviceNames?.join(', ') || 'Service'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                    {formatAppointmentTime(appt.appointmentAt)} • <strong className="text-gray-600">₹{(appt.finalAmount || appt.totalPrice || 0).toFixed(2)}</strong>
+                                                </p>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                <select
+                                                    value={selectedStaffMap[appt.id] || ''}
+                                                    onChange={(e) => setSelectedStaffMap(prev => ({ ...prev, [appt.id]: e.target.value }))}
+                                                    onFocus={() => fetchAvailableStaff(appt.id, appt.appointmentAt, appt.durationMinutes)}
+                                                    className="text-[11px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#ff0b01] font-semibold text-gray-700 min-w-[130px] h-9"
+                                                >
+                                                    {staffDropdownLoadingMap[appt.id] ? (
+                                                        <option value="">Loading staff...</option>
+                                                    ) : (
+                                                        <>
+                                                            <option value="">-- Select Staff --</option>
+                                                            {availableStaffMap[appt.id]?.length === 0 ? (
+                                                                <option value="" disabled>No staff available</option>
+                                                            ) : (
+                                                                availableStaffMap[appt.id]?.map((staff) => {
+                                                                    const staffId = staff.id || staff.staffId;
+                                                                    const staffName = staff.name || staff.staffName;
+                                                                    return (
+                                                                        <option key={staffId} value={staffId}>
+                                                                            {staffName}
+                                                                        </option>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </select>
+                                                
+                                                <button
+                                                    onClick={() => handleAssignStaff(appt.id)}
+                                                    disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
+                                                    className="bg-[#ff0b01] hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 h-9 rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-[#ff0b01]"
+                                                >
+                                                    {assigningMap[appt.id] ? 'Assigning...' : 'Assign'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                     </div>

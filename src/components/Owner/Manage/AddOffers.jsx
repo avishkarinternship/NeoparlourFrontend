@@ -173,6 +173,21 @@ const AddOffers = () => {
             return;
         }
 
+        if (parseFloat(discountValue) <= 0) {
+            toast.error("Discount value must be greater than 0", toastStyle);
+            return;
+        }
+
+        if (usageLimitPerCustomer && parseInt(usageLimitPerCustomer) <= 0) {
+            toast.error("Usage limit per customer must be greater than 0", toastStyle);
+            return;
+        }
+
+        if (totalUsageLimit && parseInt(totalUsageLimit) <= 0) {
+            toast.error("Total usage limit must be greater than 0", toastStyle);
+            return;
+        }
+
         setLoadingSubmit(true);
 
         const payload = {
@@ -230,40 +245,48 @@ const AddOffers = () => {
 
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
-                        <div className="inline-block border-b-2 border-red-600 pb-1 mb-8">
-                            <span className="text-[13px] font-bold uppercase tracking-wider">
-                                {editingOfferId ? 'Edit Offer' : 'Add New Offer'}
-                            </span>
+                        <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
+                            <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
+                                %
+                            </div>
+                            <div>
+                                <span className="text-[12px] font-extrabold uppercase tracking-widest text-red-600 block">
+                                    {editingOfferId ? 'Edit Mode' : 'Creation Mode'}
+                                </span>
+                                <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                                    {editingOfferId ? 'Edit Offer Details' : 'Add New Offer'}
+                                </h2>
+                            </div>
                         </div>
 
-                        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-12">
+                        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-12">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="relative">
-                                        <div className="absolute left-4 top-3.5">
-                                            <img src={offerDetailsIcon} alt="Details" className="w-4 h-4 opacity-70" />
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                                            <img src={offerDetailsIcon} alt="Details" className="w-5 h-5 opacity-55" />
                                         </div>
                                         <input
                                             type="text"
                                             value={offerName}
                                             onChange={(e) => setOfferName(e.target.value)}
                                             placeholder="Offer Name *"
-                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                             required
                                         />
                                     </div>
 
                                     <div className="relative">
-                                        <div className="absolute left-4 top-3.5">
-                                            <img src={couponCodeIcon} alt="Coupon" className="w-4 h-4 opacity-70" />
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                                            <img src={couponCodeIcon} alt="Coupon" className="w-5 h-5 opacity-55" />
                                         </div>
                                         <input
                                             type="text"
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Description"
-                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                         />
                                     </div>
                                 </div>
@@ -271,18 +294,19 @@ const AddOffers = () => {
                                 {/* Discount */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="relative">
-                                        <div className="absolute left-4 top-3.5">
-                                            <img src={percentageIcon} alt="%" className="w-4 h-4 opacity-70" />
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                                            <img src={percentageIcon} alt="%" className="w-5 h-5 opacity-55" />
                                         </div>
                                         <select
                                             value={discountType}
                                             onChange={(e) => setDiscountType(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            className="w-full pl-12 pr-10 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer"
                                         >
                                             {DISCOUNT_TYPES.map(dt => (
                                                 <option key={dt.value} value={dt.value}>{dt.label}</option>
                                             ))}
                                         </select>
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                     </div>
 
                                     <div>
@@ -291,7 +315,9 @@ const AddOffers = () => {
                                             value={discountValue}
                                             onChange={(e) => setDiscountValue(e.target.value)}
                                             placeholder="Discount Value *"
-                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            min="0.01"
+                                            step="any"
+                                            className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                             required
                                         />
                                     </div>
@@ -302,7 +328,9 @@ const AddOffers = () => {
                                             value={usageLimitPerCustomer}
                                             onChange={(e) => setUsageLimitPerCustomer(e.target.value)}
                                             placeholder="Usage Limit per Customer"
-                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                            min="1"
+                                            step="1"
+                                            className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                         />
                                     </div>
                                 </div>
@@ -313,29 +341,31 @@ const AddOffers = () => {
                                         value={totalUsageLimit}
                                         onChange={(e) => setTotalUsageLimit(e.target.value)}
                                         placeholder="Total Usage Limit (Optional)"
-                                        className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500"
+                                        min="1"
+                                        step="1"
+                                        className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                     />
                                 </div>
 
                                 {/* Validity */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-500 mb-2 block">Valid From *</label>
+                                        <label className="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-wider">Valid From *</label>
                                         <input
                                             type="datetime-local"
                                             value={validFrom}
                                             onChange={(e) => setValidFrom(e.target.value)}
-                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"
+                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-500 mb-2 block">Valid To *</label>
+                                        <label className="text-xs font-bold text-gray-400 mb-2 block uppercase tracking-wider">Valid To *</label>
                                         <input
                                             type="datetime-local"
                                             value={validTo}
                                             onChange={(e) => setValidTo(e.target.value)}
-                                            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"
+                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
                                             required
                                         />
                                     </div>
@@ -343,10 +373,10 @@ const AddOffers = () => {
 
                                 {/* Services + Price Breakdown */}
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-500 mb-3 block">
+                                    <label className="text-xs font-bold text-gray-400 mb-3 block uppercase tracking-wider">
                                         Applicable Services * ({selectedServices.length} selected)
                                     </label>
-                                    <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div className="max-h-60 overflow-y-auto border border-gray-200 bg-gray-50/30 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2 shadow-inner">
                                         {loadingServices ? (
                                             <p className="text-gray-500">Loading services...</p>
                                         ) : activeServices.length === 0 ? (
@@ -398,14 +428,14 @@ const AddOffers = () => {
                                     <button
                                         type="submit"
                                         disabled={loadingSubmit || loadingEdit}
-                                        className="flex-1 bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 disabled:opacity-70"
+                                        className="flex-1 bg-[#FF0B01] hover:bg-red-700 disabled:opacity-70 transition-all text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-[0.985] text-sm tracking-wider uppercase"
                                     >
                                         {loadingSubmit ? 'Saving...' : editingOfferId ? 'Update Offer' : 'Create Offer'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 border border-gray-300 py-4 rounded-xl font-bold hover:bg-gray-50"
+                                        className="flex-1 border border-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-all text-sm tracking-wider uppercase"
                                     >
                                         Discard
                                     </button>
@@ -438,26 +468,32 @@ const AddOffers = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {offers.map((offer) => (
-                                    <div key={offer.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition-all">
-                                        <div className="flex justify-between items-start">
-                                            <h4 className="font-bold text-lg">{offer.name}</h4>
-                                            <span className={`px-4 py-1 text-xs font-bold rounded-full ${offer.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    <div key={offer.id} className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                                        {/* Subtle top indicator bar */}
+                                        <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/10 group-hover:bg-[#FF0B01] transition-colors duration-300"></div>
+                                        
+                                        <div className="flex justify-between items-start mt-2">
+                                            <h4 className="font-bold text-lg text-gray-900 group-hover:text-[#FF0B01] transition-colors duration-300">{offer.name}</h4>
+                                            <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full ${offer.active ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
                                                 {offer.active ? 'ACTIVE' : 'INACTIVE'}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{offer.description}</p>
-                                        <div className="mt-4 text-sm font-semibold text-red-600">
-                                            {getDiscountDisplay(offer)}
-                                        </div>
+                                        <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">{offer.description}</p>
+                                        
+                                        <div className="mt-5 flex justify-between items-center">
+                                            <div className="px-3 py-1 bg-red-50 text-[#FF0B01] rounded-xl text-xs font-black tracking-wider uppercase">
+                                                {getDiscountDisplay(offer)}
+                                            </div>
 
-                                        <button
-                                            onClick={() => handleEdit(offer)}
-                                            disabled={loadingEdit}
-                                            className="mt-4 flex items-center gap-2 text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-60"
-                                        >
-                                            <img src={editIcon} alt="edit" className="w-4 h-4" />
-                                            {loadingEdit ? 'Loading...' : 'Edit Offer'}
-                                        </button>
+                                            <button
+                                                onClick={() => handleEdit(offer)}
+                                                disabled={loadingEdit}
+                                                className="flex items-center gap-1.5 text-gray-700 hover:text-[#FF0B01] text-xs font-bold transition-all disabled:opacity-60 bg-gray-50 hover:bg-red-50 px-3.5 py-2 rounded-xl border border-gray-100"
+                                            >
+                                                <img src={editIcon} alt="edit" className="w-3.5 h-3.5" />
+                                                {loadingEdit ? 'Loading...' : 'Edit Offer'}
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

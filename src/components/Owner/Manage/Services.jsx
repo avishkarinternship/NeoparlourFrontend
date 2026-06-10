@@ -238,22 +238,22 @@ const Service = () => {
                     <div className="max-w-5xl mx-auto">
 
                         {/* Tab Navigation */}
-                        <div className="flex border-b border-gray-200 mb-8">
+                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-xl border border-gray-100 shadow-sm">
                             <button
                                 onClick={() => setCurrentTab('Service')}
-                                className={`px-8 py-4 font-medium border-b-2 ${currentTab === 'Service' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Service' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 Services
                             </button>
                             <button
                                 onClick={() => setCurrentTab('Staff')}
-                                className={`px-8 py-4 font-medium border-b-2 ${currentTab === 'Staff' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Staff' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 Staff
                             </button>
                             <button
                                 onClick={() => setCurrentTab('Dashboard')}
-                                className={`px-8 py-4 font-medium border-b-2 ${currentTab === 'Dashboard' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Dashboard' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 Dashboard
                             </button>
@@ -271,12 +271,12 @@ const Service = () => {
                                     </div>
                                 </div>
 
-                                <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
+                                <div className="max-w-3xl border border-gray-100 rounded-3xl p-8 bg-white shadow-md hover:shadow-lg transition-all duration-300 mb-8">
                                     <form onSubmit={handleServiceSave} className="space-y-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 transition-colors">
-                                                    <img src={serviceNameIcon} alt="Service Name" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
+                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
                                                         placeholder="Service Name"
@@ -285,22 +285,22 @@ const Service = () => {
                                                             setServiceName(e.target.value);
                                                             if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                         }}
-                                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
                                                     />
                                                 </div>
                                                 {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
                                             </div>
 
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 transition-colors">
-                                                    <img src={categoryIcon} alt="Category" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
+                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <img src={categoryIcon} alt="Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <select
                                                         value={category}
                                                         onChange={(e) => {
                                                             setCategory(e.target.value);
                                                             if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
                                                         }}
-                                                        className="w-full text-xs font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
+                                                        className="w-full text-sm font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
                                                     >
                                                         <option value="" disabled hidden>Category</option>
                                                         <option value="Hair Cut">Hair Cut</option>
@@ -314,8 +314,8 @@ const Service = () => {
                                             </div>
 
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 transition-colors">
-                                                    <img src={priceIcon} alt="Price" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
+                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
                                                         placeholder="Price"
@@ -325,15 +325,15 @@ const Service = () => {
                                                             setPrice(val);
                                                             if (formErrors.price) setFormErrors(prev => ({ ...prev, price: '' }));
                                                         }}
-                                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
                                                     />
                                                 </div>
                                                 {formErrors.price && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.price}</p>}
                                             </div>
 
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-300 rounded-xl px-3.5 py-2.5 focus-within:border-gray-900 transition-colors">
-                                                    <img src={durationIcon} alt="Duration" className="w-4 h-4 mr-2.5 object-contain opacity-70 flex-shrink-0" />
+                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <img src={durationIcon} alt="Duration" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
                                                         placeholder="Duration (in minutes)"
@@ -343,18 +343,18 @@ const Service = () => {
                                                             setDuration(val);
                                                             if (formErrors.duration) setFormErrors(prev => ({ ...prev, duration: '' }));
                                                         }}
-                                                        className="w-full text-xs font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
                                                     />
                                                 </div>
                                                 {formErrors.duration && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.duration}</p>}
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 text-xs font-bold uppercase tracking-wider">
+                                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 text-xs font-bold uppercase tracking-wider">
                                             <button
                                                 type="submit"
                                                 disabled={submitting}
-                                                className="w-full sm:flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-100 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                className="w-full sm:flex-1 bg-[#FF0B01] text-white py-4 rounded-2xl hover:bg-red-700 transition active:scale-[0.985] shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                                             >
                                                 {submitting ? 'Saving...' : editingServiceId ? 'Update Service' : 'Save Service'}
                                             </button>
@@ -362,9 +362,9 @@ const Service = () => {
                                             <button
                                                 type="button"
                                                 onClick={resetServiceForm}
-                                                className="w-full sm:flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                                                className="w-full sm:flex-1 border border-gray-300 text-gray-700 py-4 rounded-2xl hover:bg-gray-50 transition"
                                             >
-                                                {editingServiceId ? 'Discard Changes' : 'Cancel'}
+                                                {editingServiceId ? 'Discard' : 'Cancel'}
                                             </button>
                                         </div>
                                     </form>
@@ -381,7 +381,8 @@ const Service = () => {
                                             </div>
                                         ) : services.length > 0 ? (
                                             services.map((service) => (
-                                                <div key={service.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-sm transition-all">
+                                                <div key={service.id} className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-shadow relative overflow-hidden group pl-8">
+                                                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${service.category === 'Hair Cut' ? 'bg-[#FF0B01]' : service.category === 'Skin Care' ? 'bg-amber-400' : service.category === 'Shaving' ? 'bg-blue-400' : 'bg-green-400'}`}></div>
                                                     <div className="flex items-center space-x-3">
                                                         <div className="w-11 h-11 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-black text-sm uppercase">
                                                             {service.name?.charAt(0) || 'S'}

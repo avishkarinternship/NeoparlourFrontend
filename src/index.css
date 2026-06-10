@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+*, *::before, *::after {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  font-weight: 300;
+}
+
 /* Custom Sidebar Icon Glow & Color effects */
 .active-icon-glow {
   filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%) drop-shadow(0 0 5px rgba(255, 11, 1, 0.6)) !important;
