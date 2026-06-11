@@ -12,7 +12,7 @@ import SubscriptionPlans from '../components/Owner/SubscriptionPlans'
 import OwnerDashboard from '../components/Owner/OwnerDashboard'
 import ManageSideBar from '../components/Owner/Layouts/ManageSideBar'
 import Analytics from '../components/Owner/Analytics'
-import TeamMembers from '../components/Owner/TeamMembers'
+import Orders from '../components/Owner/Orders'
 import Billing from '../components/Owner/Billing'
 import Settings from '../components/Owner/Settings'
 import Schedule from '../components/Owner/Manage/Schedule'
@@ -110,8 +110,8 @@ export let routes = createBrowserRouter([
                 element: <Analytics />
             },
             {
-                path: '/owner/team',
-                element: <TeamMembers />
+                path: '/owner/orders',
+                element: <Orders />
             },
             {
                 path: '/owner/billing',

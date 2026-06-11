@@ -28,6 +28,7 @@ const toastStyle = {
 };
 
 const Schedule = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
   const [appointments, setAppointments] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -229,13 +230,34 @@ const Schedule = () => {
     }
   };
 
+  const handleDownloadInvoice = async (appointmentId) => {
+    const toastId = toast.loading('Generating invoice PDF...', toastStyle);
+    try {
+      const response = await axiosInstance.get(`/invoices/appointment/${appointmentId}`, {
+        responseType: 'blob'
+      });
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank');
+      
+      toast.success('Invoice opened successfully!', { id: toastId, ...toastStyle });
+    } catch (error) {
+      console.error('Failed to generate invoice:', error);
+      toast.error('Failed to generate invoice. Please try again.', { id: toastId, ...toastStyle });
+    }
+  };
+
   const handleCancel = async () => {
     if (!selectedAppointment || !cancelReason.trim()) {
       toast.error("Please provide a cancellation reason", toastStyle);
       return;
     }
     try {
-      await axiosInstance.put(`/appointments/${selectedAppointment.id}/cancel`, cancelReason);
+      await axiosInstance.put(
+        `/appointments/${selectedAppointment.id}/cancel`,
+        cancelReason,
+        { headers: { 'Content-Type': 'text/plain' } }
+      );
       toast.success('Appointment cancelled successfully', toastStyle);
       setShowCancelModal(false);
       setCancelReason('');
@@ -282,10 +304,10 @@ const Schedule = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-      <Navbar />
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <div className="flex flex-1 w-full">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <ManageSideBar activeTab="Schedule" onTabChange={() => { }} />
 
         <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
@@ -385,7 +407,7 @@ const Schedule = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full lg:w-auto justify-end text-[10px] font-extrabold uppercase tracking-widest">
+                    <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end text-[10px] font-extrabold uppercase tracking-widest pt-2 lg:pt-0 border-t border-gray-50 lg:border-t-0">
                       {currentSubTab === 'Scheduled' && (
                         <>
                           <button onClick={() => openActionModal(appt, 'reschedule')} className="bg-[#FF0B01] text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition shadow-sm">Reschedule</button>
@@ -395,6 +417,17 @@ const Schedule = () => {
                             <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Staff
                           </button>
                         </>
+                      )}
+                      {currentSubTab === 'Completed' && (
+                        <button 
+                          onClick={() => handleDownloadInvoice(appt.id)} 
+                          className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Invoice
+                        </button>
                       )}
                     </div>
                   </div>

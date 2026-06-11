@@ -134,6 +134,8 @@ const OwnerDashboard = () => {
     const [upcomingLoading, setUpcomingLoading] = useState(false);
     const [completedAppointments, setCompletedAppointments] = useState([]);
     const [completedLoading, setCompletedLoading] = useState(false);
+    const [cancelledAppointments, setCancelledAppointments] = useState([]);
+    const [cancelledLoading, setCancelledLoading] = useState(false);
 
     // Unallocated appointments states
     const [unallocatedAppointments, setUnallocatedAppointments] = useState([]);
@@ -181,8 +183,12 @@ const OwnerDashboard = () => {
     const fetchUpcomingAppointments = useCallback(async (signal) => {
         setUpcomingLoading(true);
         try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const fromDateStr = today.toISOString();
+
             const response = await axiosInstance.get('/appointments/search/advanced', {
-                params: { status: 'booked', page: 0, size: 10 },
+                params: { status: 'booked', fromDate: fromDateStr, page: 0, size: 3 },
                 signal
             });
             setUpcomingAppointments(response.data?.content || []);
@@ -200,8 +206,12 @@ const OwnerDashboard = () => {
     const fetchCompletedAppointments = useCallback(async (signal) => {
         setCompletedLoading(true);
         try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const fromDateStr = today.toISOString();
+
             const response = await axiosInstance.get('/appointments/search/advanced', {
-                params: { status: 'completed', page: 0, size: 5 },
+                params: { status: 'completed', fromDate: fromDateStr, page: 0, size: 5 },
                 signal
             });
             setCompletedAppointments(response.data?.content || []);
@@ -219,8 +229,12 @@ const OwnerDashboard = () => {
     const fetchUnallocatedAppointments = useCallback(async (signal) => {
         setUnallocatedLoading(true);
         try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const fromDateStr = today.toISOString();
+
             const response = await axiosInstance.get('/appointments/search/advanced', {
-                params: { status: 'booked', isStaffAllocated: false, page: 0, size: 10 },
+                params: { status: 'booked', isStaffAllocated: false, fromDate: fromDateStr, page: 0, size: 10 },
                 signal
             });
             setUnallocatedAppointments(response.data?.content || []);
@@ -231,6 +245,29 @@ const OwnerDashboard = () => {
             }
         } finally {
             setUnallocatedLoading(false);
+        }
+    }, []);
+
+    // Fetch Live Cancelled Appointments
+    const fetchCancelledAppointments = useCallback(async (signal) => {
+        setCancelledLoading(true);
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const fromDateStr = today.toISOString();
+
+            const response = await axiosInstance.get('/appointments/search/advanced', {
+                params: { status: 'cancelled', fromDate: fromDateStr, page: 0, size: 3 },
+                signal
+            });
+            setCancelledAppointments(response.data?.content || []);
+        } catch (error) {
+            if (error.name !== 'CanceledError' && error.message !== 'canceled' && !axiosInstance.isCancel?.(error)) {
+                console.error('Failed to fetch cancelled appointments:', error);
+                setCancelledAppointments([]);
+            }
+        } finally {
+            setCancelledLoading(false);
         }
     }, []);
 
@@ -350,11 +387,12 @@ const OwnerDashboard = () => {
         fetchUpcomingAppointments(controller.signal);
         fetchCompletedAppointments(controller.signal);
         fetchUnallocatedAppointments(controller.signal);
+        fetchCancelledAppointments(controller.signal);
         fetchStaffAvailability(controller.signal);
         return () => {
             controller.abort();
         };
-    }, [fetchUpcomingAppointments, fetchCompletedAppointments, fetchUnallocatedAppointments, fetchStaffAvailability]);
+    }, [fetchUpcomingAppointments, fetchCompletedAppointments, fetchUnallocatedAppointments, fetchCancelledAppointments, fetchStaffAvailability]);
 
     const handleViewTypeChange = (type) => {
         setViewType(type);
@@ -393,7 +431,7 @@ const OwnerDashboard = () => {
                     <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
 
                     {/* Responsive Workspace Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                         {/* 1. Revenue Graph Card (Upgraded UI) */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[350px]">
@@ -536,7 +574,7 @@ const OwnerDashboard = () => {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 flex flex-col justify-around">
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
                                     {upcomingAppointments.slice(0, 3).map((appt) => (
                                         <div key={appt.id} className="flex justify-between items-center py-3">
                                             <div>
@@ -578,7 +616,7 @@ const OwnerDashboard = () => {
                                     <p className="text-[11px] text-gray-300 mt-1">Mark sessions as completed to see activity.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 flex flex-col justify-around">
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
                                     {completedAppointments.slice(0, 3).map((appt) => (
                                         <div key={appt.id} className="flex justify-between items-center py-3">
                                             <div>
@@ -602,106 +640,7 @@ const OwnerDashboard = () => {
                             )}
                         </div>
 
-                        {/* 4. Today's Next Appointments */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
-                            <div>
-                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Today's Next Appointments</h3>
-                                <p className="text-[11px] text-gray-400 font-medium mb-4">Booked slots scheduled for today</p>
-                            </div>
-
-                            {upcomingLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : todaysAppointments.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
-                                    <img
-                                        src={todaysAppointmentIcon}
-                                        alt="Today's Appointments Icon"
-                                        className="w-12 h-12 object-contain opacity-50"
-                                    />
-                                    <h4 className="text-[14px] font-bold text-gray-400 mt-3">No Appointments Today</h4>
-                                    <p className="text-[11px] text-gray-300 mt-1">There are no booked slots scheduled for today.</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100 flex-1 flex flex-col justify-around">
-                                    {todaysAppointments.slice(0, 3).map((appt) => (
-                                        <div key={appt.id} className="flex justify-between items-center py-3">
-                                            <div>
-                                                <h4 className="text-[13px] font-bold text-gray-800">{appt.customerName}</h4>
-                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
-                                                    {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
-                                                </p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
-                                                    {formatAppointmentTime(appt.appointmentAt)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-red-50 text-[#ff0b01] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize">
-                                                    {appt.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 5. Stylist Status & Availability */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col">
-                            <div>
-                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Stylist Status & Availability</h3>
-                                <p className="text-[11px] text-gray-400 font-medium mb-4">Real-time team active status</p>
-                            </div>
-                            
-                            {staffAvailabilityLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : staffStatusList.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
-                                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                    </svg>
-                                    <p className="text-[12px] font-semibold text-gray-400">No staff status available</p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
-                                    {staffStatusList.map((staff, idx) => (
-                                        <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
-                                                    {staff.imageUrl ? (
-                                                        <img src={staff.imageUrl} alt={staff.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        staff.name ? staff.name.charAt(0) : 'S'
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-[13px] font-bold text-gray-800">{staff.name || 'Stylist'}</h4>
-                                                    <p className="text-[10px] text-gray-400 font-semibold">
-                                                        {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? 'No rating yet' : `★ ${Number(staff.rating).toFixed(1)}`}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
-                                                    staff.status === 'Available' ? 'bg-[#E3F9EC] text-[#299764]' :
-                                                    staff.status === 'In Session' ? 'bg-red-50 text-[#ff0b01]' :
-                                                    staff.status === 'On Leave' ? 'bg-amber-50 text-amber-600' :
-                                                    'bg-gray-100 text-gray-500'
-                                                }`}>
-                                                    {staff.status || 'Offline'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 6. Unallocated Appointments Panel */}
+                        {/* 4. Unallocated Appointments Panel */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
                             <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Unallocated Appointments</h3>
                             <p className="text-[11px] text-gray-400 font-medium mb-4">Appointments waiting for staff allocation</p>
@@ -780,6 +719,105 @@ const OwnerDashboard = () => {
                                                 >
                                                     {assigningMap[appt.id] ? 'Assigning...' : 'Assign'}
                                                 </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 5. Stylist Status & Availability */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col">
+                            <div>
+                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Stylist Status & Availability</h3>
+                                <p className="text-[11px] text-gray-400 font-medium mb-4">Real-time team active status</p>
+                            </div>
+                            
+                            {staffAvailabilityLoading ? (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                                </div>
+                            ) : staffStatusList.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
+                                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                    <p className="text-[12px] font-semibold text-gray-400">No staff status available</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                    {staffStatusList.map((staff, idx) => (
+                                        <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
+                                                    {staff.imageUrl ? (
+                                                        <img src={staff.imageUrl} alt={staff.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        staff.name ? staff.name.charAt(0) : 'S'
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-[13px] font-bold text-gray-800">{staff.name || 'Stylist'}</h4>
+                                                    <p className="text-[10px] text-gray-400 font-semibold">
+                                                        {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? 'No rating yet' : `★ ${Number(staff.rating).toFixed(1)}`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
+                                                    staff.status === 'Available' ? 'bg-[#E3F9EC] text-[#299764]' :
+                                                    staff.status === 'In Session' ? 'bg-red-50 text-[#ff0b01]' :
+                                                    staff.status === 'On Leave' ? 'bg-amber-50 text-amber-600' :
+                                                    'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {staff.status || 'Offline'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 6. Cancelled Appointments Panel */}
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
+                            <div>
+                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Cancelled Appointments</h3>
+                                <p className="text-[11px] text-gray-400 font-medium mb-4">Booked slots cancelled for today</p>
+                            </div>
+
+                            {cancelledLoading ? (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                                </div>
+                            ) : cancelledAppointments.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
+                                    <img
+                                        src={todaysAppointmentIcon}
+                                        alt="Cancelled Appointments Icon"
+                                        className="w-12 h-12 object-contain opacity-50"
+                                    />
+                                    <h4 className="text-[14px] font-bold text-gray-400 mt-3">No Cancelled Appointments</h4>
+                                    <p className="text-[11px] text-gray-300 mt-1">There are no cancelled slots for today.</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                    {cancelledAppointments.map((appt) => (
+                                        <div key={appt.id} className="flex justify-between items-center py-3">
+                                            <div>
+                                                <h4 className="text-[13px] font-bold text-gray-800">{appt.customerName}</h4>
+                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                                                    {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                    {formatAppointmentTime(appt.appointmentAt)}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                                <span className="inline-block text-[9px] bg-red-50 text-[#ff0b01] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize">
+                                                    {appt.status}
+                                                </span>
                                             </div>
                                         </div>
                                     ))}

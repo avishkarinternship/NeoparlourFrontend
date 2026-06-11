@@ -40,7 +40,20 @@ const toastStyle = {
 
 const Service = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [currentTab, setCurrentTab] = useState('Service');
+
+    const [sidebarOpen, setSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem('manageSidebarOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        const handleToggle = () => {
+            const saved = localStorage.getItem('manageSidebarOpen');
+            setSidebarOpen(saved !== null ? JSON.parse(saved) : true);
+        };
+        window.addEventListener('manageSidebarToggle', handleToggle);
+        return () => window.removeEventListener('manageSidebarToggle', handleToggle);
+    }, []);
 
     // ==================== SERVICE STATES ====================
     const [serviceName, setServiceName] = useState('');
@@ -53,37 +66,59 @@ const Service = () => {
     const [formErrors, setFormErrors] = useState({});
     const [editingServiceId, setEditingServiceId] = useState(null);
 
-    // ==================== STAFF STATES ====================
-    const [name, setName] = useState('');
-    const [gender, setGender] = useState('');
-    const [speciality, setSpeciality] = useState('');
-    const [birthdate, setBirthdate] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [teamMemberId, setTeamMemberId] = useState('');
-    const [activeFilter, setActiveFilter] = useState('All');
+    // Search / Filter states
+    const [searchName, setSearchName] = useState('');
+    const [searchCategory, setSearchCategory] = useState('');
+    const [hasSearched, setHasSearched] = useState(false);
+    const [filteredServices, setFilteredServices] = useState([]);
 
-    const [staffList, setStaffList] = useState([
-        { id: '1', name: 'Mitesh Waghmode', speciality: 'Hair Stylist', gender: 'Male', birthdate: '29 July 1998', initial: 'T' },
-        { id: '2', name: 'Shubham Satpute', speciality: 'Grooming & Hair Removal', gender: 'Male', birthdate: '29 July 1998', initial: 'S' },
-        { id: '3', name: 'Shubhada Acharya', speciality: 'Skin & Facial Services', gender: 'female', birthdate: '29 July 1998', initial: 'S' }
-    ]);
+
 
     const fetchServices = async () => {
         try {
-            setLoading(true);
             const response = await axiosInstance.get('/services');
-            setServices(response.data || []);
+            const allServices = response.data || [];
+            setServices(allServices);
+
+            if (hasSearched) {
+                const filtered = allServices.filter(service => {
+                    const matchesName = !searchName.trim() || service.name?.toLowerCase().includes(searchName.trim().toLowerCase());
+                    const matchesCategory = !searchCategory || service.category?.toLowerCase() === searchCategory.toLowerCase();
+                    return matchesName && matchesCategory;
+                });
+                setFilteredServices(filtered);
+            }
         } catch (error) {
             console.error('Failed to fetch services:', error);
+        }
+    };
+
+    const handleSearchServices = async (e) => {
+        if (e) e.preventDefault();
+        setLoading(true);
+        setHasSearched(true);
+        try {
+            const response = await axiosInstance.get('/services');
+            const allServices = response.data || [];
+            setServices(allServices);
+
+            const filtered = allServices.filter(service => {
+                const matchesName = !searchName.trim() || service.name?.toLowerCase().includes(searchName.trim().toLowerCase());
+                const matchesCategory = !searchCategory || service.category?.toLowerCase() === searchCategory.toLowerCase();
+                return matchesName && matchesCategory;
+            });
+            setFilteredServices(filtered);
+        } catch (error) {
+            console.error('Failed to search services:', error);
             toast.error('Failed to load services', toastStyle);
+            setFilteredServices([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchServices();
+        // fetchServices is not called on mount to satisfy the lazy-loading search requirement!
     }, []);
 
     // ==================== FORM VALIDATION ====================
@@ -163,6 +198,7 @@ const Service = () => {
             }
 
             resetServiceForm();
+            setHasSearched(true);
             fetchServices();
         } catch (error) {
             const errMsg = error.response?.data?.message ||
@@ -189,42 +225,12 @@ const Service = () => {
         } catch (error) {
             console.error('Failed to toggle service:', error);
             toast.error('Failed to update service status.', toastStyle);
+            setHasSearched(true);
             fetchServices();
         }
     };
 
-    const handleStaffSave = (e) => {
-        e.preventDefault();
-        if (!name || !speciality) {
-            toast.error("Please fill out the required fields!", toastStyle);
-            return;
-        }
 
-        const newStaff = {
-            id: Date.now().toString(),
-            name,
-            speciality,
-            gender: gender || 'Not Specified',
-            birthdate: birthdate ? new Date(birthdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '29 July 1998',
-            initial: name.charAt(0).toUpperCase()
-        };
-
-        setStaffList([newStaff, ...staffList]);
-        setName('');
-        setGender('');
-        setSpeciality('');
-        setBirthdate('');
-        setStartDate('');
-        setEndDate('');
-        setTeamMemberId('');
-        toast.success('Staff member added successfully!', toastStyle);
-    };
-
-    const filterTags = ['All', 'Hair Stylist', 'Skin Treatment', 'Hair Treatment', 'Others'];
-    const filteredStaff = staffList.filter((staff) => {
-        if (activeFilter === 'All') return true;
-        return staff.speciality.toLowerCase().includes(activeFilter.toLowerCase());
-    });
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
@@ -232,36 +238,13 @@ const Service = () => {
 
             <div className="flex flex-1 w-full">
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab={currentTab} onTabChange={(tab) => setCurrentTab(tab)} />
+                <ManageSideBar />
 
                 <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
 
-                        {/* Tab Navigation */}
-                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-xl border border-gray-100 shadow-sm">
-                            <button
-                                onClick={() => setCurrentTab('Service')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Service' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-                            >
-                                Services
-                            </button>
-                            <button
-                                onClick={() => setCurrentTab('Staff')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Staff' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-                            >
-                                Staff
-                            </button>
-                            <button
-                                onClick={() => setCurrentTab('Dashboard')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${currentTab === 'Dashboard' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-                            >
-                                Dashboard
-                            </button>
-                        </div>
-
                         {/* ==================== SERVICE TAB ==================== */}
-                        {currentTab === 'Service' && (
-                            <>
+                        <>
                                 <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
                                     <div className="flex items-center space-x-2 text-gray-900">
                                         <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
@@ -369,124 +352,185 @@ const Service = () => {
                                         </div>
                                     </form>
                                 </div>
+                                 {/* Services List */}
+                                 <div>
+                                     {/* Search Filters */}
+                                     <form onSubmit={handleSearchServices} className="max-w-3xl bg-white border border-gray-200 rounded-3xl p-6 mb-8 shadow-sm">
+                                         <h4 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">Search Filters</h4>
+                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                                             {/* Name filter */}
+                                             <div className="space-y-1.5">
+                                                 <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Service Name</label>
+                                                 <input 
+                                                     type="text" 
+                                                     placeholder="Filter by Name" 
+                                                     value={searchName} 
+                                                     onChange={(e) => setSearchName(e.target.value)} 
+                                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all" 
+                                                 />
+                                             </div>
 
-                                {/* Services List */}
-                                <div>
-                                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">All Services</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
-                                        {loading ? (
-                                            <div className="col-span-2 py-10 flex flex-col items-center justify-center gap-2">
-                                                <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                                                <span className="text-xs font-semibold text-gray-400">Loading services...</span>
-                                            </div>
-                                        ) : services.length > 0 ? (
-                                            services.map((service) => (
-                                                <div key={service.id} className="flex items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-shadow relative overflow-hidden group pl-8">
-                                                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${service.category === 'Hair Cut' ? 'bg-[#FF0B01]' : service.category === 'Skin Care' ? 'bg-amber-400' : service.category === 'Shaving' ? 'bg-blue-400' : 'bg-green-400'}`}></div>
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-11 h-11 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-black text-sm uppercase">
-                                                            {service.name?.charAt(0) || 'S'}
+                                             {/* Category filter */}
+                                             <div className="space-y-1.5">
+                                                 <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Category</label>
+                                                 <select 
+                                                     value={searchCategory} 
+                                                     onChange={(e) => setSearchCategory(e.target.value)} 
+                                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                                 >
+                                                     <option value="">All Categories</option>
+                                                     <option value="Hair Cut">Hair Cut</option>
+                                                     <option value="Skin Care">Skin Care</option>
+                                                     <option value="Shaving">Shaving</option>
+                                                     <option value="Hair Styling">Hair Styling</option>
+                                                 </select>
+                                             </div>
+                                         </div>
+
+                                         {/* Action Buttons */}
+                                         <div className="flex justify-end gap-3 mt-5">
+                                             <button 
+                                                 type="button" 
+                                                 onClick={() => {
+                                                     setSearchName('');
+                                                     setSearchCategory('');
+                                                 }} 
+                                                 className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                                             >
+                                                 Clear Filters
+                                             </button>
+                                             <button 
+                                                 type="submit" 
+                                                 className="px-8 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#FF0B01] rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
+                                             >
+                                                 Search
+                                             </button>
+                                         </div>
+                                     </form>
+
+                                     <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">All Services</h3>
+                                     
+                                     {!hasSearched ? (
+                                         <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 max-w-3xl">
+                                             <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                             </svg>
+                                             <h4 className="text-base font-bold text-gray-800">Search Services</h4>
+                                             <p className="text-xs font-semibold text-gray-400 max-w-md mx-auto">Use the filters above and click Search to display the services list.</p>
+                                         </div>
+                                     ) : loading ? (
+                                         <div className="py-10 flex flex-col items-center justify-center gap-2 max-w-3xl">
+                                             <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                             <span className="text-xs font-semibold text-gray-400">Loading services...</span>
+                                         </div>
+                                     ) : (
+                                         <div className={`grid gap-4 max-w-3xl ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                                             {filteredServices.length > 0 ? (
+                                                 filteredServices.map((service) => {
+                                                // Local theme helper for category styles
+                                                const getCategoryTheme = (cat) => {
+                                                    switch (cat) {
+                                                        case 'Hair Cut':
+                                                            return {
+                                                                accent: 'bg-[#FF0B01]',
+                                                                bg: 'bg-red-50/70',
+                                                                text: 'text-[#FF0B01]',
+                                                                border: 'border-red-100/50',
+                                                            };
+                                                        case 'Skin Care':
+                                                            return {
+                                                                accent: 'bg-amber-400',
+                                                                bg: 'bg-amber-50/70',
+                                                                text: 'text-amber-700',
+                                                                border: 'border-amber-100/50',
+                                                            };
+                                                        case 'Shaving':
+                                                            return {
+                                                                accent: 'bg-blue-400',
+                                                                bg: 'bg-blue-50/70',
+                                                                text: 'text-blue-700',
+                                                                border: 'border-blue-100/50',
+                                                            };
+                                                        default:
+                                                            return {
+                                                                accent: 'bg-green-400',
+                                                                bg: 'bg-green-50/70',
+                                                                text: 'text-green-700',
+                                                                border: 'border-green-100/50',
+                                                            };
+                                                    }
+                                                };
+                                                const theme = getCategoryTheme(service.category);
+
+                                                return (
+                                                     <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:border-gray-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all duration-300 relative overflow-hidden group pl-7 gap-4">
+                                                         {/* Sleek Vertical Accent stripe */}
+                                                         <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${theme.accent} rounded-r-md`}></div>
+                                                         
+                                                         {/* Left section: Service Details */}
+                                                         <div className="flex items-center space-x-3.5 min-w-0 flex-1 w-full">
+                                                             {/* Category themed avatar box */}
+                                                             <div className={`w-11 h-11 rounded-2xl ${theme.bg} ${theme.border} border flex items-center justify-center ${theme.text} font-black text-sm uppercase flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105`}>
+                                                                 {service.name?.charAt(0) || 'S'}
+                                                             </div>
+                                                             <div className="min-w-0 flex-1">
+                                                                 <h4 className="text-sm font-semibold text-gray-900 tracking-tight truncate mb-1" title={service.name}>
+                                                                     {service.name}
+                                                                 </h4>
+                                                                 <div className="flex flex-wrap items-center gap-2">
+                                                                     {/* Category Tag */}
+                                                                     <span className="px-2 py-0.5 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-100">
+                                                                         {service.category}
+                                                                     </span>
+                                                                     {/* Duration Badge */}
+                                                                     <span className="flex items-center text-[10px] font-semibold text-gray-400 gap-1 flex-shrink-0">
+                                                                         <img src={durationIcon} alt="Duration" className="w-3.5 h-3.5 opacity-40 object-contain" />
+                                                                         {service.duration} mins
+                                                                     </span>
+                                                                 </div>
+                                                             </div>
+                                                         </div>
+
+                                                         {/* Right section: Price & Controls */}
+                                                         <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0">
+                                                             <div className="text-left sm:text-right pr-1 flex-shrink-0">
+                                                                 <p className="text-[16px] font-bold text-gray-900 tracking-tight">₹{service.price}</p>
+                                                             </div>
+
+                                                             <div className="flex items-center gap-3">
+                                                                 {/* Circular icon button for edit */}
+                                                                 <button
+                                                                     onClick={() => handleEditService(service)}
+                                                                     className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 rounded-full border border-gray-100 hover:border-red-100 transition-all duration-200 flex-shrink-0 cursor-pointer"
+                                                                     title="Edit Service"
+                                                                 >
+                                                                     <img src={editIcon} alt="Edit" className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+                                                                 </button>
+
+                                                                 {/* Premium active/inactive switch */}
+                                                                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 select-none">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={service.active !== false}
+                                                                    onChange={() => toggleServiceStatus(service.id, service.active)}
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                            </label>
                                                         </div>
-                                                        <div>
-                                                            <h4 className="text-[13px] font-extrabold text-gray-900 tracking-tight">{service.name}</h4>
-                                                            <div className="flex items-center space-x-2.5 text-[10px] font-bold text-gray-400 mt-0.5 tracking-tight">
-                                                                <span className="text-gray-500">{service.category}</span>
-                                                                <span className="flex items-center">
-                                                                    <img src={durationIcon} alt="Duration" className="w-3 h-3 mr-1 opacity-60 object-contain" />
-                                                                    {service.duration} mins
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="text-right pr-2">
-                                                            <p className="text-[15px] font-extrabold text-gray-900 tracking-tight">₹ {service.price}</p>
-                                                        </div>
-
-                                                        <button
-                                                            onClick={() => handleEditService(service)}
-                                                            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-                                                            title="Edit Service"
-                                                        >
-                                                            <img src={editIcon} alt="Edit" className="w-4 h-4" />
-                                                        </button>
-
-                                                        <label className="relative inline-flex items-center cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={service.active !== false}
-                                                                onChange={() => toggleServiceStatus(service.id, service.active)}
-                                                                className="sr-only peer"
-                                                            />
-                                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                                                        </label>
                                                     </div>
                                                 </div>
-                                            ))
+                                            );
+                                        })
                                         ) : (
-                                            <div className="col-span-2 py-10 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                            <div className="col-span-full py-10 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
                                                 No services found
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                )}
+                                 </div>
                             </>
-                        )}
-
-                        {/* ==================== STAFF TAB ==================== */}
-                        {currentTab === 'Staff' && (
-                            <>
-                                <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
-                                    <div className="flex items-center space-x-2 text-gray-900">
-                                        <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
-                                        <span className="text-[13px] font-bold uppercase tracking-wider">Add Staff</span>
-                                    </div>
-                                </div>
-
-                                {/* Staff Form & List (unchanged) */}
-                                <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-                                    <form onSubmit={handleStaffSave} className="space-y-5">
-                                        {/* ... Your existing staff form fields ... */}
-                                        {/* (Copy your full staff form from previous version here) */}
-                                    </form>
-                                </div>
-
-                                {/* Staff List */}
-                                <div className="max-w-3xl">
-                                    <h3 className="text-[11px] font-extrabold uppercase tracking-wider text-gray-900 mb-3">Staff Details</h3>
-                                    {/* ... Your existing staff list and filters ... */}
-                                </div>
-                            </>
-                        )}
-
-                        {/* ==================== DASHBOARD TAB ==================== */}
-                        {currentTab === 'Dashboard' && (
-                            <div className="max-w-4xl space-y-6">
-                                <div className="inline-block border-b-2 border-red-600 pb-2 mb-2">
-                                    <div className="flex items-center space-x-2 text-gray-900">
-                                        <span className="text-[13px] font-bold uppercase tracking-wider">Workspace Dashboard</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div className="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">Total Services</span>
-                                        <h3 className="text-2xl font-extrabold text-gray-900 mt-1">{services.length}</h3>
-                                    </div>
-                                    <div className="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">Active Staff</span>
-                                        <h3 className="text-2xl font-extrabold text-gray-900 mt-1">{staffList.length}</h3>
-                                    </div>
-                                    <div className="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">Avg Service Price</span>
-                                        <h3 className="text-2xl font-extrabold text-gray-900 mt-1">
-                                            ₹ {services.length ? Math.round(services.reduce((acc, s) => acc + Number(s.price), 0) / services.length) : 0}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </main>
             </div>

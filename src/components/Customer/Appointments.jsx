@@ -4,6 +4,24 @@ import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
 
+const toastStyle = {
+  style: {
+    background: '#1a1a1a',
+    color: '#fff',
+    borderRadius: '16px',
+    padding: '20px 24px',
+    fontSize: '15px',
+    fontWeight: '600',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+    minWidth: '350px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+  iconTheme: {
+    primary: '#ff0b01',
+    secondary: '#fff',
+  }
+};
+
 const Appointments = () => {
   const navigate = useNavigate();
   
@@ -29,6 +47,7 @@ const Appointments = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
@@ -84,6 +103,23 @@ const Appointments = () => {
       controller.abort();
     };
   }, [activeTab, page]);
+
+  const handleDownloadInvoice = async (appointmentId) => {
+    const toastId = toast.loading('Generating invoice PDF...', toastStyle);
+    try {
+      const response = await axiosInstance.get(`/invoices/appointment/${appointmentId}`, {
+        responseType: 'blob'
+      });
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank');
+      
+      toast.success('Invoice opened successfully!', { id: toastId, ...toastStyle });
+    } catch (error) {
+      console.error('Failed to generate invoice:', error);
+      toast.error('Failed to generate invoice. Please try again.', { id: toastId, ...toastStyle });
+    }
+  };
 
   // Actions
   const handleAssignStaff = (appointment) => {
@@ -144,17 +180,34 @@ const Appointments = () => {
 
   const handleCancelClick = (appointment) => {
     setSelectedAppointment(appointment);
+    setCancelReason('');
     setShowCancelModal(true);
   };
 
-  const confirmCancel = () => {
-    // Simulate canceling the appointment
-    setAppointments(prev => prev.filter(app => app.id !== selectedAppointment.id));
-    
-    toast.success('Appointment cancelled successfully.', {
-      style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
-    });
-    setShowCancelModal(false);
+  const confirmCancel = async () => {
+    if (!cancelReason.trim()) {
+      toast.error('Please provide a cancellation reason.', {
+        style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
+      });
+      return;
+    }
+    try {
+      await axiosInstance.put(
+        `/appointments/${selectedAppointment.id}/cancel`,
+        cancelReason.trim(),
+        { headers: { 'Content-Type': 'text/plain' } }
+      );
+      setAppointments(prev => prev.filter(app => app.id !== selectedAppointment.id));
+      toast.success('Appointment cancelled successfully.', {
+        style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
+      });
+      setShowCancelModal(false);
+      setCancelReason('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to cancel appointment', {
+        style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
+      });
+    }
   };
 
   // Helper to format Date & Time elegantly
@@ -342,7 +395,7 @@ const Appointments = () => {
 
                       {/* Action buttons (Only for Scheduled tab) */}
                       {activeTab === 'SCHEDULED' && (
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                           <button
                             onClick={() => handleReschedule(app)}
                             className="flex-1 sm:flex-none px-5 py-3.5 bg-[#ff0b01] text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-[#ff0b01]/10 uppercase"
@@ -369,6 +422,21 @@ const Appointments = () => {
                               Assign Staff
                             </button>
                           )}
+                        </div>
+                      )}
+
+                      {/* Action buttons (Only for Completed tab) */}
+                      {activeTab === 'COMPLETED' && (
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <button
+                            onClick={() => handleDownloadInvoice(app.id)}
+                            className="flex-1 sm:flex-none px-5 py-3.5 bg-green-600 text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-green-600/10 uppercase flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Invoice
+                          </button>
                         </div>
                       )}
                     </div>
@@ -531,8 +599,14 @@ const Appointments = () => {
               </svg>
             </div>
             
-            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Appointment?</h3>
-            <p className="text-sm text-gray-400 font-medium leading-relaxed mb-6">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Appointment</h3>
+            <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">Please provide a reason for cancelling this appointment. This action cannot be undone.</p>
+            <textarea 
+              value={cancelReason} 
+              onChange={(e) => setCancelReason(e.target.value)} 
+              placeholder="Reason for cancellation..." 
+              className="w-full border border-gray-200 rounded-xl p-3 h-24 resize-y text-xs mb-6 outline-none focus:border-[#ff0b01] transition-all font-medium" 
+            />
 
             <div className="flex gap-4">
               <button 

@@ -162,7 +162,7 @@ export default function Navbar({ onToggleSidebar }) {
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between sticky top-0 z-50">
 
       {/* Left Logo Area */}
-      <div className="w-20 lg:w-64 h-full flex items-center px-4 lg:px-6 border-r border-gray-200">
+      <div className="w-20 md:w-44 lg:w-64 h-full flex items-center px-3 sm:px-4 md:px-6 border-r border-gray-200 flex-shrink-0">
         <button
           onClick={onToggleSidebar}
           className="mr-3 p-1 text-gray-500 hover:text-gray-900 lg:hidden focus:outline-none"
@@ -185,24 +185,24 @@ export default function Navbar({ onToggleSidebar }) {
       </div>
 
       {/* Right Container Elements */}
-      <div className="flex items-center justify-end flex-1 px-6 space-x-6">
+      <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2.5 sm:space-x-6 min-w-0">
 
         {/* Pill-Shaped Inline Search Field with Dropdown container */}
-        <div ref={dropdownRef} className="relative w-full max-w-xs sm:max-w-md">
-          <div className="border border-gray-300 rounded-full p-1 pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-shadow">
-            <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+        <div ref={dropdownRef} className="relative flex-1 max-w-[140px] sm:max-w-xs md:max-w-md transition-all duration-300">
+          <div className="border border-gray-300 rounded-full p-1 pl-3 sm:pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="Search staff, appointments..."
+              placeholder="Search..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setShowDropdown(true);
               }}
               onFocus={() => setShowDropdown(true)}
-              className="w-full bg-transparent text-xs sm:text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+              className="w-full bg-transparent text-[11px] sm:text-xs text-gray-700 placeholder-gray-400 focus:outline-none"
             />
             {query && (
               <button 
@@ -211,19 +211,19 @@ export default function Navbar({ onToggleSidebar }) {
                   setQuery('');
                   setShowDropdown(false);
                 }}
-                className="text-gray-400 hover:text-gray-600 mr-2 text-xs font-bold"
+                className="text-gray-400 hover:text-gray-600 mr-2 text-[10px] font-bold"
               >
                 ✕
               </button>
             )}
-            <button className="bg-red-600 text-white px-5 py-1.5 text-[10px] sm:text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
+            <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
               Search
             </button>
           </div>
 
           {/* Absolute Search Dropdown results */}
           {showDropdown && (query.trim().length > 0 || searching) && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
+            <div className="absolute top-full right-0 w-[280px] sm:left-0 sm:w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
               {searching && staffResults.length === 0 && appointmentResults.length === 0 ? (
                 <div className="flex items-center justify-center py-6 gap-2">
                   <div className="animate-spin h-4 w-4 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>

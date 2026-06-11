@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // Icons
@@ -11,6 +11,20 @@ const ManageSideBar = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = localStorage.getItem('manageSidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const toggleSidebar = () => {
+    setIsOpen(prev => {
+      const next = !prev;
+      localStorage.setItem('manageSidebarOpen', JSON.stringify(next));
+      window.dispatchEvent(new Event('manageSidebarToggle'));
+      return next;
+    });
+  };
 
   const subMenu = [
     {
@@ -66,10 +80,16 @@ const ManageSideBar = () => {
   ];
 
   return (
-    <div className="w-56 bg-white border-r border-gray-200 min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative">
+    <div 
+      className={`bg-white min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-30
+        ${isOpen ? 'w-56 border-r border-gray-200' : 'w-0 border-r-0'}`}
+    >
 
       {/* Navigation Links */}
-      <div className="space-y-1 px-3">
+      <div 
+        className={`space-y-1 transition-all duration-300 ease-in-out overflow-hidden
+          ${isOpen ? 'px-3 w-56 opacity-100' : 'px-0 w-0 opacity-0 pointer-events-none'}`}
+      >
 
         {subMenu.map((item, idx) => {
 
@@ -107,12 +127,19 @@ const ManageSideBar = () => {
       </div>
 
       {/* Toggle Button */}
-      <button className="absolute top-4 -right-3.5 bg-white border border-gray-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors z-20">
+      <button 
+        onClick={toggleSidebar}
+        className={`absolute top-4 -right-3.5 border rounded-full w-7 h-7 flex items-center justify-center transition-all z-40 cursor-pointer
+          ${isOpen 
+            ? 'bg-white border-gray-200 shadow-sm hover:bg-gray-50 hover:shadow-md' 
+            : 'bg-[#FF0B01] border-[#FF0B01] shadow-[0_0_15px_rgba(255,11,1,0.6)] animate-pulse ring-2 ring-red-500/20'}`}
+      >
         <svg
-          className="w-3.5 h-3.5 text-gray-400"
+          className={`w-3.5 h-3.5 transition-all duration-300
+            ${isOpen ? 'text-gray-400' : 'text-white rotate-180'}`}
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth="3"
           viewBox="0 0 24 24"
         >
           <path

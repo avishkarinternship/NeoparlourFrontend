@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../common/Navbar';
+import Navbar from './Layouts/Navbar';
 import Footer from '../common/Footer';
 import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';

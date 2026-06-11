@@ -11,13 +11,69 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
 
 import Sidebar from './Layouts/SideBar';
 import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
 import axiosInstance from '../../api/axiosInstance';
+
+// Helper to format X-axis labels based on the view type (timezone-safe)
+const formatLabel = (label, viewType) => {
+    if (!label) return '';
+    try {
+        if (typeof label === 'string' && label.toLowerCase().includes('week')) {
+            return label;
+        }
+
+        if (viewType === 'year' && /^\d{4}-\d{2}$/.test(label)) {
+            const [year, month] = label.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+            return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        }
+        
+        if ((viewType === 'month' || viewType === 'week') && /^\d{4}-\d{2}-\d{2}$/.test(label)) {
+            const [year, month, day] = label.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        }
+
+        const cleanLabel = label.replace('.0', '');
+        const date = new Date(cleanLabel.replace(' ', 'T'));
+        if (isNaN(date.getTime())) return label;
+
+        switch (viewType) {
+            case 'day':
+                return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            case 'week':
+                return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' });
+            case 'month':
+                return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            case 'year':
+                return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+            default:
+                return label;
+        }
+    } catch {
+        return label;
+    }
+};
+
+// Premium Custom Tooltip for the chart
+const CustomTooltip = ({ active, payload, label, viewType }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs border border-white/10 text-left">
+                <p className="font-semibold text-gray-400 mb-1.5 tracking-wide uppercase text-[9px]">{formatLabel(label, viewType)}</p>
+                <p className="font-black text-lg text-[#ff0b01]">₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            </div>
+        );
+    }
+    return null;
+};
 
 const Analytics = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -46,11 +102,27 @@ const Analytics = () => {
   // --- API RESPONSE INTEGRATION MATRIX ---
   const [revenueApiResponse, setRevenueApiResponse] = useState([]);
 
+  // --- LOCAL GRAPH REVENUE STATES (SAME AS DASHBOARD) ---
+  const [graphViewType, setGraphViewType] = useState('day');
+  const [graphStartDate, setGraphStartDate] = useState(getFirstDayOfMonth());
+  const [graphEndDate, setGraphEndDate] = useState(getTodayDateString());
+  const [graphRevenueData, setGraphRevenueData] = useState([]);
+  const [graphRevenueLoading, setGraphRevenueLoading] = useState(false);
+  const [graphTotalRevenue, setGraphTotalRevenue] = useState(0);
+
+  // --- COMPLETED ORDERS REVENUE FOR LINE CURVE ---
+  const [ordersViewType, setOrdersViewType] = useState('day');
+  const [ordersStartDate, setOrdersStartDate] = useState(getFirstDayOfMonth());
+  const [ordersEndDate, setOrdersEndDate] = useState(getTodayDateString());
+  const [ordersRevenueData, setOrdersRevenueData] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
   const mapTimeframeToViewType = (tf) => {
     switch (tf) {
       case 'Daily': return 'day';
       case 'Weekly': return 'week';
       case 'Monthly': return 'month';
+      case 'Yearly': return 'year';
       case 'Custom': return 'custom';
       default: return 'day';
     }
@@ -83,7 +155,8 @@ const Analytics = () => {
       axiosInstance.get(`/revenue/graph`, { params, signal: controller.signal })
         .then(res => {
           if (isMounted && res.data) {
-            setRevenueApiResponse(res.data);
+            const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.content) ? res.data.content : []);
+            setRevenueApiResponse(data);
           }
         })
         .catch(err => {
@@ -106,12 +179,116 @@ const Analytics = () => {
     };
   }, [globalTimeframe, startDate, endDate]);
 
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    let shouldCall = true;
+    let effectiveEndDate = graphEndDate;
+
+    if (graphViewType === 'custom') {
+      if (!graphStartDate) {
+        shouldCall = false;
+      } else if (!graphEndDate) {
+        effectiveEndDate = getTodayDateString();
+      }
+    }
+
+    if (shouldCall) {
+      setGraphRevenueLoading(true);
+      const params = { viewType: graphViewType, onlyOffers: false };
+      if (graphViewType === 'custom') {
+        params.startDate = graphStartDate;
+        params.endDate = effectiveEndDate;
+      }
+
+      axiosInstance.get(`/revenue/graph`, { params, signal: controller.signal })
+        .then(res => {
+          if (isMounted && res.data) {
+            const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.content) ? res.data.content : []);
+            setGraphRevenueData(data);
+            const total = data.reduce((sum, item) => sum + (item.revenue || 0), 0);
+            setGraphTotalRevenue(total);
+          }
+        })
+        .catch(err => {
+          if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+            console.error("Failed to fetch analytics revenue graph:", err);
+            setGraphRevenueData([]);
+            setGraphTotalRevenue(0);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setGraphRevenueLoading(false);
+        });
+    } else {
+      setGraphRevenueData([]);
+      setGraphTotalRevenue(0);
+      setGraphRevenueLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [graphViewType, graphStartDate, graphEndDate]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    let shouldCall = true;
+    let effectiveEndDate = ordersEndDate;
+
+    if (ordersViewType === 'custom') {
+      if (!ordersStartDate) {
+        shouldCall = false;
+      } else if (!ordersEndDate) {
+        effectiveEndDate = getTodayDateString();
+      }
+    }
+
+    if (shouldCall) {
+      setOrdersLoading(true);
+      const params = { viewType: ordersViewType };
+      if (ordersViewType === 'custom') {
+        params.startDate = ordersStartDate;
+        params.endDate = effectiveEndDate;
+      }
+
+      axiosInstance.get(`/revenue/orders`, { params, signal: controller.signal })
+        .then(res => {
+          if (isMounted && res.data) {
+            const data = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.content) ? res.data.content : []);
+            setOrdersRevenueData(data);
+          }
+        })
+        .catch(err => {
+          if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+            console.error("Failed to fetch completed orders revenue:", err);
+            setOrdersRevenueData([]);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setOrdersLoading(false);
+        });
+    } else {
+      setOrdersRevenueData([]);
+      setOrdersLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [ordersViewType, ordersStartDate, ordersEndDate]);
+
   // Derive total metrics dynamically from your API data array
-  const totalRevenueSum = revenueApiResponse.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
+  const totalRevenueSum = Array.isArray(revenueApiResponse) ? revenueApiResponse.reduce((acc, curr) => acc + (curr.revenue || 0), 0) : 0;
 
   // --- DATA GRAPH MATRICES FOR SUB-CARDS ---
   // Dynamic datasets that sync structure based on the current API sequence shape
-  const salesRevenuePieData = revenueApiResponse.map((item, idx) => {
+  const salesRevenuePieData = Array.isArray(revenueApiResponse) ? revenueApiResponse.map((item, idx) => {
     const colorPalette = [
       '#A0BFFE', '#FFA5A5', '#FFD3A5', '#FFF3A5', '#D3FFA5', 
       '#A5FFD3', '#A5FFF3', '#A5D3FF', '#D3A5FF', '#FFA5F3'
@@ -121,13 +298,9 @@ const Analytics = () => {
       value: item.revenue || 0,
       color: colorPalette[idx % colorPalette.length]
     };
-  });
+  }) : [];
 
-  const productSalesLineData = revenueApiResponse.map((item) => ({
-    name: item.label ? (item.label.includes('week') ? item.label : item.label.substring(5)) : '', 
-    "Current Revenue": item.revenue || 0,
-    "Target Revenue": (item.revenue || 0) * 1.2 
-  }));
+
 
   const totalAppointmentsStaffData = [
     { name: 'Staff 1', Completed: 45, Reschedule: 12, Cancelled: 5 },
@@ -185,6 +358,7 @@ const Analytics = () => {
                   <option value="Daily">Daily</option>
                   <option value="Weekly">Weekly</option>
                   <option value="Monthly">Monthly</option>
+                  <option value="Yearly">Yearly</option>
                   <option value="Custom">Custom</option>
                 </select>
                 <span className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-[6px] text-gray-500">▼</span>
@@ -222,30 +396,69 @@ const Analytics = () => {
           {/* CHARTS CONTAINER GRID MATRICES */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             
-            {/* CARD 1: RECENT REVENUE METRIC FROM API RESPONSE */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+            {/* CARD 1: APPOINTMENTS REVENUE METRIC FROM API RESPONSE */}
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-xs flex flex-col justify-between min-h-[350px]">
               <div>
-                <div className="flex items-start justify-between">
+                <div className="flex justify-between items-start mb-1">
                   <div>
-                    <h3 className="text-[13px] font-bold text-gray-900 tracking-tight">Recent Sales Summary</h3>
-                    <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Filtered by global timeframe ({globalTimeframe})</p>
+                    <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Appointments Revenue</h3>
+                    <p className="text-[11px] text-gray-400 font-medium capitalize">{graphViewType} view</p>
                   </div>
-                  <div className="text-right text-[10px] font-bold text-gray-400 space-y-0.5">
-                    <p>Total Data Points <span className="text-gray-900 font-extrabold">{revenueApiResponse.length}</span></p>
+                  <div className="text-right">
+                    <p className="text-[11px] text-gray-400 font-medium">Total Revenue</p>
+                    <p className="text-2xl font-black text-[#ff0b01]">₹ {graphTotalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <span className="text-xl font-black text-gray-900 tracking-tight">₹ {totalRevenueSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+
+                {/* Pill-shaped Time Filter Tabs */}
+                <div className="flex gap-2 mb-6 mt-3 flex-wrap">
+                  {['day', 'week', 'month', 'year', 'custom'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setGraphViewType(type)}
+                      className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
+                        graphViewType === type
+                          ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-200 scale-105'
+                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
+
+                {graphViewType === 'custom' && (
+                  <div className="flex items-center space-x-3 mb-6 bg-gray-50 border border-gray-200 p-3 rounded-2xl max-w-md">
+                    <div className="flex-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">From</label>
+                      <input 
+                        type="date"
+                        value={graphStartDate}
+                        onChange={(e) => setGraphStartDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                      />
+                    </div>
+                    <div className="text-gray-300 text-xs mt-4">to</div>
+                    <div className="flex-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">To</label>
+                      <input 
+                        type="date"
+                        value={graphEndDate}
+                        onChange={(e) => setGraphEndDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* BAR CHART DISPLAYING DIRECT API METRICS SHAPE */}
+              {/* AREA CHART DISPLAYING DIRECT API METRICS SHAPE */}
               <div className="w-full h-56 mt-4 relative">
-                {loading ? (
+                {graphRevenueLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-spin h-8 w-8 border-2 border-[#9BA2FF] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
                   </div>
-                ) : revenueApiResponse.length === 0 ? (
+                ) : graphRevenueData.length === 0 ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <svg className="w-8 h-8 text-gray-300 mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -254,22 +467,17 @@ const Analytics = () => {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueApiResponse} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                    <AreaChart data={graphRevenueData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="analyticsRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
                       <XAxis 
                         dataKey="label" 
-                        tickFormatter={(val) => {
-                          if (!val) return '';
-                          if (typeof val === 'string' && val.toLowerCase().includes('week')) return val;
-                          const parts = val.split('-');
-                          if (parts.length === 3) {
-                            const dateObj = new Date(val);
-                            if (!isNaN(dateObj.getTime())) {
-                              return dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-                            }
-                          }
-                          return val;
-                        }}
+                        tickFormatter={(val) => formatLabel(val, graphViewType)}
                         tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
                         axisLine={false} 
                         tickLine={false} 
@@ -278,16 +486,25 @@ const Analytics = () => {
                         tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
                         axisLine={false} 
                         tickLine={false} 
+                        tickFormatter={(val) => `₹${val}`}
                       />
-                      <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
-                      <Bar dataKey="revenue" fill="#9BA2FF" radius={[3, 3, 0, 0]} barSize={14} />
-                    </BarChart>
+                      <Tooltip content={<CustomTooltip viewType={graphViewType} />} />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#ff0b01"
+                        strokeWidth={3}
+                        fill="url(#analyticsRevenueGradient)"
+                        dot={{ r: 3, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                        activeDot={{ r: 5, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 )}
               </div>
               
               <div className="flex items-center space-x-4 justify-start mt-2 text-[9px] font-bold text-gray-600">
-                <div className="flex items-center"><span className="w-2 h-2 rounded-full bg-[#9BA2FF] mr-1.5" /> Core Generated Revenue Stream</div>
+                <div className="flex items-center"><span className="w-2.5 h-0.5 bg-[#ff0b01] mr-1.5" /> Core Generated Revenue Stream</div>
               </div>
             </div>
 
@@ -342,30 +559,109 @@ const Analytics = () => {
             </div>
 
             {/* CARD 3: PRODUCT SALES TRENDS CONSOLE */}
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-[13px] font-bold text-gray-900 tracking-tight">Product Sales Line Curve</h3>
-                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Performance timeline flow metrics</p>
+            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-xs flex flex-col justify-between min-h-[350px]">
+              <div>
+                <div className="flex justify-between items-start mb-1">
+                  <div>
+                    <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Product Sales Revenue</h3>
+                    <p className="text-[11px] text-gray-400 font-medium capitalize">{ordersViewType} view</p>
+                  </div>
                 </div>
+
+                {/* Pill-shaped Time Filter Tabs */}
+                <div className="flex gap-2 mb-6 mt-3 flex-wrap">
+                  {['day', 'week', 'month', 'year', 'custom'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setOrdersViewType(type)}
+                      className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
+                        ordersViewType === type
+                          ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-200 scale-105'
+                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+
+                {ordersViewType === 'custom' && (
+                  <div className="flex items-center space-x-3 mb-6 bg-gray-50 border border-gray-200 p-3 rounded-2xl max-w-md">
+                    <div className="flex-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">From</label>
+                      <input 
+                        type="date"
+                        value={ordersStartDate}
+                        onChange={(e) => setOrdersStartDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                      />
+                    </div>
+                    <div className="text-gray-300 text-xs mt-4">to</div>
+                    <div className="flex-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">To</label>
+                      <input 
+                        type="date"
+                        value={ordersEndDate}
+                        onChange={(e) => setOrdersEndDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="w-full h-56 mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={productSalesLineData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F3F3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="Current Revenue" stroke="#FF0B01" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="Target Revenue" stroke="#4F46E5" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+              <div className="w-full h-56 mt-4 relative">
+                {ordersLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                  </div>
+                ) : ordersRevenueData.length === 0 ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <svg className="w-8 h-8 text-gray-300 mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    </svg>
+                    <p className="text-[10px] font-semibold text-gray-400">No order revenue data available</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={ordersRevenueData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="ordersRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
+                      <XAxis 
+                        dataKey="label" 
+                        tickFormatter={(val) => formatLabel(val, ordersViewType)}
+                        tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tickFormatter={(val) => `₹${val}`}
+                      />
+                      <Tooltip content={<CustomTooltip viewType={ordersViewType} />} />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#ff0b01"
+                        strokeWidth={3}
+                        fill="url(#ordersRevenueGradient)"
+                        dot={{ r: 3, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                        activeDot={{ r: 5, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
-              <div className="flex items-center space-x-4 justify-center mt-2 text-[9px] font-bold text-gray-500">
-                <div className="flex items-center"><span className="w-2.5 h-0.5 bg-[#FF0B01] mr-1.5" /> Actual Achieved</div>
-                <div className="flex items-center"><span className="w-2.5 h-0.5 bg-[#4F46E5] border-t border-dashed mr-1.5" /> Projected Threshold</div>
+              <div className="flex items-center space-x-4 justify-start mt-2 text-[9px] font-bold text-gray-600">
+                <div className="flex items-center"><span className="w-2.5 h-0.5 bg-[#ff0b01] mr-1.5" /> Core Generated Revenue Stream</div>
               </div>
             </div>
 

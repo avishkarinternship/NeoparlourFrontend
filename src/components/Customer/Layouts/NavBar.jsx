@@ -45,7 +45,7 @@ const Navbar = () => {
                 {/* Logo Section */}
                 <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
                     <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
-                    <span className="text-lg sm:text-xl font-black tracking-tight text-gray-900">NeoParlour</span>
+                    <span className="text-base sm:text-xl font-black tracking-tight text-gray-900 max-[360px]:hidden">NeoParlour</span>
                 </div>
 
                 {/* Desktop Navigation Links */}
@@ -62,32 +62,32 @@ const Navbar = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                     {isAuthenticated && (user || profile) ? (
                         <button 
                             onClick={() => setIsProfileOpen(true)} 
-                            className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+                            className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans"
                         >
                             {/* Circular Logo/Avatar */}
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-xs sm:text-sm shadow-sm flex-shrink-0">
                                 {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
                             </div>
                             {/* User Name */}
-                            <span className="text-xs font-black text-gray-800 tracking-tight">
+                            <span className="text-xs font-black text-gray-800 tracking-tight hidden sm:inline">
                                 {profile?.fullName || user?.name || user?.username || 'Profile'}
                             </span>
                         </button>
                     ) : (
                         <>
                             {/* Signup Button */}
-                            <button onClick={() => navigate('/register')} className="px-2 sm:px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-1.5 hover:bg-gray-50 transition text-gray-500">
-                                <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
+                            <button onClick={() => navigate('/register')} className="px-1.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-1 hover:bg-gray-50 transition text-gray-500">
+                                <img src={signupIcon} alt="Signup" className="w-4.5 h-4.5 sm:w-5 sm:h-5 object-contain" />
                                 <span className="hidden sm:inline">SIGNUP</span>
                             </button>
                             
                             {/* Login Button */}
-                            <button onClick={() => navigate('/login')} className="px-2 sm:px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-1.5 hover:bg-red-700 transition">
-                                <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
+                            <button onClick={() => navigate('/login')} className="px-1.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-1 hover:bg-red-700 transition">
+                                <img src={loginIcon} alt="Login" className="w-4.5 h-4.5 sm:w-5 sm:h-5 object-contain" />
                                 <span className="hidden sm:inline">LOGIN</span>
                             </button>
                         </>
@@ -96,10 +96,10 @@ const Navbar = () => {
                     {/* Hamburger Menu Icon - Opens the slider directly on screen */}
                     <button 
                         onClick={() => setIsDrawerOpen(true)} 
-                        className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-1" 
+                        className="lg:hidden p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-0.5 sm:ml-1" 
                         title="Menu"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
@@ -121,6 +121,10 @@ const Navbar = () => {
             <ProfilePopup 
                 isOpen={isProfileOpen} 
                 onClose={() => setIsProfileOpen(false)} 
+                onChangePasswordClick={() => {
+                    setIsProfileOpen(false);
+                    setIsPasswordResetOpen(true);
+                }}
             />
 
             {/* Password Reset Modal */}

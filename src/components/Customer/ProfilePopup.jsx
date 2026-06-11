@@ -5,7 +5,7 @@ import { fetchCustomerProfile, logoutCustomerApi, updateCustomerProfile } from '
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
-const ProfilePopup = ({ isOpen, onClose }) => {
+const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user, profile, loading, isAuthenticated } = useSelector((state) => state.customer);
@@ -351,6 +351,17 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                                 <Edit2 className="w-4 h-4" />
                                 EDIT PROFILE
                             </button>
+                            {onChangePasswordClick && (
+                                <button
+                                    onClick={onChangePasswordClick}
+                                    className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-bold text-gray-600 transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                                >
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    CHANGE PASSWORD
+                                </button>
+                            )}
                             <button
                                 onClick={handleLogout}
                                 className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] active:scale-[0.98] text-white py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-sm"

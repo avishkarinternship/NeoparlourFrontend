@@ -22,6 +22,7 @@ const toastStyle = {
 };
 
 const Feedback = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved'
     const [pendingFeedbacks, setPendingFeedbacks] = useState([]);
     const [approvedFeedbacks, setApprovedFeedbacks] = useState([]);
@@ -94,10 +95,10 @@ const Feedback = () => {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
             <div className="flex flex-1 w-full items-stretch">
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 <ManageSideBar activeTab="Feedback" onTabChange={() => { }} />
 
                 <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">

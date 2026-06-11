@@ -20,6 +20,20 @@ const AddPackages = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('add');
 
+    const [sidebarOpen, setSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem('manageSidebarOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        const handleToggle = () => {
+            const saved = localStorage.getItem('manageSidebarOpen');
+            setSidebarOpen(saved !== null ? JSON.parse(saved) : true);
+        };
+        window.addEventListener('manageSidebarToggle', handleToggle);
+        return () => window.removeEventListener('manageSidebarToggle', handleToggle);
+    }, []);
+
     // Form State
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -143,8 +157,13 @@ const AddPackages = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.packagePrice || formData.serviceIds.length === 0) {
-            toast.error("Package Name, Price & at least one Service are required", toastStyle);
+        if (!formData.name || !formData.packagePrice) {
+            toast.error("Please fill all required fields", toastStyle);
+            return;
+        }
+
+        if (formData.serviceIds.length === 0) {
+            toast.error("Please select at least one service", toastStyle);
             return;
         }
 
@@ -218,6 +237,39 @@ const AddPackages = () => {
             fetchPackages();
         } catch (error) {
             toast.error('Failed to delete package', toastStyle);
+        }
+    };
+
+    // Helper to get service names display for a package card
+    const getPackageServicesDisplay = (pkg) => {
+        if (!pkg) return '';
+        // 1. If services exists and has items
+        if (pkg.services && pkg.services.length > 0) {
+            return pkg.services.map(s => s.name).join(', ');
+        }
+        // 2. Fallback to lookup from services state via serviceIds
+        const sIds = pkg.serviceIds || [];
+        if (sIds.length > 0 && services.length > 0) {
+            return sIds
+                .map(id => services.find(s => s.id === id)?.name)
+                .filter(Boolean)
+                .join(', ');
+        }
+        return '';
+    };
+
+    const togglePackageStatus = async (id, currentActive) => {
+        try {
+            await axiosInstance.put(`/packages/${id}/toggle`);
+            toast.success(`Package ${currentActive ? 'deactivated' : 'activated'} successfully!`, toastStyle);
+            setPackages(prev =>
+                prev.map(pkg =>
+                    pkg.id === id ? { ...pkg, active: !currentActive } : pkg
+                )
+            );
+        } catch (error) {
+            console.error('Failed to toggle package:', error);
+            toast.error('Failed to update package status.', toastStyle);
         }
     };
 
@@ -426,6 +478,16 @@ const AddPackages = () => {
                                     </div>
                                 </div>
 
+                                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-start gap-3">
+                                    <span className="text-amber-500 text-lg leading-none mt-0.5">⚠️</span>
+                                    <div>
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-0.5">Disclaimer</p>
+                                        <p className="text-[11px] text-amber-700/95 font-medium leading-relaxed">
+                                            This package will be available until and unless disabled manually.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div className="flex gap-4 pt-6">
                                     <button
                                         type="submit"
@@ -485,7 +547,7 @@ const AddPackages = () => {
                             ) : packages.length === 0 ? (
                                 <div className="text-center py-20 text-gray-500">No packages found</div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 ${sidebarOpen ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
                                     {packages.map(pkg => (
                                         <div key={pkg.id} className="bg-white border border-gray-200 rounded-3xl p-6 hover:shadow-xl transition-all duration-200">
                                             <div className="flex justify-between items-start">
@@ -493,9 +555,20 @@ const AddPackages = () => {
                                                     <h3 className="font-bold text-2xl">{pkg.name}</h3>
                                                     <p className="text-4xl font-bold text-red-600 mt-2">₹{pkg.packagePrice}</p>
                                                 </div>
-                                                <span className={`text-xs font-bold px-4 py-2 rounded-full ${pkg.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                    {pkg.active ? 'ACTIVE' : 'INACTIVE'}
-                                                </span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-xs font-bold px-4 py-2 rounded-full ${pkg.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                        {pkg.active ? 'ACTIVE' : 'INACTIVE'}
+                                                    </span>
+                                                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pkg.active !== false}
+                                                            onChange={() => togglePackageStatus(pkg.id, pkg.active)}
+                                                            className="sr-only peer"
+                                                        />
+                                                        <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                    </label>
+                                                </div>
                                             </div>
 
                                             {pkg.discountType && (
@@ -507,6 +580,16 @@ const AddPackages = () => {
                                             <p className="mt-4 text-gray-600 line-clamp-3 text-sm leading-relaxed">
                                                 {pkg.description}
                                             </p>
+
+                                            {/* Services list */}
+                                            {getPackageServicesDisplay(pkg) && (
+                                                <div className="mt-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Services Included</span>
+                                                    <span className="text-xs font-semibold text-gray-700 mt-0.5 block whitespace-normal break-words" title={getPackageServicesDisplay(pkg)}>
+                                                        {getPackageServicesDisplay(pkg)}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             <div className="mt-8 flex gap-3">
                                                 <button

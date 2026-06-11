@@ -46,6 +46,20 @@ const AddProducts = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('add'); // 'add' or 'view'
 
+    const [sidebarOpen, setSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem('manageSidebarOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        const handleToggle = () => {
+            const saved = localStorage.getItem('manageSidebarOpen');
+            setSidebarOpen(saved !== null ? JSON.parse(saved) : true);
+        };
+        window.addEventListener('manageSidebarToggle', handleToggle);
+        return () => window.removeEventListener('manageSidebarToggle', handleToggle);
+    }, []);
+
     // Edit Mode State
     const [editingProductId, setEditingProductId] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -180,7 +194,7 @@ const AddProducts = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!name || !price || !stock) {
-            toast.error("Name, Price and Stock are required", toastStyle);
+            toast.error("Name, Price and Quantity are required", toastStyle);
             return;
         }
 
@@ -200,7 +214,7 @@ const AddProducts = () => {
         }
 
         if (parseInt(stock) <= 0) {
-            toast.error("Stock must be greater than 0", toastStyle);
+            toast.error("Quantity must be greater than 0", toastStyle);
             return;
         }
 
@@ -441,8 +455,8 @@ const AddProducts = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Stock" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Current Stock *" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Quantity" className="w-5 h-5 opacity-40" /></div>
+                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Quantity *" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Restock" className="w-5 h-5 opacity-40" /></div>
@@ -542,7 +556,7 @@ const AddProducts = () => {
                                     <div className="text-center py-12 text-gray-500">No products found</div>
                                 ) : (
                                     <>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                                        <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
                                             {products.map(product => {
                                                 const imageUrl = getProductImage(product);
                                                 const discount = discountPercent(product.price, product.discountPrice);
@@ -564,8 +578,14 @@ const AddProducts = () => {
                                                             <h5 className="text-sm font-semibold line-clamp-2 leading-tight mb-2 h-10">{product.name}</h5>
                                                             <div className="flex justify-between items-center">
                                                                 <div>
-                                                                    <span className="font-bold text-red-600">₹{product.price}</span>
-                                                                    {product.discountPrice && <span className="text-xs line-through text-gray-400 ml-2">₹{product.discountPrice}</span>}
+                                                                    {product.discountPrice ? (
+                                                                        <>
+                                                                            <span className="font-bold text-red-600">₹{product.discountPrice}</span>
+                                                                            <span className="text-xs line-through text-gray-400 ml-2">₹{product.price}</span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="font-bold text-red-600">₹{product.price}</span>
+                                                                    )}
                                                                 </div>
                                                                 <span className="text-xs text-gray-500">{product.stock} left</span>
                                                             </div>

@@ -50,6 +50,17 @@ const Inventory = () => {
     const [loading, setLoading] = useState(false);
     const [activeFilter, setActiveFilter] = useState('All');
 
+    // Search filters
+    const [searchName, setSearchName] = useState('');
+    const [searchProductType, setSearchProductType] = useState('');
+    const [searchUnitType, setSearchUnitType] = useState('');
+    const [searchIsLowStock, setSearchIsLowStock] = useState(false);
+    const [searchStockSort, setSearchStockSort] = useState('lowToHigh'); // Default sorting
+    const [hasSearched, setHasSearched] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+
     // ==================== STAFF LIST ====================
     const [staffList, setStaffList] = useState([]);
     const [loadingStaff, setLoadingStaff] = useState(false);
@@ -61,6 +72,11 @@ const Inventory = () => {
     const [allocatedQuantity, setAllocatedQuantity] = useState('');
     const [notes, setNotes] = useState('');
     const [assignLoading, setAssignLoading] = useState(false);
+
+    // ==================== ADD STOCK MODAL ====================
+    const [showAddStockModal, setShowAddStockModal] = useState(false);
+    const [stockToAdd, setStockToAdd] = useState('');
+    const [stockLoading, setStockLoading] = useState(false);
 
     // ==================== VIEW ASSIGNED MODAL ====================
     const [showAssignedModal, setShowAssignedModal] = useState(false);
@@ -92,16 +108,36 @@ const Inventory = () => {
         }
     };
 
-    const fetchInventory = async () => {
+    const fetchInventory = async (page = currentPage) => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/inventory');
-            setInventoryItems(response.data || []);
+            const params = {};
+            if (searchName.trim()) params.name = searchName.trim();
+            if (searchProductType) params.productType = searchProductType;
+            if (searchUnitType) params.unitType = searchUnitType;
+            if (searchIsLowStock) params.isLowStock = true;
+            if (searchStockSort) params.stockSort = searchStockSort;
+            params.size = 10;
+            params.page = page;
+
+            const response = await axiosInstance.get('/inventory/search', { params });
+            setInventoryItems(response.data?.content || response.data || []);
+            setTotalPages(response.data?.totalPages || 0);
+            setTotalElements(response.data?.totalElements || 0);
+            setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load inventory', toastStyle);
+            setInventoryItems([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSearchInventory = (e) => {
+        if (e) e.preventDefault();
+        setHasSearched(true);
+        setCurrentPage(0);
+        fetchInventory(0);
     };
 
     const fetchSwapRequests = async (status = activeSwapStatus) => {
@@ -118,6 +154,7 @@ const Inventory = () => {
     };
 
     useEffect(() => {
+        setHasSearched(true);
         fetchInventory();
         fetchStaffList();
         fetchSwapRequests();
@@ -192,11 +229,48 @@ const Inventory = () => {
             setReorderLevel('');
             setUnitType('PIECE');
             setProductType('consumable');
+            setHasSearched(true);
             fetchInventory();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to add inventory', toastStyle);
         } finally {
             setLoadingAdd(false);
+        }
+    };
+
+    const openAddStockModal = (item) => {
+        setSelectedInventory(item);
+        setStockToAdd('');
+        setShowAddStockModal(true);
+    };
+
+    const handleAddStock = async () => {
+        if (!stockToAdd) {
+            toast.error("Please enter a stock quantity", toastStyle);
+            return;
+        }
+
+        const quantityToAdd = safeParseInt(stockToAdd);
+        if (quantityToAdd <= 0) {
+            toast.error("Quantity must be greater than 0", toastStyle);
+            return;
+        }
+
+        setStockLoading(true);
+        try {
+            const newStock = (selectedInventory.currentStock || 0) + quantityToAdd;
+            await axiosInstance.put(`/inventory/${selectedInventory.id}/stock`, null, {
+                params: {
+                    stock: newStock
+                }
+            });
+            toast.success('Stock added successfully!', toastStyle);
+            setShowAddStockModal(false);
+            fetchInventory();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add stock', toastStyle);
+        } finally {
+            setStockLoading(false);
         }
     };
 
@@ -232,6 +306,7 @@ const Inventory = () => {
             await axiosInstance.post('/staff-inventory/assign', payload);
             toast.success('Inventory assigned successfully!', toastStyle);
             setShowAssignModal(false);
+            setHasSearched(true);
             fetchInventory();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to assign inventory', toastStyle);
@@ -403,7 +478,7 @@ const Inventory = () => {
                                             <img src={durationIcon} alt="Quantity" className="w-5 h-5 mr-3 opacity-40 flex-shrink-0" />
                                             <input
                                                 type="text"
-                                                placeholder="Current Stock *"
+                                                placeholder="Quantity *"
                                                 value={quantity}
                                                 onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
                                                 className="w-full text-sm font-semibold outline-none bg-transparent text-gray-800"
@@ -440,6 +515,100 @@ const Inventory = () => {
                         {/* VIEW INVENTORY TAB */}
                         {activeTab === 'view' && (
                             <div>
+                                {/* Search Filters box */}
+                                <form onSubmit={handleSearchInventory} className="bg-white border border-gray-200 rounded-3xl p-6 mb-8 shadow-sm">
+                                    <h4 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">Search Filters</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+                                        {/* Name filter */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Item Name</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Filter by Name" 
+                                                value={searchName} 
+                                                onChange={(e) => setSearchName(e.target.value)} 
+                                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all" 
+                                            />
+                                        </div>
+
+                                        {/* Product Type filter */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Product Type</label>
+                                            <select 
+                                                value={searchProductType} 
+                                                onChange={(e) => setSearchProductType(e.target.value)} 
+                                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                            >
+                                                <option value="">All Types</option>
+                                                {PRODUCT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                                            </select>
+                                        </div>
+
+                                        {/* Unit Type filter */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Unit Type</label>
+                                            <select 
+                                                value={searchUnitType} 
+                                                onChange={(e) => setSearchUnitType(e.target.value)} 
+                                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                            >
+                                                <option value="">All Units</option>
+                                                {UNIT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                                            </select>
+                                        </div>
+
+                                        {/* Low Stock filter */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Stock Level</label>
+                                            <select 
+                                                value={searchIsLowStock ? 'low' : ''} 
+                                                onChange={(e) => setSearchIsLowStock(e.target.value === 'low')} 
+                                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                            >
+                                                <option value="">All Levels</option>
+                                                <option value="low">Low Stock / Out of Stock</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Sort filter */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Sort Order</label>
+                                            <select 
+                                                value={searchStockSort} 
+                                                onChange={(e) => setSearchStockSort(e.target.value)} 
+                                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                            >
+                                                <option value="lowToHigh">Low to High Stock</option>
+                                                <option value="highToLow">High to Low Stock</option>
+                                                <option value="newest">Newest Created</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex justify-end gap-3 mt-5">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => {
+                                                setSearchName('');
+                                                setSearchProductType('');
+                                                setSearchUnitType('');
+                                                setSearchIsLowStock(false);
+                                                setSearchStockSort('lowToHigh');
+                                            }} 
+                                            className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                                        >
+                                            Clear Filters
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="px-8 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#FF0B01] rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
+                                        >
+                                            Search
+                                        </button>
+                                    </div>
+                                </form>
+
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">ALL INVENTORY ITEMS</h3>
                                     <div className="flex flex-wrap gap-2">
@@ -451,43 +620,149 @@ const Inventory = () => {
                                     </div>
                                 </div>
 
-                                {loading ? <div className="py-20 text-center">Loading...</div> : (
-                                    <div className="space-y-3">
-                                        {filteredItems.map(item => (
-                                            <div key={item.id} className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center gap-4">
-                                                <div className="flex items-center gap-4 flex-1">
-                                                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-extrabold text-xl">
-                                                        {item.name?.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
-                                                        <p className="text-xs font-bold text-gray-400 mt-0.5 uppercase tracking-wide">{item.productType} • {item.unitType}</p>
-                                                    </div>
-                                                </div>
+                                {loading ? <div className="py-20 text-center">Loading...</div> : 
+                                 !hasSearched ? (
+                                     <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2">
+                                         <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                         </svg>
+                                         <h4 className="text-base font-bold text-gray-800">Search Inventory Items</h4>
+                                         <p className="text-xs font-semibold text-gray-400 max-w-md mx-auto">Use the filters above and click Search to display inventory list.</p>
+                                     </div>
+                                 ) : filteredItems.length === 0 ? (
+                                     <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                                         No inventory items found.
+                                     </div>
+                                 ) : (
+                                     <>
+                                     <div className="space-y-3">
+                                         {filteredItems.map(item => {
+                                             const isBelowReorder = item.reorderLevel !== null && item.reorderLevel !== undefined && item.currentStock <= item.reorderLevel;
 
-                                                <div className="flex items-center gap-10 md:gap-16">
-                                                    <div className="text-center">
-                                                        <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">STOCK</p>
-                                                        <p className="text-3xl font-black text-gray-900">{item.currentStock}</p>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">PRICE</p>
-                                                        <p className="text-2xl font-black text-[#FF0B01]">₹{item.costPrice}</p>
-                                                    </div>
-                                                </div>
+                                             return (
+                                                 <div 
+                                                     key={item.id} 
+                                                     className={`bg-white border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-4 ${
+                                                         isBelowReorder 
+                                                             ? 'border-red-200 bg-red-50/20 shadow-[0_4px_20px_rgba(239,68,68,0.05)]' 
+                                                             : 'border-gray-100'
+                                                     }`}
+                                                 >
+                                                     <div className="flex items-center gap-4 flex-1">
+                                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-xl ${
+                                                             isBelowReorder ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-red-50 text-[#FF0B01]'
+                                                         }`}>
+                                                             {item.name?.charAt(0).toUpperCase()}
+                                                         </div>
+                                                         <div>
+                                                             <div className="flex items-center gap-2 flex-wrap">
+                                                                 <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
+                                                                 {isBelowReorder && (
+                                                                     <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                                                         item.currentStock === 0 ? 'bg-red-600 text-white' : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                                     }`}>
+                                                                         {item.currentStock === 0 ? 'Out of Stock' : 'Low Stock'}
+                                                                     </span>
+                                                                 )}
+                                                             </div>
+                                                             <p className="text-xs font-bold text-gray-400 mt-0.5 uppercase tracking-wide">{item.productType} • {item.unitType}</p>
+                                                         </div>
+                                                     </div>
 
-                                                <div className="flex gap-3 md:ml-auto text-xs font-bold uppercase tracking-wider">
-                                                    <button onClick={() => openAssignModal(item)} className="flex items-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-[#FF0B01] hover:text-white transition-colors duration-250">
-                                                        <img src={assignStaff} alt="" className="w-4 h-4 invert hover:invert-0" /> ASSIGN STAFF
-                                                    </button>
-                                                    <button onClick={() => openViewAssigned(item)} className="border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-gray-50 transition-colors duration-250">
-                                                        VIEW ASSIGNED
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                                     <div className="flex items-center gap-10 md:gap-16">
+                                                         <div className="text-center">
+                                                             <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">STOCK</p>
+                                                             <p className={`text-3xl font-black ${isBelowReorder ? 'text-red-600' : 'text-gray-900'}`}>{item.currentStock}</p>
+                                                         </div>
+                                                         <div className="text-center">
+                                                             <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">PRICE</p>
+                                                             <p className="text-2xl font-black text-[#FF0B01]">₹{item.costPrice}</p>
+                                                         </div>
+                                                     </div>
+
+                                                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:ml-auto text-xs font-bold uppercase tracking-wider">
+                                                          <button onClick={() => openAddStockModal(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-[#FF0B01] hover:text-white transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
+                                                              + ADD STOCK
+                                                          </button>
+                                                          <button onClick={() => openAssignModal(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-[#FF0B01] hover:text-white transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
+                                                              <img src={assignStaff} alt="" className="w-4 h-4 invert hover:invert-0" /> ASSIGN STAFF
+                                                          </button>
+                                                          <button onClick={() => openViewAssigned(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-gray-50 transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
+                                                              VIEW ASSIGNED
+                                                          </button>
+                                                      </div>
+                                                 </div>
+                                             );
+                                         })}
+                                     </div>
+                                     {/* Pagination Controls */}
+                                     {totalPages > 1 && (
+                                         <div className="flex items-center justify-between mt-8 bg-white border border-gray-100 rounded-2xl px-6 py-4 shadow-sm">
+                                             <p className="text-xs font-semibold text-gray-400">
+                                                 Showing <span className="text-gray-800 font-bold">{currentPage * 10 + 1}</span> – <span className="text-gray-800 font-bold">{Math.min((currentPage + 1) * 10, totalElements)}</span> of <span className="text-gray-800 font-bold">{totalElements}</span> items
+                                             </p>
+                                             <div className="flex items-center gap-2">
+                                                 <button
+                                                     onClick={() => fetchInventory(0)}
+                                                     disabled={currentPage === 0}
+                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
+                                                     title="First Page"
+                                                 >
+                                                     ««
+                                                 </button>
+                                                 <button
+                                                     onClick={() => fetchInventory(currentPage - 1)}
+                                                     disabled={currentPage === 0}
+                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
+                                                     title="Previous Page"
+                                                 >
+                                                     ‹
+                                                 </button>
+                                                 {Array.from({ length: totalPages }, (_, i) => i)
+                                                     .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 1)
+                                                     .reduce((acc, i, idx, arr) => {
+                                                         if (idx > 0 && i - arr[idx - 1] > 1) acc.push('...');
+                                                         acc.push(i);
+                                                         return acc;
+                                                     }, [])
+                                                     .map((item, idx) =>
+                                                         item === '...' ? (
+                                                             <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 text-xs">…</span>
+                                                         ) : (
+                                                             <button
+                                                                 key={item}
+                                                                 onClick={() => fetchInventory(item)}
+                                                                 className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${
+                                                                     currentPage === item
+                                                                         ? 'bg-[#FF0B01] text-white shadow-md'
+                                                                         : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                                 }`}
+                                                             >
+                                                                 {item + 1}
+                                                             </button>
+                                                         )
+                                                     )}
+                                                 <button
+                                                     onClick={() => fetchInventory(currentPage + 1)}
+                                                     disabled={currentPage >= totalPages - 1}
+                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
+                                                     title="Next Page"
+                                                 >
+                                                     ›
+                                                 </button>
+                                                 <button
+                                                     onClick={() => fetchInventory(totalPages - 1)}
+                                                     disabled={currentPage >= totalPages - 1}
+                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
+                                                     title="Last Page"
+                                                 >
+                                                     »»
+                                                 </button>
+                                             </div>
+                                         </div>
+                                     )}
+                                 </>
+                                 )}
                             </div>
                         )}
 
@@ -593,6 +868,49 @@ const Inventory = () => {
                         <div className="flex gap-3 mt-8">
                             <button onClick={() => setShowAssignModal(false)} className="flex-1 py-3.5 border border-gray-300 rounded-xl">Cancel</button>
                             <button onClick={handleAssignToStaff} disabled={assignLoading} className="flex-1 bg-red-600 text-white py-3.5 rounded-xl font-bold">Assign Now</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Stock Modal */}
+            {showAddStockModal && selectedInventory && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+                        <h3 className="text-2xl font-semibold mb-1">Add Stock</h3>
+                        <p className="text-gray-600 mb-6">{selectedInventory.name}</p>
+
+                        <div className="space-y-5">
+                            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex justify-between items-center text-sm">
+                                <div>
+                                    <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Current Stock</p>
+                                    <p className="text-2xl font-black text-gray-800 mt-1">{selectedInventory.currentStock}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">New Total Stock</p>
+                                    <p className="text-2xl font-black text-green-600 mt-1">
+                                        {(selectedInventory.currentStock || 0) + (stockToAdd ? safeParseInt(stockToAdd) : 0)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-2">Quantity to Add</label>
+                                <input 
+                                    type="text" 
+                                    value={stockToAdd} 
+                                    onChange={(e) => setStockToAdd(e.target.value.replace(/[^0-9]/g, ''))} 
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base focus:outline-none focus:border-[#FF0B01] transition-all" 
+                                    placeholder="Enter quantity" 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <button onClick={() => setShowAddStockModal(false)} className="flex-1 py-3.5 border border-gray-300 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-colors">Cancel</button>
+                            <button onClick={handleAddStock} disabled={stockLoading} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-70 transition-colors">
+                                {stockLoading ? 'Adding...' : 'Add Stock'}
+                            </button>
                         </div>
                     </div>
                 </div>

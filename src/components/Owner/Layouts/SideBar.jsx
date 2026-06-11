@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import homeIcon from '../../../assets/Owner/Dashboard/SideBar/home_icon.svg';
 import manageIcon from '../../../assets/Owner/Dashboard/SideBar/manage_icon.svg';
 import analyticsIcon from '../../../assets/Owner/Dashboard/SideBar/analytics_icon.svg';
-import teamIcon from '../../../assets/Owner/Dashboard/SideBar/team_icon.svg';
+import ordersIcon from '../../../assets/Owner/Manage/Subscription/invoice_icon.svg';
 import billingIcon from '../../../assets/Owner/Dashboard/SideBar/billing_icon.svg';
 import helpIcon from '../../../assets/Owner/Dashboard/SideBar/help_icon.svg';
 import settingIcon from '../../../assets/Owner/Dashboard/SideBar/setting_icon.svg';
@@ -39,9 +39,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     { label: 'Add Packages', path: '/owner/manage/add-package' },
   ];
 
-  const handleManageClick = () => {
+  const handleManageClick = (isMobile = false) => {
     setShowManageDrawer(!showManageDrawer);
-    if (!isManagePath) {
+    if (!isMobile && !isManagePath) {
       navigate('/owner/manage/schedule');
     }
   };
@@ -113,7 +113,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Manage */}
           <button
-            onClick={handleManageClick}
+            onClick={() => handleManageClick(isMobile)}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${isManagePath || showManageDrawer
                 ? 'text-red-600 bg-red-50'
@@ -183,27 +183,27 @@ const Sidebar = ({ isOpen, onClose }) => {
             <span>Analytics</span>
           </button>
 
-          {/* Team */}
+          {/* Orders */}
           <button
-            onClick={() => navigate('/owner/team')}
+            onClick={() => navigate('/owner/orders')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
-              ${location.pathname === '/owner/team'
+              ${location.pathname === '/owner/orders'
                 ? 'text-red-600 bg-red-50'
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
-            {location.pathname === '/owner/team' && (
+            {location.pathname === '/owner/orders' && (
               <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
             )}
 
             <img
-              src={teamIcon}
-              alt="Team"
+              src={ordersIcon}
+              alt="Orders"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/team' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/orders' ? 'active-icon-glow' : 'opacity-60'
               }`}
             />
-            <span>Team</span>
+            <span>Orders</span>
           </button>
 
           {/* Billing */}

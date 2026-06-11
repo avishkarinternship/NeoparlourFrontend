@@ -8,11 +8,11 @@ const Navbar = ({ onToggleSidebar }) => {
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between sticky top-0 z-50">
 
       {/* Left Logo Area */}
-      <div className="w-auto lg:w-64 h-full flex items-center px-4 lg:px-6 border-r border-gray-200 space-x-3 flex-shrink-0">
+      <div className="w-20 md:w-44 lg:w-64 h-full flex items-center px-3 sm:px-4 md:px-6 border-r border-gray-200 flex-shrink-0">
         {onToggleSidebar && (
           <button 
             onClick={onToggleSidebar} 
-            className="p-1 text-gray-500 hover:text-gray-900 lg:hidden focus:outline-none flex-shrink-0 cursor-pointer"
+            className="mr-3 p-1 text-gray-500 hover:text-gray-900 lg:hidden focus:outline-none flex-shrink-0 cursor-pointer"
             aria-label="Toggle Sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -33,21 +33,23 @@ const Navbar = ({ onToggleSidebar }) => {
       </div>
 
       {/* Right Container Elements */}
-      <div className="flex items-center justify-end flex-1 px-6 space-x-6">
+      <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2.5 sm:space-x-6 min-w-0">
 
         {/* Pill-Shaped Inline Search Field */}
-        <div className="relative w-full max-w-xs sm:max-w-md border border-gray-300 rounded-full p-1 pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-shadow">
-          <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full bg-transparent text-xs sm:text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
-          />
-          <button className="bg-red-600 text-white px-5 py-1.5 text-[10px] sm:text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150">
-            Search
-          </button>
+        <div className="relative flex-1 max-w-[140px] sm:max-w-xs md:max-w-md transition-all duration-300">
+          <div className="border border-gray-300 rounded-full p-1 pl-3 sm:pl-4 flex items-center bg-white focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 mr-1.5 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full bg-transparent text-[11px] sm:text-xs text-gray-700 placeholder-gray-400 focus:outline-none"
+            />
+            <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
+              Search
+            </button>
+          </div>
         </div>
 
         {/* Notification Bell with Badge */}
@@ -64,7 +66,6 @@ const Navbar = ({ onToggleSidebar }) => {
         <div className="flex items-center space-x-2 cursor-pointer group">
           {/* Circular image frame container */}
           <div className="h-8 w-8 rounded-full border border-gray-900 flex items-center justify-center overflow-hidden">
-            {/* FIX: Changed src="/Owner/..." to src={profileIcon} */}
             <img
               src={profileIcon}
               alt="Prowin Wadkar Profile"

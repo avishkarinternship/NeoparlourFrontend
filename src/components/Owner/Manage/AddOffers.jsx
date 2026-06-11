@@ -35,6 +35,21 @@ const DISCOUNT_TYPES = [
 const AddOffers = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeFilter, setActiveFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('add');
+
+    const [sidebarOpen, setSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem('manageSidebarOpen');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        const handleToggle = () => {
+            const saved = localStorage.getItem('manageSidebarOpen');
+            setSidebarOpen(saved !== null ? JSON.parse(saved) : true);
+        };
+        window.addEventListener('manageSidebarToggle', handleToggle);
+        return () => window.removeEventListener('manageSidebarToggle', handleToggle);
+    }, []);
 
     // Form States
     const [editingOfferId, setEditingOfferId] = useState(null);
@@ -48,6 +63,7 @@ const AddOffers = () => {
     const [usageLimitPerCustomer, setUsageLimitPerCustomer] = useState('');
     const [totalUsageLimit, setTotalUsageLimit] = useState('');
     const [selectedServices, setSelectedServices] = useState([]);
+    const [initialSelectedIds, setInitialSelectedIds] = useState([]);
 
     const [activeServices, setActiveServices] = useState([]);
     const [loadingServices, setLoadingServices] = useState(false);
@@ -90,8 +106,13 @@ const AddOffers = () => {
 
     useEffect(() => {
         fetchActiveServices();
-        fetchOffers();
-    }, [activeFilter]);
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'view') {
+            fetchOffers();
+        }
+    }, [activeTab, activeFilter]);
 
     const toggleService = (serviceId) => {
         if (selectedServices.includes(serviceId)) {
@@ -127,6 +148,7 @@ const AddOffers = () => {
         setUsageLimitPerCustomer('');
         setTotalUsageLimit('');
         setSelectedServices([]);
+        setInitialSelectedIds([]);
         setEditingOfferId(null);
     };
 
@@ -156,7 +178,8 @@ const AddOffers = () => {
                 ? fullOffer.applicableServices.map(s => s.id)
                 : [];
             setSelectedServices(serviceIds);
-
+            setInitialSelectedIds(serviceIds);
+            setActiveTab('add');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
             toast.error('Failed to load offer details', toastStyle);
@@ -168,8 +191,13 @@ const AddOffers = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!offerName || !discountValue || !validFrom || !validTo || selectedServices.length === 0) {
-            toast.error("Please fill all required fields and select at least one service", toastStyle);
+        if (!offerName || !discountValue || !validFrom || !validTo) {
+            toast.error("Please fill all required fields", toastStyle);
+            return;
+        }
+
+        if (selectedServices.length === 0) {
+            toast.error("Please select at least one service", toastStyle);
             return;
         }
 
@@ -211,7 +239,7 @@ const AddOffers = () => {
             }
 
             resetForm();
-            fetchOffers();
+            setActiveTab('view');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save offer', toastStyle);
         } finally {
@@ -235,6 +263,51 @@ const AddOffers = () => {
         return `₹${value} OFF`;
     };
 
+    // Helper to get service names display for an offer card
+    const getOfferServicesDisplay = (offer) => {
+        if (!offer) return '';
+        // 1. Check services array from API structure
+        if (offer.services && offer.services.length > 0) {
+            return offer.services.map(s => s.name).join(', ');
+        }
+        // 2. If applicableServices exists and has items
+        if (offer.applicableServices && offer.applicableServices.length > 0) {
+            return offer.applicableServices.map(s => s.name).join(', ');
+        }
+        // 3. Fallback to lookup from activeServices via applicableServiceIds
+        const serviceIds = offer.applicableServiceIds || [];
+        if (serviceIds.length > 0 && activeServices.length > 0) {
+            return serviceIds
+                .map(id => activeServices.find(s => s.id === id)?.name)
+                .filter(Boolean)
+                .join(', ');
+        }
+        return '';
+    };
+
+    const toggleOfferStatus = async (id, currentActive) => {
+        try {
+            await axiosInstance.put(`/offers/${id}/toggle`);
+            toast.success(`Offer ${currentActive ? 'deactivated' : 'activated'} successfully!`, toastStyle);
+            setOffers(prev =>
+                prev.map(offer =>
+                    offer.id === id ? { ...offer, active: !currentActive } : offer
+                )
+            );
+        } catch (error) {
+            console.error('Failed to toggle offer:', error);
+            toast.error('Failed to update offer status.', toastStyle);
+        }
+    };
+
+    const sortedServices = [...activeServices].sort((a, b) => {
+        const aSelected = initialSelectedIds.includes(a.id);
+        const bSelected = initialSelectedIds.includes(b.id);
+        if (aSelected && !bSelected) return -1;
+        if (!aSelected && bSelected) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
     return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
             <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -245,7 +318,25 @@ const AddOffers = () => {
 
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
-                        <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
+                        {/* Tabs */}
+                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-10 max-w-md border border-gray-100 shadow-sm">
+                            <button
+                                onClick={() => setActiveTab('add')}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                            >
+                                Add / Edit Offer
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('view')}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                            >
+                                View Offers
+                            </button>
+                        </div>
+
+                        {activeTab === 'add' && (
+                            <>
+                                <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
                             <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
                                 %
                             </div>
@@ -382,7 +473,7 @@ const AddOffers = () => {
                                         ) : activeServices.length === 0 ? (
                                             <p className="text-gray-500">No active services available</p>
                                         ) : (
-                                            activeServices.map(service => (
+                                            sortedServices.map(service => (
                                                 <label
                                                     key={service.id}
                                                     className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer border border-transparent hover:border-gray-200"
@@ -424,6 +515,16 @@ const AddOffers = () => {
                                     )}
                                 </div>
 
+                                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-start gap-3">
+                                    <span className="text-amber-500 text-lg leading-none mt-0.5">⚠️</span>
+                                    <div>
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-0.5">Disclaimer</p>
+                                        <p className="text-[11px] text-amber-700/95 font-medium leading-relaxed">
+                                            This offer will be for a limited period and will expire automatically on the specified end date.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <div className="flex gap-4 pt-6">
                                     <button
                                         type="submit"
@@ -442,8 +543,12 @@ const AddOffers = () => {
                                 </div>
                             </form>
                         </div>
+                            </>
+                        )}
 
-                        {/* Existing Offers */}
+                        {activeTab === 'view' && (
+                            <>
+                                {/* Existing Offers */}
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold">Existing Offers</h3>
                             <div className="flex gap-2">
@@ -466,7 +571,7 @@ const AddOffers = () => {
                                 No offers found
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                                 {offers.map((offer) => (
                                     <div key={offer.id} className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
                                         {/* Subtle top indicator bar */}
@@ -474,11 +579,32 @@ const AddOffers = () => {
                                         
                                         <div className="flex justify-between items-start mt-2">
                                             <h4 className="font-bold text-lg text-gray-900 group-hover:text-[#FF0B01] transition-colors duration-300">{offer.name}</h4>
-                                            <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full ${offer.active ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
-                                                {offer.active ? 'ACTIVE' : 'INACTIVE'}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full ${offer.active ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                                                    {offer.active ? 'ACTIVE' : 'INACTIVE'}
+                                                </span>
+                                                <label className="relative inline-flex items-center cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={offer.active !== false}
+                                                        onChange={() => toggleOfferStatus(offer.id, offer.active)}
+                                                        className="sr-only peer"
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                </label>
+                                            </div>
                                         </div>
                                         <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">{offer.description}</p>
+                                        
+                                        {/* Services list */}
+                                        {getOfferServicesDisplay(offer) && (
+                                            <div className="mt-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Services Included</span>
+                                                <span className="text-xs font-semibold text-gray-700 mt-0.5 block whitespace-normal break-words" title={getOfferServicesDisplay(offer)}>
+                                                    {getOfferServicesDisplay(offer)}
+                                                </span>
+                                            </div>
+                                        )}
                                         
                                         <div className="mt-5 flex justify-between items-center">
                                             <div className="px-3 py-1 bg-red-50 text-[#FF0B01] rounded-xl text-xs font-black tracking-wider uppercase">
@@ -497,6 +623,8 @@ const AddOffers = () => {
                                     </div>
                                 ))}
                             </div>
+                        )}
+                            </>
                         )}
                     </div>
                 </main>
