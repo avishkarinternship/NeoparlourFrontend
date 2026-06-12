@@ -69,27 +69,28 @@ const Service = () => {
     // Search / Filter states
     const [searchName, setSearchName] = useState('');
     const [searchCategory, setSearchCategory] = useState('');
-    const [hasSearched, setHasSearched] = useState(false);
+    const [hasSearched, setHasSearched] = useState(true);
     const [filteredServices, setFilteredServices] = useState([]);
 
 
 
     const fetchServices = async () => {
+        setLoading(true);
         try {
             const response = await axiosInstance.get('/services');
             const allServices = response.data || [];
             setServices(allServices);
 
-            if (hasSearched) {
-                const filtered = allServices.filter(service => {
-                    const matchesName = !searchName.trim() || service.name?.toLowerCase().includes(searchName.trim().toLowerCase());
-                    const matchesCategory = !searchCategory || service.category?.toLowerCase() === searchCategory.toLowerCase();
-                    return matchesName && matchesCategory;
-                });
-                setFilteredServices(filtered);
-            }
+            const filtered = allServices.filter(service => {
+                const matchesName = !searchName.trim() || service.name?.toLowerCase().includes(searchName.trim().toLowerCase());
+                const matchesCategory = !searchCategory || service.category?.toLowerCase() === searchCategory.toLowerCase();
+                return matchesName && matchesCategory;
+            });
+            setFilteredServices(filtered);
         } catch (error) {
             console.error('Failed to fetch services:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -118,7 +119,7 @@ const Service = () => {
     };
 
     useEffect(() => {
-        // fetchServices is not called on mount to satisfy the lazy-loading search requirement!
+        fetchServices();
     }, []);
 
     // ==================== FORM VALIDATION ====================
@@ -129,6 +130,8 @@ const Service = () => {
             errors.serviceName = "Service name is required";
         } else if (serviceName.trim().length < 3) {
             errors.serviceName = "Service name must be at least 3 characters";
+        } else if (serviceName.trim().length > 100) {
+            errors.serviceName = "Service name cannot exceed 100 characters";
         }
 
         if (!category) {
@@ -138,6 +141,8 @@ const Service = () => {
         const priceNum = parseFloat(price);
         if (!price || isNaN(priceNum) || priceNum <= 0) {
             errors.price = "Price must be a positive number";
+        } else if (priceNum >= 100000) {
+            errors.price = "Price cannot exceed ₹99,999";
         }
 
         const durationNum = parseInt(duration, 10);
@@ -212,12 +217,18 @@ const Service = () => {
     // ==================== TOGGLE SERVICE STATUS ====================
     const toggleServiceStatus = async (id, currentActive) => {
         try {
-            const newActive = !currentActive;
+            const isCurrentActive = currentActive !== false;
+            const newActive = !isCurrentActive;
             await axiosInstance.put(`/services/${id}/toggle?active=${newActive}`);
 
             toast.success(`Service ${newActive ? 'activated' : 'deactivated'} successfully!`, toastStyle);
 
             setServices(prev =>
+                prev.map(service =>
+                    service.id === id ? { ...service, active: newActive } : service
+                )
+            );
+            setFilteredServices(prev =>
                 prev.map(service =>
                     service.id === id ? { ...service, active: newActive } : service
                 )
@@ -301,12 +312,21 @@ const Service = () => {
                                                     <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
+                                                        inputMode="decimal"
                                                         placeholder="Price"
                                                         value={price}
                                                         onChange={(e) => {
                                                             const val = e.target.value.replace(/[^0-9.]/g, '');
+                                                            const occurrences = (val.match(/\./g) || []).length;
+                                                            if (occurrences > 1) return;
+                                                            const parts = val.split('.');
+                                                            if (parts[0].length > 5) return;
                                                             setPrice(val);
-                                                            if (formErrors.price) setFormErrors(prev => ({ ...prev, price: '' }));
+                                                            if (parts[0].length === 5) {
+                                                                setFormErrors(prev => ({ ...prev, price: "Maximum price limit reached (5 digits)" }));
+                                                            } else {
+                                                                setFormErrors(prev => ({ ...prev, price: "" }));
+                                                            }
                                                         }}
                                                         className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
                                                     />
@@ -515,7 +535,7 @@ const Service = () => {
                                                                     onChange={() => toggleServiceStatus(service.id, service.active)}
                                                                     className="sr-only peer"
                                                                 />
-                                                                <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                                <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
                                                             </label>
                                                         </div>
                                                     </div>

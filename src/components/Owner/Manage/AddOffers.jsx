@@ -64,6 +64,7 @@ const AddOffers = () => {
     const [totalUsageLimit, setTotalUsageLimit] = useState('');
     const [selectedServices, setSelectedServices] = useState([]);
     const [initialSelectedIds, setInitialSelectedIds] = useState([]);
+    const [discountError, setDiscountError] = useState('');
 
     const [activeServices, setActiveServices] = useState([]);
     const [loadingServices, setLoadingServices] = useState(false);
@@ -72,6 +73,9 @@ const AddOffers = () => {
     const [loadingEdit, setLoadingEdit] = useState(false);
 
     const [offers, setOffers] = useState([]);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     // Fetch Active Services
     const fetchActiveServices = async () => {
@@ -87,15 +91,22 @@ const AddOffers = () => {
     };
 
     // Fetch Offers List
-    const fetchOffers = async () => {
+    const fetchOffers = async (page = currentPage) => {
         try {
             setLoadingOffers(true);
-            let url = '/offers/search';
-            if (activeFilter === 'active') url += '?active=true';
-            else if (activeFilter === 'inactive') url += '?active=false';
+            const params = new URLSearchParams();
+            if (activeFilter === 'active') params.append('active', 'true');
+            else if (activeFilter === 'inactive') params.append('active', 'false');
+            params.append('page', page);
+            params.append('size', '10');
+            params.append('sortBy', 'id');
+            params.append('direction', 'desc');
 
-            const response = await axiosInstance.get(url);
+            const response = await axiosInstance.get(`/offers/search?${params.toString()}`);
             setOffers(response.data?.content || response.data || []);
+            setTotalPages(response.data?.totalPages || 0);
+            setTotalElements(response.data?.totalElements || 0);
+            setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load offers', toastStyle);
             setOffers([]);
@@ -110,7 +121,7 @@ const AddOffers = () => {
 
     useEffect(() => {
         if (activeTab === 'view') {
-            fetchOffers();
+            fetchOffers(0);
         }
     }, [activeTab, activeFilter]);
 
@@ -133,6 +144,31 @@ const AddOffers = () => {
 
     const finalPrice = Math.max(0, totalOriginalPrice - discountAmount);
 
+    const handleDiscountValueChange = (value) => {
+        let val = value.replace(/[^0-9.]/g, '');
+        const occurrences = (val.match(/\./g) || []).length;
+        if (occurrences > 1) return;
+
+        if (discountType === 'PERCENTAGE') {
+            const numValue = parseFloat(val) || 0;
+            const newVal = Math.min(numValue, 100).toString();
+            setDiscountValue(newVal);
+            setDiscountError("");
+        } else if (discountType === 'FLAT') {
+            const parts = val.split('.');
+            if (parts[0].length > 5) return;
+            setDiscountValue(val);
+            if (parts[0].length === 5) {
+                setDiscountError("Maximum discount limit reached (5 digits)");
+            } else {
+                setDiscountError("");
+            }
+        } else {
+            setDiscountValue(val);
+            setDiscountError("");
+        }
+    };
+
     const toInstant = (datetimeLocal) => {
         if (!datetimeLocal) return null;
         return datetimeLocal + ':00Z';
@@ -150,6 +186,7 @@ const AddOffers = () => {
         setSelectedServices([]);
         setInitialSelectedIds([]);
         setEditingOfferId(null);
+        setDiscountError('');
     };
 
     // Fetch Full Offer Data for Editing + Pre-select Services
@@ -191,8 +228,13 @@ const AddOffers = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!offerName || !discountValue || !validFrom || !validTo) {
+        if (!offerName?.trim() || !discountValue || !validFrom || !validTo) {
             toast.error("Please fill all required fields", toastStyle);
+            return;
+        }
+
+        if (offerName.trim().length > 100) {
+            toast.error("Offer name cannot exceed 100 characters", toastStyle);
             return;
         }
 
@@ -201,19 +243,50 @@ const AddOffers = () => {
             return;
         }
 
-        if (parseFloat(discountValue) <= 0) {
+        const discVal = parseFloat(discountValue);
+        if (isNaN(discVal) || discVal <= 0) {
             toast.error("Discount value must be greater than 0", toastStyle);
             return;
         }
 
-        if (usageLimitPerCustomer && parseInt(usageLimitPerCustomer) <= 0) {
-            toast.error("Usage limit per customer must be greater than 0", toastStyle);
+        if (discVal >= 100000) {
+            toast.error("Discount value cannot exceed ₹99,999", toastStyle);
             return;
         }
 
-        if (totalUsageLimit && parseInt(totalUsageLimit) <= 0) {
-            toast.error("Total usage limit must be greater than 0", toastStyle);
+        if (discountType === 'PERCENTAGE' && discVal > 100) {
+            toast.error("Percentage discount cannot exceed 100%", toastStyle);
             return;
+        }
+
+        if (discountType === 'FLAT' && discVal > totalOriginalPrice) {
+            toast.error(`Flat discount cannot exceed total service price (₹${totalOriginalPrice})`, toastStyle);
+            return;
+        }
+
+        if (new Date(validTo) <= new Date(validFrom)) {
+            toast.error("Valid To date must be after Valid From date", toastStyle);
+            return;
+        }
+
+        if (usageLimitPerCustomer) {
+            const limitVal = parseInt(usageLimitPerCustomer, 10);
+            if (isNaN(limitVal) || limitVal <= 0) {
+                toast.error("Usage limit per customer must be greater than 0", toastStyle);
+                return;
+            }
+        }
+
+        if (totalUsageLimit) {
+            const totalVal = parseInt(totalUsageLimit, 10);
+            if (isNaN(totalVal) || totalVal <= 0) {
+                toast.error("Total usage limit must be greater than 0", toastStyle);
+                return;
+            }
+            if (usageLimitPerCustomer && totalVal < parseInt(usageLimitPerCustomer, 10)) {
+                toast.error("Total usage limit cannot be less than usage limit per customer", toastStyle);
+                return;
+            }
         }
 
         setLoadingSubmit(true);
@@ -287,11 +360,13 @@ const AddOffers = () => {
 
     const toggleOfferStatus = async (id, currentActive) => {
         try {
+            const isCurrentActive = currentActive !== false;
+            const newActive = !isCurrentActive;
             await axiosInstance.put(`/offers/${id}/toggle`);
-            toast.success(`Offer ${currentActive ? 'deactivated' : 'activated'} successfully!`, toastStyle);
+            toast.success(`Offer ${newActive ? 'activated' : 'deactivated'} successfully!`, toastStyle);
             setOffers(prev =>
                 prev.map(offer =>
-                    offer.id === id ? { ...offer, active: !currentActive } : offer
+                    offer.id === id ? { ...offer, active: newActive } : offer
                 )
             );
         } catch (error) {
@@ -401,17 +476,19 @@ const AddOffers = () => {
                                     </div>
 
                                     <div>
-                                        <input
-                                            type="number"
-                                            value={discountValue}
-                                            onChange={(e) => setDiscountValue(e.target.value)}
-                                            placeholder="Discount Value *"
-                                            min="0.01"
-                                            step="any"
-                                            className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
-                                            required
-                                        />
-                                    </div>
+                                         <div className="relative">
+                                             <input
+                                                 type="text"
+                                                 inputMode="decimal"
+                                                 value={discountValue}
+                                                 onChange={(e) => handleDiscountValueChange(e.target.value)}
+                                                 placeholder="Discount Value *"
+                                                 className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                                 required
+                                             />
+                                         </div>
+                                         {discountError && <p className="text-red-500 text-xs mt-1 ml-1">{discountError}</p>}
+                                     </div>
 
                                     <div>
                                         <input
@@ -590,7 +667,7 @@ const AddOffers = () => {
                                                         onChange={() => toggleOfferStatus(offer.id, offer.active)}
                                                         className="sr-only peer"
                                                     />
-                                                    <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                     <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
                                                 </label>
                                             </div>
                                         </div>
@@ -622,6 +699,51 @@ const AddOffers = () => {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* PAGINATION FOOTER */}
+                        {!loadingOffers && (
+                            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                    PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL OFFERS)
+                                </span>
+                                <div className="flex items-center space-x-1.5">
+                                    <button
+                                        onClick={() => fetchOffers(0)}
+                                        disabled={currentPage <= 0}
+                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    >
+                                        « First
+                                    </button>
+                                    <button
+                                        onClick={() => fetchOffers(Math.max(0, currentPage - 1))}
+                                        disabled={currentPage <= 0}
+                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    >
+                                        ‹ Prev
+                                    </button>
+                                    
+                                    {/* Current Page Indicator Pill */}
+                                    <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                        {totalPages === 0 ? 1 : currentPage + 1}
+                                    </span>
+
+                                    <button
+                                        onClick={() => fetchOffers(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
+                                        disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    >
+                                        Next ›
+                                    </button>
+                                    <button
+                                        onClick={() => fetchOffers(Math.max(0, totalPages - 1))}
+                                        disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    >
+                                        Last »
+                                    </button>
+                                </div>
                             </div>
                         )}
                             </>

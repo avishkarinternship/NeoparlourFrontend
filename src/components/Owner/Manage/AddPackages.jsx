@@ -11,6 +11,7 @@ import axiosInstance from '../../../api/axiosInstance';
 import productDetailsIcon from '../../../assets/Owner/Manage/Products/product_details_icon.svg';
 import percentageIcon from '../../../assets/Owner/Manage/Products/percentage_icon.svg';
 import rateIcon from '../../../assets/Owner/Manage/Products/rate_icon.svg';
+import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg';
 
 const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -50,6 +51,8 @@ const AddPackages = () => {
         totalUsageLimit: ''
     });
 
+    const [priceError, setPriceError] = useState('');
+
     const [services, setServices] = useState([]);
     const [serviceSearch, setServiceSearch] = useState('');
     const [selectedServices, setSelectedServices] = useState([]);
@@ -60,8 +63,7 @@ const AddPackages = () => {
     const [loadingPackages, setLoadingPackages] = useState(false);
     const [filters, setFilters] = useState({
         name: '',
-        active: '',
-        discountType: ''
+        active: ''
     });
 
     // Fetch Services
@@ -80,7 +82,6 @@ const AddPackages = () => {
             const params = new URLSearchParams();
             if (filters.name) params.append('name', filters.name);
             if (filters.active !== '') params.append('active', filters.active);
-            if (filters.discountType) params.append('discountType', filters.discountType);
 
             const res = await axiosInstance.get(`/packages/search?${params.toString()}`);
             setPackages(res.data?.content || []);
@@ -112,26 +113,24 @@ const AddPackages = () => {
         const { name, value } = e.target;
         let newValue = value;
 
-        if (name === 'discountValue') {
-            const numValue = parseFloat(value) || 0;
-            if (formData.discountType === 'PERCENTAGE') {
-                newValue = Math.min(numValue, 100).toString();
-            } else if (formData.discountType === 'FLAT' && totalServicePrice > 0) {
-                newValue = Math.min(numValue, totalServicePrice).toString();
+        if (name === 'packagePrice') {
+            let val = value.replace(/[^0-9.]/g, '');
+            const occurrences = (val.match(/\./g) || []).length;
+            if (occurrences > 1) return;
+            const parts = val.split('.');
+            if (parts[0].length > 5) return;
+            newValue = val;
+            if (parts[0].length === 5) {
+                setPriceError("Maximum price limit reached (5 digits)");
+            } else {
+                setPriceError("");
             }
         }
 
         setFormData(prev => ({ ...prev, [name]: newValue }));
     };
 
-    const handleDiscountTypeChange = (e) => {
-        const newType = e.target.value;
-        setFormData(prev => ({
-            ...prev,
-            discountType: newType,
-            discountValue: ''
-        }));
-    };
+
 
     const toggleService = (serviceId) => {
         let newSelected = [...selectedServices];
@@ -153,46 +152,86 @@ const AddPackages = () => {
         setServiceSearch('');
         setIsEditing(false);
         setEditingId(null);
+        setPriceError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.packagePrice) {
+        if (!formData.name?.trim() || !formData.packagePrice) {
             toast.error("Please fill all required fields", toastStyle);
             return;
         }
 
-        if (formData.serviceIds.length === 0) {
+        if (formData.name.trim().length > 120) {
+            toast.error("Package name cannot exceed 120 characters", toastStyle);
+            return;
+        }
+
+        if (formData.description && formData.description.trim().length > 500) {
+            toast.error("Description cannot exceed 500 characters", toastStyle);
+            return;
+        }
+
+        if (selectedServices.length === 0) {
             toast.error("Please select at least one service", toastStyle);
             return;
         }
 
-        if (parseFloat(formData.packagePrice) <= 0) {
+        const priceVal = parseFloat(formData.packagePrice);
+        if (isNaN(priceVal) || priceVal <= 0) {
             toast.error("Package price must be greater than 0", toastStyle);
             return;
         }
 
-        if (formData.discountType && (!formData.discountValue || parseFloat(formData.discountValue) <= 0)) {
-            toast.error("Discount value must be greater than 0", toastStyle);
+        if (priceVal >= 100000) {
+            toast.error("Package price cannot exceed ₹99,999", toastStyle);
             return;
         }
 
-        if (formData.usageLimitPerCustomer && parseInt(formData.usageLimitPerCustomer) <= 0) {
-            toast.error("Usage limit per customer must be greater than 0", toastStyle);
-            return;
+        if (formData.usageLimitPerCustomer) {
+            const limitVal = parseInt(formData.usageLimitPerCustomer, 10);
+            if (isNaN(limitVal) || limitVal <= 0) {
+                toast.error("Usage limit per customer must be greater than 0", toastStyle);
+                return;
+            }
         }
 
-        if (formData.totalUsageLimit && parseInt(formData.totalUsageLimit) <= 0) {
-            toast.error("Total usage limit must be greater than 0", toastStyle);
-            return;
+        if (formData.totalUsageLimit) {
+            const totalVal = parseInt(formData.totalUsageLimit, 10);
+            if (isNaN(totalVal) || totalVal <= 0) {
+                toast.error("Total usage limit must be greater than 0", toastStyle);
+                return;
+            }
+            if (formData.usageLimitPerCustomer && totalVal < parseInt(formData.usageLimitPerCustomer, 10)) {
+                toast.error("Total usage limit cannot be less than usage limit per customer", toastStyle);
+                return;
+            }
+        }
+
+        // Calculate discount type and discount value automatically!
+        const totalActualPrice = selectedServices.reduce((sum, id) => {
+            const service = services.find(s => s.id === id);
+            return sum + (parseFloat(service?.price) || 0);
+        }, 0);
+
+        let calculatedDiscountType = null;
+        let calculatedDiscountValue = null;
+
+        if (priceVal < totalActualPrice) {
+            calculatedDiscountType = 'FLAT';
+            calculatedDiscountValue = totalActualPrice - priceVal;
         }
 
         const payload = {
-            ...formData,
-            packagePrice: parseFloat(formData.packagePrice),
-            discountValue: formData.discountValue ? parseFloat(formData.discountValue) : null,
-            usageLimitPerCustomer: formData.usageLimitPerCustomer ? parseInt(formData.usageLimitPerCustomer) : null,
-            totalUsageLimit: formData.totalUsageLimit ? parseInt(formData.totalUsageLimit) : null,
+            name: formData.name.trim(),
+            description: formData.description?.trim(),
+            packagePrice: priceVal,
+            active: formData.active !== false,
+            discountType: calculatedDiscountType,
+            discountValue: calculatedDiscountValue,
+            serviceIds: selectedServices,
+            usageLimitPerCustomer: formData.usageLimitPerCustomer ? parseInt(formData.usageLimitPerCustomer, 10) : null,
+            totalUsageLimit: formData.totalUsageLimit ? parseInt(formData.totalUsageLimit, 10) : null,
         };
 
         try {
@@ -215,8 +254,6 @@ const AddPackages = () => {
             name: pkg.name || '',
             description: pkg.description || '',
             packagePrice: pkg.packagePrice || '',
-            discountType: pkg.discountType || '',
-            discountValue: pkg.discountValue || '',
             active: pkg.active !== false,
             serviceIds: pkg.services?.map(s => s.id) || [],
             usageLimitPerCustomer: pkg.usageLimitPerCustomer || '',
@@ -240,14 +277,11 @@ const AddPackages = () => {
         }
     };
 
-    // Helper to get service names display for a package card
     const getPackageServicesDisplay = (pkg) => {
         if (!pkg) return '';
-        // 1. If services exists and has items
         if (pkg.services && pkg.services.length > 0) {
             return pkg.services.map(s => s.name).join(', ');
         }
-        // 2. Fallback to lookup from services state via serviceIds
         const sIds = pkg.serviceIds || [];
         if (sIds.length > 0 && services.length > 0) {
             return sIds
@@ -258,13 +292,29 @@ const AddPackages = () => {
         return '';
     };
 
+    const getPackageServicesList = (pkg) => {
+        if (!pkg) return [];
+        if (pkg.services && pkg.services.length > 0) {
+            return pkg.services;
+        }
+        const sIds = pkg.serviceIds || [];
+        if (sIds.length > 0 && services.length > 0) {
+            return sIds
+                .map(id => services.find(s => s.id === id))
+                .filter(Boolean);
+        }
+        return [];
+    };
+
     const togglePackageStatus = async (id, currentActive) => {
         try {
+            const isCurrentActive = currentActive !== false;
+            const newActive = !isCurrentActive;
             await axiosInstance.put(`/packages/${id}/toggle`);
-            toast.success(`Package ${currentActive ? 'deactivated' : 'activated'} successfully!`, toastStyle);
+            toast.success(`Package ${newActive ? 'activated' : 'deactivated'} successfully!`, toastStyle);
             setPackages(prev =>
                 prev.map(pkg =>
-                    pkg.id === id ? { ...pkg, active: !currentActive } : pkg
+                    pkg.id === id ? { ...pkg, active: newActive } : pkg
                 )
             );
         } catch (error) {
@@ -286,7 +336,6 @@ const AddPackages = () => {
                 <ManageSideBar activeTab="Add Packages" onTabChange={() => { }} />
 
                 <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
-                    {/* Tabs */}
                     <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-10 max-w-md border border-gray-100 shadow-sm">
                         <button
                             onClick={() => setActiveTab('add')}
@@ -302,7 +351,6 @@ const AddPackages = () => {
                         </button>
                     </div>
 
-                    {/* ==================== ADD / EDIT FORM ==================== */}
                     {activeTab === 'add' && (
                         <div className="max-w-4xl mx-auto bg-white border border-gray-100 rounded-[32px] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
                             <div className="bg-gradient-to-r from-[#FF0B01] via-red-650 to-orange-600 text-white px-8 py-8 relative overflow-hidden">
@@ -314,7 +362,7 @@ const AddPackages = () => {
                             </div>
 
                             <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 gap-6">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Package Name</label>
                                         <div className="relative">
@@ -330,25 +378,67 @@ const AddPackages = () => {
                                             />
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Package Price (₹)</label>
+                                         <div className="relative">
+                                             <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <input
+                                                 type="text"
+                                                 inputMode="decimal"
+                                                 name="packagePrice"
+                                                 value={formData.packagePrice}
+                                                 onChange={handleInputChange}
+                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                                 placeholder="2999"
+                                                 required
+                                             />
+                                             {priceError && <p className="text-red-500 text-xs mt-1 ml-1">{priceError}</p>}
+                                         </div>
+                                    </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Package Price (₹)</label>
-                                        <div className="relative">
-                                            <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
-                                            <input
-                                                type="number"
-                                                name="packagePrice"
-                                                value={formData.packagePrice}
-                                                onChange={handleInputChange}
-                                                min="0.01"
-                                                step="any"
-                                                className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
-                                                placeholder="2999"
-                                                required
-                                            />
-                                        </div>
+                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Services Value (₹)</label>
+                                         <div className="relative">
+                                             <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <input
+                                                 type="text"
+                                                 readOnly
+                                                 value={totalServicePrice.toFixed(2)}
+                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-100 rounded-2xl text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                                             />
+                                         </div>
+                                    </div>
+
+                                    <div>
+                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Discount Price / Savings (₹)</label>
+                                         <div className="relative">
+                                              <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <input
+                                                 type="text"
+                                                 readOnly
+                                                 value={
+                                                     formData.packagePrice && parseFloat(formData.packagePrice) < totalServicePrice
+                                                         ? (totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)
+                                                         : '0.00'
+                                                 }
+                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-100 rounded-2xl text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                                             />
+                                         </div>
                                     </div>
                                 </div>
+
+                                {totalServicePrice > 0 && formData.packagePrice && parseFloat(formData.packagePrice) < totalServicePrice && (
+                                     <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+                                         <div className="text-emerald-600 text-xl leading-none">💰</div>
+                                         <div>
+                                             <p className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider">Discounted Savings: ₹{(totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)}</p>
+                                             <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mt-0.5">Actual Value: ₹{totalServicePrice} → Package: ₹{formData.packagePrice}</p>
+                                         </div>
+                                     </div>
+                                 )}
 
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
@@ -362,7 +452,6 @@ const AddPackages = () => {
                                     />
                                 </div>
 
-                                {/* Services Selection - Improved */}
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-3">Select Services</label>
 
@@ -408,47 +497,6 @@ const AddPackages = () => {
                                     </div>
                                 </div>
 
-                                {/* Discount Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Discount Type</label>
-                                        <div className="relative">
-                                            <select
-                                                name="discountType"
-                                                value={formData.discountType}
-                                                onChange={handleDiscountTypeChange}
-                                                className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer"
-                                            >
-                                                <option value="">No Discount</option>
-                                                <option value="PERCENTAGE">Percentage Off</option>
-                                                <option value="FLAT">Flat Amount Off</option>
-                                            </select>
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                            Discount Value {formData.discountType === 'PERCENTAGE' ? '(in %)' : '(in ₹)'}
-                                        </label>
-                                        <div className="relative">
-                                            <img src={percentageIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
-                                            <input
-                                                type="number"
-                                                name="discountValue"
-                                                value={formData.discountValue}
-                                                onChange={handleInputChange}
-                                                min="0.01"
-                                                step="any"
-                                                max={formData.discountType === 'PERCENTAGE' ? 100 : totalServicePrice}
-                                                className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Usage Limits */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Usage Limit per Customer</label>
@@ -511,7 +559,7 @@ const AddPackages = () => {
                     {activeTab === 'view' && (
                         <div className="max-w-6xl mx-auto">
                             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                                <h2 className="text-3xl font-bold">All Packages</h2>
+                                <h2 className="text-3xl font-black tracking-tight text-gray-900">All Packages</h2>
 
                                 <div className="flex flex-wrap gap-4">
                                     <input
@@ -519,94 +567,115 @@ const AddPackages = () => {
                                         placeholder="Search packages..."
                                         value={filters.name}
                                         onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))}
-                                        className="border border-gray-300 rounded-xl px-5 py-3 w-80"
+                                        className="border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all w-80 shadow-sm"
                                     />
                                     <select
                                         value={filters.active}
                                         onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value }))}
-                                        className="border border-gray-300 rounded-xl px-5 py-3"
+                                        className="border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all shadow-sm cursor-pointer"
                                     >
                                         <option value="">All Status</option>
                                         <option value="true">Active</option>
                                         <option value="false">Inactive</option>
                                     </select>
-                                    <select
-                                        value={filters.discountType}
-                                        onChange={(e) => setFilters(prev => ({ ...prev, discountType: e.target.value }))}
-                                        className="border border-gray-300 rounded-xl px-5 py-3"
-                                    >
-                                        <option value="">All Discounts</option>
-                                        <option value="PERCENTAGE">Percentage</option>
-                                        <option value="FLAT">Flat</option>
-                                    </select>
                                 </div>
                             </div>
 
                             {loadingPackages ? (
-                                <div className="text-center py-20">Loading packages...</div>
+                                <div className="text-center py-20 text-gray-500 font-medium">Loading packages...</div>
                             ) : packages.length === 0 ? (
-                                <div className="text-center py-20 text-gray-500">No packages found</div>
+                                <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                                    No packages found
+                                </div>
                             ) : (
                                 <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 ${sidebarOpen ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
-                                    {packages.map(pkg => (
-                                        <div key={pkg.id} className="bg-white border border-gray-200 rounded-3xl p-6 hover:shadow-xl transition-all duration-200">
-                                            <div className="flex justify-between items-start">
+                                    {packages.map(pkg => {
+                                        const pkgServices = getPackageServicesList(pkg);
+                                        const totalServicesVal = pkgServices.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0);
+                                        const savingsVal = totalServicesVal > pkg.packagePrice ? totalServicesVal - pkg.packagePrice : 0;
+
+                                        return (
+                                            <div
+                                                key={pkg.id}
+                                                className="bg-white border border-gray-200 border-l-4 border-l-[#FF0B01] rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between"
+                                            >
+                                                {/* Subtle top indicator bar */}
+                                                <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/5 group-hover:bg-[#FF0B01]/10 transition-colors duration-300"></div>
+
                                                 <div>
-                                                    <h3 className="font-bold text-2xl">{pkg.name}</h3>
-                                                    <p className="text-4xl font-bold text-red-600 mt-2">₹{pkg.packagePrice}</p>
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex-1 min-w-0 pr-4">
+                                                            <h3 className="font-extrabold text-xl text-gray-900 group-hover:text-[#FF0B01] transition-colors duration-300 truncate" title={pkg.name}>
+                                                                {pkg.name}
+                                                            </h3>
+                                                        </div>
+                                                        <div className="flex items-center gap-2.5 flex-shrink-0">
+                                                            <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full transition-colors ${pkg.active ? 'bg-green-55 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                                                                {pkg.active ? 'ACTIVE' : 'INACTIVE'}
+                                                            </span>
+                                                            <label className="relative inline-flex items-center cursor-pointer select-none">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={pkg.active !== false}
+                                                                    onChange={() => togglePackageStatus(pkg.id, pkg.active)}
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-red-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF0B01]"></div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-between items-baseline mt-4">
+                                                        <div className="flex items-baseline gap-2">
+                                                            <span className="text-3xl font-black text-[#FF0B01]">₹{pkg.packagePrice}</span>
+                                                            {totalServicesVal > pkg.packagePrice && (
+                                                                <span className="text-sm text-gray-400 line-through font-semibold">₹{totalServicesVal.toFixed(0)}</span>
+                                                            )}
+                                                        </div>
+                                                        {savingsVal > 0 && (
+                                                            <div className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                                                Save ₹{savingsVal.toFixed(0)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <p className="mt-4 text-gray-500 line-clamp-3 text-xs font-medium leading-relaxed">
+                                                        {pkg.description || "No description provided."}
+                                                    </p>
+
+                                                    {/* Services list */}
+                                                    {pkgServices.length > 0 && (
+                                                        <div className="mt-5">
+                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Services Included</span>
+                                                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                                                                {pkgServices.map(service => (
+                                                                    <span key={service.id} className="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100 transition-colors">
+                                                                        {service.name}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`text-xs font-bold px-4 py-2 rounded-full ${pkg.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                        {pkg.active ? 'ACTIVE' : 'INACTIVE'}
-                                                    </span>
-                                                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={pkg.active !== false}
-                                                            onChange={() => togglePackageStatus(pkg.id, pkg.active)}
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
-                                                    </label>
+
+                                                <div className="mt-6 pt-4 border-t border-gray-100 flex gap-3">
+                                                    <button
+                                                        onClick={() => handleEdit(pkg)}
+                                                        className="flex-1 flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
+                                                    >
+                                                        <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(pkg.id)}
+                                                        className="flex-1 flex items-center justify-center gap-1.5 text-red-650 hover:bg-red-100 text-xs font-bold transition-all border border-red-200 py-3 rounded-xl"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </div>
-
-                                            {pkg.discountType && (
-                                                <p className="mt-3 text-lg font-medium">
-                                                    {pkg.discountType === 'PERCENTAGE' ? `${pkg.discountValue}% OFF` : `₹${pkg.discountValue} OFF`}
-                                                </p>
-                                            )}
-
-                                            <p className="mt-4 text-gray-600 line-clamp-3 text-sm leading-relaxed">
-                                                {pkg.description}
-                                            </p>
-
-                                            {/* Services list */}
-                                            {getPackageServicesDisplay(pkg) && (
-                                                <div className="mt-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Services Included</span>
-                                                    <span className="text-xs font-semibold text-gray-700 mt-0.5 block whitespace-normal break-words" title={getPackageServicesDisplay(pkg)}>
-                                                        {getPackageServicesDisplay(pkg)}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <div className="mt-8 flex gap-3">
-                                                <button
-                                                    onClick={() => handleEdit(pkg)}
-                                                    className="flex-1 bg-gray-900 text-white py-3.5 rounded-2xl font-semibold hover:bg-black transition"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(pkg.id)}
-                                                    className="flex-1 border border-red-200 text-red-600 py-3.5 rounded-2xl font-semibold hover:bg-red-50 transition"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

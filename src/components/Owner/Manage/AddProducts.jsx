@@ -72,6 +72,7 @@ const AddProducts = () => {
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
 
     // Form States
     const [name, setName] = useState('');
@@ -82,6 +83,8 @@ const AddProducts = () => {
     const [productType, setProductType] = useState('');
     const [stock, setStock] = useState('');
     const [restockLevel, setRestockLevel] = useState('');
+    const [priceError, setPriceError] = useState('');
+    const [discountPriceError, setDiscountPriceError] = useState('');
 
     const [mainImageBase64, setMainImageBase64] = useState('');
     const [additionalImagesBase64, setAdditionalImagesBase64] = useState([]);
@@ -116,7 +119,8 @@ const AddProducts = () => {
 
             const response = await axiosInstance.get(url);
             setProducts(response.data?.content || response.data || []);
-            setTotalPages(response.data?.totalPages || 1);
+            setTotalPages(response.data?.totalPages || 0);
+            setTotalElements(response.data?.totalElements || 0);
             setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load products', toastStyle);
@@ -191,36 +195,100 @@ const AddProducts = () => {
         setAdditionalImagesBase64(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handlePriceChange = (value) => {
+        let val = value.replace(/[^0-9.]/g, '');
+        const occurrences = (val.match(/\./g) || []).length;
+        if (occurrences > 1) return;
+        const parts = val.split('.');
+        if (parts[0].length > 5) return;
+        setPrice(val);
+        if (parts[0].length === 5) {
+            setPriceError("Maximum price limit reached (5 digits)");
+        } else {
+            setPriceError("");
+        }
+    };
+
+    const handleDiscountPriceChange = (value) => {
+        let val = value.replace(/[^0-9.]/g, '');
+        const occurrences = (val.match(/\./g) || []).length;
+        if (occurrences > 1) return;
+        const parts = val.split('.');
+        if (parts[0].length > 5) return;
+        setDiscountPrice(val);
+        if (parts[0].length === 5) {
+            setDiscountPriceError("Maximum price limit reached (5 digits)");
+        } else {
+            setDiscountPriceError("");
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!name || !price || !stock) {
+        if (!name?.trim() || !price || stock === '') {
             toast.error("Name, Price and Quantity are required", toastStyle);
             return;
         }
 
-        if (parseFloat(price) <= 0) {
+        if (name.trim().length > 255) {
+            toast.error("Product name cannot exceed 255 characters", toastStyle);
+            return;
+        }
+
+        if (description && description.trim().length > 500) {
+            toast.error("Description cannot exceed 500 characters", toastStyle);
+            return;
+        }
+
+        if (category && category.trim().length > 100) {
+            toast.error("Category cannot exceed 100 characters", toastStyle);
+            return;
+        }
+
+        if (productType && productType.trim().length > 100) {
+            toast.error("Product type cannot exceed 100 characters", toastStyle);
+            return;
+        }
+
+        const priceVal = parseFloat(price);
+        if (isNaN(priceVal) || priceVal <= 0) {
             toast.error("Price must be greater than 0", toastStyle);
             return;
         }
 
-        if (discountPrice && parseFloat(discountPrice) <= 0) {
-            toast.error("Discount price must be greater than 0", toastStyle);
+        if (priceVal >= 100000) {
+            toast.error("Price cannot exceed ₹99,999", toastStyle);
             return;
         }
 
-        if (discountPrice && parseFloat(discountPrice) >= parseFloat(price)) {
-            toast.error("Discount price must be less than original price", toastStyle);
+        const discPriceVal = discountPrice ? parseFloat(discountPrice) : null;
+        if (discPriceVal !== null) {
+            if (isNaN(discPriceVal) || discPriceVal <= 0) {
+                toast.error("Discount price must be greater than 0", toastStyle);
+                return;
+            }
+            if (discPriceVal >= priceVal) {
+                toast.error("Discount price must be less than original price", toastStyle);
+                return;
+            }
+            if (discPriceVal >= 100000) {
+                toast.error("Discount price cannot exceed ₹99,999", toastStyle);
+                return;
+            }
+        }
+
+        const stockVal = parseInt(stock, 10);
+        if (isNaN(stockVal) || stockVal < 0) {
+            toast.error("Quantity must be 0 or greater", toastStyle);
             return;
         }
 
-        if (parseInt(stock) <= 0) {
-            toast.error("Quantity must be greater than 0", toastStyle);
-            return;
-        }
-
-        if (restockLevel && parseInt(restockLevel) <= 0) {
-            toast.error("Restock level must be greater than 0", toastStyle);
-            return;
+        if (restockLevel) {
+            const restockVal = parseInt(restockLevel, 10);
+            if (isNaN(restockVal) || restockVal < 0) {
+                toast.error("Restock level must be 0 or greater", toastStyle);
+                return;
+            }
         }
 
         setLoadingSubmit(true);
@@ -262,6 +330,7 @@ const AddProducts = () => {
     const resetForm = () => {
         setName(''); setDescription(''); setPrice(''); setDiscountPrice('');
         setCategory(''); setProductType(''); setStock(''); setRestockLevel('');
+        setPriceError(''); setDiscountPriceError('');
         setMainImageBase64(''); setAdditionalImagesBase64([]);
         setExistingMainImageUrl(''); setExistingAdditionalImageUrls([]);
         setEditingProductId(null);
@@ -426,13 +495,19 @@ const AddProducts = () => {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={rateIcon} alt="Price" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Original Price *" min="0.01" step="any" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                        <div>
+                                            <div className="relative">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={rateIcon} alt="Price" className="w-5 h-5 opacity-40" /></div>
+                                                <input type="text" inputMode="decimal" value={price} onChange={(e) => handlePriceChange(e.target.value)} placeholder="Original Price *" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                            </div>
+                                            {priceError && <p className="text-red-500 text-xs mt-1 ml-1">{priceError}</p>}
                                         </div>
-                                        <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={percentageIcon} alt="Discount" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="number" value={discountPrice} onChange={(e) => setDiscountPrice(e.target.value)} placeholder="Discount Price (₹)" min="0.01" step="any" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                        <div>
+                                            <div className="relative">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={percentageIcon} alt="Discount" className="w-5 h-5 opacity-40" /></div>
+                                                <input type="text" inputMode="decimal" value={discountPrice} onChange={(e) => handleDiscountPriceChange(e.target.value)} placeholder="Discount Price (₹)" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                            </div>
+                                            {discountPriceError && <p className="text-red-500 text-xs mt-1 ml-1">{discountPriceError}</p>}
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productTypeIcon} alt="Type" className="w-5 h-5 opacity-40" /></div>
@@ -611,14 +686,48 @@ const AddProducts = () => {
                                                     </div>
                                                 );
                                             })}
-                                        </div>
+                                                       {/* Pagination */}
+                                         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
+                                             <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                                 PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PRODUCTS)
+                                             </span>
+                                             <div className="flex items-center space-x-1.5">
+                                                 <button
+                                                     onClick={() => fetchProducts(0)}
+                                                     disabled={currentPage <= 0}
+                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                 >
+                                                     « First
+                                                 </button>
+                                                 <button
+                                                     onClick={() => fetchProducts(Math.max(0, currentPage - 1))}
+                                                     disabled={currentPage <= 0}
+                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                 >
+                                                     ‹ Prev
+                                                 </button>
+                                                 
+                                                 {/* Current Page Indicator Pill */}
+                                                 <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                                     {totalPages === 0 ? 1 : currentPage + 1}
+                                                 </span>
 
-                                        {/* Pagination */}
-                                        <div className="flex justify-center gap-4 mt-10">
-                                            <button onClick={() => fetchProducts(currentPage - 1)} disabled={currentPage === 0} className="px-6 py-2 border rounded-xl disabled:opacity-50">Previous</button>
-                                            <span className="px-6 py-2 font-medium">Page {currentPage + 1} of {totalPages}</span>
-                                            <button onClick={() => fetchProducts(currentPage + 1)} disabled={currentPage >= totalPages - 1} className="px-6 py-2 border rounded-xl disabled:opacity-50">Next</button>
-                                        </div>
+                                                 <button
+                                                     onClick={() => fetchProducts(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
+                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                 >
+                                                     Next ›
+                                                 </button>
+                                                 <button
+                                                     onClick={() => fetchProducts(Math.max(0, totalPages - 1))}
+                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                 >
+                                                     Last »
+                                                 </button>
+                                             </div>
+                                         </div>                                    </div>
                                     </>
                                 )}
                             </>

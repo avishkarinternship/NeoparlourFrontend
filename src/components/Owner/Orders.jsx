@@ -385,139 +385,158 @@ const Orders = () => {
                                 <p className="text-[10px] text-gray-400 max-w-xs mt-1">No product purchase records match the selected active tab or filters.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {orders.map((order) => (
-                                    <div 
-                                        key={order.id}
-                                        className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-gray-200 transition-all duration-200 flex flex-col justify-between"
-                                    >
-                                        <div>
-                                            {/* Header */}
-                                            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
-                                                <div>
-                                                    <span className="text-xs font-black text-gray-900">#ORD-{order.id}</span>
-                                                    <div className="text-[9px] text-gray-400 font-medium mt-0.5">
-                                                        {formatDateTime(order.createdAt)}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    {order.status === 'ordered' && (
-                                                        <span className="px-2.5 py-1 text-[9px] font-bold rounded-full border bg-blue-50 text-blue-600 border-blue-100 uppercase tracking-wider">
-                                                            Ordered
-                                                        </span>
-                                                    )}
-                                                    {order.status === 'ready' && (
-                                                        <span className="px-2.5 py-1 text-[9px] font-bold rounded-full border bg-amber-50 text-amber-600 border-amber-100 uppercase tracking-wider">
-                                                            Ready
-                                                        </span>
-                                                    )}
-                                                    {order.status === 'completed' && (
-                                                        <span className="px-2.5 py-1 text-[9px] font-bold rounded-full border bg-green-50 text-green-600 border-green-100 uppercase tracking-wider">
-                                                            Completed
-                                                        </span>
-                                                    )}
-                                                    {order.status === 'cancelled' && (
-                                                        <span className="px-2.5 py-1 text-[9px] font-bold rounded-full border bg-red-50 text-red-600 border-red-100 uppercase tracking-wider">
-                                                            Cancelled
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {orders.map((order) => {
+                                    const isCompleted = order.status === 'completed';
+                                    const isCancelled = order.status === 'cancelled';
+                                    const isOrdered = order.status === 'ordered';
+                                    const isReady = order.status === 'ready';
 
-                                            {/* Customer Info */}
-                                            <div className="space-y-1 mb-4">
-                                                <div className="flex items-center text-[11px] font-bold text-gray-900">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-2 shrink-0"></span>
-                                                    {order.customerName || 'Anonymous Customer'}
-                                                </div>
-                                                {order.customerMobile && (
-                                                    <div className="flex items-center text-[10px] font-semibold text-gray-500 pl-3.5">
-                                                        📞 {order.customerMobile}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Order Items */}
-                                            <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-2 max-h-40 overflow-y-auto">
-                                                <div className="text-[9px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-200/50 pb-1.5 mb-1">Items Summary</div>
-                                                {Array.isArray(order.items) && order.items.map((item) => (
-                                                    <div key={item.id} className="flex items-center justify-between text-[11px] font-medium text-gray-700 py-0.5">
-                                                        <div className="flex items-center min-w-0 mr-3">
-                                                            {item.productImageUrl ? (
-                                                                <LazyImage 
-                                                                    src={item.productImageUrl} 
-                                                                    alt={item.productName} 
-                                                                    className="w-8 h-8 rounded-lg border border-gray-200/60 mr-2.5"
-                                                                />
-                                                            ) : null}
-                                                            <span className="truncate font-semibold text-gray-800">{item.productName}</span>
+                                    return (
+                                        <div 
+                                            key={order.id}
+                                            className={`border rounded-xl p-4 shadow-3xs transition-all duration-200 flex flex-col justify-between ${
+                                                isCompleted
+                                                    ? 'bg-white border-emerald-100 hover:border-emerald-250'
+                                                    : 'bg-white border-gray-100 hover:border-gray-200'
+                                            }`}
+                                        >
+                                            <div>
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                                    <div>
+                                                        <span className="text-[11px] font-bold text-gray-900">#ORD-{order.id}</span>
+                                                        <div className="text-[9px] text-gray-400 font-medium mt-0.5">
+                                                            {formatDateTime(order.createdAt)}
                                                         </div>
-                                                        <span className="shrink-0 font-bold text-gray-900">
-                                                            {item.quantity} x ₹{parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                                        </span>
                                                     </div>
-                                                ))}
+                                                    <div className="text-right">
+                                                        {isOrdered && (
+                                                            <span className="px-2 py-0.5 text-[9px] font-bold rounded-full border bg-blue-50 text-blue-600 border-blue-100 uppercase tracking-wider">
+                                                                Ordered
+                                                            </span>
+                                                        )}
+                                                        {isReady && (
+                                                            <span className="px-2 py-0.5 text-[9px] font-bold rounded-full border bg-amber-50 text-amber-600 border-amber-100 uppercase tracking-wider">
+                                                                Ready
+                                                            </span>
+                                                        )}
+                                                        {isCompleted && (
+                                                            <span className="px-2 py-0.5 text-[9px] font-bold rounded-full border bg-emerald-50 text-emerald-600 border-emerald-100 uppercase tracking-wider">
+                                                                Completed
+                                                            </span>
+                                                        )}
+                                                        {isCancelled && (
+                                                            <span className="px-2 py-0.5 text-[9px] font-bold rounded-full border bg-red-50 text-red-600 border-red-100 uppercase tracking-wider">
+                                                                Cancelled
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Customer Info */}
+                                                <div className="space-y-0.5 mb-2.5">
+                                                    <div className="flex items-center text-[11px] font-bold text-gray-900">
+                                                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 ${isCompleted ? 'bg-emerald-500' : isCancelled ? 'bg-gray-300' : 'bg-blue-500'}`}></span>
+                                                        {order.customerName || 'Anonymous Customer'}
+                                                    </div>
+                                                    {order.customerMobile && (
+                                                        <div className="text-[9px] font-semibold text-gray-500 pl-3">
+                                                            📞 {order.customerMobile}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Order Items */}
+                                                <div className={`rounded-lg p-2.5 mb-3 space-y-1.5 max-h-36 overflow-y-auto ${isCompleted ? 'bg-emerald-50/20 border border-emerald-100/30' : 'bg-gray-50'}`}>
+                                                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-200/50 pb-1 mb-1">Items</div>
+                                                    {Array.isArray(order.items) && order.items.map((item) => (
+                                                        <div key={item.id} className="flex items-center justify-between text-[10px] font-medium text-gray-700 py-0.5">
+                                                            <div className="flex items-center min-w-0 mr-2">
+                                                                {item.productImageUrl ? (
+                                                                    <LazyImage 
+                                                                        src={item.productImageUrl} 
+                                                                        alt={item.productName} 
+                                                                        className="w-7 h-7 rounded-md border border-gray-200/60 mr-2"
+                                                                    />
+                                                                ) : null}
+                                                                <span className="truncate font-semibold text-gray-800">{item.productName}</span>
+                                                            </div>
+                                                            <span className="shrink-0 font-bold text-gray-900">
+                                                                {item.quantity} x ₹{parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Total & Action Footer */}
+                                            <div className="border-t border-gray-100 pt-2.5">
+                                                <div className="flex items-center justify-between mb-2.5">
+                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wide">Grand Total</span>
+                                                    <span className={`text-sm font-black ${isCompleted ? 'text-emerald-600' : 'text-[#FF0B01]'}`}>
+                                                        ₹{parseFloat(order.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+
+                                                {/* Context Action Buttons */}
+                                                <div className="flex flex-wrap gap-1.5 justify-end">
+                                                    {isOrdered && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openConfirmModal('cancel', order.id)}
+                                                                className="px-2.5 py-1 border border-red-200 text-red-500 rounded-md text-[9px] font-bold hover:bg-red-55 transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdateStatusDirect(order.id, 'completed')}
+                                                                className="px-2.5 py-1 bg-green-600 text-white rounded-md text-[9px] font-bold hover:bg-green-700 transition-all"
+                                                            >
+                                                                Complete
+                                                            </button>
+                                                        </>
+                                                    )}
+
+                                                    {isReady && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openConfirmModal('cancel', order.id)}
+                                                                className="px-2.5 py-1 border border-red-200 text-red-500 rounded-md text-[9px] font-bold hover:bg-red-55 transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdateStatusDirect(order.id, 'completed')}
+                                                                className="px-2.5 py-1 bg-green-600 text-white rounded-md text-[9px] font-bold hover:bg-green-700 transition-all"
+                                                            >
+                                                                Complete
+                                                            </button>
+                                                        </>
+                                                    )}
+
+                                                    {isCancelled && (
+                                                        <button
+                                                            onClick={() => openConfirmModal('delete', order.id)}
+                                                            className="px-2.5 py-1 border border-gray-200 text-gray-500 rounded-md text-[9px] font-bold hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
+                                                        >
+                                                            Delete Record
+                                                        </button>
+                                                    )}
+
+                                                    {isCompleted && (
+                                                        <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50/80 border border-emerald-100 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Paid & Delivered
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-
-                                        {/* Total & Action Footer */}
-                                        <div className="border-t border-gray-100 pt-4 mt-2">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wide">Grand Total</span>
-                                                <span className="text-base font-black text-[#FF0B01]">
-                                                    ₹{parseFloat(order.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                                                </span>
-                                            </div>
-
-                                            {/* Context Action Buttons */}
-                                            <div className="flex flex-wrap gap-2 justify-end">
-                                                {order.status === 'ordered' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => openConfirmModal('cancel', order.id)}
-                                                            className="px-3.5 py-1.5 border border-red-200 text-red-500 rounded-lg text-[10px] font-bold hover:bg-red-50 transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleUpdateStatusDirect(order.id, 'completed')}
-                                                            className="px-3.5 py-1.5 bg-green-600 text-white rounded-lg text-[10px] font-bold hover:bg-green-700 hover:shadow-xs transition-all"
-                                                        >
-                                                            Complete Order
-                                                        </button>
-                                                    </>
-                                                )}
-
-                                                {/* Fallback for pre-existing ready orders in database */}
-                                                {order.status === 'ready' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => openConfirmModal('cancel', order.id)}
-                                                            className="px-3.5 py-1.5 border border-red-200 text-red-500 rounded-lg text-[10px] font-bold hover:bg-red-50 transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleUpdateStatusDirect(order.id, 'completed')}
-                                                            className="px-3.5 py-1.5 bg-green-600 text-white rounded-lg text-[10px] font-bold hover:bg-green-700 hover:shadow-xs transition-all"
-                                                        >
-                                                            Complete Order
-                                                        </button>
-                                                    </>
-                                                )}
-
-                                                {(order.status === 'completed' || order.status === 'cancelled') && (
-                                                    <button
-                                                        onClick={() => openConfirmModal('delete', order.id)}
-                                                        className="px-3.5 py-1.5 border border-gray-200 text-gray-500 rounded-lg text-[10px] font-bold hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
-                                                    >
-                                                        Delete Order Record
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -569,14 +588,14 @@ const Orders = () => {
                             <div className="flex items-center space-x-1.5">
                                 <button
                                     onClick={() => setCurrentPage(0)}
-                                    disabled={currentPage === 0}
+                                    disabled={currentPage <= 0}
                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
                                 >
                                     « First
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                                    disabled={currentPage === 0}
+                                    disabled={currentPage <= 0}
                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
                                 >
                                     ‹ Prev
@@ -588,15 +607,15 @@ const Orders = () => {
                                 </span>
 
                                 <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                                    disabled={currentPage === totalPages - 1}
+                                    onClick={() => setCurrentPage(prev => Math.min(Math.max(0, totalPages - 1), prev + 1))}
+                                    disabled={currentPage >= totalPages - 1 || totalPages <= 1}
                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
                                 >
                                     Next ›
                                 </button>
                                 <button
-                                    onClick={() => setCurrentPage(totalPages - 1)}
-                                    disabled={currentPage === totalPages - 1}
+                                    onClick={() => setCurrentPage(Math.max(0, totalPages - 1))}
+                                    disabled={currentPage >= totalPages - 1 || totalPages <= 1}
                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
                                 >
                                     Last »

@@ -82,14 +82,39 @@ const Schedule = () => {
 
       if (filters.mobile) params.append('mobile', filters.mobile);
       if (filters.staffId) params.append('staffId', filters.staffId);
-      if (filters.fromDate) params.append('fromDate', filters.fromDate);
-      if (filters.toDate) params.append('toDate', filters.toDate);
       if (filters.minAmount) params.append('minAmount', filters.minAmount);
       if (filters.maxAmount) params.append('maxAmount', filters.maxAmount);
 
-      const status = currentSubTab === 'Scheduled' ? 'booked'
+      const status = (currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') ? 'booked'
         : currentSubTab === 'Cancelled' ? 'cancelled' : 'completed';
       params.append('status', status);
+
+      // Get the start of today in IST (Asia/Kolkata) timezone
+      const getStartOfTodayIST = () => {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const dateStr = formatter.format(now);
+        return `${dateStr}T00:00:00+05:30`;
+      };
+      
+      const startOfTodayIST = getStartOfTodayIST();
+
+      if (filters.fromDate) {
+        params.append('fromDate', convertToISTZoned(filters.fromDate));
+      } else if (currentSubTab === 'Scheduled') {
+        params.append('fromDate', startOfTodayIST);
+      }
+
+      if (filters.toDate) {
+        params.append('toDate', convertToISTZoned(filters.toDate));
+      } else if (currentSubTab === 'Past Appointments') {
+        params.append('toDate', startOfTodayIST);
+      }
 
       const response = await axiosInstance.get(`/appointments/search/advanced?${params.toString()}`);
 
@@ -311,9 +336,8 @@ const Schedule = () => {
         <ManageSideBar activeTab="Schedule" onTabChange={() => { }} />
 
         <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
-          {/* Sub Tabs */}
-          <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">
-            {['Scheduled', 'Cancelled', 'Completed'].map(tab => (
+          <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-3xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">
+            {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setCurrentSubTab(tab)}
@@ -384,7 +408,7 @@ const Schedule = () => {
                 return (
                   <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-8 gap-4">
                     {/* Left status vertical border indicator */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
                     
                     <div className="flex items-center space-x-3.5">
                       <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200">
@@ -403,19 +427,30 @@ const Schedule = () => {
                             {istTime.time} <span className="text-[10px] ml-1">(IST)</span>
                           </span>
                           {appt.customerMobile && <span className="text-emerald-600 font-medium">📞 {appt.customerMobile}</span>}
+                          {appt.staffId && appt.staffName && (
+                            <span className="text-blue-600 font-semibold flex items-center gap-1">
+                              👤 Stylist: {appt.staffName}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end text-[10px] font-extrabold uppercase tracking-widest pt-2 lg:pt-0 border-t border-gray-50 lg:border-t-0">
-                      {currentSubTab === 'Scheduled' && (
+                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && (
                         <>
                           <button onClick={() => openActionModal(appt, 'reschedule')} className="bg-[#FF0B01] text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition shadow-sm">Reschedule</button>
                           <button onClick={() => handleComplete(appt)} className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm">Complete</button>
                           <button onClick={() => openCancelModal(appt)} className="bg-gray-400 text-white px-4 py-2.5 rounded-xl hover:bg-gray-500 transition shadow-sm">Cancel</button>
-                          <button onClick={() => openStaffModal(appt)} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center gap-1 transition">
-                            <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Staff
-                          </button>
+                          {appt.staffId ? (
+                            <button onClick={() => openStaffModal(appt)} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center gap-1 transition shadow-2xs">
+                              <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Change Staff
+                            </button>
+                          ) : (
+                            <button onClick={() => openStaffModal(appt)} className="border border-[#FF0B01] text-[#FF0B01] bg-red-50/20 px-4 py-2.5 rounded-xl hover:bg-red-50 flex items-center gap-1 transition shadow-2xs">
+                              <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" style={{ filter: 'invert(15%) sepia(95%) saturate(6935%) hue-rotate(357deg) brightness(95%) contrast(115%)' }} /> Assign Staff
+                            </button>
+                          )}
                         </>
                       )}
                       {currentSubTab === 'Completed' && (
@@ -513,7 +548,9 @@ const Schedule = () => {
       {showStaffModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-bold mb-4">Assign Staff</h3>
+            <h3 className="text-lg font-bold mb-4">
+              {selectedAppointment.staffId ? 'Change Assigned Staff' : 'Assign Staff'}
+            </h3>
             <p className="text-sm text-gray-600 mb-4">Appointment: <strong>{selectedAppointment.customerName}</strong></p>
 
             <div>
@@ -530,7 +567,9 @@ const Schedule = () => {
 
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowStaffModal(false)} className="flex-1 py-3 border border-gray-300 rounded-xl font-medium">Cancel</button>
-              <button onClick={handleChangeStaff} disabled={!newStaffId} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-medium disabled:opacity-60">Assign Staff</button>
+              <button onClick={handleChangeStaff} disabled={!newStaffId} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-medium disabled:opacity-60">
+                {selectedAppointment.staffId ? 'Update Staff' : 'Assign Staff'}
+              </button>
             </div>
           </div>
         </div>

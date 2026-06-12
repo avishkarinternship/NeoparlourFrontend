@@ -43,6 +43,7 @@ const Inventory = () => {
     const [unitType, setUnitType] = useState('PIECE');
     const [productType, setProductType] = useState('consumable');
     const [reorderLevel, setReorderLevel] = useState('');
+    const [priceError, setPriceError] = useState('');
     const [loadingAdd, setLoadingAdd] = useState(false);
 
     // ==================== VIEW INVENTORY STATES ====================
@@ -181,30 +182,62 @@ const Inventory = () => {
         return num;
     };
 
+    const handleCostPriceChange = (value) => {
+        let val = value.replace(/[^0-9.]/g, '');
+        const occurrences = (val.match(/\./g) || []).length;
+        if (occurrences > 1) return;
+        
+        const parts = val.split('.');
+        if (parts[0].length > 6) return;
+        
+        setCostPrice(val);
+        if (parts[0].length === 6) {
+            setPriceError("Maximum price limit reached (6 digits)");
+        } else {
+            setPriceError("");
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!itemName.trim()) {
+        if (!itemName?.trim()) {
             toast.error("Item Name is required", toastStyle);
             return;
         }
-        if (!costPrice || !quantity) {
+
+        if (itemName.trim().length > 150) {
+            toast.error("Item Name cannot exceed 150 characters", toastStyle);
+            return;
+        }
+
+        if (!costPrice || quantity === '') {
             toast.error("Cost Price and Quantity are required", toastStyle);
             return;
         }
 
-        if (safeParseFloat(costPrice) <= 0) {
+        const costPriceVal = parseFloat(costPrice);
+        if (isNaN(costPriceVal) || costPriceVal <= 0) {
             toast.error("Cost price must be greater than 0", toastStyle);
             return;
         }
 
-        if (safeParseInt(quantity) <= 0) {
-            toast.error("Current stock must be greater than 0", toastStyle);
+        if (costPriceVal >= 1000000) {
+            toast.error("Cost price cannot exceed ₹999,999", toastStyle);
             return;
         }
 
-        if (reorderLevel && safeParseInt(reorderLevel) <= 0) {
-            toast.error("Reorder level must be greater than 0", toastStyle);
+        const quantityVal = parseInt(quantity, 10);
+        if (isNaN(quantityVal) || quantityVal < 0) {
+            toast.error("Current stock must be 0 or greater", toastStyle);
             return;
+        }
+
+        if (reorderLevel) {
+            const reorderVal = parseInt(reorderLevel, 10);
+            if (isNaN(reorderVal) || reorderVal < 0) {
+                toast.error("Reorder level must be 0 or greater", toastStyle);
+                return;
+            }
         }
 
         setLoadingAdd(true);
@@ -227,6 +260,7 @@ const Inventory = () => {
             setCostPrice('');
             setQuantity('');
             setReorderLevel('');
+            setPriceError('');
             setUnitType('PIECE');
             setProductType('consumable');
             setHasSearched(true);
@@ -459,19 +493,20 @@ const Inventory = () => {
                                             <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                         </div>
 
-                                        <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
-                                            <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 opacity-40 flex-shrink-0" />
-                                            <input
-                                                type="text"
-                                                placeholder="Cost Price *"
-                                                value={costPrice}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.replace(/[^0-9.]/g, '');
-                                                    if ((value.match(/\./g) || []).length <= 1) setCostPrice(value);
-                                                }}
-                                                className="w-full text-sm font-semibold outline-none bg-transparent text-gray-800"
-                                                required
-                                            />
+                                        <div>
+                                            <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 opacity-40 flex-shrink-0" />
+                                                <input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    placeholder="Cost Price *"
+                                                    value={costPrice}
+                                                    onChange={(e) => handleCostPriceChange(e.target.value)}
+                                                    className="w-full text-sm font-semibold outline-none bg-transparent text-gray-800"
+                                                    required
+                                                />
+                                            </div>
+                                            {priceError && <p className="text-red-500 text-xs mt-1 ml-1">{priceError}</p>}
                                         </div>
 
                                         <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
@@ -504,6 +539,7 @@ const Inventory = () => {
                                         <button type="button" onClick={() => {
                                             setItemName(''); setCostPrice(''); setQuantity(''); setReorderLevel('');
                                             setUnitType('PIECE'); setProductType('consumable');
+                                            setPriceError('');
                                         }} className="flex-1 border border-gray-300 py-4 rounded-2xl hover:bg-gray-50 font-bold transition">
                                             Cancel
                                         </button>
@@ -642,52 +678,60 @@ const Inventory = () => {
                                              return (
                                                  <div 
                                                      key={item.id} 
-                                                     className={`bg-white border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-4 ${
+                                                     className={`bg-white border-l-4 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center gap-4 ${
                                                          isBelowReorder 
-                                                             ? 'border-red-200 bg-red-50/20 shadow-[0_4px_20px_rgba(239,68,68,0.05)]' 
-                                                             : 'border-gray-100'
+                                                             ? 'border-red-100 border-l-red-500 bg-red-50/20 shadow-[0_4px_20px_rgba(239,68,68,0.05)]' 
+                                                             : 'border-gray-100 border-l-[#FF0B01]/50'
                                                      }`}
                                                  >
                                                      <div className="flex items-center gap-4 flex-1">
-                                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-xl ${
-                                                             isBelowReorder ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-red-50 text-[#FF0B01]'
+                                                         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base border flex-shrink-0 ${
+                                                             isBelowReorder ? 'bg-red-50 text-red-600 border-red-150 animate-pulse' : 'bg-gray-50 text-gray-700 border-gray-150'
                                                          }`}>
                                                              {item.name?.charAt(0).toUpperCase()}
                                                          </div>
                                                          <div>
                                                              <div className="flex items-center gap-2 flex-wrap">
-                                                                 <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
+                                                                 <h4 className="font-bold text-base text-gray-900 leading-tight">{item.name}</h4>
                                                                  {isBelowReorder && (
-                                                                     <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                                                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                                                          item.currentStock === 0 ? 'bg-red-600 text-white' : 'bg-amber-100 text-amber-800 border border-amber-200'
                                                                      }`}>
                                                                          {item.currentStock === 0 ? 'Out of Stock' : 'Low Stock'}
                                                                      </span>
                                                                  )}
                                                              </div>
-                                                             <p className="text-xs font-bold text-gray-400 mt-0.5 uppercase tracking-wide">{item.productType} • {item.unitType}</p>
+                                                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                                                 <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-100">
+                                                                     {item.productType}
+                                                                 </span>
+                                                                 <span className="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-200/50">
+                                                                     {item.unitType}
+                                                                 </span>
+                                                             </div>
                                                          </div>
                                                      </div>
 
-                                                     <div className="flex items-center gap-10 md:gap-16">
-                                                         <div className="text-center">
-                                                             <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">STOCK</p>
-                                                             <p className={`text-3xl font-black ${isBelowReorder ? 'text-red-600' : 'text-gray-900'}`}>{item.currentStock}</p>
+                                                     <div className="flex items-center gap-8 md:gap-12 bg-gray-50/50 p-3 rounded-2xl border border-gray-100/50 flex-shrink-0 justify-around sm:justify-start">
+                                                         <div className="text-center px-1">
+                                                             <p className="text-[9px] font-extrabold text-gray-400 tracking-wider uppercase mb-0.5">STOCK</p>
+                                                             <p className={`text-xl font-black leading-tight ${isBelowReorder ? 'text-red-650' : 'text-gray-900'}`}>{item.currentStock}</p>
                                                          </div>
-                                                         <div className="text-center">
-                                                             <p className="text-[10px] font-extrabold text-gray-400 tracking-wider uppercase">PRICE</p>
-                                                             <p className="text-2xl font-black text-[#FF0B01]">₹{item.costPrice}</p>
+                                                         <div className="w-px h-8 bg-gray-200"></div>
+                                                         <div className="text-center px-1">
+                                                             <p className="text-[9px] font-extrabold text-gray-400 tracking-wider uppercase mb-0.5">PRICE</p>
+                                                             <p className="text-lg font-black leading-tight text-[#FF0B01]">₹{item.costPrice}</p>
                                                          </div>
                                                      </div>
 
-                                                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:ml-auto text-xs font-bold uppercase tracking-wider">
-                                                          <button onClick={() => openAddStockModal(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-[#FF0B01] hover:text-white transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
+                                                     <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto md:ml-auto text-xs font-bold uppercase tracking-wider">
+                                                          <button onClick={() => openAddStockModal(item)} className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 hover:bg-[#FF0B01] hover:text-white transition-all duration-200 w-full sm:flex-1 md:flex-initial shadow-sm">
                                                               + ADD STOCK
                                                           </button>
-                                                          <button onClick={() => openAssignModal(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-[#FF0B01] hover:text-white transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
-                                                              <img src={assignStaff} alt="" className="w-4 h-4 invert hover:invert-0" /> ASSIGN STAFF
+                                                          <button onClick={() => openAssignModal(item)} className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 hover:bg-[#FF0B01] hover:text-white transition-all duration-200 w-full sm:flex-1 md:flex-initial shadow-sm">
+                                                              <img src={assignStaff} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" /> ASSIGN STAFF
                                                           </button>
-                                                          <button onClick={() => openViewAssigned(item)} className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-5 py-3.5 hover:bg-gray-50 transition-colors duration-250 w-full sm:flex-1 md:flex-initial">
+                                                          <button onClick={() => openViewAssigned(item)} className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-all duration-200 w-full sm:flex-1 md:flex-initial shadow-sm">
                                                               VIEW ASSIGNED
                                                           </button>
                                                       </div>
@@ -696,71 +740,49 @@ const Inventory = () => {
                                          })}
                                      </div>
                                      {/* Pagination Controls */}
-                                     {totalPages > 1 && (
-                                         <div className="flex items-center justify-between mt-8 bg-white border border-gray-100 rounded-2xl px-6 py-4 shadow-sm">
-                                             <p className="text-xs font-semibold text-gray-400">
-                                                 Showing <span className="text-gray-800 font-bold">{currentPage * 10 + 1}</span> – <span className="text-gray-800 font-bold">{Math.min((currentPage + 1) * 10, totalElements)}</span> of <span className="text-gray-800 font-bold">{totalElements}</span> items
-                                             </p>
-                                             <div className="flex items-center gap-2">
-                                                 <button
-                                                     onClick={() => fetchInventory(0)}
-                                                     disabled={currentPage === 0}
-                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
-                                                     title="First Page"
-                                                 >
-                                                     ««
-                                                 </button>
-                                                 <button
-                                                     onClick={() => fetchInventory(currentPage - 1)}
-                                                     disabled={currentPage === 0}
-                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
-                                                     title="Previous Page"
-                                                 >
-                                                     ‹
-                                                 </button>
-                                                 {Array.from({ length: totalPages }, (_, i) => i)
-                                                     .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - currentPage) <= 1)
-                                                     .reduce((acc, i, idx, arr) => {
-                                                         if (idx > 0 && i - arr[idx - 1] > 1) acc.push('...');
-                                                         acc.push(i);
-                                                         return acc;
-                                                     }, [])
-                                                     .map((item, idx) =>
-                                                         item === '...' ? (
-                                                             <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 text-xs">…</span>
-                                                         ) : (
-                                                             <button
-                                                                 key={item}
-                                                                 onClick={() => fetchInventory(item)}
-                                                                 className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${
-                                                                     currentPage === item
-                                                                         ? 'bg-[#FF0B01] text-white shadow-md'
-                                                                         : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
-                                                                 }`}
-                                                             >
-                                                                 {item + 1}
-                                                             </button>
-                                                         )
-                                                     )}
-                                                 <button
-                                                     onClick={() => fetchInventory(currentPage + 1)}
-                                                     disabled={currentPage >= totalPages - 1}
-                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
-                                                     title="Next Page"
-                                                 >
-                                                     ›
-                                                 </button>
-                                                 <button
-                                                     onClick={() => fetchInventory(totalPages - 1)}
-                                                     disabled={currentPage >= totalPages - 1}
-                                                     className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs font-bold"
-                                                     title="Last Page"
-                                                 >
-                                                     »»
-                                                 </button>
-                                             </div>
-                                         </div>
-                                     )}
+                                      {!loading && (
+                                          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
+                                              <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                                  PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL ITEMS)
+                                              </span>
+                                              <div className="flex items-center space-x-1.5">
+                                                  <button
+                                                      onClick={() => fetchInventory(0)}
+                                                      disabled={currentPage <= 0}
+                                                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                  >
+                                                      « First
+                                                  </button>
+                                                  <button
+                                                      onClick={() => fetchInventory(Math.max(0, currentPage - 1))}
+                                                      disabled={currentPage <= 0}
+                                                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                  >
+                                                      ‹ Prev
+                                                  </button>
+                                                  
+                                                  {/* Current Page Indicator Pill */}
+                                                  <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                                      {totalPages === 0 ? 1 : currentPage + 1}
+                                                  </span>
+
+                                                  <button
+                                                      onClick={() => fetchInventory(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
+                                                      disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                  >
+                                                      Next ›
+                                                  </button>
+                                                  <button
+                                                      onClick={() => fetchInventory(Math.max(0, totalPages - 1))}
+                                                      disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                  >
+                                                      Last »
+                                                  </button>
+                                              </div>
+                                          </div>
+                                      )}
                                  </>
                                  )}
                             </div>
