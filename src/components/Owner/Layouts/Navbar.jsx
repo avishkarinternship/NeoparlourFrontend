@@ -85,9 +85,19 @@ export default function Navbar({ onToggleSidebar }) {
 
   const [query, setQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [staffResults, setStaffResults] = useState([]);
-  const [appointmentResults, setAppointmentResults] = useState([]);
+  const [searchResults, setSearchResults] = useState({
+    staff: [],
+    customerSalonVisits: [],
+    appointments: [],
+    services: [],
+    products: [],
+    offers: []
+  });
   const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    console.log("[Navbar] Current search results:", searchResults);
+  }, [searchResults]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -103,8 +113,14 @@ export default function Navbar({ onToggleSidebar }) {
   // Debounced search trigger
   useEffect(() => {
     if (!query.trim()) {
-      setStaffResults([]);
-      setAppointmentResults([]);
+      setSearchResults({
+        staff: [],
+        customerSalonVisits: [],
+        appointments: [],
+        services: [],
+        products: [],
+        offers: []
+      });
       return;
     }
 
@@ -113,36 +129,19 @@ export default function Navbar({ onToggleSidebar }) {
 
     const delayDebounce = setTimeout(async () => {
       try {
-        const searchTerm = query.trim();
-        const isNumeric = /^\d+$/.test(searchTerm);
-        const isEmail = searchTerm.includes('@');
-
-        // Build search parameters dynamically based on input format
-        const staffParams = { page: 0, size: 5 };
-        if (isEmail) staffParams.email = searchTerm;
-        else if (isNumeric) staffParams.phone = searchTerm;
-        else staffParams.name = searchTerm;
-
-        const staffPromise = axiosInstance.get('/staff/search', {
-          params: staffParams,
+        const response = await axiosInstance.get('/search', {
+          params: { query: query.trim(), limit: 5 },
           signal: controller.signal
         });
-
-        let appointmentPromise = Promise.resolve({ data: { content: [] } });
-        if (isNumeric) {
-          appointmentPromise = axiosInstance.get('/appointments/search/advanced', {
-            params: { mobile: searchTerm, page: 0, size: 5 },
-            signal: controller.signal
-          });
-        }
-
-        const [staffRes, appointmentRes] = await Promise.all([
-          staffPromise,
-          appointmentPromise
-        ]);
-
-        setStaffResults(staffRes.data?.content || []);
-        setAppointmentResults(appointmentRes.data?.content || []);
+        const data = response.data || {};
+        setSearchResults({
+          staff: data.staff || [],
+          customerSalonVisits: data.customerSalonVisits || [],
+          appointments: data.appointments || [],
+          services: data.services || [],
+          products: data.products || [],
+          offers: data.offers || []
+        });
       } catch (err) {
         if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
           console.error("Universal search failed:", err);
@@ -224,25 +223,36 @@ export default function Navbar({ onToggleSidebar }) {
           {/* Absolute Search Dropdown results */}
           {showDropdown && (query.trim().length > 0 || searching) && (
             <div className="absolute top-full right-0 w-[280px] sm:left-0 sm:w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
-              {searching && staffResults.length === 0 && appointmentResults.length === 0 ? (
+              {searching && 
+               (!searchResults.staff || searchResults.staff.length === 0) &&
+               (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
+               (!searchResults.appointments || searchResults.appointments.length === 0) &&
+               (!searchResults.services || searchResults.services.length === 0) &&
+               (!searchResults.products || searchResults.products.length === 0) &&
+               (!searchResults.offers || searchResults.offers.length === 0) ? (
                 <div className="flex items-center justify-center py-6 gap-2">
                   <div className="animate-spin h-4 w-4 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
                   <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Searching...</span>
                 </div>
-              ) : staffResults.length === 0 && appointmentResults.length === 0 ? (
+              ) : (!searchResults.staff || searchResults.staff.length === 0) &&
+                  (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
+                  (!searchResults.appointments || searchResults.appointments.length === 0) &&
+                  (!searchResults.services || searchResults.services.length === 0) &&
+                  (!searchResults.products || searchResults.products.length === 0) &&
+                  (!searchResults.offers || searchResults.offers.length === 0) ? (
                 <div className="text-center py-6 text-xs text-gray-400 font-bold">
                   No matching records found.
                 </div>
               ) : (
                 <>
                   {/* Category 1: Staff Stylists */}
-                  {staffResults.length > 0 && (
+                  {searchResults.staff && searchResults.staff.length > 0 && (
                     <div className="space-y-2">
                       <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
                         Team Stylists
                       </h4>
                       <div className="space-y-1.5">
-                        {staffResults.map(staff => {
+                        {searchResults.staff.map(staff => {
                           const nameInitial = staff.name?.charAt(0).toUpperCase() || 'S';
                           return (
                             <button
@@ -272,7 +282,7 @@ export default function Navbar({ onToggleSidebar }) {
                                 </div>
                               </div>
                               <span className="text-[8px] bg-red-50 text-[#ff0b01] px-1.5 py-0.5 rounded font-bold capitalize">
-                                {staff.staffStatus}
+                                {staff.status}
                               </span>
                             </button>
                           );
@@ -281,14 +291,52 @@ export default function Navbar({ onToggleSidebar }) {
                     </div>
                   )}
 
-                  {/* Category 2: Appointments */}
-                  {appointmentResults.length > 0 && (
+                  {/* Category 2: Salon Visits */}
+                  {searchResults.customerSalonVisits && searchResults.customerSalonVisits.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Salon Visits / Customers
+                      </h4>
+                      <div className="space-y-1.5">
+                        {searchResults.customerSalonVisits.map(visit => (
+                          <button
+                            key={visit.id}
+                            onClick={() => {
+                              navigate('/owner/manage/staff');
+                              setShowDropdown(false);
+                            }}
+                            className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
+                          >
+                            <div className="flex justify-between items-start w-full">
+                              <span className="text-xs font-bold text-gray-900 group-hover:text-[#ff0b01] truncate">
+                                {visit.customerName}
+                              </span>
+                              <span className="text-[9px] font-bold text-gray-400">
+                                {visit.visitCount} Visits
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between w-full mt-1">
+                              <span className="text-[9px] text-gray-400 font-semibold truncate">
+                                {visit.customerMobile}
+                              </span>
+                              <span className="text-[9px] font-bold text-green-600">
+                                ₹ {visit.totalRevenue?.toFixed(2)}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category 3: Appointments */}
+                  {searchResults.appointments && searchResults.appointments.length > 0 && (
                     <div className="space-y-2">
                       <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
                         Appointments
                       </h4>
                       <div className="space-y-1.5">
-                        {appointmentResults.map(appt => (
+                        {searchResults.appointments.map(appt => (
                           <button
                             key={appt.id}
                             onClick={() => {
@@ -299,15 +347,15 @@ export default function Navbar({ onToggleSidebar }) {
                           >
                             <div className="flex justify-between items-start w-full">
                               <span className="text-xs font-bold text-gray-900 group-hover:text-[#ff0b01] truncate">
-                                {appt.customerName}
+                                {appt.customerName || appt.customer?.fullName || 'Customer'}
                               </span>
                               <span className="text-[9px] font-bold text-gray-400">
-                                ₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}
+                                ₹ {(appt.finalAmount || appt.totalPrice || 0).toFixed(2)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between w-full mt-1">
                               <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[150px]">
-                                {appt.serviceNames?.join(', ') || 'Grooming'}
+                                {appt.serviceNames?.join(', ') || appt.serviceName || (appt.services && appt.services.map(s => s.serviceName).join(', ')) || 'Grooming'}
                               </span>
                               <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
                                 appt.status === 'booked' ? 'bg-red-50 text-[#ff0b01]' :
@@ -319,6 +367,120 @@ export default function Navbar({ onToggleSidebar }) {
                             </div>
                           </button>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category 4: Services */}
+                  {searchResults.services && searchResults.services.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Services
+                      </h4>
+                      <div className="space-y-1.5">
+                        {searchResults.services.map(service => (
+                          <button
+                            key={service.id}
+                            onClick={() => {
+                              navigate('/owner/manage/services');
+                              setShowDropdown(false);
+                            }}
+                            className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
+                          >
+                            <div className="min-w-0 flex-1 pr-2">
+                              <div className="text-xs font-bold text-gray-900 truncate group-hover:text-[#ff0b01]">{service.name}</div>
+                              <div className="text-[9px] text-gray-400 font-semibold capitalize">{service.category} • {service.duration} mins</div>
+                            </div>
+                            <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                              ₹ {service.price}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category 5: Products */}
+                  {searchResults.products && searchResults.products.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Products
+                      </h4>
+                      <div className="space-y-1.5">
+                        {(searchResults.products ?? []).map(product => {
+                          const prodNameInitial = product.name?.charAt(0).toUpperCase() || 'P';
+                          return (
+                            <button
+                              key={product.id}
+                              onClick={() => {
+                                navigate('/owner/manage/add-products');
+                                setShowDropdown(false);
+                              }}
+                              className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
+                            >
+                              <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-2">
+                                <div className="w-8 h-8 rounded-xl overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
+                                  {product.imageUrl ? (
+                                    <img 
+                                      src={product.imageUrl} 
+                                      alt={product.name} 
+                                      className="w-full h-full object-cover" 
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '';
+                                      }}
+                                    />
+                                  ) : (
+                                    prodNameInitial
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-xs font-bold text-gray-900 truncate group-hover:text-[#ff0b01]">{product.name}</div>
+                                  <div className="text-[9px] text-gray-400 font-semibold">{product.category} • {product.stock} in stock</div>
+                                </div>
+                              </div>
+                              <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                                ₹ {product.price}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Category 6: Offers */}
+                  {searchResults.offers && searchResults.offers.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1">
+                        Offers
+                      </h4>
+                      <div className="space-y-1.5">
+                        {searchResults.offers.map(offer => {
+                          const discountLabel = (offer.discountType?.toUpperCase() === 'PERCENTAGE')
+                            ? `${offer.discountValue}% OFF`
+                            : `₹${offer.discountValue} OFF`;
+                          return (
+                            <button
+                              key={offer.id}
+                              onClick={() => {
+                                navigate('/owner/manage/add-offers');
+                                setShowDropdown(false);
+                              }}
+                              className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
+                            >
+                              <div className="min-w-0 flex-1 pr-2">
+                                <div className="text-xs font-bold text-gray-900 truncate group-hover:text-[#ff0b01]">{offer.name}</div>
+                                <div className="text-[9px] text-gray-400 font-semibold">
+                                  {discountLabel}
+                                </div>
+                              </div>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${offer.active ? 'bg-[#E3F9EC] text-[#299764]' : 'bg-gray-100 text-gray-500'}`}>
+                                {offer.active ? 'active' : 'inactive'}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

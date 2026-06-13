@@ -60,6 +60,9 @@ const AddPackages = () => {
 
     // View Packages State
     const [packages, setPackages] = useState([]);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
     const [loadingPackages, setLoadingPackages] = useState(false);
     const [filters, setFilters] = useState({
         name: '',
@@ -76,29 +79,36 @@ const AddPackages = () => {
         }
     }, []);
 
-    const fetchPackages = useCallback(async () => {
+    const fetchPackages = useCallback(async (page = currentPage) => {
         setLoadingPackages(true);
         try {
             const params = new URLSearchParams();
             if (filters.name) params.append('name', filters.name);
             if (filters.active !== '') params.append('active', filters.active);
+            params.append('page', page);
+            params.append('size', '10');
+            params.append('sortBy', 'id');
+            params.append('direction', 'desc');
 
             const res = await axiosInstance.get(`/packages/search?${params.toString()}`);
             setPackages(res.data?.content || []);
+            setTotalPages(res.data?.page?.totalPages ?? res.data?.totalPages ?? 0);
+            setTotalElements(res.data?.page?.totalElements ?? res.data?.totalElements ?? 0);
+            setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load packages', toastStyle);
         } finally {
             setLoadingPackages(false);
         }
-    }, [filters]);
+    }, [filters, currentPage]);
 
     useEffect(() => {
         fetchServices();
     }, [fetchServices]);
 
     useEffect(() => {
-        if (activeTab === 'view') fetchPackages();
-    }, [activeTab, fetchPackages]);
+        if (activeTab === 'view') fetchPackages(0);
+    }, [activeTab, filters, fetchPackages]);
 
     // Calculate total price of selected services
     useEffect(() => {
@@ -588,6 +598,7 @@ const AddPackages = () => {
                                     No packages found
                                 </div>
                             ) : (
+                                <>
                                 <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 ${sidebarOpen ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
                                     {packages.map(pkg => {
                                         const pkgServices = getPackageServicesList(pkg);
@@ -677,6 +688,50 @@ const AddPackages = () => {
                                         );
                                     })}
                                 </div>
+
+                                {/* PAGINATION FOOTER */}
+                                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                        PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PACKAGES)
+                                    </span>
+                                    <div className="flex items-center space-x-1.5">
+                                        <button
+                                            onClick={() => fetchPackages(0)}
+                                            disabled={currentPage <= 0}
+                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        >
+                                            « First
+                                        </button>
+                                        <button
+                                            onClick={() => fetchPackages(Math.max(0, currentPage - 1))}
+                                            disabled={currentPage <= 0}
+                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        >
+                                            ‹ Prev
+                                        </button>
+                                        
+                                        {/* Current Page Indicator Pill */}
+                                        <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                            {totalPages === 0 ? 1 : currentPage + 1}
+                                        </span>
+
+                                        <button
+                                            onClick={() => fetchPackages(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
+                                            disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        >
+                                            Next ›
+                                        </button>
+                                        <button
+                                            onClick={() => fetchPackages(Math.max(0, totalPages - 1))}
+                                            disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        >
+                                            Last »
+                                        </button>
+                                    </div>
+                                </div>
+                                </>
                             )}
                         </div>
                     )}

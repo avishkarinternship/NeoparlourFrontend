@@ -516,12 +516,9 @@ const Orders = () => {
                                                     )}
 
                                                     {isCancelled && (
-                                                        <button
-                                                            onClick={() => openConfirmModal('delete', order.id)}
-                                                            className="px-2.5 py-1 border border-gray-200 text-gray-500 rounded-md text-[9px] font-bold hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
-                                                        >
-                                                            Delete Record
-                                                        </button>
+                                                        <div className="flex items-center gap-1.5 text-red-700 bg-red-50 border border-red-100 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                                                            Order Cancelled
+                                                        </div>
                                                     )}
 
                                                     {isCompleted && (

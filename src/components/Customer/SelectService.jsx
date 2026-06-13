@@ -195,11 +195,12 @@ const SelectService = () => {
     const [slotsLoading, setSlotsLoading] = useState(false);
     const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
 
-    // Derive the time slots to display: staffSlots if a specific expert is selected, otherwise salonSlots
-    const displayedSlots = (selectedExpert && selectedExpert !== 'any' && staffSlots.length > 0) ? staffSlots : salonSlots;
     const [selectedExpert, setSelectedExpert] = useState(() => {
         return location.state?.selectedExpert || 'any';
     });
+
+    // Derive the time slots to display: staffSlots if a specific expert is selected, otherwise salonSlots
+    const displayedSlots = (selectedExpert && selectedExpert !== 'any' && staffSlots.length > 0) ? staffSlots : salonSlots;
 
     // --- MODAL STATE ---
     const [isBillOpen, setIsBillOpen] = useState(false);

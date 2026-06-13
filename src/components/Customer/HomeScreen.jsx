@@ -756,19 +756,26 @@ const HomeScreen = () => {
                                         {/* Card Header: Cover Image block with metadata tags overlay */}
                                         <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
                                             {hasImage ? (
-                                                <img
-                                                    src={coverImg}
-                                                    alt={salon.salonName}
-                                                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                                                />
+                                                <>
+                                                    <img
+                                                        src={coverImg}
+                                                        alt={salon.salonName}
+                                                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+                                                </>
                                             ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                                    <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
+                                                    <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                        <circle cx="9" cy="17" r="3.5" />
+                                                        <circle cx="15" cy="17" r="3.5" />
+                                                        <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
+                                                        <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
+                                                        <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
+                                                    </svg>
                                                     <span className="text-[11px] font-semibold text-gray-400">No image available</span>
                                                 </div>
                                             )}
-                                            {/* Gradient Overlay for better contrast */}
-                                            {hasImage && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />}
 
                                             {/* Top Metadata Badges */}
                                             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
@@ -795,67 +802,62 @@ const HomeScreen = () => {
                                                 <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
-                                                    {salon.salonName ? salon.salonName[0] : 'S'}
+                                                    {salon.salonName ? salon.salonName[0].toUpperCase() : 'S'}
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Card Body Details */}
-                                        <div className="p-6 pt-3 flex flex-col flex-grow">
-                                            <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14]/75 uppercase mb-1 flex items-center gap-1">
-                                                <Sparkles className="w-2.5 h-2.5" /> NeoParlour Partner
+                                        <div className="p-6 pt-3 flex flex-col flex-grow text-left">
+                                            <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
+                                                <Sparkles className="w-2.5 h-2.5" /> NEOPARLOUR PARTNER
                                             </span>
 
-                                            <div className="flex items-start justify-between gap-2 mb-1.5">
-                                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight line-clamp-1 flex-1">
+                                            <div className="flex items-start justify-between gap-2 mb-2">
+                                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
                                                     {salon.salonName}
                                                 </h4>
-                                                <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
-                                                    {salon.salonCode}
-                                                </span>
+                                                {salon.salonCode && (
+                                                    <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
+                                                        {salon.salonCode}
+                                                    </span>
+                                                )}
                                             </div>
 
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold mb-2">
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
                                                 <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                <span>{salon.areaName}, {salon.cityName}</span>
+                                                <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
                                             </div>
 
-                                            <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-2 min-h-[32px]">
-                                                {salon.address || 'Address updating...'}
+                                            <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
+                                                {salon.address || 'Dhankawadi'}
                                             </p>
 
-                                            {/* Dynamic Services Tag & Weekly Off */}
-                                            <div className="flex flex-wrap gap-2 mt-4">
-                                                {salon.homeServiceCharges ? (
-                                                    <div className="flex items-center gap-1 px-2.5 py-1 bg-rose-50 border border-rose-100 rounded-full text-[9px] font-bold text-[#FF2A14]">
-                                                        <Home className="w-2.5 h-2.5" />
-                                                        <span>Home Service (₹{salon.homeServiceCharges})</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-full text-[9px] font-bold text-gray-400">
-                                                        <ShieldCheck className="w-2.5 h-2.5" />
-                                                        <span>In-Salon Services</span>
-                                                    </div>
-                                                )}
-                                                {salon.weeklyOffDay && (
-                                                    <div className="px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-full text-[9px] font-bold text-amber-700">
-                                                        Off: {salon.weeklyOffDay}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            {/* Home Service Badge */}
+                                            {salon.homeServiceCharges ? (
+                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                    <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                    <span>Home Service (₹{salon.homeServiceCharges})</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                    <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                    <span>Home Service (₹50)</span>
+                                                </div>
+                                            )}
 
                                             {/* Card Footer */}
-                                            <div className="mt-5 pt-4 border-t border-gray-100/60 flex items-center justify-between">
+                                            <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5 text-gray-400">
                                                     <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                                    <span className="text-[10px] font-black tracking-widest">
-                                                        {salon.openingTime?.slice(0, 5)} - {salon.closingTime?.slice(0, 5)}
+                                                    <span className="text-[11px] font-black tracking-widest">
+                                                        {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
                                                     </span>
                                                 </div>
 
-                                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
+                                                <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
                                                     <span>Book Session</span>
-                                                    <div className="h-6 w-6 rounded-full bg-[#FF2A14]/5 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
+                                                    <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </div>
                                                 </div>

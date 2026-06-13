@@ -6,7 +6,6 @@ import homeIcon from '../../../assets/Owner/Dashboard/SideBar/home_icon.svg';
 import manageIcon from '../../../assets/Owner/Dashboard/SideBar/manage_icon.svg';
 import analyticsIcon from '../../../assets/Owner/Dashboard/SideBar/analytics_icon.svg';
 import ordersIcon from '../../../assets/Owner/Manage/Subscription/invoice_icon.svg';
-import billingIcon from '../../../assets/Owner/Dashboard/SideBar/billing_icon.svg';
 import helpIcon from '../../../assets/Owner/Dashboard/SideBar/help_icon.svg';
 import settingIcon from '../../../assets/Owner/Dashboard/SideBar/setting_icon.svg';
 import logoutIcon from '../../../assets/Owner/Dashboard/SideBar/logout_icon.svg';
@@ -183,6 +182,33 @@ const Sidebar = ({ isOpen, onClose }) => {
             <span>Analytics</span>
           </button>
 
+          {/* Customers */}
+          <button
+            onClick={() => navigate('/owner/customers')}
+            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+              ${location.pathname === '/owner/customers'
+                ? 'text-red-600 bg-red-50'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            {location.pathname === '/owner/customers' && (
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+            )}
+
+            <svg
+              className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                location.pathname === '/owner/customers' ? 'active-icon-glow text-red-600' : 'opacity-60'
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Customers</span>
+          </button>
+
           {/* Orders */}
           <button
             onClick={() => navigate('/owner/orders')}
@@ -206,28 +232,6 @@ const Sidebar = ({ isOpen, onClose }) => {
             <span>Orders</span>
           </button>
 
-          {/* Billing */}
-          <button
-            onClick={() => navigate('/owner/billing')}
-            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
-              ${location.pathname === '/owner/billing'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-          >
-            {location.pathname === '/owner/billing' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
-            )}
-
-            <img
-              src={billingIcon}
-              alt="Billing"
-              className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/billing' ? 'active-icon-glow' : 'opacity-60'
-              }`}
-            />
-            <span>Billing</span>
-          </button>
 
         </div>
 

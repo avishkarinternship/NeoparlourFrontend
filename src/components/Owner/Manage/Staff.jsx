@@ -274,12 +274,26 @@ const Staff = () => {
                                         </div>
 
                                         <div className="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0 flex-shrink-0">
-                                            <button
-                                                onClick={() => handleToggleStatus(staff.id, staff.active)}
-                                                className={`px-4 py-1.5 text-xs font-bold rounded-lg ${staff.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                                            >
-                                                {staff.active ? 'Active' : 'Inactive'}
-                                            </button>
+                                            <div className="flex items-center gap-2 mr-2">
+                                                <button
+                                                    onClick={() => handleToggleStatus(staff.id, staff.active)}
+                                                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                        staff.active ? 'bg-green-500' : 'bg-gray-200'
+                                                    }`}
+                                                    role="switch"
+                                                    aria-checked={staff.active}
+                                                >
+                                                    <span
+                                                        aria-hidden="true"
+                                                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                                            staff.active ? 'translate-x-5' : 'translate-x-0'
+                                                        }`}
+                                                    />
+                                                </button>
+                                                <span className={`text-xs font-bold w-12 text-left ${staff.active ? 'text-green-600' : 'text-gray-400'}`}>
+                                                    {staff.active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </div>
                                             <button onClick={() => handleEdit(staff.id)} className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
                                                 <img src={editIcon} alt="edit" className="w-4 h-4" /> Edit
                                             </button>

@@ -18,6 +18,7 @@ import productQuantityIcon from '../../../assets/Owner/Manage/Products/product_q
 import productTypeIcon from '../../../assets/Owner/Manage/Products/product_type_icon.svg';
 import rateIcon from '../../../assets/Owner/Manage/Products/rate_icon.svg';
 import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg'; // Add this icon import
+import { Eye, X, Edit2 } from 'lucide-react';
 
 const toastStyle = {
     style: {
@@ -41,6 +42,54 @@ const PRODUCT_CATEGORIES = [
     'Serums & Treatments', 'Bath & Body', 'Men\'s Grooming', 'Natural & Organic',
     'Hair Styling', 'Skincare Devices'
 ];
+
+const LazyImage = ({ src, alt, className }) => {
+    const [isIntersecting, setIsIntersecting] = useState(false);
+    const ref = React.useRef();
+
+    useEffect(() => {
+        let isMounted = true;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && isMounted) {
+                    setIsIntersecting(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '100px' }
+        );
+
+        if (ref.current) {
+            observer.observe(ref.current);
+        }
+
+        return () => {
+            isMounted = false;
+            observer.disconnect();
+        };
+    }, [src]);
+
+    if (!isIntersecting) {
+        return (
+            <div ref={ref} className="w-full h-full bg-gray-50 flex items-center justify-center">
+                <div className="animate-pulse w-full h-full bg-gray-150 rounded-2xl"></div>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            ref={ref}
+            src={src}
+            alt={alt}
+            className={className}
+            onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '';
+            }}
+        />
+    );
+};
 
 const AddProducts = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -97,6 +146,26 @@ const AddProducts = () => {
     const [togglingId, setTogglingId] = useState(null);
     const [loadingEdit, setLoadingEdit] = useState(false);
 
+    // View Modal States
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [loadingViewProduct, setLoadingViewProduct] = useState(false);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+    const handleViewProduct = async (id) => {
+        setLoadingViewProduct(true);
+        try {
+            const response = await axiosInstance.get(`/products/${id}`);
+            setSelectedProduct(response.data);
+            setActiveImageIndex(0);
+            setIsViewModalOpen(true);
+        } catch (error) {
+            toast.error('Failed to load product details', toastStyle);
+        } finally {
+            setLoadingViewProduct(false);
+        }
+    };
+
     // Fetch Products
     const fetchProducts = async (page = 0) => {
         if (activeTab !== 'view') return;
@@ -119,8 +188,8 @@ const AddProducts = () => {
 
             const response = await axiosInstance.get(url);
             setProducts(response.data?.content || response.data || []);
-            setTotalPages(response.data?.totalPages || 0);
-            setTotalElements(response.data?.totalElements || 0);
+            setTotalPages(response.data?.page?.totalPages ?? response.data?.totalPages ?? 0);
+            setTotalElements(response.data?.page?.totalElements ?? response.data?.totalElements ?? 0);
             setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load products', toastStyle);
@@ -637,20 +706,35 @@ const AddProducts = () => {
                                                 const discount = discountPercent(product.price, product.discountPrice);
                                                 return (
                                                     <div key={product.id} className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                                                        <div className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                                                        <div 
+                                                            onClick={() => handleViewProduct(product.id)}
+                                                            className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer"
+                                                        >
                                                             {imageUrl ? (
-                                                                <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                                <LazyImage src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                             ) : (
                                                                 <div className="text-center text-gray-400 text-xs px-4">No Image</div>
                                                             )}
+                                                            {/* Quick View Hover Overlay */}
+                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                                                                <div className="bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                                                    <Eye className="w-4 h-4 text-[#FF0B01]" />
+                                                                    <span>Quick View</span>
+                                                                </div>
+                                                            </div>
                                                             {discount > 0 && (
-                                                                <div className="absolute top-3 right-3 bg-[#FF0B01] text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase shadow-sm">
+                                                                <div className="absolute top-3 right-3 bg-[#FF0B01] text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase shadow-sm z-20">
                                                                     {discount}% OFF
                                                                 </div>
                                                             )}
                                                         </div>
                                                         <div className="p-4">
-                                                            <h5 className="text-sm font-semibold line-clamp-2 leading-tight mb-2 h-10">{product.name}</h5>
+                                                            <h5 
+                                                                onClick={() => handleViewProduct(product.id)}
+                                                                className="text-sm font-semibold line-clamp-2 leading-tight mb-2 h-10 cursor-pointer hover:text-[#FF0B01] transition-colors"
+                                                            >
+                                                                {product.name}
+                                                            </h5>
                                                             <div className="flex justify-between items-center">
                                                                 <div>
                                                                     {product.discountPrice ? (
@@ -686,48 +770,50 @@ const AddProducts = () => {
                                                     </div>
                                                 );
                                             })}
-                                                       {/* Pagination */}
-                                         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
-                                             <span className="text-[10px] font-bold text-gray-500 uppercase">
-                                                 PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PRODUCTS)
-                                             </span>
-                                             <div className="flex items-center space-x-1.5">
-                                                 <button
-                                                     onClick={() => fetchProducts(0)}
-                                                     disabled={currentPage <= 0}
-                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
-                                                 >
-                                                     « First
-                                                 </button>
-                                                 <button
-                                                     onClick={() => fetchProducts(Math.max(0, currentPage - 1))}
-                                                     disabled={currentPage <= 0}
-                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
-                                                 >
-                                                     ‹ Prev
-                                                 </button>
-                                                 
-                                                 {/* Current Page Indicator Pill */}
-                                                 <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
-                                                     {totalPages === 0 ? 1 : currentPage + 1}
-                                                 </span>
+                                        </div>
 
-                                                 <button
-                                                     onClick={() => fetchProducts(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
-                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
-                                                 >
-                                                     Next ›
-                                                 </button>
-                                                 <button
-                                                     onClick={() => fetchProducts(Math.max(0, totalPages - 1))}
-                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                                     className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
-                                                 >
-                                                     Last »
-                                                 </button>
-                                             </div>
-                                         </div>                                    </div>
+                                        {/* Pagination */}
+                                        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                                PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PRODUCTS)
+                                            </span>
+                                            <div className="flex items-center space-x-1.5">
+                                                <button
+                                                    onClick={() => fetchProducts(0)}
+                                                    disabled={currentPage <= 0}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                >
+                                                    « First
+                                                </button>
+                                                <button
+                                                    onClick={() => fetchProducts(Math.max(0, currentPage - 1))}
+                                                    disabled={currentPage <= 0}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                >
+                                                    ‹ Prev
+                                                </button>
+                                                
+                                                {/* Current Page Indicator Pill */}
+                                                <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                                    {totalPages === 0 ? 1 : currentPage + 1}
+                                                </span>
+
+                                                <button
+                                                    onClick={() => fetchProducts(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
+                                                    disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                >
+                                                    Next ›
+                                                </button>
+                                                <button
+                                                    onClick={() => fetchProducts(Math.max(0, totalPages - 1))}
+                                                    disabled={currentPage >= totalPages - 1 || totalPages <= 1}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                >
+                                                    Last »
+                                                </button>
+                                            </div>
+                                        </div>
                                     </>
                                 )}
                             </>
@@ -736,6 +822,189 @@ const AddProducts = () => {
                     </div>
                 </main>
             </div>
+
+            {/* View Product Details Modal */}
+            {isViewModalOpen && selectedProduct && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+                    <div className="bg-white rounded-[32px] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative border border-gray-100 flex flex-col md:flex-row p-6 md:p-8 gap-8 animate-in fade-in zoom-in duration-200">
+                        {/* Close button */}
+                        <button 
+                            onClick={() => setIsViewModalOpen(false)}
+                            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-[#FF0B01] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        {/* Left Column: Images */}
+                        <div className="w-full md:w-1/2 flex flex-col gap-4">
+                            {/* Main Preview Container */}
+                            <div className="relative w-full aspect-square rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+                                {(() => {
+                                    const allUrls = [selectedProduct.imageUrl, ...(selectedProduct.additionalImageUrls || [])].filter(Boolean);
+                                    const currentUrl = allUrls[activeImageIndex] || null;
+                                    return currentUrl ? (
+                                        <img 
+                                            src={currentUrl} 
+                                            alt={selectedProduct.name} 
+                                            className="w-full h-full object-cover" 
+                                        />
+                                    ) : (
+                                        <div className="text-gray-400 text-sm">No Image Available</div>
+                                    );
+                                })()}
+                                
+                                {selectedProduct.discountPrice && selectedProduct.price && (
+                                    <div className="absolute top-4 left-4 bg-[#FF0B01] text-white px-3 py-1 rounded-xl text-xs font-black shadow-md uppercase">
+                                        {discountPercent(selectedProduct.price, selectedProduct.discountPrice)}% OFF
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Additional Images Thumbnails Gallery */}
+                            {(() => {
+                                const allUrls = [selectedProduct.imageUrl, ...(selectedProduct.additionalImageUrls || [])].filter(Boolean);
+                                if (allUrls.length <= 1) return null;
+                                return (
+                                    <div className="flex gap-2.5 overflow-x-auto py-1 custom-scrollbar">
+                                        {allUrls.map((url, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setActiveImageIndex(idx)}
+                                                className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${activeImageIndex === idx ? 'border-[#FF0B01] ring-2 ring-red-500/10' : 'border-gray-200 hover:border-gray-300'}`}
+                                            >
+                                                <img src={url} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Right Column: Information */}
+                        <div className="w-full md:w-1/2 flex flex-col justify-between">
+                            <div className="space-y-5">
+                                {/* Badges */}
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedProduct.category && (
+                                        <span className="text-[10px] bg-red-50 text-[#FF0B01] px-2.5 py-1 rounded-full font-black uppercase tracking-wider">
+                                            {selectedProduct.category}
+                                        </span>
+                                    )}
+                                    {selectedProduct.productType && (
+                                        <span className="text-[10px] bg-slate-50 text-slate-600 px-2.5 py-1 rounded-full font-black uppercase tracking-wider border border-slate-100">
+                                            {selectedProduct.productType}
+                                        </span>
+                                    )}
+                                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider ${
+                                        selectedProduct.active 
+                                            ? 'bg-green-50 text-green-700 border border-green-100' 
+                                            : 'bg-red-50 text-red-700 border border-red-100'
+                                    }`}>
+                                        {selectedProduct.active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+
+                                {/* Title & Meta */}
+                                <div>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 leading-tight tracking-tight">
+                                        {selectedProduct.name}
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        ID: NP-{selectedProduct.id} • Added on {selectedProduct.createdAt ? new Date(selectedProduct.createdAt).toLocaleDateString() : 'N/A'}
+                                    </p>
+                                </div>
+
+                                {/* Pricing Section */}
+                                <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pricing Details</p>
+                                        <div className="flex items-baseline gap-2">
+                                            {selectedProduct.discountPrice ? (
+                                                <>
+                                                    <span className="text-2xl font-black text-[#FF0B01]">₹{selectedProduct.discountPrice}</span>
+                                                    <span className="text-sm line-through text-gray-400">₹{selectedProduct.price}</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-2xl font-black text-[#FF0B01]">₹{selectedProduct.price}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {selectedProduct.discountPrice && (
+                                        <div className="bg-green-50 text-green-700 border border-green-100 rounded-xl px-3 py-2 text-right">
+                                            <p className="text-[10px] font-black uppercase tracking-wide">Calculated Savings</p>
+                                            <p className="text-sm font-extrabold">Save ₹{(selectedProduct.price - selectedProduct.discountPrice).toFixed(2)}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Inventory Metrics */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="border border-gray-150 rounded-2xl p-4 flex flex-col justify-center">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Stock Level</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl font-extrabold text-gray-900">{selectedProduct.stock} units</span>
+                                            {selectedProduct.stock <= (selectedProduct.restockLevel || 10) && (
+                                                <span className="h-2 w-2 rounded-full bg-red-500 animate-ping"></span>
+                                            )}
+                                        </div>
+                                        {selectedProduct.stock <= (selectedProduct.restockLevel || 10) ? (
+                                            <span className="text-[9px] font-bold text-red-500 uppercase mt-1">Low Stock Warning</span>
+                                        ) : (
+                                            <span className="text-[9px] font-bold text-green-600 uppercase mt-1">Adequate Stock</span>
+                                        )}
+                                    </div>
+
+                                    <div className="border border-gray-150 rounded-2xl p-4">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Restock Level</p>
+                                        <p className="text-xl font-extrabold text-gray-900">{selectedProduct.restockLevel || 10} units</p>
+                                        <p className="text-[9px] font-semibold text-gray-400 mt-1">Threshold for low-stock alerts</p>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                {selectedProduct.description && (
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Product Description</p>
+                                        <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100 font-medium whitespace-pre-line">
+                                            {selectedProduct.description}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="flex gap-4 pt-6 border-t border-gray-100 mt-6">
+                                <button
+                                    onClick={() => {
+                                        setIsViewModalOpen(false);
+                                        handleEdit(selectedProduct);
+                                    }}
+                                    className="flex-1 bg-[#FF0B01] hover:bg-[#d90900] transition text-white py-3.5 rounded-2xl font-bold shadow-md hover:shadow-lg text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    <span>Edit Product</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsViewModalOpen(false)}
+                                    className="flex-1 border border-gray-300 py-3.5 rounded-2xl font-bold hover:bg-gray-50 text-gray-700 text-xs tracking-wider uppercase transition cursor-pointer"
+                                >
+                                    Close Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Fetching loading state indicator overlay */}
+            {loadingViewProduct && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-2xl p-6 shadow-2xl flex items-center gap-3 border border-gray-100">
+                        <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>

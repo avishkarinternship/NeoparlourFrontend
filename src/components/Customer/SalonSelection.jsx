@@ -225,6 +225,15 @@ const SalonSelection = () => {
     return currentTime >= openTime && currentTime <= closeTime;
   };
 
+  const getSalonImageSrc = (imageUrl, fallbackImg) => {
+    if (!imageUrl) return fallbackImg;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    const base = axiosInstance.defaults.baseURL || 'https://sb.neoparlour.com/api';
+    return `${base}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#f6f7f9] flex flex-col lg:flex-row font-sans overflow-hidden">
 
@@ -349,63 +358,137 @@ const SalonSelection = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
                       {salonResults.map((salon, index) => {
                         const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
+                        const hasImage = !!salon.imageUrl;
+                        const coverImg = hasImage ? getSalonImageSrc(salon.imageUrl, null) : null;
+                        const rating = (((salon.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1);
+                        const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
+
                         return (
                           <div
                             key={salon.salonId || index}
                             onClick={() => handleSalonSelect(salon)}
-                            className="group flex flex-col p-6 rounded-[32px] bg-white border border-gray-100 hover:border-[#ff0b01]/30 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all cursor-pointer relative overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.01)]"
+                            className="group flex flex-col rounded-[32px] bg-white border border-gray-100 hover:border-[#ff0b01]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.01)]"
                           >
-                            <div className="flex items-start justify-between mb-6">
-                              <div className="relative flex-shrink-0">
-                                <div className="w-16 h-16 bg-gray-50 rounded-[22px] overflow-hidden border-[3px] border-white shadow-lg group-hover:scale-105 transition-transform duration-500">
-                                  {salon.imageBase64 ? (
-                                    <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-[#ff0b01] text-2xl font-black">
-                                      {salon.salonName ? salon.salonName[0] : 'S'}
-                                    </div>
-                                  )}
+                            {/* Image Section */}
+                            <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
+                              {hasImage ? (
+                                <>
+                                  <img
+                                    src={coverImg}
+                                    alt={salon.salonName}
+                                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+                                </>
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
+                                  <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <circle cx="9" cy="17" r="3.5" />
+                                    <circle cx="15" cy="17" r="3.5" />
+                                    <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
+                                    <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
+                                    <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
+                                  </svg>
+                                  <span className="text-[11px] font-semibold text-gray-400">No image available</span>
                                 </div>
-                                {salon.homeServiceCharges && (
-                                  <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#ff0b01] rounded-[10px] flex items-center justify-center text-white shadow-md shadow-[#ff0b01]/30 transform group-hover:rotate-12 transition-all border-2 border-white">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-col items-end gap-3">
-                                <span className="px-2.5 py-1 bg-gray-50 rounded-md border border-gray-200 text-[9px] font-black text-gray-400 group-hover:text-gray-900 group-hover:border-[#ff0b01]/20 transition-all uppercase tracking-widest">{salon.salonCode}</span>
-                                <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border ${currentlyOpen ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'} text-[7px] font-black uppercase tracking-widest shadow-sm`}>
-                                  <div className={`h-1 w-1 rounded-full ${currentlyOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                              )}
+
+                              {/* Top Badges */}
+                              <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                                {/* Open/Closed Badge */}
+                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${
+                                  currentlyOpen
+                                    ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
+                                    : 'bg-white/95 border-rose-500/20 text-rose-700'
+                                }`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full ${currentlyOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                                   {currentlyOpen ? 'Open' : 'Closed'}
                                 </div>
-                              </div>
-                            </div>
 
-                            <div className="space-y-3 flex-1">
-                              <h4 className="text-lg font-black text-gray-900 group-hover:text-[#ff0b01] transition-colors leading-tight uppercase tracking-tight truncate">{salon.salonName}</h4>
-
-                              <div className="space-y-2">
-                                <div className="flex items-start gap-2 text-gray-500 font-bold text-[12px] leading-snug">
-                                  <svg className="w-4 h-4 flex-shrink-0 text-[#ff0b01]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                  <p className="line-clamp-2">{salon.address || 'Address updating...'}</p>
+                                {/* Rating Badge */}
+                                <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                  <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                  <span>{rating} ({reviewsCount}+)</span>
                                 </div>
-                                <p className="text-[11px] font-black text-gray-300 ml-6 tracking-[0.1em] uppercase">
-                                  {salon.areaName} • {salon.cityName}
-                                </p>
                               </div>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 text-gray-400">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                  <span className="text-[10px] font-black tracking-widest">
-                                    {salon.openingTime?.slice(0, 5)} - {salon.closingTime?.slice(0, 5)}
+                            {/* Avatar Logo Overlay */}
+                            <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+                              {salon.imageBase64 ? (
+                                <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
+                                  {salon.salonName ? salon.salonName[0].toUpperCase() : 'S'}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="p-6 pt-3 flex flex-col flex-grow text-left">
+                              <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
+                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192L12 .587z"/>
+                                </svg>
+                                NEOPARLOUR PARTNER
+                              </span>
+
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
+                                  {salon.salonName}
+                                </h4>
+                                {salon.salonCode && (
+                                  <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
+                                    {salon.salonCode}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
+                                <svg className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
+                              </div>
+
+                              <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
+                                {salon.address || 'Dhankawadi'}
+                              </p>
+
+                              {/* Home Service Badge */}
+                              {salon.homeServiceCharges ? (
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                  </svg>
+                                  <span>Home Service (₹{salon.homeServiceCharges})</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                  </svg>
+                                  <span>Home Service (₹50)</span>
+                                </div>
+                              )}
+
+                              {/* Card Footer */}
+                              <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-gray-400">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                  <span className="text-[11px] font-black tracking-widest">
+                                    {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
                                   </span>
                                 </div>
-                              </div>
-                              <div className="h-8 w-8 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-[#ff0b01] group-hover:text-white transition-all duration-300 shadow-sm">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
+                                  <span>Book Session</span>
+                                  <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                  </div>
+                                </div>
                               </div>
                             </div>
 

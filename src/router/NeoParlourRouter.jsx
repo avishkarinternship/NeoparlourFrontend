@@ -42,6 +42,8 @@ import PrivacyPolicyScreen from '../components/Owner/PrivacyPolicy'
 import Support from '../components/Customer/Support'
 import PartnerWithUs from '../components/Customer/PartnerWithUs'
 import SalonsListing from '../components/Customer/SalonsListing'
+import Customers from '../components/Owner/Customers'
+import MySalons from '../components/Customer/MySalons'
 
 export let routes = createBrowserRouter([
     {
@@ -160,6 +162,14 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner/manage/add-package',
                 element: <AddPackages />
+            },
+            {
+                path: '/owner/customers',
+                element: <Customers />
+            },
+            {
+                path: '/customer/my-salons',
+                element: <MySalons />
             },
             {
                 path: '/owner/appointments',

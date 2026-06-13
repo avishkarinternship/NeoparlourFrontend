@@ -104,8 +104,8 @@ const AddOffers = () => {
 
             const response = await axiosInstance.get(`/offers/search?${params.toString()}`);
             setOffers(response.data?.content || response.data || []);
-            setTotalPages(response.data?.totalPages || 0);
-            setTotalElements(response.data?.totalElements || 0);
+            setTotalPages(response.data?.page?.totalPages ?? response.data?.totalPages ?? 0);
+            setTotalElements(response.data?.page?.totalElements ?? response.data?.totalElements ?? 0);
             setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load offers', toastStyle);

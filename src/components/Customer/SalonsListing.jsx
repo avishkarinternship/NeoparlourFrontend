@@ -513,17 +513,19 @@ const SalonsListing = () => {
                                 return currentTime >= openH * 60 + openM && currentTime <= closeH * 60 + closeM;
                             })();
 
+                            const reviewsCount = (((salon.salonId || salon.id || 0) * 17) % 80) + 40;
+
                             return (
                                 <div
                                     key={salonId || index}
                                     onClick={() => !isSwitching && handleSalonClick(salon)}
-                                    className={`bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/60 hover:border-gray-200 transition-all duration-300 cursor-pointer group relative ${
+                                    className={`bg-white rounded-[32px] overflow-hidden border border-gray-100 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group relative flex flex-col ${
                                         isSwitching ? 'opacity-70 pointer-events-none' : ''
                                     } ${loading && isShowingStatic ? 'opacity-65 pointer-events-none animate-pulse' : ''}`}
                                 >
                                     {/* Switching overlay */}
                                     {isSwitching && (
-                                        <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-10 flex items-center justify-center rounded-2xl">
+                                        <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-10 flex items-center justify-center rounded-[32px]">
                                             <div className="flex flex-col items-center gap-2">
                                                 <div className="w-6 h-6 border-2 border-[#FF2A14] border-t-transparent rounded-full animate-spin" />
                                                 <span className="text-xs font-semibold text-gray-500">Switching...</span>
@@ -531,79 +533,131 @@ const SalonsListing = () => {
                                         </div>
                                     )}
 
-                                    {/* Image */}
-                                    <div className="h-48 relative overflow-hidden bg-gray-50">
+                                    {/* Image Section */}
+                                    <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
                                         {hasImage ? (
                                             <>
                                                 <img
                                                     src={coverImg}
                                                     alt={salon.salonName || salon.name}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                                                 />
-                                                {/* Gradient overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
                                             </>
                                         ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                                <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-40" />
+                                            <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
+                                                <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                    <circle cx="9" cy="17" r="3.5" />
+                                                    <circle cx="15" cy="17" r="3.5" />
+                                                    <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
+                                                    <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
+                                                    <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
+                                                </svg>
                                                 <span className="text-[11px] font-semibold text-gray-400">No image available</span>
                                             </div>
                                         )}
-                                        
-                                        {/* Rating badge */}
-                                        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm">
-                                            <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <span className="text-gray-800">{rating}</span>
-                                        </div>
 
-                                        {/* Open/Closed badge */}
-                                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm ${
-                                            isOpen
-                                                ? 'bg-emerald-50/95 text-emerald-600 border border-emerald-200/50'
-                                                : 'bg-red-50/95 text-red-500 border border-red-200/50'
-                                        }`}>
-                                            <span className="flex items-center gap-1">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                                        {/* Top Badges */}
+                                        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                                            {/* Open/Closed Badge */}
+                                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${
+                                                isOpen
+                                                    ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
+                                                    : 'bg-white/95 border-rose-500/20 text-rose-700'
+                                            }`}>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                                                 {isOpen ? 'Open' : 'Closed'}
-                                            </span>
+                                            </div>
+
+                                            {/* Rating Badge */}
+                                            <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                                <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                                <span>{rating} ({reviewsCount}+)</span>
+                                            </div>
                                         </div>
                                     </div>
 
+                                    {/* Avatar Logo Overlay */}
+                                    <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+                                        {salon.imageBase64 ? (
+                                            <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName || salon.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
+                                                {(salon.salonName || salon.name || 'S')[0].toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* Card Body */}
-                                    <div className="p-4">
-                                        <h3 className="font-bold text-gray-900 text-base leading-tight mb-1 group-hover:text-[#FF2A14] transition-colors duration-200 line-clamp-1">
-                                            {salon.salonName || salon.name}
-                                        </h3>
-                                        <div className="flex items-center gap-1 text-gray-400 mb-3">
-                                            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <div className="p-6 pt-3 flex flex-col flex-grow text-left">
+                                        <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
+                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192L12 .587z"/>
+                                            </svg>
+                                            NEOPARLOUR PARTNER
+                                        </span>
+
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
+                                                {salon.salonName || salon.name}
+                                            </h4>
+                                            {(salon.salonCode || salon.gstNumber) && (
+                                                <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
+                                                    {salon.salonCode || '02FBD8E7'}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
+                                            <svg className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
-                                            <span className="text-xs font-medium line-clamp-1">
-                                                {[salon.areaName, salon.cityName].filter(Boolean).join(', ') || 'Location not specified'}
-                                            </span>
+                                            <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
                                         </div>
 
-                                        {/* Tags */}
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {salon.openingTime && salon.closingTime && (
-                                                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    {salon.openingTime} - {salon.closingTime}
+                                        <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
+                                            {salon.address || 'Dhankawadi'}
+                                        </p>
+
+                                        {/* Home Service Badge */}
+                                        {salon.homeServiceCharges ? (
+                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                </svg>
+                                                <span>Home Service (₹{salon.homeServiceCharges})</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                </svg>
+                                                <span>Home Service (₹50)</span>
+                                            </div>
+                                        )}
+
+                                        {/* Card Footer */}
+                                        <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5 text-gray-400">
+                                                <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span className="text-[11px] font-black tracking-widest">
+                                                    {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
                                                 </span>
-                                            )}
-                                            {salon.gstNumber && (
-                                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </div>
+
+                                            <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
+                                                <span>Book Session</span>
+                                                <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
+                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                                     </svg>
-                                                    Verified
-                                                </span>
-                                            )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

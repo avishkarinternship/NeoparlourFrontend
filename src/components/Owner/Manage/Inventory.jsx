@@ -77,6 +77,7 @@ const Inventory = () => {
     // ==================== ADD STOCK MODAL ====================
     const [showAddStockModal, setShowAddStockModal] = useState(false);
     const [stockToAdd, setStockToAdd] = useState('');
+    const [costPriceToAdd, setCostPriceToAdd] = useState('');
     const [stockLoading, setStockLoading] = useState(false);
 
     // ==================== VIEW ASSIGNED MODAL ====================
@@ -90,6 +91,12 @@ const Inventory = () => {
     const [newAllocatedQuantity, setNewAllocatedQuantity] = useState('');
     const [editNotes, setEditNotes] = useState('');
     const [editLoading, setEditLoading] = useState(false);
+
+    // ==================== VIEW USAGE MODAL ====================
+    const [showUsageModal, setShowUsageModal] = useState(false);
+    const [usageList, setUsageList] = useState([]);
+    const [usageLoading, setUsageLoading] = useState(false);
+    const [selectedStaffInventory, setSelectedStaffInventory] = useState(null);
 
     // ==================== SWAP REQUESTS STATES ====================
     const [swapRequests, setSwapRequests] = useState([]);
@@ -123,8 +130,8 @@ const Inventory = () => {
 
             const response = await axiosInstance.get('/inventory/search', { params });
             setInventoryItems(response.data?.content || response.data || []);
-            setTotalPages(response.data?.totalPages || 0);
-            setTotalElements(response.data?.totalElements || 0);
+            setTotalPages(response.data?.page?.totalPages ?? response.data?.totalPages ?? 0);
+            setTotalElements(response.data?.page?.totalElements ?? response.data?.totalElements ?? 0);
             setCurrentPage(page);
         } catch (error) {
             toast.error('Failed to load inventory', toastStyle);
@@ -275,6 +282,7 @@ const Inventory = () => {
     const openAddStockModal = (item) => {
         setSelectedInventory(item);
         setStockToAdd('');
+        setCostPriceToAdd('');
         setShowAddStockModal(true);
     };
 
@@ -292,10 +300,10 @@ const Inventory = () => {
 
         setStockLoading(true);
         try {
-            const newStock = (selectedInventory.currentStock || 0) + quantityToAdd;
-            await axiosInstance.put(`/inventory/${selectedInventory.id}/stock`, null, {
+            await axiosInstance.post(`/inventory/${selectedInventory.id}/add-stock`, null, {
                 params: {
-                    stock: newStock
+                    quantity: quantityToAdd,
+                    costPrice: costPriceToAdd || undefined
                 }
             });
             toast.success('Stock added successfully!', toastStyle);
@@ -351,12 +359,28 @@ const Inventory = () => {
 
     const openViewAssigned = async (item) => {
         try {
+            setSelectedInventory(item);
             const response = await axiosInstance.get(`/staff-inventory/inventory/${item.id}`);
             setAssignedStaffList(response.data || []);
             setCurrentItemName(item.name);
             setShowAssignedModal(true);
         } catch (error) {
             toast.error('Failed to fetch assigned staff', toastStyle);
+        }
+    };
+
+    const handleViewUsage = async (staffInventory) => {
+        setSelectedStaffInventory(staffInventory);
+        setShowUsageModal(true);
+        setUsageLoading(true);
+        setUsageList([]);
+        try {
+            const response = await axiosInstance.get(`/staff-inventory/${staffInventory.id}/opened-products-counts`);
+            setUsageList(response.data || []);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to fetch usage history', toastStyle);
+        } finally {
+            setUsageLoading(false);
         }
     };
 
@@ -926,6 +950,22 @@ const Inventory = () => {
                                     placeholder="Enter quantity" 
                                 />
                             </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-gray-500 block mb-2">Cost Price (₹, Optional)</label>
+                                <input 
+                                    type="text" 
+                                    value={costPriceToAdd} 
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                                        const parts = val.split('.');
+                                        if (parts.length > 2) return;
+                                        setCostPriceToAdd(val);
+                                    }} 
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base focus:outline-none focus:border-[#FF0B01] transition-all" 
+                                    placeholder="Enter cost price" 
+                                />
+                            </div>
                         </div>
 
                         <div className="flex gap-3 mt-8">
@@ -975,7 +1015,12 @@ const Inventory = () => {
 
                                     <div className="flex justify-between mt-4 text-xs">
                                         <p>Assigned: {staff.assignedAt ? new Date(staff.assignedAt).toLocaleString() : 'N/A'}</p>
-                                        <button className="border border-red-600 text-red-600 px-5 py-2 rounded-full text-xs font-medium hover:bg-red-50">View Usage</button>
+                                        <button 
+                                            onClick={() => handleViewUsage(staff)} 
+                                            className="border border-[#FF0B01] text-[#FF0B01] px-5 py-2 rounded-full text-xs font-medium hover:bg-red-50 cursor-pointer transition-colors"
+                                        >
+                                            View Usage
+                                        </button>
                                     </div>
                                 </div>
                             ))
@@ -1023,6 +1068,104 @@ const Inventory = () => {
                             <button onClick={() => setShowEditModal(false)} className="flex-1 py-3 border border-gray-300 rounded-xl">Cancel</button>
                             <button onClick={handleUpdateAssignment} disabled={editLoading} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold">
                                 {editLoading ? 'Updating...' : 'Update'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Usage Modal */}
+            {showUsageModal && selectedStaffInventory && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative border border-gray-100 max-h-[90vh] flex flex-col">
+                        {/* Close button */}
+                        <button 
+                            onClick={() => setShowUsageModal(false)}
+                            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-[#FF0B01] flex items-center justify-center transition focus:outline-none cursor-pointer text-lg font-bold"
+                        >
+                            ✕
+                        </button>
+
+                        <div className="mb-6 pb-3 border-b border-gray-100 pr-8">
+                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF0B01] block">
+                                Usage & Open Product History
+                            </span>
+                            <h3 className="text-xl font-black text-gray-900 tracking-tight mt-1">
+                                {selectedStaffInventory.staffName}'s Usage Details
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-1 font-semibold">
+                                Inventory Item: <span className="font-bold text-[#FF0B01]">{selectedInventory?.name || currentItemName}</span>
+                            </p>
+                        </div>
+
+                        {/* Usage List Content */}
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[250px] text-left">
+                            {usageLoading ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                                    <div className="animate-spin h-7 w-7 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Loading usage details...</span>
+                                </div>
+                            ) : usageList.length === 0 ? (
+                                <div className="text-center py-16 text-gray-400 font-bold uppercase text-xs tracking-wider">
+                                    No open product usage records found for this assignment.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {usageList.map((record) => (
+                                        <div key={record.id} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 hover:bg-gray-50/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-sm font-extrabold text-gray-900">
+                                                        Qty Opened: {record.openedQuantity}
+                                                    </span>
+                                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                                        record.isFinished 
+                                                            ? 'bg-gray-200 text-gray-600' 
+                                                            : 'bg-[#FF0B01]/10 text-[#FF0B01]'
+                                                    }`}>
+                                                        {record.isFinished ? 'Finished' : 'Currently Active'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="text-[11px] text-gray-500 font-semibold space-y-0.5">
+                                                    <p>
+                                                        Opened: {record.openedAt ? new Date(record.openedAt).toLocaleString('en-IN') : 'N/A'}
+                                                    </p>
+                                                    {record.finishedAt && (
+                                                        <p>
+                                                            Finished: {new Date(record.finishedAt).toLocaleString('en-IN')}
+                                                        </p>
+                                                    )}
+                                                    {record.notes && (
+                                                        <p className="text-gray-400 italic font-normal">
+                                                            Note: {record.notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Right count pill */}
+                                            <div className="bg-white border border-gray-200 rounded-2xl p-3 text-center min-w-[120px] shadow-2xs">
+                                                <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest block mb-0.5">
+                                                    Appointments Served
+                                                </span>
+                                                <span className="text-xl font-black text-gray-900 font-mono">
+                                                    {record.appointmentCount ?? 0}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="pt-4 border-t border-gray-100 mt-4 flex justify-end">
+                            <button
+                                onClick={() => setShowUsageModal(false)}
+                                className="bg-[#FF0B01] hover:bg-[#d90900] text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider cursor-pointer transition"
+                            >
+                                Close History
                             </button>
                         </div>
                     </div>

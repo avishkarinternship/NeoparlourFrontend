@@ -5,6 +5,7 @@ import ManageSideBar from "../Layouts/ManageSideBar";
 import Navbar from '../Layouts/Navbar';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { CalendarClock, CheckCircle, XCircle, Eye, X } from 'lucide-react';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -64,6 +65,24 @@ const Schedule = () => {
   // Staff Modal
   const [newStaffId, setNewStaffId] = useState('');
 
+  // View Appointment Modal States
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [loadingViewAppointment, setLoadingViewAppointment] = useState(false);
+  const [selectedAppointmentDetails, setSelectedAppointmentDetails] = useState(null);
+
+  const handleViewAppointment = async (id) => {
+    setLoadingViewAppointment(true);
+    try {
+      const response = await axiosInstance.get(`/appointments/${id}`);
+      setSelectedAppointmentDetails(response.data);
+      setIsViewModalOpen(true);
+    } catch (error) {
+      toast.error('Failed to load appointment details', toastStyle);
+    } finally {
+      setLoadingViewAppointment(false);
+    }
+  };
+
   const fetchStaff = async () => {
     try {
       const response = await axiosInstance.get('/staff');
@@ -88,6 +107,8 @@ const Schedule = () => {
       const status = (currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') ? 'booked'
         : currentSubTab === 'Cancelled' ? 'cancelled' : 'completed';
       params.append('status', status);
+
+      params.append('sort', 'appointmentAt,desc');
 
       // Get the start of today in IST (Asia/Kolkata) timezone
       const getStartOfTodayIST = () => {
@@ -410,12 +431,16 @@ const Schedule = () => {
                     {/* Left status vertical border indicator */}
                     <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
                     
-                    <div className="flex items-center space-x-3.5">
+                    <div 
+                      onClick={() => handleViewAppointment(appt.id)}
+                      className="flex items-center space-x-3.5 cursor-pointer hover:opacity-85 transition-all group/info"
+                      title="Click to view details"
+                    >
                       <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200">
                         <img src={appt.customerAvatar || profileIcon} alt={appt.customerName} className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <h4 className="text-[14px] font-bold text-gray-900 tracking-tight">{appt.customerName || 'Customer'}</h4>
+                        <h4 className="text-[14px] font-bold text-gray-900 tracking-tight group-hover/info:text-[#FF0B01] transition-colors">{appt.customerName || 'Customer'}</h4>
                         <div className="flex items-center space-x-3 text-[11px] font-semibold text-gray-400 mt-1 flex-wrap">
                           <span className="text-gray-500">{appt.serviceName || (appt.serviceNames && appt.serviceNames.join(", "))}</span>
                           <span className="flex items-center text-gray-400">
@@ -437,11 +462,33 @@ const Schedule = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end text-[10px] font-extrabold uppercase tracking-widest pt-2 lg:pt-0 border-t border-gray-50 lg:border-t-0">
+                      {/* View Details Eye Button */}
+                      <button 
+                        onClick={() => handleViewAppointment(appt.id)} 
+                        className="w-9 h-9 flex items-center justify-center bg-gray-50 text-gray-600 hover:text-[#FF0B01] hover:bg-red-50 border border-gray-150 rounded-xl transition shadow-xs cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && (
                         <>
-                          <button onClick={() => openActionModal(appt, 'reschedule')} className="bg-[#FF0B01] text-white px-4 py-2.5 rounded-xl hover:bg-red-700 transition shadow-sm">Reschedule</button>
-                          <button onClick={() => handleComplete(appt)} className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm">Complete</button>
-                          <button onClick={() => openCancelModal(appt)} className="bg-gray-400 text-white px-4 py-2.5 rounded-xl hover:bg-gray-500 transition shadow-sm">Cancel</button>
+                          <button 
+                            onClick={() => openActionModal(appt, 'reschedule')} 
+                            className="w-9 h-9 flex items-center justify-center bg-[#FF0B01] text-white rounded-xl hover:bg-red-700 transition shadow-sm cursor-pointer"
+                          >
+                            <CalendarClock className="w-4.5 h-4.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleComplete(appt)} 
+                            className="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-sm cursor-pointer"
+                          >
+                            <CheckCircle className="w-4.5 h-4.5" />
+                          </button>
+                          <button 
+                            onClick={() => openCancelModal(appt)} 
+                            className="w-9 h-9 flex items-center justify-center bg-gray-400 text-white rounded-xl hover:bg-gray-500 transition shadow-sm cursor-pointer"
+                          >
+                            <XCircle className="w-4.5 h-4.5" />
+                          </button>
                           {appt.staffId ? (
                             <button onClick={() => openStaffModal(appt)} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center gap-1 transition shadow-2xs">
                               <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Change Staff
@@ -571,6 +618,262 @@ const Schedule = () => {
                 {selectedAppointment.staffId ? 'Update Staff' : 'Assign Staff'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Appointment Details Modal */}
+      {isViewModalOpen && selectedAppointmentDetails && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative border border-gray-100 p-6 md:p-8 animate-in fade-in zoom-in duration-200">
+            {/* Close button */}
+            <button 
+              onClick={() => setIsViewModalOpen(false)}
+              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-[#FF0B01] flex items-center justify-center transition-all duration-200 focus:outline-none cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
+                📅
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-600 block">
+                  Appointment Overview
+                </span>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">
+                  Appointment #NP-{selectedAppointmentDetails.id}
+                </h3>
+              </div>
+            </div>
+
+            {/* Details Grid (Premium dashboard card key-value cells) */}
+            <div className="space-y-4 text-left">
+              {/* Client & Booking details grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Customer</span>
+                  <span className="text-xs font-bold text-gray-800 break-words">
+                    {selectedAppointmentDetails.customerName || selectedAppointmentDetails.customer?.fullName || 'N/A'}
+                  </span>
+                </div>
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Customer Contact</span>
+                  <span className="text-xs font-bold text-gray-800 break-words">
+                    {selectedAppointmentDetails.customerNumber || selectedAppointmentDetails.customerMobile || selectedAppointmentDetails.customer?.mobile || 'N/A'}
+                  </span>
+                </div>
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Stylist</span>
+                  <span className="text-xs font-bold text-gray-800 break-words">
+                    {selectedAppointmentDetails.staffName || 'Unassigned'}
+                  </span>
+                </div>
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Duration</span>
+                  <span className="text-xs font-extrabold text-[#FF0B01] uppercase tracking-wider">
+                    {selectedAppointmentDetails.serviceDuration ? `${selectedAppointmentDetails.serviceDuration} Mins` : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Schedule & Status */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl md:col-span-2 flex flex-col justify-between">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Scheduled Date & Time (IST)</span>
+                  <span className="text-xs font-semibold text-gray-800">
+                    {selectedAppointmentDetails.appointmentAt 
+                      ? new Date(selectedAppointmentDetails.appointmentAt).toLocaleString('en-IN', { 
+                          timeZone: 'Asia/Kolkata', 
+                          dateStyle: 'medium', 
+                          timeStyle: 'short' 
+                        }) 
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Status</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${
+                      selectedAppointmentDetails.status === 'booked' ? 'bg-[#FF0B01]' :
+                      selectedAppointmentDetails.status === 'completed' ? 'bg-green-500' :
+                      'bg-gray-400'
+                    }`}></span>
+                    <span className="text-xs font-bold text-gray-800 uppercase tracking-wider capitalize">
+                      {selectedAppointmentDetails.status || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Merged Services & Price Calculation Ledger */}
+              <div className="border border-dashed border-gray-200 bg-gray-50/30 p-5 rounded-2xl space-y-3 font-mono">
+                <div className="flex items-center justify-between pb-2 border-b border-dashed border-gray-200">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest font-sans">Services & Billing Ledger</span>
+                  <span className="text-[9px] text-gray-400 uppercase font-sans tracking-widest font-bold font-mono">Receipt</span>
+                </div>
+
+                {/* Services List and their individual prices */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest block font-sans">Services Booked</span>
+                  <div className="divide-y divide-gray-100/60">
+                    {(() => {
+                      const services = selectedAppointmentDetails.services || [];
+                      if (services.length > 0) {
+                        return services.map((s, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-1.5 first:pt-0 last:pb-0 text-xs">
+                            <span className="text-gray-800 font-sans">{s.serviceName || `Service ${idx + 1}`}</span>
+                            <span className="font-bold text-gray-650 font-mono">₹{(s.price ?? 0).toFixed(2)}</span>
+                          </div>
+                        ));
+                      }
+                      
+                      const serviceNames = selectedAppointmentDetails.serviceNames || [];
+                      if (serviceNames.length > 0) {
+                        return serviceNames.map((name, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-1.5 first:pt-0 last:pb-0 text-xs">
+                            <span className="text-gray-800 font-sans">{name}</span>
+                            <span className="font-bold text-gray-400 font-mono">N/A</span>
+                          </div>
+                        ));
+                      }
+                      
+                      if (selectedAppointmentDetails.serviceName) {
+                        return (
+                          <div className="flex justify-between items-center py-1.5 text-xs">
+                            <span className="text-gray-800 font-sans">{selectedAppointmentDetails.serviceName}</span>
+                            <span className="font-bold text-gray-650 font-mono">₹{(selectedAppointmentDetails.totalPrice ?? 0).toFixed(2)}</span>
+                          </div>
+                        );
+                      }
+                      
+                      return <p className="text-xs text-gray-400 font-sans">No services specified</p>;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-100/60 my-2"></div>
+
+                {/* Service Subtotal */}
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span className="font-sans">Service Subtotal:</span>
+                  <span className="font-bold">₹{(selectedAppointmentDetails.totalPrice ?? 0).toFixed(2)}</span>
+                </div>
+
+                {/* Home Service Charge */}
+                {selectedAppointmentDetails.homeService && (
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span className="font-sans">🏠 Home Service Charge:</span>
+                    <span className="font-bold text-amber-600">
+                      {selectedAppointmentDetails.homeCharge ? `+ ₹${Number(selectedAppointmentDetails.homeCharge).toFixed(2)}` : 'Included / Free'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Discount Applied */}
+                {(selectedAppointmentDetails.discountAmount ?? 0) > 0 && (
+                  <div className="flex flex-col gap-1 py-1 bg-green-50/30 px-2 rounded-lg border border-green-100/50">
+                    <div className="flex justify-between text-xs text-green-700">
+                      <span className="font-sans">🎁 Promo Discount:</span>
+                      <span className="font-bold">- ₹{(selectedAppointmentDetails.discountAmount ?? 0).toFixed(2)}</span>
+                    </div>
+                    {selectedAppointmentDetails.offerName && (
+                      <div className="text-[9px] font-sans text-green-600 font-bold uppercase tracking-wider">
+                        Offer: {selectedAppointmentDetails.offerName}
+                        {selectedAppointmentDetails.discountValue && (
+                          <span> ({selectedAppointmentDetails.discountType === 'percentage' ? `${selectedAppointmentDetails.discountValue}%` : `₹${selectedAppointmentDetails.discountValue}`} Off)</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Package Applied */}
+                {selectedAppointmentDetails.packageName && (
+                  <div className="flex justify-between text-xs text-blue-750 bg-blue-50/30 px-2 py-1 rounded-lg border border-blue-100/50">
+                    <span className="text-[9px] font-sans uppercase font-bold tracking-wider">📦 Package: {selectedAppointmentDetails.packageName}</span>
+                    <span className="text-[9px] font-sans text-blue-500 font-semibold">Applied</span>
+                  </div>
+                )}
+
+                {/* Horizontal divider */}
+                <div className="border-t border-dashed border-gray-250 pt-2 flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-800 font-sans">Final Net Amount:</span>
+                  <div className="flex flex-col items-end">
+                    <span className="text-lg font-black text-[#FF0B01]">
+                      ₹{(selectedAppointmentDetails.finalAmount ?? selectedAppointmentDetails.totalPrice ?? 0).toFixed(2)}
+                    </span>
+                    <span className="text-[8px] font-semibold text-gray-400 font-sans uppercase tracking-widest mt-0.5">Calculated & Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Home Service Address details */}
+              {selectedAppointmentDetails.homeService && selectedAppointmentDetails.address && (
+                <div className="border border-amber-200 bg-amber-50/20 rounded-2xl p-4 space-y-2">
+                  <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+                    🏠 Home Delivery Address
+                  </span>
+                  <p className="text-xs text-gray-700 font-medium leading-relaxed">
+                    {selectedAppointmentDetails.address}
+                  </p>
+                  {(selectedAppointmentDetails.latitude || selectedAppointmentDetails.longitude) && (
+                    <div className="text-[9px] font-mono text-gray-400">
+                      Coordinates: {selectedAppointmentDetails.latitude || 'N/A'}, {selectedAppointmentDetails.longitude || 'N/A'}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reason / Notes */}
+              {(selectedAppointmentDetails.cancelReason || 
+                selectedAppointmentDetails.ownerRescheduleReason || 
+                selectedAppointmentDetails.customerRescheduleReason) && (
+                <div className="border border-red-100 bg-red-50/10 rounded-2xl p-4 space-y-2">
+                  <span className="text-[10px] font-black text-[#FF0B01] uppercase tracking-wider">📝 Reschedule / Cancellation Info</span>
+                  {selectedAppointmentDetails.cancelReason && (
+                    <div className="text-xs text-gray-750">
+                      <span className="font-bold">Cancellation Reason: </span>
+                      <span>{selectedAppointmentDetails.cancelReason}</span>
+                    </div>
+                  )}
+                  {selectedAppointmentDetails.ownerRescheduleReason && (
+                    <div className="text-xs text-gray-755">
+                      <span className="font-bold">Owner Rescheduled: </span>
+                      <span>{selectedAppointmentDetails.ownerRescheduleReason}</span>
+                    </div>
+                  )}
+                  {selectedAppointmentDetails.customerRescheduleReason && (
+                    <div className="text-xs text-gray-755">
+                      <span className="font-bold">Customer Rescheduled: </span>
+                      <span>{selectedAppointmentDetails.customerRescheduleReason}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="flex gap-4 pt-6 border-t border-gray-100 mt-6">
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="flex-1 bg-[#FF0B01] hover:bg-[#d90900] transition text-white py-3.5 rounded-2xl font-bold shadow-md hover:shadow-lg text-xs tracking-wider uppercase cursor-pointer"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fetching loading state indicator overlay */}
+      {loadingViewAppointment && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-6 shadow-2xl flex items-center gap-3 border border-gray-100">
+            <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
+            <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
           </div>
         </div>
       )}
