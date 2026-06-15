@@ -25,12 +25,10 @@ const Footer = () => {
                 <div className="md:col-span-2">
                     <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Company</h4>
                     <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Careers</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
+                        <li onClick={() => navigate('/customer/influencer-program')} className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
+                        <li onClick={() => navigate('/customer/about')} className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
                         <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
+                        <li onClick={() => navigate('/customer/blogs')} className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
                     </ul>
                 </div>
 
@@ -38,8 +36,8 @@ const Footer = () => {
                 <div className="md:col-span-2">
                     <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Legal</h4>
                     <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Privacy Policy</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Terms Of Service</li>
+                        <li onClick={() => navigate('/customer/privacy-policy')} className="cursor-pointer hover:text-gray-900 transition-colors">• Privacy Policy</li>
+                        <li onClick={() => navigate('/customer/terms-and-conditions')} className="cursor-pointer hover:text-gray-900 transition-colors">• Terms Of Service</li>
                     </ul>
                 </div>
 

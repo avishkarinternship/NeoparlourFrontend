@@ -308,7 +308,7 @@ export default function Navbar({ onToggleSidebar }) {
                             <button
                               key={staff.id}
                               onClick={() => {
-                                navigate('/owner/manage/staff');
+                                navigate('/owner/manage/staff', { state: { editStaffId: staff.id } });
                                 setShowDropdown(false);
                               }}
                               className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
@@ -352,7 +352,7 @@ export default function Navbar({ onToggleSidebar }) {
                           <button
                             key={visit.id}
                             onClick={() => {
-                              navigate('/owner/manage/staff');
+                              navigate('/owner/customers', { state: { customerMobile: visit.customerMobile, customerName: visit.customerName } });
                               setShowDropdown(false);
                             }}
                             className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
@@ -390,7 +390,7 @@ export default function Navbar({ onToggleSidebar }) {
                           <button
                             key={appt.id}
                             onClick={() => {
-                              navigate('/owner/manage/schedule');
+                              navigate('/owner/manage/schedule', { state: { appointmentId: appt.id } });
                               setShowDropdown(false);
                             }}
                             className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
@@ -431,7 +431,7 @@ export default function Navbar({ onToggleSidebar }) {
                           <button
                             key={service.id}
                             onClick={() => {
-                              navigate('/owner/manage/services');
+                              navigate('/owner/manage/services', { state: { serviceId: service.id } });
                               setShowDropdown(false);
                             }}
                             className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
@@ -462,7 +462,7 @@ export default function Navbar({ onToggleSidebar }) {
                             <button
                               key={product.id}
                               onClick={() => {
-                                navigate('/owner/manage/add-products');
+                                navigate('/owner/manage/add-products', { state: { editProductId: product.id } });
                                 setShowDropdown(false);
                               }}
                               className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
@@ -513,7 +513,7 @@ export default function Navbar({ onToggleSidebar }) {
                             <button
                               key={offer.id}
                               onClick={() => {
-                                navigate('/owner/manage/add-offers');
+                                navigate('/owner/manage/add-offers', { state: { editOfferId: offer.id } });
                                 setShowDropdown(false);
                               }}
                               className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"

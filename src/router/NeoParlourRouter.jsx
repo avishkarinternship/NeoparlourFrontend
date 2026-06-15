@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
@@ -32,9 +32,8 @@ import SalonPage from '../components/Customer/SalonPage'
 import SelectService from '../components/Customer/SelectService'
 import ProductSearch from '../components/Customer/ProductSearch'
 import ProductDetails from '../components/Customer/ProductDetails'
-import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
-import ProductBillDetails from '../components/Customer/ProductBillDetails'
 import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
+import OrderSuccess from '../components/Customer/OrderSuccess'
 import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
 import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
 import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
@@ -46,6 +45,43 @@ import Customers from '../components/Owner/Customers'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
 
+// Import New Footer Pages
+import InfluencerProgram from '../components/Customer/InfluencerProgram'
+import Blogs from '../components/Customer/Blogs'
+
+// --- Route Guards ---
+const OwnerRouteGuard = ({ children }) => {
+    const ownerToken = localStorage.getItem('ownerStaffToken');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (!ownerToken) {
+        if (customerToken) {
+            // Customer trying to access owner page -> send to customer home
+            return <Navigate to="/" replace />;
+        }
+        // Guest trying to access owner page -> send to owner login
+        return <Navigate to="/owner/login" replace />;
+    }
+    return children;
+};
+
+const CustomerRouteGuard = ({ children, isPublic = false }) => {
+    const ownerToken = localStorage.getItem('ownerStaffToken');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (ownerToken) {
+        // Owner trying to access customer page -> send to owner dashboard
+        return <Navigate to="/owner/dashboard" replace />;
+    }
+
+    if (!isPublic && !customerToken) {
+        // Guest trying to access private customer page -> send to customer login
+        return <Navigate to="/customer/login" replace />;
+    }
+
+    return children;
+};
+
 export let routes = createBrowserRouter([
     {
         path: '/',
@@ -53,15 +89,15 @@ export let routes = createBrowserRouter([
         children: [
             {
                 path: '/',
-                element: <HomeScreen />
+                element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
             },
             {
                 path: '/customer/login',
-                element: <CustomerLogin />
+                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
             },
             {
                 path: '/login',
-                element: <CustomerLogin />
+                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
             },
             {
                 path: '/owner/login',
@@ -73,11 +109,11 @@ export let routes = createBrowserRouter([
             },
             {
                 path: '/register',
-                element: <CustomerRegister />
+                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
             },
             {
                 path: '/signup',
-                element: <CustomerRegister />
+                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
             },
             {
                 path: '/owner/register',
@@ -89,92 +125,88 @@ export let routes = createBrowserRouter([
             },
             {
                 path: '/subscription-plans',
-                element: <SubscriptionPlans />
+                element: <OwnerRouteGuard><SubscriptionPlans /></OwnerRouteGuard>
             },
           
             {
                 path: '/customer/select-salon',
-                element: <SalonSelection />
+                element: <CustomerRouteGuard><SalonSelection /></CustomerRouteGuard>
             },
             {
                 path: '/owner/dashboard',
-                element: <OwnerDashboard />
+                element: <OwnerRouteGuard><OwnerDashboard /></OwnerRouteGuard>
             },
             {
                 path : '/customer/terms-and-conditions',
-                element : <CustomerTermsAndConditions/>
+                element : <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions/></CustomerRouteGuard>
             },
-            // {
-            //     path: '/owner/manage',
-            //     element: <ManageSideBar />
-            // },
             {
                 path: '/owner/analytics',
-                element: <Analytics />
+                element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
             },
             {
                 path: '/owner/orders',
-                element: <Orders />
+                element: <OwnerRouteGuard><Orders /></OwnerRouteGuard>
             },
             {
                 path: '/owner/billing',
-                element: <Billing />
+                element: <OwnerRouteGuard><Billing /></OwnerRouteGuard>
             },
             {
                 path: '/owner/settings',
-                element: <Settings />
+                element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/schedule',
-                element: <Schedule />
+                element: <OwnerRouteGuard><Schedule /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/services',
-                element: <Services />
+                element: <OwnerRouteGuard><Services /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/inventory',
-                element: <Inventory />
+                element: <OwnerRouteGuard><Inventory /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/staff',
-                element: <Staff />
+                element: <OwnerRouteGuard><Staff /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/feedback',
-                element: <Feedback />
+                element: <OwnerRouteGuard><Feedback /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/home-services',
-                element: <HomeServices />
+                element: <OwnerRouteGuard><HomeServices /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/subscription',
-                element: <Subscription />
+                element: <OwnerRouteGuard><Subscription /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/add-offers',
-                element: <AddOffers />
+                element: <OwnerRouteGuard><AddOffers /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/add-products',
-                element: <AddProducts />
+                element: <OwnerRouteGuard><AddProducts /></OwnerRouteGuard>
             },
             {
                 path: '/owner/manage/add-package',
-                element: <AddPackages />
+                element: <OwnerRouteGuard><AddPackages /></OwnerRouteGuard>
             },
             {
                 path: '/owner/customers',
-                element: <Customers />
+                element: <OwnerRouteGuard><Customers /></OwnerRouteGuard>
             },
             {
                 path: '/customer/my-salons',
-                element: <MySalons />
+                element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
             },
             {
                 path: '/owner/appointments',
-                element: <Appointments />
+                element: <OwnerRouteGuard><Appointments /></OwnerRouteGuard>
             },
             {
                 path: '/owner/notifications',
@@ -182,84 +214,91 @@ export let routes = createBrowserRouter([
             },
             {
                 path: '/customer/appointments',
-                element: <Appointments />
+                element: <CustomerRouteGuard><Appointments /></CustomerRouteGuard>
             },
             {
                 path: '/customer-login',
-                element: <CustomerLogin />
+                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
             },
             {
                 path: '/customer/home',
-                element: <HomeScreen />
+                element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
             },
             {
                 path: '/customer/features',
-                element: <Features />
+                element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
             },
             {
                 path: 'customer/salon',
-                element: <SalonPage />
+                element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
             },
             {
                 path: 'customer/book-service',
-                element: <SelectService />
+                element: <CustomerRouteGuard isPublic={true}><SelectService /></CustomerRouteGuard>
             },
             {
                 path: 'customer/product-search',
-                element: <ProductSearch />
+                element: <CustomerRouteGuard isPublic={true}><ProductSearch /></CustomerRouteGuard>
             },
             {
                 path: 'customer/product-details',
-                element: <ProductDetails />
-            },
-            {
-                path: 'customer/product-payment',
-                element: <ProductPaymentMethod />
-            },
-            {
-                path: 'customer/product-bill',
-                element: <ProductBillDetails />
+                element: <CustomerRouteGuard isPublic={true}><ProductDetails /></CustomerRouteGuard>
             },
             {
                 path: 'customer/appointment-success',
-                element: <AppointmentSuccess />
+                element: <CustomerRouteGuard><AppointmentSuccess /></CustomerRouteGuard>
+            },
+            {
+                path: 'customer/order-success',
+                element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
             },   
             {
                 path: '/customer/about',
-                element: <AboutUs />
+                element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
             },
             {
                 path: '/customer/support',
-                element: <Support />
+                element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
             },
             {
                 path: '/customer/partner-with-us',
-                element: <PartnerWithUs />
+                element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
             },
             {
                 path: '/customer/salons',
-                element: <SalonsListing />
+                element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
             },
             {
                 path: '/customer/privacy-policy',
-                element: <PrivacyPolicy />
+                element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
             },
             {
                 path: '/owner/privacy-policy',
-                element: <PrivacyPolicyScreen />
+                element: <OwnerRouteGuard><PrivacyPolicyScreen /></OwnerRouteGuard>
             },
             {
                 path: '/settings',
-                element: <Settings />
+                element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
             },
             {
                 path: '/signup',
-                element: <CustomerRegister />
+                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
             },
             {
                 path: '/owner/terms-and-conditions',
-                element: <OwnerTermsAndConditions />
+                element: <OwnerRouteGuard><OwnerTermsAndConditions /></OwnerRouteGuard>
             },
+            
+            // New Footer Pages
+            {
+                path: '/customer/influencer-program',
+                element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
+            },
+            {
+                path: '/customer/blogs',
+                element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+            },
+
             {
                 path: '*',
                 element: <div className='min-h-screen flex items-center justify-center text-2xl font-poppins'>404 - Page Not Found</div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
@@ -39,6 +40,7 @@ const toastStyle = {
 };
 
 const Service = () => {
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -172,6 +174,18 @@ const Service = () => {
         setFormErrors({});
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    useEffect(() => {
+        if (location.state?.serviceId) {
+            axiosInstance.get(`/services/${location.state.serviceId}`)
+                .then(res => {
+                    handleEditService(res.data);
+                })
+                .catch(err => {
+                    console.error("Failed to load service details for edit:", err);
+                });
+        }
+    }, [location.state?.serviceId]);
 
     const handleServiceSave = async (e) => {
         e.preventDefault();

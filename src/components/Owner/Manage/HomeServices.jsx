@@ -15,6 +15,8 @@ const HomeServices = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [serviceCharge, setServiceCharge] = useState('0.0');
+    const [originalCharge, setOriginalCharge] = useState('0.0');
+    const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -27,6 +29,7 @@ const HomeServices = () => {
             const response = await axiosInstance.get(`salons/${salonId}/home-service-charges`);
             const charge = response.data || 0.0;
             setServiceCharge(charge.toString());
+            setOriginalCharge(charge.toString());
         } catch (error) {
             console.error(error);
             toast.error('Failed to load home service charge', toastStyle);
@@ -54,6 +57,8 @@ const HomeServices = () => {
                 `salons/home-service-charges?charges=${chargeValue}`
             );
             toast.success('Home service charge updated successfully', toastStyle);
+            setOriginalCharge(serviceCharge);
+            setIsEditing(false);
         } catch (error) {
             console.error(error);
             toast.error(
@@ -63,6 +68,11 @@ const HomeServices = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleCancel = () => {
+        setServiceCharge(originalCharge);
+        setIsEditing(false);
     };
 
     const handleChargeChange = (e) => {
@@ -99,9 +109,20 @@ const HomeServices = () => {
                         <form onSubmit={handleSave} className="space-y-8">
                             {/* Service Charge Section */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                    Home Service Charge
-                                </label>
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-sm font-semibold text-gray-700">
+                                        Home Service Charge
+                                    </label>
+                                    {!isEditing && !loading && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditing(true)}
+                                            className="text-xs font-bold text-[#FF0B01] hover:text-red-700 transition flex items-center gap-1 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50/20"
+                                        >
+                                            ✏️ Edit Charge
+                                        </button>
+                                    )}
+                                </div>
 
                                 <div className="relative">
                                     <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl text-gray-400 font-light">₹</div>
@@ -110,8 +131,12 @@ const HomeServices = () => {
                                         type="text"
                                         value={serviceCharge}
                                         onChange={handleChargeChange}
-                                        disabled={loading}
-                                        className="w-full pl-14 pr-6 py-5 text-4xl font-semibold rounded-2xl border border-gray-200 focus:border-red-500 focus:ring-0 transition-all bg-gray-50"
+                                        disabled={!isEditing || loading}
+                                        className={`w-full pl-14 pr-6 py-5 text-4xl font-semibold rounded-2xl border transition-all ${
+                                            isEditing 
+                                                ? 'border-red-500 focus:border-red-600 focus:ring-0 bg-white text-gray-900 shadow-xs' 
+                                                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                                        }`}
                                         placeholder="0.0"
                                     />
                                 </div>
@@ -121,14 +146,25 @@ const HomeServices = () => {
                                 </p>
                             </div>
 
-                            {/* Action Button */}
-                            <button
-                                type="submit"
-                                disabled={saving || loading}
-                                className="w-full bg-[#FF0B01] hover:bg-red-700 disabled:opacity-70 transition-all text-white font-bold py-4 px-8 rounded-2xl text-lg tracking-wider shadow-sm active:scale-[0.985]"
-                            >
-                                {saving ? 'Saving Changes...' : 'Save Charge Configuration'}
-                            </button>
+                            {/* Action Buttons */}
+                            {isEditing && (
+                                <div className="flex gap-4">
+                                    <button
+                                        type="submit"
+                                        disabled={saving || loading}
+                                        className="flex-1 bg-[#FF0B01] hover:bg-red-700 disabled:opacity-70 transition-all text-white font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm active:scale-[0.985]"
+                                    >
+                                        {saving ? 'Saving Changes...' : 'Save Changes'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancel}
+                                        className="flex-1 border border-gray-300 hover:bg-gray-50 transition-all text-gray-700 font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
                         </form>
                     </div>
 

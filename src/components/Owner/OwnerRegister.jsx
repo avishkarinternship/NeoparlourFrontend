@@ -3,10 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration, loginOwner } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, Building, MapPin, Clock, ShieldCheck, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Lock, Building, MapPin, Clock, ShieldCheck, Sparkles, Navigation } from 'lucide-react';
 
-// Locations Data
-import locationData from '../../data/locations.json';
+import searchService from '../../services/searchService';
 
 // Using existing assets
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
@@ -44,11 +43,19 @@ const OwnerRegister = () => {
   });
 
   const [otp, setOtp] = useState('');
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [areaSuggestions, setAreaSuggestions] = useState([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isLoadingAreas, setIsLoadingAreas] = useState(false);
+
+  const isUserTypingCityRef = useRef(false);
+  const isUserTypingAreaRef = useRef(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
   const [profileImageBase64, setProfileImageBase64] = useState('');
   const [profileImagePreview, setProfileImagePreview] = useState('');
@@ -125,21 +132,94 @@ const OwnerRegister = () => {
     };
   }, [dispatch]);
 
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const result = await searchService.reverseGeocode(latitude, longitude);
+          if (result.city) {
+            isUserTypingCityRef.current = false;
+            isUserTypingAreaRef.current = false;
+            setFormData(prev => ({
+              ...prev,
+              cityName: result.city,
+              areaName: result.area || ''
+            }));
+            toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
+          } else {
+            toast.error("Could not determine your city. Please enter it manually.");
+          }
+        } catch (error) {
+          toast.error("Could not determine your city. Please enter it manually.");
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        toast.error("Location permission denied. Please enter it manually.");
+        setIsDetectingLocation(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Search logic for City
-  const filteredCities = locationData.cities.filter(city => 
-    city.name.toLowerCase().includes(formData.cityName.toLowerCase())
-  );
+  // Autocomplete city search
+  useEffect(() => {
+    if (!isUserTypingCityRef.current) return;
+    if (!formData.cityName || formData.cityName.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
 
-  // Search logic for Area
-  const selectedCityData = locationData.cities.find(c => c.name.toLowerCase() === formData.cityName.toLowerCase());
-  const filteredAreas = selectedCityData ? selectedCityData.areas.filter(area => 
-    area.toLowerCase().includes(formData.areaName.toLowerCase())
-  ) : [];
+    setIsLoadingCities(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(formData.cityName, 'city');
+        setCitySuggestions(results);
+      } catch (err) {
+        console.error("Owner Register City Search Error:", err);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [formData.cityName]);
+
+  // Autocomplete area search
+  useEffect(() => {
+    if (!isUserTypingAreaRef.current) return;
+    if (!formData.areaName || formData.areaName.trim().length < 2) {
+      setAreaSuggestions([]);
+      return;
+    }
+
+    setIsLoadingAreas(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(formData.areaName, 'area', formData.cityName);
+        setAreaSuggestions(results);
+      } catch (err) {
+        console.error("Owner Register Area Search Error:", err);
+      } finally {
+        setIsLoadingAreas(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [formData.areaName, formData.cityName]);
 
   const handleSendOtp = () => {
     if (!formData.phone) {
@@ -336,27 +416,51 @@ const OwnerRegister = () => {
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                       <MapPin className="w-5 h-5 stroke-[2]" />
                     </div>
-                    <input 
+                     <input 
                       type="text" 
                       name="cityName"
                       value={formData.cityName}
                       onChange={(e) => {
+                        isUserTypingCityRef.current = true;
                         handleInputChange(e);
                         setShowCityDropdown(true);
                       }}
                       onFocus={() => setShowCityDropdown(true)}
                       placeholder="Select City" 
                       required
-                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                      className="w-full pl-14 pr-12 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                     />
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={isDetectingLocation}
+                      className={`absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-[#ff0b01] hover:bg-[#ff0b01]/5 transition-all duration-150 flex-shrink-0 z-10 ${
+                        isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                      }`}
+                      title="Detect Current Location"
+                    >
+                      {isDetectingLocation ? (
+                        <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                      ) : (
+                        <Navigation className="w-4 h-4 -rotate-45" />
+                      )}
+                    </button>
                     {showCityDropdown && formData.cityName && (
                       <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
-                        {filteredCities.length > 0 ? (
-                          filteredCities.map((city, idx) => (
+                        {isLoadingCities ? (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                            <span>Searching...</span>
+                          </div>
+                        ) : citySuggestions.length > 0 ? (
+                          citySuggestions.map((city, idx) => (
                             <div 
                               key={idx} 
                               onClick={() => {
+                                isUserTypingCityRef.current = false;
                                 setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
+                                setCitySuggestions([]);
+                                setAreaSuggestions([]);
                                 setShowCityDropdown(false);
                               }}
                               className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
@@ -381,6 +485,7 @@ const OwnerRegister = () => {
                       name="areaName"
                       value={formData.areaName}
                       onChange={(e) => {
+                        isUserTypingAreaRef.current = true;
                         handleInputChange(e);
                         setShowAreaDropdown(true);
                       }}
@@ -391,17 +496,24 @@ const OwnerRegister = () => {
                     />
                     {showAreaDropdown && formData.areaName && (
                       <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
-                        {filteredAreas.length > 0 ? (
-                          filteredAreas.map((area, idx) => (
+                        {isLoadingAreas ? (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                            <span>Searching...</span>
+                          </div>
+                        ) : areaSuggestions.length > 0 ? (
+                          areaSuggestions.map((area, idx) => (
                             <div 
                               key={idx} 
                               onClick={() => {
-                                setFormData(prev => ({ ...prev, areaName: area }));
+                                isUserTypingAreaRef.current = false;
+                                setFormData(prev => ({ ...prev, areaName: area.name }));
+                                setAreaSuggestions([]);
                                 setShowAreaDropdown(false);
                               }}
                               className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
                             >
-                              {area}
+                              {area.name}
                             </div>
                           ))
                         ) : (

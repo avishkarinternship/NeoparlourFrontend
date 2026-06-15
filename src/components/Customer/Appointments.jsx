@@ -32,14 +32,18 @@ const Appointments = () => {
   const isCustomer = customerState.isAuthenticated;
   const currentUser = isCustomer ? customerState.user : ownerState.user;
   const customerId = currentUser?.id || currentUser?.customerId || currentUser?.userId || 1;
+  // Read mobile from localStorage or Redux state for appointment filtering
+  const customerProfile = (() => { try { return JSON.parse(localStorage.getItem('customerProfile')) || {}; } catch { return {}; } })();
+  const customerUser = (() => { try { return JSON.parse(localStorage.getItem('customerUser')) || {}; } catch { return {}; } })();
+  const customerMobile = customerProfile.phone || customerProfile.mobile || customerUser.phone || customerUser.mobile || currentUser?.phone || currentUser?.mobile || null;
 
-  const [activeTab, setActiveTab] = useState('SCHEDULED'); // 'SCHEDULED', 'CANCELLED', 'COMPLETED'
+  const [activeTab, setActiveTab] = useState('TODAY'); // 'TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -60,20 +64,33 @@ const Appointments = () => {
     { id: 4, name: 'Karan', role: 'Senior Barber', rating: '4.9', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80' },
   ];
 
-  // Fetch Appointments
   const fetchAppointments = async (signal) => {
     setLoading(true);
     try {
-      const customerFilter = isCustomer ? `&customerId=${customerId}` : '';
+      const customerFilter = isCustomer && customerMobile ? `&mobile=${encodeURIComponent(customerMobile)}` : '';
       
-      let response;
-      if (activeTab === 'SCHEDULED') {
-        // Fetch booked appointments (which already include rescheduled ones)
-        response = await axiosInstance.get(`/appointments/search/advanced?status=booked${customerFilter}&page=${page}&size=10`, { signal });
-      } else {
-        const statusParam = activeTab.toLowerCase(); // 'cancelled' or 'completed'
-        response = await axiosInstance.get(`/appointments/search/advanced?status=${statusParam}${customerFilter}&page=${page}&size=10`, { signal });
+      const today = new Date();
+      const startLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+      const endLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      
+      const startOfTodayISO = startLocal.toISOString();
+      const endOfTodayISO = endLocal.toISOString();
+
+      let queryParams = `page=${page}&size=10&sort=appointmentAt,desc${customerFilter}`;
+      
+      if (activeTab === 'TODAY') {
+        queryParams += `&status=booked&fromDate=${encodeURIComponent(startOfTodayISO)}&toDate=${encodeURIComponent(endOfTodayISO)}`;
+      } else if (activeTab === 'UPCOMING') {
+        queryParams += `&status=booked&fromDate=${encodeURIComponent(endOfTodayISO)}`;
+      } else if (activeTab === 'PREVIOUS') {
+        queryParams += `&status=booked&toDate=${encodeURIComponent(startOfTodayISO)}`;
+      } else if (activeTab === 'CANCELLED') {
+        queryParams += `&status=cancelled`;
+      } else if (activeTab === 'COMPLETED') {
+        queryParams += `&status=completed`;
       }
+
+      const response = await axiosInstance.get(`/appointments/search/advanced?${queryParams}`, { signal });
       
       if (!signal?.aborted) {
         setAppointments(response.data?.content || []);
@@ -231,8 +248,142 @@ const Appointments = () => {
     app.serviceNames?.some(name => name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+
+
+  const renderAppointmentCard = (app, index) => {
+    const { date, time } = formatDateTime(app.appointmentAt);
+    const isRescheduled = app.status?.toLowerCase() === 'rescheduled';
+    
+    return (
+      <div 
+        key={app.id || index}
+        className={`py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all duration-300 ${
+          isRescheduled ? 'bg-amber-50/30 rounded-2xl px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
+        }`}
+      >
+        {/* Customer & Info Card */}
+        <div className="flex items-center gap-5">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 rounded-full bg-gray-50 border-[3px] border-white shadow-md overflow-hidden flex items-center justify-center">
+              <img 
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(app.customerName || 'NP')}&backgroundColor=ffebeb&textColor=ff0b01&fontWeight=800&fontSize=34`}
+                alt={app.customerName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {isRescheduled && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Rescheduled">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Text info */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <h3 className="text-base font-black text-gray-900 tracking-tight">{app.customerName}</h3>
+              {isRescheduled && (
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
+                  Rescheduled
+                </span>
+              )}
+            </div>
+            
+            <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">
+              {app.serviceNames?.join(', ') || 'General Grooming'}
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-gray-500 pt-1">
+              <div className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{date}</span>
+              </div>
+              
+              <div className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{time}</span>
+              </div>
+              
+              {app.staffName && (
+                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2.5 py-0.5 rounded-full border border-gray-100 shadow-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span>Stylist: {app.staffName}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Price & Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-5">
+          {/* Price Badge */}
+          <div className="text-left sm:text-right pr-4">
+            <span className="text-[10px] font-black text-gray-300 tracking-[0.2em] uppercase block">Final Amount</span>
+            <span className="text-lg font-black text-[#ff0b01]">₹{app.finalAmount?.toFixed(2)}</span>
+          </div>
+
+          {/* Action buttons (Only for TODAY, UPCOMING, and PREVIOUS tabs) */}
+          {(activeTab === 'TODAY' || activeTab === 'UPCOMING' || activeTab === 'PREVIOUS') && (
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => handleReschedule(app)}
+                className="flex-1 sm:flex-none px-5 py-3.5 bg-[#ff0b01] text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-[#ff0b01]/10 uppercase"
+              >
+                Reschedule
+              </button>
+              
+              <button
+                onClick={() => handleCancelClick(app)}
+                className="flex-1 sm:flex-none px-5 py-3.5 bg-[#858585] text-white font-black tracking-widest text-[9px] rounded-xl hover:bg-gray-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-md uppercase"
+              >
+                Cancel
+              </button>
+              
+              {/* Assign Staff Button is ONLY shown to salon Owners */}
+              {!isCustomer && (
+                <button
+                  onClick={() => handleAssignStaff(app)}
+                  className="flex-1 sm:flex-none px-5 py-3.5 bg-white text-gray-700 font-black tracking-widest text-[9px] rounded-xl border border-gray-200 hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 uppercase"
+                >
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  Assign Staff
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons (Only for Completed tab) */}
+          {activeTab === 'COMPLETED' && (
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => handleDownloadInvoice(app.id)}
+                className="flex-1 sm:flex-none px-5 py-3.5 bg-green-600 text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-green-600/10 uppercase flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Invoice
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
+
   const handleBackNavigation = () => {
-    navigate(isCustomer ? '/customer/dashboard' : '/owner/dashboard');
+    navigate(isCustomer ? '/' : '/owner/dashboard');
   };
 
   return (
@@ -283,12 +434,12 @@ const Appointments = () => {
       {/* Main Tabs Container */}
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="border-b border-gray-100 flex gap-8 md:gap-12 bg-white px-6 rounded-2xl shadow-sm border border-gray-50/50 mb-8 overflow-x-auto whitespace-nowrap">
-          {['SCHEDULED', 'CANCELLED', 'COMPLETED'].map((tab) => (
+          {['TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'].map((tab) => (
             <button
               key={tab}
               onClick={() => {
                 setActiveTab(tab);
-                setPage(1);
+                setPage(0);
               }}
               className={`py-5 text-xs font-black tracking-[0.25em] transition-all relative ${
                 activeTab === tab ? 'text-gray-900 font-black' : 'text-gray-300 hover:text-gray-500'
@@ -314,136 +465,7 @@ const Appointments = () => {
             </div>
           ) : filteredAppointments.length > 0 ? (
             <div className="divide-y divide-gray-100">
-              {filteredAppointments.map((app, index) => {
-                const { date, time } = formatDateTime(app.appointmentAt);
-                const isRescheduled = app.status?.toLowerCase() === 'rescheduled';
-                
-                return (
-                  <div 
-                    key={app.id || index}
-                    className={`py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all duration-300 ${
-                      isRescheduled ? 'bg-amber-50/30 rounded-2xl px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
-                    }`}
-                  >
-                    {/* Customer & Info Card */}
-                    <div className="flex items-center gap-5">
-                      {/* Avatar */}
-                      <div className="relative flex-shrink-0">
-                        <div className="w-16 h-16 rounded-full bg-gray-50 border-[3px] border-white shadow-md overflow-hidden flex items-center justify-center">
-                          <img 
-                            src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(app.customerName || 'NP')}&backgroundColor=ffebeb&textColor=ff0b01&fontWeight=800&fontSize=34`}
-                            alt={app.customerName}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        {isRescheduled && (
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Rescheduled">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Text info */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-base font-black text-gray-900 tracking-tight">{app.customerName}</h3>
-                          {isRescheduled && (
-                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
-                              Rescheduled
-                            </span>
-                          )}
-                        </div>
-                        
-                        <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">
-                          {app.serviceNames?.join(', ') || 'General Grooming'}
-                        </p>
-                        
-                        <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-gray-500 pt-1">
-                          <div className="flex items-center gap-1.5">
-                            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>{date}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-1.5">
-                            <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>{time}</span>
-                          </div>
-                          
-                          {app.staffName && (
-                            <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2.5 py-0.5 rounded-full border border-gray-100 shadow-sm">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              <span>Stylist: {app.staffName}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Price & Action Buttons */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-5">
-                      {/* Price Badge */}
-                      <div className="text-left sm:text-right pr-4">
-                        <span className="text-[10px] font-black text-gray-300 tracking-[0.2em] uppercase block">Final Amount</span>
-                        <span className="text-lg font-black text-[#ff0b01]">₹{app.finalAmount?.toFixed(2)}</span>
-                      </div>
-
-                      {/* Action buttons (Only for Scheduled tab) */}
-                      {activeTab === 'SCHEDULED' && (
-                        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                          <button
-                            onClick={() => handleReschedule(app)}
-                            className="flex-1 sm:flex-none px-5 py-3.5 bg-[#ff0b01] text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-[#ff0b01]/10 uppercase"
-                          >
-                            Reschedule
-                          </button>
-                          
-                          <button
-                            onClick={() => handleCancelClick(app)}
-                            className="flex-1 sm:flex-none px-5 py-3.5 bg-[#858585] text-white font-black tracking-widest text-[9px] rounded-xl hover:bg-gray-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-md uppercase"
-                          >
-                            Cancel
-                          </button>
-                          
-                          {/* Assign Staff Button is ONLY shown to salon Owners */}
-                          {!isCustomer && (
-                            <button
-                              onClick={() => handleAssignStaff(app)}
-                              className="flex-1 sm:flex-none px-5 py-3.5 bg-white text-gray-700 font-black tracking-widest text-[9px] rounded-xl border border-gray-200 hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 uppercase"
-                            >
-                              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                              </svg>
-                              Assign Staff
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Action buttons (Only for Completed tab) */}
-                      {activeTab === 'COMPLETED' && (
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                          <button
-                            onClick={() => handleDownloadInvoice(app.id)}
-                            className="flex-1 sm:flex-none px-5 py-3.5 bg-green-600 text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-green-600/10 uppercase flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Invoice
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                );
-              })}
+              {filteredAppointments.map((app, index) => renderAppointmentCard(app, index))}
             </div>
           ) : (
             <div className="text-center py-24">
@@ -460,14 +482,14 @@ const Appointments = () => {
           {totalPages > 1 && (
             <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs font-bold text-gray-400">
-                Showing Page <span className="text-gray-900 font-extrabold">{page}</span> of <span className="text-gray-900 font-extrabold">{totalPages}</span> ({totalElements} bookings)
+                Showing Page <span className="text-gray-900 font-extrabold">{page + 1}</span> of <span className="text-gray-900 font-extrabold">{totalPages}</span> ({totalElements} bookings)
               </p>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setPage(p => Math.max(p - 1, 1))}
-                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(p - 1, 0))}
+                  disabled={page === 0}
                   className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
-                    page === 1 
+                    page === 0
                       ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
                       : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
                   }`}
@@ -475,10 +497,10 @@ const Appointments = () => {
                   Previous
                 </button>
                 <button
-                  onClick={() => setPage(p => Math.min(p + 1, totalPages))}
-                  disabled={page === totalPages}
+                  onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
+                  disabled={page === totalPages - 1}
                   className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
-                    page === totalPages 
+                    page === totalPages - 1
                       ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
                       : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
                   }`}

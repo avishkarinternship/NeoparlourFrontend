@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation } from 'lucide-react';
+import searchService from '../../services/searchService';
 
 // Using existing assets
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
@@ -18,6 +19,9 @@ const CustomerRegister = () => {
     name: '',
     email: '',
     phone: '',
+    cityName: '',
+    areaName: '',
+    specificAddress: '',
     password: '',
     confirmPassword: '',
   });
@@ -25,14 +29,120 @@ const CustomerRegister = () => {
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [areaSuggestions, setAreaSuggestions] = useState([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isLoadingAreas, setIsLoadingAreas] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  const cityDropdownRef = useRef(null);
+  const areaDropdownRef = useRef(null);
+  const isUserTypingCityRef = useRef(false);
+  const isUserTypingAreaRef = useRef(false);
 
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setShowCityDropdown(false);
+      }
+      if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+        setShowAreaDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
       dispatch(clearOwnerStaffError());
       dispatch(resetRegistration());
     };
   }, [dispatch]);
+
+  // Autocomplete city search
+  useEffect(() => {
+    if (!isUserTypingCityRef.current) return;
+    if (!formData.cityName || formData.cityName.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    setIsLoadingCities(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(formData.cityName, 'city');
+        setCitySuggestions(results);
+      } catch (err) {
+        console.error("Customer Register City Search Error:", err);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [formData.cityName]);
+
+  // Autocomplete area search
+  useEffect(() => {
+    if (!isUserTypingAreaRef.current) return;
+    if (!formData.areaName || formData.areaName.trim().length < 2) {
+      setAreaSuggestions([]);
+      return;
+    }
+
+    setIsLoadingAreas(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchExternalLocations(formData.areaName, 'area', formData.cityName);
+        setAreaSuggestions(results);
+      } catch (err) {
+        console.error("Customer Register Area Search Error:", err);
+      } finally {
+        setIsLoadingAreas(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [formData.areaName, formData.cityName]);
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const result = await searchService.reverseGeocode(latitude, longitude);
+          if (result.city) {
+            isUserTypingCityRef.current = false;
+            isUserTypingAreaRef.current = false;
+            setFormData(prev => ({
+              ...prev,
+              cityName: result.city,
+              areaName: result.area || ''
+            }));
+            toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
+          } else {
+            toast.error("Could not determine your city. Please enter it manually.");
+          }
+        } catch (error) {
+          toast.error("Could not determine your city. Please enter it manually.");
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        toast.error("Location permission denied. Please enter it manually.");
+        setIsDetectingLocation(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -175,6 +285,140 @@ const CustomerRegister = () => {
                     required
                     disabled={otpSent}
                     className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold disabled:opacity-50" 
+                  />
+                </div>
+              </div>
+
+              {/* Location Details Section */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-[10px] font-black text-gray-300 tracking-[0.25em] uppercase border-b pb-1.5">Location Details</h3>
+                
+                {/* Cities Dropdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative" ref={cityDropdownRef}>
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
+                      <MapPin className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="cityName"
+                      value={formData.cityName}
+                      onChange={(e) => {
+                        isUserTypingCityRef.current = true;
+                        handleInputChange(e);
+                        setShowCityDropdown(true);
+                      }}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Select City" 
+                      required
+                      className="w-full pl-14 pr-12 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={isDetectingLocation}
+                      className={`absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-[#ff0b01] hover:bg-[#ff0b01]/5 transition-all duration-150 flex-shrink-0 z-10 ${
+                        isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                      }`}
+                      title="Detect Current Location"
+                    >
+                      {isDetectingLocation ? (
+                        <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                      ) : (
+                        <Navigation className="w-4 h-4 -rotate-45" />
+                      )}
+                    </button>
+                    {showCityDropdown && formData.cityName && (
+                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                        {isLoadingCities ? (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                            <span>Searching...</span>
+                          </div>
+                        ) : citySuggestions.length > 0 ? (
+                          citySuggestions.map((city, idx) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => {
+                                isUserTypingCityRef.current = false;
+                                setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
+                                setCitySuggestions([]);
+                                setAreaSuggestions([]);
+                                setShowCityDropdown(false);
+                              }}
+                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                            >
+                              {city.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Areas Dropdown */}
+                  <div className="relative" ref={areaDropdownRef}>
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
+                      <MapPin className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="areaName"
+                      value={formData.areaName}
+                      onChange={(e) => {
+                        isUserTypingAreaRef.current = true;
+                        handleInputChange(e);
+                        setShowAreaDropdown(true);
+                      }}
+                      onFocus={() => setShowAreaDropdown(true)}
+                      placeholder="Select Area" 
+                      required
+                      className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                    />
+                    {showAreaDropdown && formData.areaName && (
+                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                        {isLoadingAreas ? (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                            <span>Searching...</span>
+                          </div>
+                        ) : areaSuggestions.length > 0 ? (
+                          areaSuggestions.map((area, idx) => (
+                            <div 
+                              key={idx} 
+                              onClick={() => {
+                                isUserTypingAreaRef.current = false;
+                                setFormData(prev => ({ ...prev, areaName: area.name }));
+                                setAreaSuggestions([]);
+                                setShowAreaDropdown(false);
+                              }}
+                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                            >
+                              {area.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Specific Address */}
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
+                    <MapPin className="w-5 h-5 stroke-[2]" />
+                  </div>
+                  <input 
+                    type="text" 
+                    name="specificAddress"
+                    value={formData.specificAddress}
+                    onChange={handleInputChange}
+                    placeholder="Specific Address (Flat, Street, Landmark)" 
+                    className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                   />
                 </div>
               </div>
