@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 
 // Icons
 import cameraIcon from '../../../assets/Owner/Manage/Services/camera_icon.svg';
@@ -22,6 +23,7 @@ const toastStyle = {
 };
 
 const Staff = () => {
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Form States
@@ -173,6 +175,12 @@ const Staff = () => {
             name: '', phone: '', email: '', address: '', birthdate: '', gender: ''
         });
     };
+
+    useEffect(() => {
+        if (location.state?.editStaffId && staffList.length > 0) {
+            handleEdit(location.state.editStaffId);
+        }
+    }, [location.state?.editStaffId, staffList]);
 
     const handleToggleStatus = async (id, currentActive) => {
         try {

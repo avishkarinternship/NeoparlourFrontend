@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
@@ -92,6 +93,7 @@ const LazyImage = ({ src, alt, className }) => {
 };
 
 const AddProducts = () => {
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('add'); // 'add' or 'view'
 
@@ -238,6 +240,12 @@ const AddProducts = () => {
             setLoadingEdit(false);
         }
     };
+
+    useEffect(() => {
+        if (location.state?.editProductId) {
+            handleEdit({ id: location.state.editProductId });
+        }
+    }, [location.state?.editProductId]);
 
     // Image Handlers
     const handleMainImageUpload = (e) => {

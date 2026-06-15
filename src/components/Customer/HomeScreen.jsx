@@ -112,8 +112,6 @@ const recommendedSalons = [
     { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
 ];
 
-let initialGeoFetched = false;
-
 const HomeScreen = () => {
     const dispatch = useDispatch();
     const isUserTypingCityRef = useRef(false);
@@ -130,9 +128,11 @@ const HomeScreen = () => {
     }, [isAuthenticated, user, profile, dispatch]);
 
     const [searchData, setSearchData] = useState({
-        cityName: '',
-        areaName: '',
+        cityName: localStorage.getItem('customerCity') || '',
+        areaName: localStorage.getItem('customerArea') || '',
     });
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    const geoFetchedRef = useRef(false);
 
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
@@ -233,6 +233,8 @@ const HomeScreen = () => {
                             cityName: result.city,
                             areaName: result.area || ''
                         });
+                        localStorage.setItem('customerCity', result.city);
+                        localStorage.setItem('customerArea', result.area || '');
                         
                         // Immediately dispatch salon search
                         dispatch(
@@ -293,6 +295,7 @@ const HomeScreen = () => {
             }
             setLocationPermission('denied');
             setRecommendedList(recommendedSalons);
+            setIsPageLoading(false);
             return;
         }
 
@@ -326,6 +329,10 @@ const HomeScreen = () => {
 
                     setRecommendedList(formatted);
 
+                    // Save to localStorage
+                    localStorage.setItem('customerCity', result.city || detectedCity);
+                    localStorage.setItem('customerArea', result.area || '');
+
                     // Also auto-populate search bar if detecting location
                     setSearchData({
                         cityName: result.city || detectedCity,
@@ -342,6 +349,7 @@ const HomeScreen = () => {
                         toast.error("Error identifying location details.");
                     }
                 } finally {
+                    setIsPageLoading(false);
                     if (isClickTriggered) {
                         setIsDetectingLocation(false);
                     }
@@ -351,6 +359,7 @@ const HomeScreen = () => {
                 console.error("Geolocation error:", error);
                 setLocationPermission('denied');
                 setRecommendedList(recommendedSalons);
+                setIsPageLoading(false);
                 if (isClickTriggered) {
                     let msg = "Location permission denied.";
                     if (error.code === error.PERMISSION_DENIED) {
@@ -366,8 +375,29 @@ const HomeScreen = () => {
 
     // Website loaded first geolocation trigger
     useEffect(() => {
-        if (!initialGeoFetched) {
-            initialGeoFetched = true;
+        if (geoFetchedRef.current) return;
+        geoFetchedRef.current = true;
+
+        const storedCity = localStorage.getItem('customerCity');
+        if (storedCity) {
+            setIsPageLoading(true);
+            fetchCitySalons(storedCity).then(apiSalons => {
+                const formatted = apiSalons.map((s, index) => ({
+                    name: s.salonName,
+                    location: s.areaName || s.cityName,
+                    img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
+                    rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
+                    isApiSalon: true,
+                    originalSalon: s
+                }));
+                formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+                setRecommendedList(formatted);
+                setIsPageLoading(false);
+            }).catch(() => {
+                setRecommendedList(recommendedSalons);
+                setIsPageLoading(false);
+            });
+        } else {
             requestLocationAndFetchSalons(false);
         }
     }, []);
@@ -394,6 +424,11 @@ const HomeScreen = () => {
         console.log(searchData);
 
         if (!searchData.cityName && !searchData.areaName) return;
+
+        if (searchData.cityName) {
+            localStorage.setItem('customerCity', searchData.cityName);
+            localStorage.setItem('customerArea', searchData.areaName || '');
+        }
 
         try {
             await dispatch(
@@ -442,6 +477,18 @@ const HomeScreen = () => {
         const openTime = openH * 60 + openM;
         const closeTime = closeH * 60 + closeM;
         return currentTime >= openTime && currentTime <= closeTime;
+    };
+
+    const handleExploreMore = () => {
+        const resultsSection = document.getElementById('results-section');
+        const statsSection = document.getElementById('stats-section');
+        if (resultsSection) {
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        } else if (statsSection) {
+            statsSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            window.scrollBy({ top: window.innerHeight * 0.75, behavior: 'smooth' });
+        }
     };
 
     const location = useLocation();
@@ -514,10 +561,7 @@ const HomeScreen = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
-                    <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
-                        OFFERS
-                        <img src={offersIcon} alt="Offers" className="w-4 h-4 object-contain" />
-                    </a>
+
                 </div>
 
                 {/* Action Buttons */}
@@ -595,7 +639,7 @@ const HomeScreen = () => {
                 />
                 <div className="absolute inset-0 bg-white/5 pointer-events-none z-10"></div>
 
-                <div className="relative z-20 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
+                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
                     <div className="text-gray-900 text-sm md:text-base font-black uppercase tracking-wider mb-4">
                         List your salon free
                     </div>
@@ -726,153 +770,179 @@ const HomeScreen = () => {
                     </div>
                 </div>
 
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-30 cursor-pointer hover:scale-105 transition-transform duration-200 select-none">
+                <div 
+                    onClick={handleExploreMore}
+                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20 cursor-pointer hover:scale-105 transition-transform duration-200 select-none"
+                >
                     <img src={exploreMoreIcon} alt="Explore Now" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
                 </div>
             </section>
 
             {/* Salon Search Results Section */}
-            {salonResults && salonResults.length > 0 && (
-                <section className="py-16 bg-[#F9FAFB] px-6 border-b" data-aos="fade-up">
+            {(loading || (salonResults && salonResults.length > 0)) && (
+                <section id="results-section" className="py-16 bg-[#F9FAFB] px-6 border-b" data-aos="fade-up">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col items-center mb-12 text-center">
                             <h2 className="text-[#FF2A14] text-xs font-black tracking-[0.3em] uppercase mb-3">Found Destinations</h2>
                             <h3 className="text-gray-900 text-3xl font-black uppercase tracking-tight">Premium Salons Nearby</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {salonResults.map((salon, index) => {
-                                const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
-                                const hasImage = !!salon.imageUrl;
-                                const coverImg = hasImage ? getSalonImageSrc(salon.imageUrl, null) : null;
-                                const rating = (((salon.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1);
-                                const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
-                                return (
-                                    <div
-                                        key={salon.salonId || index}
-                                        onClick={() => handleSalonSelect(salon)}
-                                        className="group relative flex flex-col rounded-[32px] bg-white border border-gray-100/80 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden text-left shadow-[0_4px_20px_rgba(0,0,0,0.015)]"
-                                    >
-                                        {/* Card Header: Cover Image block with metadata tags overlay */}
-                                        <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
-                                            {hasImage ? (
-                                                <>
-                                                    <img
-                                                        src={coverImg}
-                                                        alt={salon.salonName}
-                                                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                                                    />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
-                                                </>
-                                            ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
-                                                    <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                        <circle cx="9" cy="17" r="3.5" />
-                                                        <circle cx="15" cy="17" r="3.5" />
-                                                        <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
-                                                        <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
-                                                        <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
-                                                    </svg>
-                                                    <span className="text-[11px] font-semibold text-gray-400">No image available</span>
-                                                </div>
-                                            )}
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {Array.from({ length: 3 }).map((_, idx) => (
+                                    <div key={idx} className="rounded-[32px] bg-white border border-gray-100 p-6 space-y-4 animate-pulse">
+                                        <div className="h-44 bg-slate-200 rounded-2xl" />
+                                        <div className="w-16 h-16 bg-slate-200 rounded-2xl -mt-14 ml-2 border-[3px] border-white relative z-20" />
+                                        <div className="space-y-3 pt-2">
+                                            <div className="h-4 bg-slate-200 rounded w-1/4" />
+                                            <div className="h-6 bg-slate-200 rounded w-3/4" />
+                                            <div className="h-4 bg-slate-200 rounded w-1/2" />
+                                            <div className="h-3 bg-slate-200 rounded w-2/3" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {salonResults.map((salon, index) => {
+                                    const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
+                                    const hasImage = !!salon.imageUrl;
+                                    const coverImg = hasImage ? getSalonImageSrc(salon.imageUrl, null) : null;
+                                    const rating = salon.rating != null ? parseFloat(salon.rating).toFixed(1) : null;
+                                    const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
+                                    return (
+                                        <div
+                                            key={salon.salonId || index}
+                                            onClick={() => handleSalonSelect(salon)}
+                                            className="group relative flex flex-col rounded-[32px] bg-white border border-gray-100/80 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden text-left shadow-[0_4px_20px_rgba(0,0,0,0.015)]"
+                                        >
+                                            {/* Card Header: Cover Image block with metadata tags overlay */}
+                                            <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
+                                                {hasImage ? (
+                                                    <>
+                                                        <img
+                                                            src={coverImg}
+                                                            alt={salon.salonName}
+                                                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+                                                    </>
+                                                ) : (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
+                                                        <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                            <circle cx="9" cy="17" r="3.5" />
+                                                            <circle cx="15" cy="17" r="3.5" />
+                                                            <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
+                                                            <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
+                                                            <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
+                                                        </svg>
+                                                        <span className="text-[11px] font-semibold text-gray-400">No image available</span>
+                                                    </div>
+                                                )}
 
-                                            {/* Top Metadata Badges */}
-                                            <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                                                {/* Open / Closed Badge */}
-                                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${currentlyOpen
-                                                        ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
-                                                        : 'bg-white/95 border-rose-500/20 text-rose-700'
-                                                    }`}>
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${currentlyOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                    {currentlyOpen ? 'Open' : 'Closed'}
-                                                </div>
+                                                {/* Top Metadata Badges */}
+                                                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                                                    {/* Open / Closed Badge */}
+                                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${currentlyOpen
+                                                            ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
+                                                            : 'bg-white/95 border-rose-500/20 text-rose-700'
+                                                        }`}>
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${currentlyOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                        {currentlyOpen ? 'Open' : 'Closed'}
+                                                    </div>
 
-                                                {/* Deterministic Rating Badge */}
-                                                <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                                    <span>{rating} ({reviewsCount}+)</span>
+                                                    {/* Deterministic Rating Badge */}
+                                                    {rating != null ? (
+                                                        <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                                            <span>{rating} ({reviewsCount}+)</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-emerald-600 text-white rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest flex items-center shadow-sm">
+                                                            NEW
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Dynamic Avatar Overlay */}
-                                        <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-                                            {salon.imageBase64 ? (
-                                                <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
-                                                    {salon.salonName ? salon.salonName[0].toUpperCase() : 'S'}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Card Body Details */}
-                                        <div className="p-6 pt-3 flex flex-col flex-grow text-left">
-                                            <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
-                                                <Sparkles className="w-2.5 h-2.5" /> NEOPARLOUR PARTNER
-                                            </span>
-
-                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
-                                                    {salon.salonName}
-                                                </h4>
-                                                {salon.salonCode && (
-                                                    <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
-                                                        {salon.salonCode}
-                                                    </span>
+                                            {/* Dynamic Avatar Overlay */}
+                                            <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+                                                {salon.imageBase64 ? (
+                                                    <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
+                                                        {salon.salonName ? salon.salonName[0].toUpperCase() : 'S'}
+                                                    </div>
                                                 )}
                                             </div>
 
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
-                                                <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
-                                            </div>
+                                            {/* Card Body Details */}
+                                            <div className="p-6 pt-3 flex flex-col flex-grow text-left">
+                                                <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
+                                                    <Sparkles className="w-2.5 h-2.5" /> NEOPARLOUR PARTNER
+                                                </span>
 
-                                            <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
-                                                {salon.address || 'Dhankawadi'}
-                                            </p>
-
-                                            {/* Home Service Badge */}
-                                            {salon.homeServiceCharges ? (
-                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                                    <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                    <span>Home Service (₹{salon.homeServiceCharges})</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                                    <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                    <span>Home Service (₹50)</span>
-                                                </div>
-                                            )}
-
-                                            {/* Card Footer */}
-                                            <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
-                                                <div className="flex items-center gap-1.5 text-gray-400">
-                                                    <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                                    <span className="text-[11px] font-black tracking-widest">
-                                                        {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
-                                                    </span>
+                                                <div className="flex items-start justify-between gap-2 mb-2">
+                                                    <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
+                                                        {salon.salonName}
+                                                    </h4>
+                                                    {salon.salonCode && (
+                                                        <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
+                                                            {salon.salonCode}
+                                                        </span>
+                                                    )}
                                                 </div>
 
-                                                <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
-                                                    <span>Book Session</span>
-                                                    <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
-                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
+                                                    <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                    <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
+                                                </div>
+
+                                                <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
+                                                    {salon.address || 'Dhankawadi'}
+                                                </p>
+
+                                                {/* Home Service Badge */}
+                                                {salon.homeServiceCharges ? (
+                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                        <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                        <span>Home Service (₹{salon.homeServiceCharges})</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
+                                                        <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
+                                                        <span>Home Service (₹50)</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Card Footer */}
+                                                <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
+                                                    <div className="flex items-center gap-1.5 text-gray-400">
+                                                        <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                                        <span className="text-[11px] font-black tracking-widest">
+                                                            {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
+                                                        <span>Book Session</span>
+                                                        <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
+                                                            <ArrowRight className="w-3.5 h-3.5" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </section>
             )}
 
             {/* 3. FIXED STATS SECTION */}
-            <section className="pt-16 pb-12 border-b">
+            <section id="stats-section" className="pt-16 pb-12 border-b">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-4 px-6">
                     {[
                         { label: "REVIEWS", value: "1.14k", img: reviewIcon },
@@ -906,31 +976,43 @@ const HomeScreen = () => {
                     </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {recommendedList.map((salon, idx) => (
-                        <div 
-                            key={idx} 
-                            onClick={() => handleRecommendedCardClick(salon)}
-                            className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
-                        >
-                            <div className="h-48 relative overflow-hidden bg-gray-50">
-                                {salon.img ? (
-                                    <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                        <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
-                                        <span className="text-[11px] font-semibold text-gray-400">No image available</span>
-                                    </div>
-                                )}
-                                <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                                    ⭐ {salon.rating}
+                    {isPageLoading ? (
+                        Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={idx} className="rounded-xl overflow-hidden border shadow-sm bg-white animate-pulse">
+                                <div className="h-48 bg-slate-200" />
+                                <div className="p-4 space-y-3">
+                                    <div className="h-4 bg-slate-200 rounded w-3/4" />
+                                    <div className="h-3 bg-slate-200 rounded w-1/2" />
                                 </div>
                             </div>
-                            <div className="p-4 bg-white">
-                                <h4 className="font-bold text-gray-800">{salon.name}</h4>
-                                <p className="text-xs text-gray-500">{salon.location}</p>
+                        ))
+                    ) : (
+                        recommendedList.map((salon, idx) => (
+                            <div 
+                                key={idx} 
+                                onClick={() => handleRecommendedCardClick(salon)}
+                                className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
+                            >
+                                <div className="h-48 relative overflow-hidden bg-gray-50">
+                                    {salon.img ? (
+                                        <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                            <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
+                                            <span className="text-[11px] font-semibold text-gray-400">No image available</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                                        {salon.rating != null ? `⭐ ${parseFloat(salon.rating).toFixed(1)}` : '⭐ NEW'}
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white">
+                                    <h4 className="font-bold text-gray-800">{salon.name}</h4>
+                                    <p className="text-xs text-gray-500">{salon.location}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </section>
 

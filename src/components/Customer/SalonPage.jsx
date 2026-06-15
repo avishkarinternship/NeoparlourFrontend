@@ -49,80 +49,80 @@ import productFive from '../../assets/Customer/ProductSearch/product_five.jpg';
 
 // --- LOCAL ASYNC IMAGE COMPONENT ---
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
-  const [src, setSrc] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+    const [src, setSrc] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!imagePath) {
-      setSrc(null);
-      setError(true);
-      return;
+    useEffect(() => {
+        if (!imagePath) {
+            setSrc(null);
+            setError(true);
+            return;
+        }
+
+        let isMounted = true;
+        const controller = new AbortController();
+        setLoading(true);
+        setError(false);
+
+        const fetchImage = async () => {
+            try {
+                const response = await axiosInstance.get(`/images/${imagePath}`, {
+                    responseType: 'blob',
+                    signal: controller.signal
+                });
+
+                if (isMounted) {
+                    const blobUrl = URL.createObjectURL(response.data);
+                    setSrc(blobUrl);
+                }
+            } catch (err) {
+                if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
+                    console.error("Failed to load async image:", err);
+                    if (isMounted) {
+                        setError(true);
+                    }
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchImage();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, [imagePath]);
+
+    useEffect(() => {
+        return () => {
+            if (src) {
+                URL.revokeObjectURL(src);
+            }
+        };
+    }, [src]);
+
+    if (loading) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
+                <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+            </div>
+        );
     }
 
-    let isMounted = true;
-    const controller = new AbortController();
-    setLoading(true);
-    setError(false);
+    if (error || !src) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 font-extrabold text-sm uppercase">
+                {fallbackText}
+            </div>
+        );
+    }
 
-    const fetchImage = async () => {
-      try {
-        const response = await axiosInstance.get(`/images/${imagePath}`, {
-          responseType: 'blob',
-          signal: controller.signal
-        });
-        
-        if (isMounted) {
-          const blobUrl = URL.createObjectURL(response.data);
-          setSrc(blobUrl);
-        }
-      } catch (err) {
-        if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
-          console.error("Failed to load async image:", err);
-          if (isMounted) {
-            setError(true);
-          }
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchImage();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [imagePath]);
-
-  useEffect(() => {
-    return () => {
-      if (src) {
-        URL.revokeObjectURL(src);
-      }
-    };
-  }, [src]);
-
-  if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
-        <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (error || !src) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 font-extrabold text-sm uppercase">
-        {fallbackText}
-      </div>
-    );
-  }
-
-  return <img src={src} alt={alt} className={className} />;
+    return <img src={src} alt={alt} className={className} />;
 };
 
 const SalonPage = () => {
@@ -425,7 +425,7 @@ const SalonPage = () => {
 
     const isSalonOpenNow = () => {
         if (!salon) return false;
-        
+
         // Check if today is weeklyOffDay
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const todayDayName = daysOfWeek[new Date().getDay()];
@@ -434,7 +434,7 @@ const SalonPage = () => {
         }
 
         if (!salon.openingTime || !salon.closingTime) return true;
-        
+
         const now = new Date();
         const [openH, openM] = salon.openingTime.split(':').map(Number);
         const [closeH, closeM] = salon.closingTime.split(':').map(Number);
@@ -530,18 +530,17 @@ const SalonPage = () => {
                         </p>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                        <div className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${
-                            isSalonOpenNow() 
-                                ? 'bg-green-50 border border-green-200 text-green-700' 
+                        <div className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${isSalonOpenNow()
+                                ? 'bg-green-50 border border-green-200 text-green-700'
                                 : 'bg-red-50 border border-red-200 text-red-600'
-                        }`}>
+                            }`}>
                             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
                             <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open' : 'Closed'}</span>
                             <span className="hidden xs:inline">|</span>
                             <span className="hidden xs:inline whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
                         </div>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={handleShare}
                             className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-605 transition shadow-sm"
                             title="Share Salon"
@@ -562,10 +561,10 @@ const SalonPage = () => {
                             {/* Large Image (Left) */}
                             <div className="md:col-span-2 h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white">
                                 {mainImageToShow ? (
-                                    <img 
-                                        src={getSalonImageSrc(mainImageToShow)} 
-                                        alt={salon?.name || 'Salon Cover'} 
-                                        className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                                    <img
+                                        src={getSalonImageSrc(mainImageToShow)}
+                                        alt={salon?.name || 'Salon Cover'}
+                                        className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
@@ -574,19 +573,19 @@ const SalonPage = () => {
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Two Stacked Images (Right) */}
                             <div className="flex flex-row md:flex-col gap-3 sm:gap-4 h-[140px] sm:h-[180px] md:h-[400px]">
-                                <div 
+                                <div
                                     onClick={() => galleryImages[1] && swapGalleryImage(1)}
                                     className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
                                     title="Click to swap with main image"
                                 >
                                     {galleryImages[1] ? (
-                                        <img 
-                                            src={getSalonImageSrc(galleryImages[1])} 
-                                            alt="Gallery 1" 
-                                            className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                                        <img
+                                            src={getSalonImageSrc(galleryImages[1])}
+                                            alt="Gallery 1"
+                                            className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
@@ -595,16 +594,16 @@ const SalonPage = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div 
+                                <div
                                     onClick={() => galleryImages[2] && swapGalleryImage(2)}
                                     className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
                                     title="Click to swap with main image"
                                 >
                                     {galleryImages[2] ? (
-                                        <img 
-                                            src={getSalonImageSrc(galleryImages[2])} 
-                                            alt="Gallery 2" 
-                                            className="w-full h-full object-cover hover:scale-105 transition duration-500" 
+                                        <img
+                                            src={getSalonImageSrc(galleryImages[2])}
+                                            alt="Gallery 2"
+                                            className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
@@ -629,8 +628,8 @@ const SalonPage = () => {
                             ) : offers.length > 0 ? (
                                 <div className="space-y-4">
                                     {offers.map((offer) => (
-                                        <div 
-                                            key={offer.id} 
+                                        <div
+                                            key={offer.id}
                                             className="border border-red-100 bg-red-50/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:scale-[1.005] transition-all duration-300"
                                         >
                                             <div className="flex items-center gap-4">
@@ -711,7 +710,7 @@ const SalonPage = () => {
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                                     <Compass className="w-4.5 h-4.5 text-[#FF0B01]" /> Photos
                                 </h3>
-                                <span 
+                                <span
                                     onClick={() => navigate('/customer/book-service')}
                                     className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
                                 >
@@ -722,21 +721,20 @@ const SalonPage = () => {
                                 {[0, 1, 2].map((idx) => {
                                     const imgUrl = galleryImages[idx];
                                     return (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             onClick={() => imgUrl && idx !== 0 && swapGalleryImage(idx)}
-                                            className={`h-24 sm:h-28 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border bg-slate-50 transition-all ${
-                                                imgUrl 
-                                                    ? 'cursor-pointer border-slate-100 hover:border-red-200 hover:scale-105' 
+                                            className={`h-24 sm:h-28 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border bg-slate-50 transition-all ${imgUrl
+                                                    ? 'cursor-pointer border-slate-100 hover:border-red-200 hover:scale-105'
                                                     : 'border-slate-100'
-                                            }`}
+                                                }`}
                                             title={imgUrl && idx !== 0 ? "Click to swap with main image" : ""}
                                         >
                                             {imgUrl ? (
-                                                <img 
-                                                    src={getSalonImageSrc(imgUrl)} 
-                                                    alt={`Gallery ${idx}`} 
-                                                    className="w-full h-full object-cover" 
+                                                <img
+                                                    src={getSalonImageSrc(imgUrl)}
+                                                    alt={`Gallery ${idx}`}
+                                                    className="w-full h-full object-cover"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-slate-300">
@@ -761,24 +759,21 @@ const SalonPage = () => {
                                     const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
                                     const isToday = day.toLowerCase() === todayName.toLowerCase();
                                     return (
-                                        <div 
-                                            key={day} 
-                                            className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${
-                                                isToday 
-                                                    ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 shadow-sm' 
+                                        <div
+                                            key={day}
+                                            className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${isToday
+                                                    ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 shadow-sm'
                                                     : 'hover:bg-slate-50'
-                                            }`}
+                                                }`}
                                         >
-                                            <span className={`uppercase tracking-tight flex items-center gap-1.5 ${
-                                                isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
-                                            }`}>
+                                            <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
+                                                }`}>
                                                 {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] animate-pulse shrink-0"></span>}
                                                 {day}
                                                 {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">TODAY</span>}
                                             </span>
-                                            <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${
-                                                isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
-                                            }`}>
+                                            <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
+                                                }`}>
                                                 {isOff ? 'Closed' : operatingHours}
                                             </span>
                                         </div>
@@ -794,7 +789,7 @@ const SalonPage = () => {
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                                     <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> Top Experts
                                 </h3>
-                                <span 
+                                <span
                                     onClick={() => navigate('/customer/book-service')}
                                     className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider flex items-center gap-0.5"
                                 >
@@ -819,13 +814,19 @@ const SalonPage = () => {
                                         const rating = staff.rating != null ? parseFloat(staff.rating).toFixed(1) : null;
                                         const isTopRated = index === 0 && rating && parseFloat(rating) >= 4.0;
                                         return (
-                                            <div 
-                                                key={staff.id} 
-                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
-                                                    isTopRated 
-                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md' 
+                                            <div
+                                                key={staff.id}
+                                                onClick={() => navigate('/customer/book-service', {
+                                                    state: {
+                                                        selectedExpert: staff.id,
+                                                        selectedDateObj: selectedDateObj,
+                                                        selectedTime: selectedTime
+                                                    }
+                                                })}
+                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${isTopRated
+                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
                                                         : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
-                                                }`}
+                                                    }`}
                                             >
                                                 {/* Top Rated Badge */}
                                                 {isTopRated && (
@@ -838,28 +839,27 @@ const SalonPage = () => {
 
                                                 <div className="p-5 flex flex-col items-center text-center">
                                                     {/* Avatar */}
-                                                    <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${
-                                                        isTopRated ? 'ring-amber-300' : 'ring-slate-200'
-                                                    }`}>
+                                                    <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
+                                                        }`}>
                                                         {staff.imagePath ? (
-                                                            <AsyncImage 
-                                                                imagePath={staff.imagePath} 
-                                                                alt={staff.name} 
-                                                                className="w-full h-full object-cover" 
-                                                                fallbackText={staff.name?.[0] || 'S'} 
+                                                            <AsyncImage
+                                                                imagePath={staff.imagePath}
+                                                                alt={staff.name}
+                                                                className="w-full h-full object-cover"
+                                                                fallbackText={staff.name?.[0] || 'S'}
                                                             />
                                                         ) : (
-                                                            <img 
-                                                                src={getExpertImg(index)} 
-                                                                alt={staff.name} 
-                                                                className="w-full h-full object-cover" 
+                                                            <img
+                                                                src={getExpertImg(index)}
+                                                                alt={staff.name}
+                                                                className="w-full h-full object-cover"
                                                             />
                                                         )}
                                                     </div>
 
                                                     {/* Name */}
                                                     <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight">{staff.name}</h4>
-                                                    
+
                                                     {/* Role */}
                                                     <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{role}</p>
 
@@ -868,13 +868,12 @@ const SalonPage = () => {
                                                         <div className="mt-3 flex items-center gap-1.5">
                                                             <div className="flex items-center">
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <Star 
-                                                                        key={i} 
-                                                                        className={`w-3.5 h-3.5 ${
-                                                                            i < Math.round(parseFloat(rating)) 
-                                                                                ? 'text-amber-400 fill-amber-400' 
+                                                                    <Star
+                                                                        key={i}
+                                                                        className={`w-3.5 h-3.5 ${i < Math.round(parseFloat(rating))
+                                                                                ? 'text-amber-400 fill-amber-400'
                                                                                 : 'text-slate-200'
-                                                                        }`} 
+                                                                            }`}
                                                                     />
                                                                 ))}
                                                             </div>
@@ -908,11 +907,10 @@ const SalonPage = () => {
                                                                 selectedTime: selectedTime
                                                             }
                                                         })}
-                                                        className={`mt-4 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
-                                                            isTopRated 
-                                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md' 
+                                                        className={`mt-4 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${isTopRated
+                                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
                                                                 : 'bg-slate-900 hover:bg-black text-white shadow-sm'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         Book Now
                                                     </button>
@@ -970,11 +968,10 @@ const SalonPage = () => {
                                                 setSelectedSlot(null);
                                                 setAvailableStaffForSlot([]);
                                             }}
-                                            className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
-                                                isSelectedDate
+                                            className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
                                                     ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
                                                     : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
-                                            }`}
+                                                }`}
                                         >
                                             <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
                                             <span className="text-sm font-black">{d.num}</span>
@@ -1003,14 +1000,18 @@ const SalonPage = () => {
                                                 type="button"
                                                 key={slot.startTime || idx}
                                                 onClick={() => {
-                                                    setSelectedTime(slot.displayTime);
-                                                    setSelectedSlot(slot);
+                                                    navigate('/customer/book-service', {
+                                                        state: {
+                                                            selectedDateObj: selectedDateObj,
+                                                            selectedTime: slot.displayTime,
+                                                            selectedSlot: slot
+                                                        }
+                                                    });
                                                 }}
-                                                className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${
-                                                    isSelected
+                                                className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isSelected
                                                         ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
                                                         : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300'
-                                                }`}
+                                                    }`}
                                             >
                                                 {slot.displayTime}
                                             </button>
@@ -1044,8 +1045,8 @@ const SalonPage = () => {
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                                     <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Products
                                 </h3>
-                                <span 
-                                    onClick={() => navigate('/customer/book-service')}
+                                <span
+                                    onClick={() => navigate('/customer/product-search', { state: { salonId: activeSalonId } })}
                                     className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
                                 >
                                     See More
@@ -1062,10 +1063,10 @@ const SalonPage = () => {
                                         <div key={product.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                                             <div>
                                                 <div className="aspect-video bg-slate-50 rounded-xl overflow-hidden mb-3.5 relative">
-                                                    <img 
-                                                        src={getProductImg(product, index)} 
-                                                        alt={product.name} 
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out" 
+                                                    <img
+                                                        src={getProductImg(product, index)}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
                                                     />
                                                 </div>
                                                 <span className="text-[9px] font-black text-[#FF0B01] uppercase tracking-wider bg-red-50 px-2 py-1 rounded-md">
@@ -1079,9 +1080,9 @@ const SalonPage = () => {
                                                     <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">Price</span>
                                                     <span className="text-sm font-extrabold text-slate-900 mt-1.5 block">₹{product.price}</span>
                                                 </div>
-                                                <button 
+                                                <button
                                                     type="button"
-                                                    onClick={() => navigate('/customer/book-service')}
+                                                    onClick={() => navigate('/customer/product-details', { state: { product } })}
                                                     className="bg-slate-950 hover:bg-black text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-sm"
                                                 >
                                                     Buy Now
@@ -1144,7 +1145,7 @@ const SalonPage = () => {
                             <h3 className="text-base font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">
                                 {salon?.name || 'Salon Details'}
                             </h3>
-                            
+
                             <div className="space-y-3.5 text-xs text-slate-655 font-semibold mb-6">
                                 <div className="flex items-center gap-1.5">
                                     <span className={`w-1.5 h-1.5 rounded-full ${isSalonOpenNow() ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>

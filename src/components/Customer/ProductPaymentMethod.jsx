@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function ProductPaymentMethod() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { product, quantity } = location.state || {};
+  const subtotal = (product?.price || 450) * (quantity || 1);
+  const total = subtotal;
   // State hooks for selection context simulation
   const [paymentType, setPaymentType] = useState('upi'); // 'upi' or 'card'
   const [selectedUpiApp, setSelectedUpiApp] = useState('gpay'); // 'gpay', 'phonepe', or 'paytm'
@@ -238,16 +242,16 @@ export default function ProductPaymentMethod() {
             {/* Main Brand Meta Core Identification info */}
             <div className="space-y-2">
               <h3 className="font-poppins text-4xl font-semibold capitalize tracking-tight text-[#131313]">
-                nessaire
+                {product?.name || 'Necessaire'}
               </h3>
               <p className="font-poppins text-[15px] font-medium leading-relaxed text-[#8D8D8D]">
-                The Body Lotion - Firming Moisturizer With 5 Peptides and 2.5% Niacinamide
+                {product?.description || 'The Body Lotion - Firming Moisturizer With 5 Peptides and 2.5% Niacinamide'}
               </p>
             </div>
 
             {/* Configured Item Parameters Layout */}
             <div className="flex h-9 w-24 items-center justify-center rounded-md border border-black px-4">
-              <span className="font-poppins text-base font-medium text-[#FF0B01]">50ml</span>
+              <span className="font-poppins text-base font-medium text-[#FF0B01]">Qty: {quantity || 1}</span>
             </div>
 
             <div className="h-[1px] w-full bg-[#8D8D8D]" />
@@ -256,11 +260,7 @@ export default function ProductPaymentMethod() {
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm font-semibold uppercase text-[#131313]">
                 <span>subtotal</span>
-                <span>₹ 450</span>
-              </div>
-              <div className="flex items-center justify-between text-sm font-semibold uppercase text-[#131313]">
-                <span>tax</span>
-                <span>₹ 50</span>
+                <span>₹ {subtotal}</span>
               </div>
 
               <div className="h-[1px] w-full bg-[#8D8D8D]" />
@@ -268,11 +268,11 @@ export default function ProductPaymentMethod() {
               {/* Command Confirmation Action Dispatcher */}
               <div className="flex items-center justify-between text-base font-semibold uppercase mb-4">
                 <span className="text-[#131313]">total</span>
-                <span className="text-lg text-[#FF0B01]">₹ 500</span>
+                <span className="text-lg text-[#FF0B01]">₹ {total}</span>
               </div>
 
               <button 
-                onClick={() => navigate('/customer/product-bill')}
+                onClick={() => navigate('/customer/product-bill', { state: { product, quantity, paymentType } })}
                 className="w-full py-4 bg-[#FF0B01] text-white font-bold tracking-widest text-sm rounded-lg hover:bg-red-700 transition uppercase">
                 Proceed To Payment
               </button>

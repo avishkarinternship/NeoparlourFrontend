@@ -2,11 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
-import { switchTenant, fetchCustomerProfile } from '../../redux/slices/customerSlice';
+import { switchTenant, fetchCustomerProfile, searchSalonsByLocation } from '../../redux/slices/customerSlice';
 import searchService from '../../services/searchService';
 import toast from 'react-hot-toast';
+import { Navigation } from 'lucide-react';
 
 import NavBar from './Layouts/NavBar';
+
+import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
+import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
+import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
 import Footer from './Layouts/Footer';
 
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
@@ -30,8 +35,8 @@ const SalonsListing = () => {
     const { token, user, isAuthenticated, profile } = useSelector((state) => state.customer);
 
     // Search state
-    const [cityName, setCityName] = useState('');
-    const [areaName, setAreaName] = useState('');
+    const [cityName, setCityName] = useState(localStorage.getItem('customerCity') || '');
+    const [areaName, setAreaName] = useState(localStorage.getItem('customerArea') || '');
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
     const [isLoadingCities, setIsLoadingCities] = useState(false);
@@ -51,6 +56,7 @@ const SalonsListing = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [searchedCity, setSearchedCity] = useState('');
     const [switchingId, setSwitchingId] = useState(null);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
     const isShowingStatic = salons.length === 0;
     const displaySalons = isShowingStatic ? staticSalons : salons;
@@ -121,23 +127,21 @@ const SalonsListing = () => {
         return () => clearTimeout(delayDebounce);
     }, [areaName]);
 
-    // Fetch salons by city (paginated)
-    const fetchSalons = async (city, pageNum = 0) => {
+    // Fetch salons by city and area
+    const fetchSalons = async (city, area = '', pageNum = 0) => {
         if (!city || city.trim().length === 0) return;
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/salons/by-city', {
-                params: {
-                    cityName: city,
-                    page: pageNum,
-                    limit: ITEMS_PER_PAGE
-                }
-            });
-            const data = response.data;
-            setSalons(data.content || []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
-            setPage(pageNum);
+            const results = await dispatch(
+                searchSalonsByLocation({
+                    cityName: city.trim(),
+                    areaName: area ? area.trim() : ''
+                })
+            ).unwrap();
+            setSalons(results || []);
+            setTotalPages(1);
+            setTotalElements(results ? results.length : 0);
+            setPage(0);
             setSearchedCity(city);
         } catch (err) {
             console.error('Error fetching salons:', err);
@@ -149,22 +153,37 @@ const SalonsListing = () => {
         }
     };
 
-    // Auto-detect location on mount
+    // Auto-detect location on mount or read from localStorage
     useEffect(() => {
-        if ('geolocation' in navigator) {
+        const storedCity = localStorage.getItem('customerCity');
+        const storedArea = localStorage.getItem('customerArea') || '';
+        
+        if (storedCity) {
+            isUserTypingCityRef.current = false;
+            setCityName(storedCity);
+            if (storedArea) {
+                isUserTypingAreaRef.current = false;
+                setAreaName(storedArea);
+            }
+            fetchSalons(storedCity, storedArea);
+        } else if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     try {
                         const { latitude, longitude } = position.coords;
                         const geo = await searchService.reverseGeocode(latitude, longitude);
                         if (geo.city) {
+                            localStorage.setItem('customerCity', geo.city);
+                            if (geo.area) {
+                                localStorage.setItem('customerArea', geo.area);
+                            }
                             isUserTypingCityRef.current = false;
                             setCityName(geo.city);
                             if (geo.area) {
                                 isUserTypingAreaRef.current = false;
                                 setAreaName(geo.area);
                             }
-                            fetchSalons(geo.city, 0);
+                            fetchSalons(geo.city, geo.area || '');
                         }
                     } catch (err) {
                         console.error('Geolocation error:', err);
@@ -183,14 +202,56 @@ const SalonsListing = () => {
             toast.error('Please enter a city name');
             return;
         }
+        localStorage.setItem('customerCity', cityName.trim());
+        localStorage.setItem('customerArea', areaName.trim());
         setPage(0);
-        fetchSalons(cityName.trim(), 0);
+        fetchSalons(cityName.trim(), areaName.trim());
     };
 
     const handlePageChange = (newPage) => {
         if (newPage < 0 || newPage >= totalPages) return;
-        fetchSalons(searchedCity, newPage);
+        fetchSalons(searchedCity, areaName, newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDetectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsDetectingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    const result = await searchService.reverseGeocode(latitude, longitude);
+                    if (result.city) {
+                        isUserTypingCityRef.current = false;
+                        isUserTypingAreaRef.current = false;
+                        setCityName(result.city);
+                        setAreaName(result.area || '');
+                        localStorage.setItem('customerCity', result.city);
+                        localStorage.setItem('customerArea', result.area || '');
+                        
+                        // Immediately fetch salons
+                        fetchSalons(result.city, result.area || '');
+                        toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
+                    } else {
+                        toast.error("Could not determine your city. Please enter it manually.");
+                    }
+                } catch (error) {
+                    toast.error("Could not determine your city. Please enter it manually.");
+                } finally {
+                    setIsDetectingLocation(false);
+                }
+            },
+            (error) => {
+                toast.error("Location permission denied. Please enter it manually.");
+                setIsDetectingLocation(false);
+            },
+            { enableHighAccuracy: false, timeout: 8000 }
+        );
     };
 
     const getSalonImageSrc = (imageUrl, fallbackImg) => {
@@ -213,6 +274,10 @@ const SalonsListing = () => {
                             const { latitude, longitude } = position.coords;
                             const geo = await searchService.reverseGeocode(latitude, longitude);
                             if (geo.city) {
+                                localStorage.setItem('customerCity', geo.city);
+                                if (geo.area) {
+                                    localStorage.setItem('customerArea', geo.area);
+                                }
                                 isUserTypingCityRef.current = false;
                                 setCityName(geo.city);
                                 if (geo.area) {
@@ -268,10 +333,9 @@ const SalonsListing = () => {
             });
     };
 
-    const getSalonRating = (salon, index) => {
-        if (salon.rating) return parseFloat(salon.rating).toFixed(1);
-        const ratings = [4.5, 4.8, 4.3, 4.6, 4.7, 4.4, 4.9, 4.2, 4.1, 4.0];
-        return ratings[(salon.salonId || salon.id || index) % ratings.length];
+    const getSalonRating = (salon) => {
+        if (salon.rating != null) return parseFloat(salon.rating).toFixed(1);
+        return null;
     };
 
     // Generate page numbers for pagination
@@ -290,11 +354,11 @@ const SalonsListing = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans overflow-x-hidden">
             <NavBar />
 
             {/* Hero Search Section */}
-            <section className="relative overflow-hidden">
+            <section className="relative z-35 overflow-visible">
                 {/* Background decorative elements */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FFF5F4] via-white to-[#FFF0EE]" />
                 <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF2A14]/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
@@ -312,149 +376,132 @@ const SalonsListing = () => {
                     </div>
 
                     {/* Search Bar */}
-                    <div className="max-w-3xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/60 border border-gray-100 p-3 sm:p-4">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                {/* City Input */}
-                                <div ref={cityDropdownRef} className="relative flex-1">
-                                    <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-[#FF2A14]/30 focus-within:bg-white focus-within:shadow-sm transition-all">
-                                        <svg className="w-[18px] h-[18px] text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
+                            {/* City Input */}
+                            <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
+                                <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
+                                <input
+                                    id="salon-city-search"
+                                    type="text"
+                                    placeholder={isDetectingLocation ? "DETECTING..." : "Search city..."}
+                                    value={cityName}
+                                    onChange={(e) => {
+                                        isUserTypingCityRef.current = true;
+                                        setCityName(e.target.value);
+                                        setShowCityDropdown(true);
+                                    }}
+                                    onFocus={() => setShowCityDropdown(true)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent text-left"
+                                />
+                                {cityName && (
+                                    <button onClick={() => { setCityName(''); setCitySuggestions([]); }} className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        <input
-                                            id="salon-city-search"
-                                            type="text"
-                                            placeholder="Search city..."
-                                            value={cityName}
-                                            onChange={(e) => {
-                                                isUserTypingCityRef.current = true;
-                                                setCityName(e.target.value);
-                                                setShowCityDropdown(true);
-                                            }}
-                                            onFocus={() => { if (citySuggestions.length > 0) setShowCityDropdown(true); }}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                            className="flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none w-full"
-                                        />
-                                        {cityName && (
-                                            <button onClick={() => { setCityName(''); setCitySuggestions([]); }} className="text-gray-300 hover:text-gray-500 transition-colors">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* City Dropdown */}
-                                    {showCityDropdown && (citySuggestions.length > 0 || isLoadingCities) && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50 z-50 max-h-60 overflow-y-auto">
-                                            {isLoadingCities ? (
-                                                <div className="flex items-center justify-center py-6 gap-2">
-                                                    <div className="w-4 h-4 border-2 border-[#FF2A14] border-t-transparent rounded-full animate-spin" />
-                                                    <span className="text-xs text-gray-400 font-medium">Searching cities...</span>
-                                                </div>
-                                            ) : (
-                                                citySuggestions.map((suggestion, idx) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => {
-                                                            isUserTypingCityRef.current = false;
-                                                            setCityName(suggestion.name);
-                                                            setShowCityDropdown(false);
-                                                            setCitySuggestions([]);
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 hover:bg-[#FFF5F4] transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-b-0"
-                                                    >
-                                                        <svg className="w-4 h-4 text-[#FF2A14]/60 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        </svg>
-                                                        <span className="text-sm font-medium text-gray-700">{suggestion.name}</span>
-                                                    </button>
-                                                ))
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Area Input */}
-                                <div ref={areaDropdownRef} className="relative flex-1">
-                                    <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-[#FF2A14]/30 focus-within:bg-white focus-within:shadow-sm transition-all">
-                                        <svg className="w-[18px] h-[18px] text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                        <input
-                                            id="salon-area-search"
-                                            type="text"
-                                            placeholder="Search area (optional)..."
-                                            value={areaName}
-                                            onChange={(e) => {
-                                                isUserTypingAreaRef.current = true;
-                                                setAreaName(e.target.value);
-                                                setShowAreaDropdown(true);
-                                            }}
-                                            onFocus={() => { if (areaSuggestions.length > 0) setShowAreaDropdown(true); }}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                            className="flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none w-full"
-                                        />
-                                        {areaName && (
-                                            <button onClick={() => { setAreaName(''); setAreaSuggestions([]); }} className="text-gray-300 hover:text-gray-500 transition-colors">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Area Dropdown */}
-                                    {showAreaDropdown && (areaSuggestions.length > 0 || isLoadingAreas) && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50 z-50 max-h-60 overflow-y-auto">
-                                            {isLoadingAreas ? (
-                                                <div className="flex items-center justify-center py-6 gap-2">
-                                                    <div className="w-4 h-4 border-2 border-[#FF2A14] border-t-transparent rounded-full animate-spin" />
-                                                    <span className="text-xs text-gray-400 font-medium">Searching areas...</span>
-                                                </div>
-                                            ) : (
-                                                areaSuggestions.map((suggestion, idx) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => {
-                                                            isUserTypingAreaRef.current = false;
-                                                            setAreaName(suggestion.name);
-                                                            setShowAreaDropdown(false);
-                                                            setAreaSuggestions([]);
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 hover:bg-[#FFF5F4] transition-colors border-b border-gray-50 last:border-b-0"
-                                                    >
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-medium text-gray-700">{suggestion.name}</span>
-                                                            {suggestion.city && (
-                                                                <span className="text-xs text-gray-400 mt-0.5">{suggestion.city}</span>
-                                                            )}
-                                                        </div>
-                                                    </button>
-                                                ))
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Search Button */}
+                                    </button>
+                                )}
                                 <button
-                                    id="salon-search-btn"
-                                    onClick={handleSearch}
-                                    disabled={loading}
-                                    className="bg-gradient-to-r from-[#FF2A14] to-[#FF4D3A] hover:from-[#E02510] hover:to-[#FF2A14] text-white font-bold text-sm px-8 py-3 rounded-xl shadow-md shadow-[#FF2A14]/20 hover:shadow-lg hover:shadow-[#FF2A14]/30 transition-all duration-200 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 justify-center whitespace-nowrap"
+                                    type="button"
+                                    onClick={handleDetectLocation}
+                                    disabled={isDetectingLocation}
+                                    className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${
+                                        isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                                    }`}
+                                    title="Detect Current Location"
                                 >
-                                    {loading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    {isDetectingLocation ? (
+                                        <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
                                     ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
+                                        <Navigation className="w-4 h-4 -rotate-45" />
                                     )}
-                                    Search
                                 </button>
+                                {showCityDropdown && cityName && (
+                                    <div className="absolute left-0 top-full z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                        {isLoadingCities ? (
+                                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                                <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                                Locating...
+                                            </div>
+                                        ) : citySuggestions.length > 0 ? (
+                                            citySuggestions.map((city, idx) => (
+                                                <div key={idx} onClick={() => {
+                                                    isUserTypingCityRef.current = false;
+                                                    isUserTypingAreaRef.current = false;
+                                                    setCityName(city.name);
+                                                    setAreaName('');
+                                                    setShowCityDropdown(false);
+                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
+                                            ))
+                                        ) : (
+                                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Area Input */}
+                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2" ref={areaDropdownRef}>
+                                <div className="flex items-center gap-3 w-full">
+                                    <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
+                                    <input
+                                        id="salon-area-search"
+                                        type="text"
+                                        placeholder="Search area (optional)..."
+                                        value={areaName}
+                                        onChange={(e) => {
+                                            isUserTypingAreaRef.current = true;
+                                            setAreaName(e.target.value);
+                                            setShowAreaDropdown(true);
+                                        }}
+                                        onFocus={() => setShowAreaDropdown(true)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                                        className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent text-left"
+                                    />
+                                    {areaName && (
+                                        <button onClick={() => { setAreaName(''); setAreaSuggestions([]); }} className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 flex-shrink-0 animate-pulse hover:scale-110 transition-transform" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
+                                {showAreaDropdown && areaName && (
+                                    <div className="absolute left-0 top-full z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                        {isLoadingAreas ? (
+                                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                                <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                                Locating...
+                                            </div>
+                                        ) : areaSuggestions.length > 0 ? (
+                                            areaSuggestions.map((area, idx) => (
+                                                <div key={idx} onClick={() => {
+                                                    isUserTypingCityRef.current = false;
+                                                    isUserTypingAreaRef.current = false;
+                                                    setAreaName(area.name);
+                                                    setShowAreaDropdown(false);
+                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
+                                                    {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Search Button */}
+                            <button
+                                id="salon-search-btn"
+                                onClick={handleSearch}
+                                disabled={loading}
+                                className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0"
+                            >
+                                {loading ? 'Searching...' : 'Search'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -496,9 +543,22 @@ const SalonsListing = () => {
                 )}
 
                 {/* Salon Cards Grid */}
-                {(salons.length > 0 || isShowingStatic) && (
+                {(salons.length > 0 || isShowingStatic || loading) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {displaySalons.map((salon, index) => {
+                        {loading && !switchingId ? (
+                            Array.from({ length: 8 }).map((_, idx) => (
+                                <div key={idx} className="bg-white rounded-[32px] border border-gray-100 p-6 space-y-4 animate-pulse">
+                                    <div className="h-44 bg-slate-200 rounded-2xl" />
+                                    <div className="space-y-3">
+                                        <div className="h-4 bg-slate-200 rounded w-1/4" />
+                                        <div className="h-6 bg-slate-200 rounded w-3/4" />
+                                        <div className="h-4 bg-slate-200 rounded w-1/2" />
+                                        <div className="h-3 bg-slate-200 rounded w-2/3" />
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            displaySalons.map((salon, index) => {
                             const salonId = salon.salonId || salon.id;
                             const hasImage = !!salon.imageUrl || !!salon.img;
                             const coverImg = salon.img || (hasImage ? getSalonImageSrc(salon.imageUrl, null) : null);
@@ -570,12 +630,18 @@ const SalonsListing = () => {
                                             </div>
 
                                             {/* Rating Badge */}
-                                            <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                                <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                </svg>
-                                                <span>{rating} ({reviewsCount}+)</span>
-                                            </div>
+                                            {rating != null ? (
+                                                <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                                    <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                    <span>{rating} ({reviewsCount}+)</span>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-emerald-600 text-white rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest flex items-center shadow-sm">
+                                                    NEW
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -662,7 +728,7 @@ const SalonsListing = () => {
                                     </div>
                                 </div>
                             );
-                        })}
+                        }) ) }
                     </div>
                 )}
 

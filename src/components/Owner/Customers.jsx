@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from './Layouts/Navbar';
 import Sidebar from './Layouts/SideBar';
 import Footer from './Layouts/Footer';
@@ -43,6 +44,7 @@ const formatStatusText = (status) => {
 };
 
 const Customers = () => {
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Filters
@@ -95,8 +97,18 @@ const Customers = () => {
     }, []);
 
     useEffect(() => {
-        fetchVisits(0, {});
-    }, [fetchVisits]);
+        const nameParam = location.state?.customerName || '';
+        const mobileParam = location.state?.customerMobile || '';
+        if (nameParam || mobileParam) {
+            setCustomerName(nameParam);
+            setCustomerMobile(mobileParam);
+            const initFilters = { customerName: nameParam, customerMobile: mobileParam };
+            setAppliedFilters(initFilters);
+            fetchVisits(0, initFilters);
+        } else {
+            fetchVisits(0, {});
+        }
+    }, [location.state, fetchVisits]);
 
     const handleSearch = () => {
         const filters = { customerName, customerMobile, lastStatus, minVisits, fromDate, toDate, minRevenue };

@@ -186,7 +186,9 @@ const SelectService = () => {
     const [selectedTime, setSelectedTime] = useState(() => {
         return location.state?.selectedTime || null;
     });
-    const [selectedSlot, setSelectedSlot] = useState(null); // Full slot object {startTime, displayTime}
+    const [selectedSlot, setSelectedSlot] = useState(() => {
+        return location.state?.selectedSlot || null;
+    }); // Full slot object {startTime, displayTime}
 
     // --- API-BASED SLOT & AVAILABILITY STATE ---
     const [salonSlots, setSalonSlots] = useState([]);       // All salon slots for the day
@@ -199,13 +201,39 @@ const SelectService = () => {
         return location.state?.selectedExpert || 'any';
     });
 
-    // Derive the time slots to display: staffSlots if a specific expert is selected, otherwise salonSlots
-    const displayedSlots = (selectedExpert && selectedExpert !== 'any' && staffSlots.length > 0) ? staffSlots : salonSlots;
+    const [firstSelected, setFirstSelected] = useState(() => {
+        if (location.state?.selectedSlot) {
+            return 'slot';
+        }
+        if (location.state?.selectedExpert && location.state.selectedExpert !== 'any') {
+            return 'staff';
+        }
+        return null;
+    });
+
+    useEffect(() => {
+        if (!selectedSlot && (!selectedExpert || selectedExpert === 'any')) {
+            setFirstSelected(null);
+            return;
+        }
+        if (selectedSlot && (!selectedExpert || selectedExpert === 'any')) {
+            setFirstSelected('slot');
+            return;
+        }
+        if (selectedExpert && selectedExpert !== 'any' && !selectedSlot) {
+            setFirstSelected('staff');
+            return;
+        }
+    }, [selectedSlot, selectedExpert]);
+
+    // Derive the time slots to display: staffSlots if staff was selected first, otherwise salonSlots
+    const displayedSlots = (firstSelected === 'staff') ? staffSlots : salonSlots;
 
     // --- MODAL STATE ---
     const [isBillOpen, setIsBillOpen] = useState(false);
     const [isBookedOpen, setIsBookedOpen] = useState(false);
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+    const [bookingLoading, setBookingLoading] = useState(false);
 
     // --- HELPERS ---
     // Convert dateObj {day, num, month, year, fullDate:'06-06-2026'} → ISO Instant string
@@ -311,6 +339,10 @@ const SelectService = () => {
             setStaffSlots([]);
             return;
         }
+        if (firstSelected === 'slot') {
+            // Do not fetch staff-specific slots if timeslot was selected first
+            return;
+        }
         const fetchStaffSlots = async () => {
             setSlotsLoading(true);
             try {
@@ -330,12 +362,16 @@ const SelectService = () => {
             }
         };
         fetchStaffSlots();
-    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes]);
+    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes, firstSelected]);
 
     // --- FETCH AVAILABLE STAFF when time slot selected ---
     useEffect(() => {
         if (!activeSalonId || !selectedSlot?.startTime) {
             setAvailableStaffList([]);
+            return;
+        }
+        if (firstSelected === 'staff') {
+            // Do not fetch available staff if staff was selected first
             return;
         }
         const fetchAvailableStaff = async () => {
@@ -357,13 +393,13 @@ const SelectService = () => {
             }
         };
         fetchAvailableStaff();
-    }, [activeSalonId, selectedSlot, durationMinutes]);
+    }, [activeSalonId, selectedSlot, durationMinutes, firstSelected]);
 
     const fetchServices = async () => {
         if (servicesLoaded) return;
         try {
             console.log("[SelectService] Scroll down triggered: Fetching categories from API...");
-            const res = await axiosInstance.get('/services/categories', {
+            const res = await axiosInstance.get('/service/public/categories', {
                 params: { salonId: activeSalonId }
             });
             const cats = res.data || [];
@@ -385,8 +421,8 @@ const SelectService = () => {
         if (staffLoaded) return;
         try {
             console.log("[SelectService] Scroll down triggered: Fetching staff search list from API...");
-            const staffRes = await axiosInstance.get('/staff/search', {
-                params: { size: 50, salonId: activeSalonId }
+            const staffRes = await axiosInstance.get('/staff/public/search', {
+                params: { size: 50, salonId: activeSalonId, status: 'active' }
             });
             const staffData = staffRes.data?.content || staffRes.data || [];
             setStaffList(staffData);
@@ -400,6 +436,27 @@ const SelectService = () => {
     // Filter services by selected category (checking local cache first, fallback to API)
     useEffect(() => {
         if (!selectedCategory) return;
+
+        if (selectedCategory.toLowerCase() === 'all') {
+            if (allServices.length > 0) {
+                setServices(allServices);
+            } else {
+                const fetchAllServicesFallback = async () => {
+                    try {
+                        const res = await axiosInstance.get('/services/active', {
+                            params: { salonId: activeSalonId }
+                        });
+                        const activeSrv = res.data || [];
+                        setAllServices(activeSrv);
+                        setServices(activeSrv);
+                    } catch (error) {
+                        console.error("Error fetching all services fallback:", error);
+                    }
+                };
+                fetchAllServicesFallback();
+            }
+            return;
+        }
 
         if (allServices.length > 0) {
             const activeSrv = allServices.filter(s => s.category?.toLowerCase() === selectedCategory?.toLowerCase());
@@ -420,7 +477,7 @@ const SelectService = () => {
             };
             fetchServicesByCategory();
         }
-    }, [selectedCategory, allServices]);
+    }, [selectedCategory, allServices, activeSalonId]);
 
     // Setup IntersectionObservers for lazy loading
     useEffect(() => {
@@ -548,7 +605,7 @@ const SelectService = () => {
 
     // Filtered services
     const filteredServicesList = services.filter(s => {
-        const matchesCategory = s.category === selectedCategory;
+        const matchesCategory = selectedCategory.toLowerCase() === 'all' || s.category?.toLowerCase() === selectedCategory?.toLowerCase();
         if (!matchesCategory) return false;
         
         if (selectedGender !== 'All') {
@@ -580,19 +637,92 @@ const SelectService = () => {
     const serviceSubtotal = selectedServiceObjects.reduce((sum, s) => sum + (s.price || 0), 0);
     let discountAmount = 0;
     let offerServiceIds = [];
+    let offerOriginalTotal = 0;
+    let offerDiscount = 0;
+    let offerFinalTotal = 0;
     if (selectedOffer && selectedOffer.services) {
         offerServiceIds = selectedOffer.services.map(s => s.id);
         const offerServicesTotal = selectedServiceObjects
             .filter(s => offerServiceIds.includes(s.id))
             .reduce((sum, s) => sum + (s.price || 0), 0);
         discountAmount = Math.round(offerServicesTotal * ((selectedOffer.percentage || 0) / 100));
+
+        // Calculations for offer banner itself (total package value)
+        offerOriginalTotal = selectedOffer.services.reduce((sum, os) => {
+            const actualSrv = allServices.find(s => s.id === os.id) || services.find(s => s.id === os.id) || os;
+            return sum + (actualSrv.price || 0);
+        }, 0);
+        offerDiscount = Math.round(offerOriginalTotal * ((selectedOffer.percentage || 0) / 100));
+        offerFinalTotal = offerOriginalTotal - offerDiscount;
     }
-    const taxAndCharges = Math.round((serviceSubtotal - discountAmount) * 0.18); // 18% GST on discounted subtotal
-    const grandTotal = serviceSubtotal - discountAmount + taxAndCharges;
+    const grandTotal = serviceSubtotal - discountAmount;
 
     // Staff avatar fallback map
     const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
     const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
+
+    const handleConfirmBooking = async () => {
+        setBookingLoading(true);
+        try {
+            let appointmentAtStr = selectedSlot?.startTime || null;
+            if (!appointmentAtStr && selectedDateObj && selectedTime) {
+                const match = selectedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (match) {
+                    let hour = parseInt(match[1], 10);
+                    const minutes = parseInt(match[2], 10);
+                    const ampm = match[3].toUpperCase();
+                    if (ampm === 'PM' && hour < 12) hour += 12;
+                    if (ampm === 'AM' && hour === 12) hour = 0;
+                    
+                    const [dd, mm, yyyy] = selectedDateObj.fullDate.split('-');
+                    appointmentAtStr = `${yyyy}-${mm}-${dd}T${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00Z`;
+                }
+            }
+
+            const appointmentServices = selectedServiceObjects.map(s => ({
+                serviceId: String(s.id),
+                serviceName: s.name,
+                price: s.price,
+                duration: s.duration || s.durationMinutes || 30
+            }));
+
+            const bookingPayload = {
+                userId: customerUser.id || null,
+                customerId: customerProfile.id || null,
+                salonId: parseInt(activeSalonId, 10),
+                staffId: selectedExpert && selectedExpert !== 'any' ? parseInt(selectedExpert, 10) : null,
+                staffName: selectedExpertObj?.name && selectedExpertObj.name !== 'Any Stylist (Auto Assign)' ? selectedExpertObj.name : null,
+                customerName: customerName,
+                customerNumber: customerPhone,
+                appointmentAt: appointmentAtStr,
+                serviceDuration: durationMinutes,
+                totalPrice: serviceSubtotal,
+                discountAmount: discountAmount,
+                finalAmount: serviceSubtotal - discountAmount,
+                homeCharge: salon?.homeServiceCharges || 0.00,
+                homeService: false,
+                status: 'booked',
+                services: appointmentServices
+            };
+
+            if (selectedOffer) {
+                bookingPayload.offerId = selectedOffer.id;
+                bookingPayload.offerName = selectedOffer.name;
+                bookingPayload.discountType = 'PERCENTAGE';
+                bookingPayload.discountValue = selectedOffer.percentage;
+            }
+
+            const res = await axiosInstance.post('/appointments/book', bookingPayload);
+            toast.success('Appointment booked successfully!');
+            setIsBillOpen(false);
+            setIsBookedOpen(true);
+        } catch (error) {
+            console.error('[SelectService] Error booking appointment:', error);
+            toast.error(error.response?.data?.message || 'Failed to book appointment. Please try again.');
+        } finally {
+            setBookingLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -692,9 +822,24 @@ const SelectService = () => {
                                         </div>
                                     </div>
 
-                                    {/* Category icons slider strip */}
                                     {categories.length > 0 ? (
                                         <div className="flex items-center gap-3.5 overflow-x-auto pb-4 mb-6 border-b border-slate-100 scrollbar-none">
+                                            {/* All Services Tab */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedCategory('All')}
+                                                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 min-w-[90px] h-[90px] transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                                                    selectedCategory.toLowerCase() === 'all'
+                                                        ? 'border-[#FF0B01] bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                        : 'border-slate-100 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-sm'
+                                                }`}
+                                            >
+                                                <Sparkles
+                                                    className={`w-7 h-7 mb-1.5 ${selectedCategory.toLowerCase() === 'all' ? 'text-white' : 'text-slate-500'}`}
+                                                />
+                                                <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">All</span>
+                                            </button>
+
                                             {categories.map((catName) => {
                                                 const catLower = catName.toLowerCase();
                                                 const isActive = selectedCategory === catName;
@@ -724,10 +869,98 @@ const SelectService = () => {
                                         <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">No Categories Found.</div>
                                     )}
 
+                                    {/* Selected Offer Services Section */}
+                                    {selectedOffer && selectedOffer.services && selectedOffer.services.length > 0 && (
+                                        <div className="mb-8 p-5 bg-gradient-to-r from-red-50 to-orange-50 rounded-3xl border border-red-150 shadow-sm relative overflow-hidden">
+                                            {/* Decorative background accent */}
+                                            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full" />
+                                            
+                                            <div className="flex items-center justify-between border-b border-red-100 pb-3 mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles className="w-5 h-5 text-[#FF0B01] animate-pulse shrink-0" />
+                                                    <div>
+                                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                                                            {selectedOffer.name} Special Bundle
+                                                        </h4>
+                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
+                                                            Services Included ({selectedOffer.percentage}% OFF Applied)
+                                                        </p>
+                                                        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-wider">
+                                                            <span className="px-2.5 py-1 bg-white/80 border border-slate-200/50 rounded-lg text-slate-500 shadow-sm">
+                                                                Services Amount: <span className="line-through text-slate-400 font-bold ml-1">₹{offerOriginalTotal}</span>
+                                                            </span>
+                                                            <span className="px-2.5 py-1 bg-green-50/80 border border-green-100 rounded-lg text-green-700 shadow-sm">
+                                                                Discount: <span className="font-black ml-1">-₹{offerDiscount}</span>
+                                                            </span>
+                                                            <span className="px-2.5 py-1 bg-red-50/80 border border-red-100 rounded-lg text-slate-900 shadow-sm">
+                                                                Difference/Final: <span className="text-[#FF0B01] font-black ml-1">₹{offerFinalTotal}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={handleDiscardOffer}
+                                                    className="px-3.5 py-1.5 bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm shadow-red-500/10 shrink-0"
+                                                >
+                                                    Discard Offer
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {selectedOffer.services.map((service) => {
+                                                    const isAdded = addedServices.includes(service.id);
+                                                    const actualService = allServices.find(s => s.id === service.id) || services.find(s => s.id === service.id) || service;
+                                                    const originalPrice = actualService.price || 0;
+                                                    const discountedPrice = Math.round(originalPrice * (1 - (selectedOffer.percentage || 0) / 100));
+                                                    return (
+                                                        <div 
+                                                            key={service.id}
+                                                            className={`p-4 rounded-2xl bg-white border transition-all duration-300 flex items-center justify-between gap-3 shadow-sm ${
+                                                                isAdded 
+                                                                    ? 'border-[#FF0B01] bg-[#FF0B01]/[0.01]' 
+                                                                    : 'border-slate-100 opacity-65 hover:opacity-100 hover:border-slate-200'
+                                                            }`}
+                                                        >
+                                                            <div className="min-w-0">
+                                                                <h5 className="text-xs font-black text-slate-900 uppercase truncate">
+                                                                    {service.name}
+                                                                </h5>
+                                                                <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Clock className="w-3.5 h-3.5 text-slate-450 shrink-0" />
+                                                                        {actualService.duration || actualService.durationMinutes || service.duration || service.durationMinutes || 30} Min
+                                                                    </span>
+                                                                    <span>•</span>
+                                                                    <span className="flex items-center gap-1.5 font-bold">
+                                                                        <span className="line-through text-slate-400 font-semibold">₹{originalPrice}</span>
+                                                                        <span className="text-[#FF0B01] font-black">₹{discountedPrice}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleServiceToggle(service.id)}
+                                                                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
+                                                                    isAdded 
+                                                                        ? 'bg-red-50 text-[#FF0B01] border border-red-100' 
+                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                }`}
+                                                            >
+                                                                {isAdded ? 'Added' : 'Add'}
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Services List Rendering */}
                                     <div className="space-y-4">
                                         {filteredServicesList.map((service) => {
                                             const isAdded = addedServices.includes(service.id);
+                                            const isOfferIncluded = selectedOffer && selectedOffer.services?.some(s => s.id === service.id);
                                             return (
                                                 <div
                                                     key={service.id}
@@ -746,6 +979,11 @@ const SelectService = () => {
                                                             <span className="bg-slate-100 text-slate-500 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                                 {service.category}
                                                             </span>
+                                                            {isOfferIncluded && (
+                                                                <span className="bg-red-50 text-[#FF0B01] text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                                                    <Sparkles className="w-2.5 h-2.5 animate-pulse shrink-0" /> Offer Included
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
                                                             <Clock className="w-3.5 h-3.5 text-slate-450" />
@@ -971,11 +1209,6 @@ const SelectService = () => {
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between">
-                                            <span>GST (18% Charges)</span>
-                                            <span className="text-slate-800 font-bold">₹{taxAndCharges}</span>
-                                        </div>
-
                                         <div className="flex justify-between text-sm font-black text-slate-950 pt-2 border-t border-dashed border-slate-100">
                                             <span>Grand Total</span>
                                             <span className="text-base text-[#FF0B01] font-black">₹{grandTotal}</span>
@@ -1187,10 +1420,8 @@ const SelectService = () => {
             <BillDetails
                 isOpen={isBillOpen}
                 onClose={() => setIsBillOpen(false)}
-                onConfirm={() => {
-                    setIsBillOpen(false);
-                    setIsBookedOpen(true);
-                }}
+                onConfirm={handleConfirmBooking}
+                loading={bookingLoading}
                 selectedServices={selectedServiceObjects}
                 date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}
                 time={selectedTime}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
 import ManageSideBar from "../Layouts/ManageSideBar";
@@ -29,6 +30,7 @@ const toastStyle = {
 };
 
 const Schedule = () => {
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
   const [appointments, setAppointments] = useState([]);
@@ -155,6 +157,12 @@ const Schedule = () => {
     fetchAppointments(0);
     fetchStaff();
   }, [currentSubTab]);
+
+  useEffect(() => {
+    if (location.state?.appointmentId) {
+      handleViewAppointment(location.state.appointmentId);
+    }
+  }, [location.state?.appointmentId]);
 
   const handleSearch = () => fetchAppointments(0);
   const resetFilters = () => setFilters({ mobile: '', staffId: '', fromDate: '', toDate: '', minAmount: '', maxAmount: '' });

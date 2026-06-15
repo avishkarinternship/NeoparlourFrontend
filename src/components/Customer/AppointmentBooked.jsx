@@ -16,8 +16,7 @@ const AppointmentBooked = ({
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-  const taxAndCharges = Math.round((serviceTotal - discountAmount) * 0.18); // 18% GST on discounted total
-  const grandTotal = Math.max(0, serviceTotal - discountAmount + taxAndCharges);
+  const grandTotal = Math.max(0, serviceTotal - discountAmount);
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans antialiased">

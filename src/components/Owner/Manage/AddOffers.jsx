@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../Layouts/Navbar';
 import Sidebar from '../Layouts/SideBar';
 import Footer from '../Layouts/Footer';
@@ -33,6 +34,7 @@ const DISCOUNT_TYPES = [
 ];
 
 const AddOffers = () => {
+    const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeFilter, setActiveFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('add');
@@ -224,6 +226,12 @@ const AddOffers = () => {
             setLoadingEdit(false);
         }
     };
+
+    useEffect(() => {
+        if (location.state?.editOfferId) {
+            handleEdit({ id: location.state.editOfferId });
+        }
+    }, [location.state?.editOfferId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -55,10 +55,7 @@ const Navbar = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
-                    <a href="#" className="hover:text-gray-900 transition-colors flex items-center gap-1">
-                        OFFERS
-                        <img src={offersIcon} alt="Offers" className="w-4 h-4 object-contain" />
-                    </a>
+
                 </div>
 
                 {/* Action Buttons */}
@@ -96,7 +93,7 @@ const Navbar = () => {
                     {/* Hamburger Menu Icon - Opens the slider directly on screen */}
                     <button 
                         onClick={() => setIsDrawerOpen(true)} 
-                        className="lg:hidden p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-0.5 sm:ml-1" 
+                        className="p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-0.5 sm:ml-1" 
                         title="Menu"
                     >
                         <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
