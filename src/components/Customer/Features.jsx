@@ -94,7 +94,7 @@ const Features = () => {
           ) : (
             <>
               {/* Signup Button */}
-              <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
+              <button onClick={() => navigate('/owner/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
                 <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
                 SIGNUP
               </button>
@@ -159,7 +159,9 @@ const Features = () => {
             <p className="text-sm sm:text-base text-gray-400 max-w-xl font-medium leading-relaxed">
               Seamlessly Manage Appointments, Set Custom Availability, And Send Automated Reminders Designed For The Beauty And Selfcare Industry
             </p>
-            <button className="h-12 px-6 bg-[#FF1100] hover:bg-red-600 text-white text-xs font-bold tracking-wider rounded-lg flex items-center justify-center gap-3 group transition-all duration-200 hover:scale-[1.02] cursor-pointer shadow-lg shadow-red-500/20 uppercase">
+            <button 
+              onClick={() => navigate("/register")}
+              className="h-12 px-6 bg-[#FF1100] hover:bg-red-600 text-white text-xs font-bold tracking-wider rounded-lg flex items-center justify-center gap-3 group transition-all duration-200 hover:scale-[1.02] cursor-pointer shadow-lg shadow-red-500/20 uppercase">
               <span>Get Started Now</span>
               <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

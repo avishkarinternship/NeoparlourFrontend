@@ -44,6 +44,7 @@ import PartnerWithUs from '../components/Customer/PartnerWithUs'
 import SalonsListing from '../components/Customer/SalonsListing'
 import Customers from '../components/Owner/Customers'
 import MySalons from '../components/Customer/MySalons'
+import NotificationsScreen from '../components/Owner/NotificationsScreen'
 
 export let routes = createBrowserRouter([
     {
@@ -174,6 +175,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner/appointments',
                 element: <Appointments />
+            },
+            {
+                path: '/owner/notifications',
+                element: <NotificationsScreen />
             },
             {
                 path: '/customer/appointments',

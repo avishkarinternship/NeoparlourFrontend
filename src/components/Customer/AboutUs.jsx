@@ -91,8 +91,8 @@ const AboutUs = () => {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
                     {isAuthenticated && (user || profile) ? (
-                        <button 
-                            onClick={() => setIsProfileOpen(true)} 
+                        <button
+                            onClick={() => setIsProfileOpen(true)}
                             className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
                         >
                             {/* Circular Logo/Avatar */}
@@ -152,9 +152,9 @@ const AboutUs = () => {
             />
 
             {/* Password Reset Modal */}
-            <PasswordResetModal 
-                isOpen={isPasswordResetOpen} 
-                onClose={() => setIsPasswordResetOpen(false)} 
+            <PasswordResetModal
+                isOpen={isPasswordResetOpen}
+                onClose={() => setIsPasswordResetOpen(false)}
             />
 
 
@@ -172,10 +172,21 @@ const AboutUs = () => {
                             <p className="max-w-xl text-base leading-relaxed text-gray-500 sm:text-lg">
                                 NeoParlour Connects Customers With Trusted Salons And Empowers Salon Owners To Grow Their Business Effortlessly.
                             </p>
-                            <div className="pt-2">
+                            {/* <div className="pt-2">
                                 <button className="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-red-200 transition-all hover:bg-red-600 hover:shadow-xl hover:shadow-red-200">
                                     <span>LIST YOUR SALON</span>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-red-500 font-bold text-sm">+</span>
+                                </button>
+                            </div> */}
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => navigate("/owner/register")}
+                                    className="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-red-200 transition-all hover:bg-red-600 hover:shadow-xl hover:shadow-red-200"
+                                >
+                                    <span>LIST YOUR SALON</span>
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-red-500 font-bold text-sm">
+                                        +
+                                    </span>
                                 </button>
                             </div>
                         </div>
