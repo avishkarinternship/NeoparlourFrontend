@@ -173,8 +173,9 @@ const OrderSuccess = () => {
                 Collection Venue
               </h4>
               <div className="text-xs font-semibold text-neutral-700 space-y-1 font-sans">
-                <p className="text-neutral-900 font-bold">Salon Premise Collection</p>
-                <p className="text-gray-400">Salon ID: #{order.salonId || 1}</p>
+                <p className="text-neutral-900 font-bold">{order.salonName || "Salon Premise Collection"}</p>
+                {order.salonAddress && <p className="text-gray-500">{order.salonAddress}</p>}
+                <p className="text-[10px] text-gray-400">Salon ID: #{order.salonId || 1}</p>
               </div>
             </div>
           </div>
