@@ -39,12 +39,13 @@ const CustomerLogin = () => {
     dispatch(loginCustomer(formData)).unwrap().then((res) => {
       const customerToken = res?.token;
       const activeSalonId = localStorage.getItem('activeSalonId');
+      const activeSalonName = localStorage.getItem('activeSalonName') || 'Selected Salon';
       
       if (activeSalonId && customerToken) {
         dispatch(switchTenant({
           token: customerToken,
           salonId: activeSalonId,
-          salonName: 'Selected Salon'
+          salonName: activeSalonName
         })).unwrap().then(() => {
           const from = location.state?.from || '/';
           navigate(from, { state: location.state?.bookingState });

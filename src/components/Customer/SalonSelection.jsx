@@ -34,10 +34,14 @@ const SalonSelection = () => {
     showScanner: false,
   });
 
-  const [citySuggestions, setCitySuggestions] = useState([]);
-  const [areaSuggestions, setAreaSuggestions] = useState([]);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isLoadingAreas, setIsLoadingAreas] = useState(false);
+  const [locationSearch, setLocationSearch] = useState({
+    citySuggestions: [],
+    areaSuggestions: [],
+    isLoadingCities: false,
+    isLoadingAreas: false
+  });
+
+  const { citySuggestions, areaSuggestions, isLoadingCities, isLoadingAreas } = locationSearch;
 
   const cityDropdownRef = useRef(null);
   const areaDropdownRef = useRef(null);
@@ -119,19 +123,19 @@ const SalonSelection = () => {
   // OpenStreetMap City search debounce hook
   useEffect(() => {
     if (!uiState.cityName || uiState.cityName.trim().length < 2) {
-      setCitySuggestions([]);
+      setLocationSearch(prev => ({ ...prev, citySuggestions: [] }));
       return;
     }
 
-    setIsLoadingCities(true);
+    setLocationSearch(prev => ({ ...prev, isLoadingCities: true }));
     const delayDebounce = setTimeout(async () => {
       try {
         const results = await searchService.searchExternalLocations(uiState.cityName, 'city');
-        setCitySuggestions(results);
+        setLocationSearch(prev => ({ ...prev, citySuggestions: results }));
       } catch (err) {
         console.error("City search failure:", err);
       } finally {
-        setIsLoadingCities(false);
+        setLocationSearch(prev => ({ ...prev, isLoadingCities: false }));
       }
     }, 450);
 
@@ -141,11 +145,11 @@ const SalonSelection = () => {
   // OpenStreetMap Area search debounce hook (scoped by city if present)
   useEffect(() => {
     if (!uiState.areaName || uiState.areaName.trim().length < 2) {
-      setAreaSuggestions([]);
+      setLocationSearch(prev => ({ ...prev, areaSuggestions: [] }));
       return;
     }
 
-    setIsLoadingAreas(true);
+    setLocationSearch(prev => ({ ...prev, isLoadingAreas: true }));
     const delayDebounce = setTimeout(async () => {
       try {
         const results = await searchService.searchExternalLocations(
@@ -153,11 +157,11 @@ const SalonSelection = () => {
           'area',
           uiState.cityName
         );
-        setAreaSuggestions(results);
+        setLocationSearch(prev => ({ ...prev, areaSuggestions: results }));
       } catch (err) {
         console.error("Area search failure:", err);
       } finally {
-        setIsLoadingAreas(false);
+        setLocationSearch(prev => ({ ...prev, isLoadingAreas: false }));
       }
     }, 450);
 
@@ -180,6 +184,7 @@ const SalonSelection = () => {
 
   const handleSalonSelect = (salon) => {
     const salonId = salon.salonId || salon.id;
+    const salonName = salon.salonName || salon.name || 'Selected Salon';
     
     if (!salonId) {
       toast.error('Please login to access salon by code.');
@@ -188,6 +193,7 @@ const SalonSelection = () => {
     }
 
     localStorage.setItem('activeSalonId', salonId);
+    localStorage.setItem('activeSalonName', salonName);
 
     if (!token) {
       navigate('/customer/salon');
@@ -197,7 +203,7 @@ const SalonSelection = () => {
     const payload = {
       token: token,
       salonId: salonId,
-      salonName: salon.salonName || salon.name
+      salonName: salonName
     };
     dispatch(switchTenant(payload)).unwrap().then(() => {
       navigate('/customer/salon');

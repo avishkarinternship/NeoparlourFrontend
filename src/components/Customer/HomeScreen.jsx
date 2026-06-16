@@ -444,7 +444,9 @@ const HomeScreen = () => {
 
     const handleSalonSelect = (salon) => {
         const salonId = salon.salonId || salon.id;
+        const salonName = salon.salonName || salon.name || 'Selected Salon';
         localStorage.setItem('activeSalonId', salonId);
+        localStorage.setItem('activeSalonName', salonName);
         
         if (!token) {
             navigate('/customer/salon');
@@ -453,7 +455,7 @@ const HomeScreen = () => {
         const payload = {
             token: token,
             salonId: salonId,
-            salonName: salon.salonName || salon.name
+            salonName: salonName
         };
         dispatch(switchTenant(payload))
             .unwrap()

@@ -303,7 +303,9 @@ const SalonsListing = () => {
             return;
         }
         const salonId = salon.salonId || salon.id;
+        const salonName = salon.salonName || salon.name || 'Selected Salon';
         localStorage.setItem('activeSalonId', salonId);
+        localStorage.setItem('activeSalonName', salonName);
 
         if (!token) {
             navigate('/customer/salon');
@@ -313,12 +315,12 @@ const SalonsListing = () => {
         const payload = {
             token: token,
             salonId: salonId,
-            salonName: salon.salonName || salon.name
+            salonName: salonName
         };
         dispatch(switchTenant(payload))
             .unwrap()
             .then(() => {
-                toast.success(`Switched to ${salon.salonName || salon.name}`);
+                toast.success(`Switched to ${salonName}`);
                 navigate('/customer/salon');
             })
             .catch((err) => {

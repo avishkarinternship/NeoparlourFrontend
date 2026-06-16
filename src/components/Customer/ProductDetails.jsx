@@ -20,33 +20,41 @@ const ProductDetails = () => {
   const queryId = queryParams.get('id');
   const productId = location.state?.productId || productState?.id || (queryId ? parseInt(queryId, 10) : null);
 
-  const [product, setProduct] = useState(productState);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [activeImage, setActiveImage] = useState(null);
+  const [productData, setProductData] = useState({
+    product: productState,
+    loading: false,
+    error: null,
+    activeImage: null
+  });
+
+  const { product, loading, error, activeImage } = productData;
 
   useEffect(() => {
     if (productId) {
-      setLoading(true);
+      setProductData(prev => ({ ...prev, loading: true }));
       axiosInstance.get(`/products/${productId}`)
         .then(res => {
-          setProduct(res.data);
-          if (res.data?.imageUrl) {
-            setActiveImage(res.data.imageUrl);
-          }
-          setLoading(false);
+          setProductData(prev => ({
+            ...prev,
+            product: res.data,
+            activeImage: res.data?.imageUrl || prev.activeImage,
+            loading: false
+          }));
         })
         .catch(err => {
           console.error("Failed to fetch product details:", err);
-          setError("Failed to fetch product details.");
-          setLoading(false);
+          setProductData(prev => ({
+            ...prev,
+            error: "Failed to fetch product details.",
+            loading: false
+          }));
         });
     }
   }, [productId]);
 
   useEffect(() => {
     if (productState?.imageUrl && !activeImage) {
-      setActiveImage(productState.imageUrl);
+      setProductData(prev => ({ ...prev, activeImage: productState.imageUrl }));
     }
   }, [productState]);
 
@@ -84,13 +92,22 @@ const ProductDetails = () => {
   };
   // State Management Hooks
   const [quantity, setQuantity] = useState(1);
-  const [otherProducts, setOtherProducts] = useState([]);
-  const [otherProductsLoading, setOtherProductsLoading] = useState(false);
+  
+  const [recommendations, setRecommendations] = useState({
+    list: [],
+    loading: false
+  });
+
+  const { list: otherProducts, loading: otherProductsLoading } = recommendations;
 
   // Checkout Modal State
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [checkoutProduct, setCheckoutProduct] = useState(null);
-  const [orderLoading, setOrderLoading] = useState(false);
+  const [checkout, setCheckout] = useState({
+    isOpen: false,
+    product: null,
+    loading: false
+  });
+
+  const { isOpen: isOrderModalOpen, product: checkoutProduct, loading: orderLoading } = checkout;
 
   const customerProfile = useMemo(() => {
     try {
@@ -155,11 +172,11 @@ const ProductDetails = () => {
 
   const handlePlaceOrder = async () => {
     if (!orderPayload) return;
-    setOrderLoading(true);
+    setCheckout(prev => ({ ...prev, loading: true }));
     try {
       const res = await axiosInstance.post('/orders', orderPayload);
       toast.success('Order placed successfully!');
-      setIsOrderModalOpen(false);
+      setCheckout(prev => ({ ...prev, isOpen: false }));
       navigate('/customer/order-success', {
         state: {
           order: res.data,
@@ -170,7 +187,7 @@ const ProductDetails = () => {
       console.error('Failed to place order:', err);
       toast.error(err.response?.data?.message || 'Failed to place order. Please try again.');
     } finally {
-      setOrderLoading(false);
+      setCheckout(prev => ({ ...prev, loading: false }));
     }
   };
   
@@ -179,7 +196,7 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (product?.salonId) {
-      setOtherProductsLoading(true);
+      setRecommendations(prev => ({ ...prev, loading: true }));
       axiosInstance.get('/products/filter', {
         params: { active: true, size: 10, salonId: product.salonId }
       })
@@ -188,12 +205,14 @@ const ProductDetails = () => {
         // Filter out current product
         const filtered = data.filter(p => p.id !== product.id);
         // Slice to exactly 8 products
-        setOtherProducts(filtered.slice(0, 8));
-        setOtherProductsLoading(false);
+        setRecommendations({
+          list: filtered.slice(0, 8),
+          loading: false
+        });
       })
       .catch(err => {
         console.error("Failed to fetch other products:", err);
-        setOtherProductsLoading(false);
+        setRecommendations(prev => ({ ...prev, loading: false }));
       });
     }
   }, [product?.salonId, product?.id]);
@@ -396,8 +415,11 @@ const ProductDetails = () => {
             <div className="pt-2">
               <button 
                 onClick={() => {
-                  setCheckoutProduct({ product, quantity });
-                  setIsOrderModalOpen(true);
+                  setCheckout({
+                    product: { product, quantity },
+                    isOpen: true,
+                    loading: false
+                  });
                 }}
                 disabled={product?.stock === 0}
                 className="w-full h-14 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[15px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-100 disabled:shadow-none disabled:cursor-not-allowed"
@@ -503,8 +525,11 @@ const ProductDetails = () => {
                   <div className="mt-4 px-1">
                     <button 
                       onClick={() => {
-                        setCheckoutProduct({ product: prod, quantity: 1 });
-                        setIsOrderModalOpen(true);
+                        setCheckout({
+                          product: { product: prod, quantity: 1 },
+                          isOpen: true,
+                          loading: false
+                        });
                       }}
                       disabled={prod.stock === 0}
                       className="w-full py-2.5 text-xs font-extrabold text-[#131313] bg-white border-2 border-[#131313] rounded-xl uppercase tracking-wider hover:bg-[#131313] hover:text-white transition-colors duration-200 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed"
@@ -533,7 +558,7 @@ const ProductDetails = () => {
               </h2>
               <button 
                 onClick={() => {
-                  setIsOrderModalOpen(false);
+                  setCheckout(prev => ({ ...prev, isOpen: false }));
                 }}
                 className="p-1.5 text-neutral-500 hover:bg-neutral-100 rounded-full transition-colors"
                 aria-label="Close"
@@ -617,7 +642,7 @@ const ProductDetails = () => {
             <div className="pt-4 border-t border-gray-100 flex gap-3">
               <button 
                 onClick={() => {
-                  setIsOrderModalOpen(false);
+                  setCheckout(prev => ({ ...prev, isOpen: false }));
                 }}
                 disabled={orderLoading}
                 className="flex-1 py-3.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-black uppercase tracking-wider rounded-2xl transition-colors disabled:opacity-50 font-sans"
