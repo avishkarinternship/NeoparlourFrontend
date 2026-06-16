@@ -34,6 +34,7 @@ import ProductSearch from '../components/Customer/ProductSearch'
 import ProductDetails from '../components/Customer/ProductDetails'
 import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
 import OrderSuccess from '../components/Customer/OrderSuccess'
+import MyOrders from '../components/Customer/MyOrders'
 import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
 import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
 import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
@@ -257,6 +258,10 @@ export let routes = createBrowserRouter([
                 path: 'customer/order-success',
                 element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
             },
+            {
+                path: 'customer/my-orders',
+                element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
+            },   
             {
                 path: '/customer/about',
                 element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
