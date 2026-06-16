@@ -234,6 +234,7 @@ const SelectService = () => {
     const [isBookedOpen, setIsBookedOpen] = useState(false);
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [bookingLoading, setBookingLoading] = useState(false);
+    const [showDiscardOfferModal, setShowDiscardOfferModal] = useState(false);
 
     // --- HELPERS ---
     // Convert dateObj {day, num, month, year, fullDate:'06-06-2026'} → ISO Instant string
@@ -289,7 +290,7 @@ const SelectService = () => {
 
         const fetchAllServices = async () => {
             try {
-                const res = await axiosInstance.get('/services/active', {
+                const res = await axiosInstance.get('/services/public/active', {
                     params: { salonId: activeSalonId }
                 });
                 const activeSrv = res.data || [];
@@ -432,52 +433,15 @@ const SelectService = () => {
         }
     };
 
-    // Fetch services by selected category
-    // Filter services by selected category (checking local cache first, fallback to API)
+    // Filter services by selected category locally from allServices
     useEffect(() => {
-        if (!selectedCategory) return;
-
-        if (selectedCategory.toLowerCase() === 'all') {
-            if (allServices.length > 0) {
-                setServices(allServices);
-            } else {
-                const fetchAllServicesFallback = async () => {
-                    try {
-                        const res = await axiosInstance.get('/services/active', {
-                            params: { salonId: activeSalonId }
-                        });
-                        const activeSrv = res.data || [];
-                        setAllServices(activeSrv);
-                        setServices(activeSrv);
-                    } catch (error) {
-                        console.error("Error fetching all services fallback:", error);
-                    }
-                };
-                fetchAllServicesFallback();
-            }
-            return;
-        }
-
-        if (allServices.length > 0) {
+        if (!selectedCategory || selectedCategory.toLowerCase() === 'all') {
+            setServices(allServices);
+        } else {
             const activeSrv = allServices.filter(s => s.category?.toLowerCase() === selectedCategory?.toLowerCase());
             setServices(activeSrv);
-        } else {
-            const fetchServicesByCategory = async () => {
-                try {
-                    console.log(`[SelectService] Fallback Fetching services for category: ${selectedCategory} ...`);
-                    const res = await axiosInstance.get('/services/by-category', {
-                        params: { category: selectedCategory, salonId: activeSalonId }
-                    });
-                    const fetchedServices = res.data || [];
-                    const activeSrv = fetchedServices.filter(s => s.active !== false);
-                    setServices(activeSrv);
-                } catch (error) {
-                    console.error(`Error fetching services fallback by category ${selectedCategory}:`, error);
-                }
-            };
-            fetchServicesByCategory();
         }
-    }, [selectedCategory, allServices, activeSalonId]);
+    }, [selectedCategory, allServices]);
 
     // Setup IntersectionObservers for lazy loading
     useEffect(() => {
@@ -555,6 +519,13 @@ const SelectService = () => {
 
     const handleServiceToggle = (id) => {
         if (addedServices.includes(id)) {
+            if (selectedOffer && selectedOffer.services) {
+                const isOfferService = selectedOffer.services.some(s => s.id === id);
+                if (isOfferService) {
+                    setShowDiscardOfferModal(true);
+                    return;
+                }
+            }
             setAddedServices(addedServices.filter(sid => sid !== id));
         } else {
             setAddedServices([...addedServices, id]);
@@ -1516,6 +1487,52 @@ const SelectService = () => {
                                     className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
                                 >
                                     Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ==================== DISCARD OFFER CONFIRMATION MODAL ==================== */}
+            {showDiscardOfferModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl p-8 max-w-md w-full relative overflow-hidden transition-all duration-300 transform scale-100">
+                        {/* Decorative background accent */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-[80px]" />
+                        
+                        <div className="flex flex-col items-center text-center space-y-6">
+                            {/* Icon container */}
+                            <div className="w-16 h-16 bg-red-50 rounded-[24px] flex items-center justify-center shadow-lg shadow-red-500/10 shrink-0">
+                                <svg className="w-8 h-8 text-[#FF0B01]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Discard Offer?</h3>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                    Deselecting this service will remove your currently selected offer and its associated services. Do you want to proceed?
+                                </p>
+                            </div>
+
+                            {/* CTAs */}
+                            <div className="w-full space-y-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleDiscardOffer();
+                                        setShowDiscardOfferModal(false);
+                                    }}
+                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
+                                >
+                                    Yes, Discard Offer
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDiscardOfferModal(false)}
+                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
+                                >
+                                    No, Keep Offer
                                 </button>
                             </div>
                         </div>

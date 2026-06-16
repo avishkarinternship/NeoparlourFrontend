@@ -4,7 +4,7 @@ import axiosInstance from '../../api/axiosInstance';
 
 import Footer from './Layouts/Footer';
 import Navbar from './Layouts/Navbar';
-import Sidebar from './Layouts/Sidebar';
+import Sidebar from './Layouts/SideBar';
 
 // Consolidated Asset Imports from src/assets/Owner/Attendance/
 import total_attendance from '../../assets/Owner/Attendance/total_attendance.svg';

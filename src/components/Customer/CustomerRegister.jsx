@@ -31,10 +31,15 @@ const CustomerRegister = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-  const [citySuggestions, setCitySuggestions] = useState([]);
-  const [areaSuggestions, setAreaSuggestions] = useState([]);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isLoadingAreas, setIsLoadingAreas] = useState(false);
+  const [locationLookup, setLocationLookup] = useState({
+    citySuggestions: [],
+    areaSuggestions: [],
+    isLoadingCities: false,
+    isLoadingAreas: false,
+  });
+
+  const { citySuggestions, areaSuggestions, isLoadingCities, isLoadingAreas } = locationLookup;
+
   const [tncAccepted, setTncAccepted] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
@@ -64,19 +69,19 @@ const CustomerRegister = () => {
   useEffect(() => {
     if (!isUserTypingCityRef.current) return;
     if (!formData.cityName || formData.cityName.trim().length < 2) {
-      setCitySuggestions([]);
+      setLocationLookup(prev => ({ ...prev, citySuggestions: [] }));
       return;
     }
 
-    setIsLoadingCities(true);
+    setLocationLookup(prev => ({ ...prev, isLoadingCities: true }));
     const delayDebounce = setTimeout(async () => {
       try {
         const results = await searchService.searchExternalLocations(formData.cityName, 'city');
-        setCitySuggestions(results);
+        setLocationLookup(prev => ({ ...prev, citySuggestions: results }));
       } catch (err) {
         console.error("Customer Register City Search Error:", err);
       } finally {
-        setIsLoadingCities(false);
+        setLocationLookup(prev => ({ ...prev, isLoadingCities: false }));
       }
     }, 400);
 
@@ -87,19 +92,19 @@ const CustomerRegister = () => {
   useEffect(() => {
     if (!isUserTypingAreaRef.current) return;
     if (!formData.areaName || formData.areaName.trim().length < 2) {
-      setAreaSuggestions([]);
+      setLocationLookup(prev => ({ ...prev, areaSuggestions: [] }));
       return;
     }
 
-    setIsLoadingAreas(true);
+    setLocationLookup(prev => ({ ...prev, isLoadingAreas: true }));
     const delayDebounce = setTimeout(async () => {
       try {
         const results = await searchService.searchExternalLocations(formData.areaName, 'area', formData.cityName);
-        setAreaSuggestions(results);
+        setLocationLookup(prev => ({ ...prev, areaSuggestions: results }));
       } catch (err) {
         console.error("Customer Register Area Search Error:", err);
       } finally {
-        setIsLoadingAreas(false);
+        setLocationLookup(prev => ({ ...prev, isLoadingAreas: false }));
       }
     }, 400);
 
@@ -342,8 +347,7 @@ const CustomerRegister = () => {
                               onClick={() => {
                                 isUserTypingCityRef.current = false;
                                 setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
-                                setCitySuggestions([]);
-                                setAreaSuggestions([]);
+                                setLocationLookup(prev => ({ ...prev, citySuggestions: [], areaSuggestions: [] }));
                                 setShowCityDropdown(false);
                               }}
                               className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
@@ -391,7 +395,7 @@ const CustomerRegister = () => {
                               onClick={() => {
                                 isUserTypingAreaRef.current = false;
                                 setFormData(prev => ({ ...prev, areaName: area.name }));
-                                setAreaSuggestions([]);
+                                setLocationLookup(prev => ({ ...prev, areaSuggestions: [] }));
                                 setShowAreaDropdown(false);
                               }}
                               className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"

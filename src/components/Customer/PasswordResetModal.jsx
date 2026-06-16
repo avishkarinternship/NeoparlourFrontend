@@ -12,23 +12,30 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
     const { user, profile } = useSelector((state) => state.customer);
 
     const [step, setStep] = useState(1); // 1: Send OTP, 2: Reset Password
-    const [mobile, setMobile] = useState('');
-    const [otp, setOtp] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [resendTimer, setResendTimer] = useState(0);
+    const [resetFlow, setResetFlow] = useState({
+        mobile: '',
+        otp: '',
+        newPassword: '',
+        confirmPassword: '',
+        loading: false,
+        resendTimer: 0
+    });
+
+    const { mobile, otp, newPassword, confirmPassword, loading, resendTimer } = resetFlow;
 
     // Initialize mobile number if user is logged in
     useEffect(() => {
         if (isOpen) {
             const currentMobile = profile?.mobile || user?.mobile || user?.phone || '';
-            setMobile(currentMobile);
+            setResetFlow({
+                mobile: currentMobile,
+                otp: '',
+                newPassword: '',
+                confirmPassword: '',
+                loading: false,
+                resendTimer: 0
+            });
             setStep(1);
-            setOtp('');
-            setNewPassword('');
-            setConfirmPassword('');
         }
     }, [isOpen, user, profile]);
 
@@ -36,7 +43,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (resendTimer > 0) {
             const interval = setInterval(() => {
-                setResendTimer(prev => prev - 1);
+                setResetFlow(prev => ({ ...prev, resendTimer: prev.resendTimer - 1 }));
             }, 1000);
             return () => clearInterval(interval);
         }
@@ -56,17 +63,17 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
             return;
         }
 
-        setLoading(true);
+        setResetFlow(prev => ({ ...prev, loading: true }));
         try {
             await axiosInstance.post(`/customer/forgot-password/send-otp?mobile=${mobile}`);
             toast.success("OTP sent successfully to your mobile number");
             setStep(2);
-            setResendTimer(60);
+            setResetFlow(prev => ({ ...prev, resendTimer: 60 }));
         } catch (err) {
             const msg = err.response?.data?.message || "Failed to send OTP. Please verify your mobile number.";
             toast.error(msg);
         } finally {
-            setLoading(false);
+            setResetFlow(prev => ({ ...prev, loading: false }));
         }
     };
 
@@ -90,7 +97,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
             return;
         }
 
-        setLoading(true);
+        setResetFlow(prev => ({ ...prev, loading: true }));
         try {
             await axiosInstance.post('/customer/forgot-password/reset', {
                 mobile,
@@ -109,7 +116,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
             const msg = err.response?.data?.message || "Failed to reset password. Please check the OTP.";
             toast.error(msg);
         } finally {
-            setLoading(false);
+            setResetFlow(prev => ({ ...prev, loading: false }));
         }
     };
 
@@ -156,7 +163,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                 <input
                                     type="tel"
                                     value={mobile}
-                                    onChange={(e) => setMobile(e.target.value)}
+                                    onChange={(e) => setResetFlow(prev => ({ ...prev, mobile: e.target.value }))}
                                     placeholder="Registered 10 digit number"
                                     required
                                     disabled={!!user} // Block editing if already logged in
@@ -186,7 +193,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                 <input
                                     type="text"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
+                                    onChange={(e) => setResetFlow(prev => ({ ...prev, otp: e.target.value }))}
                                     placeholder="Enter OTP"
                                     required
                                     maxLength="6"
@@ -204,7 +211,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        onChange={(e) => setResetFlow(prev => ({ ...prev, newPassword: e.target.value }))}
                                         placeholder="Min 6 characters"
                                         required
                                         className="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
@@ -229,7 +236,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        onChange={(e) => setResetFlow(prev => ({ ...prev, confirmPassword: e.target.value }))}
                                         placeholder="Repeat new password"
                                         required
                                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"

@@ -229,7 +229,7 @@ const SalonPage = () => {
         const fetchActiveOffers = async () => {
             setOffersLoading(true);
             try {
-                const res = await axiosInstance.get('/offers/search', {
+                const res = await axiosInstance.get('/offers/public/search', {
                     params: { active: true, page: 0, size: 10, salonId: activeSalonId }
                 });
                 const offersData = res.data?.content || res.data || [];
@@ -316,7 +316,7 @@ const SalonPage = () => {
         if (servicesLoaded) return;
         try {
             console.log("[SalonPage] Scroll down triggered: Fetching categories from API...");
-            const categoriesRes = await axiosInstance.get('/services/categories', {
+            const categoriesRes = await axiosInstance.get('/services/public/categories', {
                 params: { salonId: activeSalonId }
             });
             setCategories(categoriesRes.data || []);
@@ -326,12 +326,12 @@ const SalonPage = () => {
         }
     };
 
-    // Lazy load Staff — fetch top 3 by rating via /staff/search
+    // Lazy load Staff — fetch top 3 by rating via /staff/public/search
     const fetchStaff = async () => {
         if (staffLoaded) return;
         try {
-            console.log("[SalonPage] Scroll down triggered: Fetching top 3 staff from /staff/search...");
-            const staffRes = await axiosInstance.get('/staff/search', {
+            console.log("[SalonPage] Scroll down triggered: Fetching top 3 staff from /staff/public/search...");
+            const staffRes = await axiosInstance.get('/staff/public/search', {
                 params: { size: 3, page: 0, salonId: activeSalonId }
             });
             const staffData = staffRes.data?.content || staffRes.data || [];
@@ -347,7 +347,7 @@ const SalonPage = () => {
         if (productsLoaded) return;
         try {
             console.log("[SalonPage] Scroll down triggered: Fetching products list from API...");
-            const productsRes = await axiosInstance.get('/products/filter', {
+            const productsRes = await axiosInstance.get('/products/public/filter', {
                 params: { active: true, size: 4, salonId: activeSalonId }
             });
             const productData = productsRes.data?.content || productsRes.data || [];
