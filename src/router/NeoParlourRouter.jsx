@@ -48,6 +48,7 @@ import NotificationsScreen from '../components/Owner/NotificationsScreen'
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
+import StaffAttendance from '../components/Owner/StaffAttendance'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -108,6 +109,10 @@ export let routes = createBrowserRouter([
                 element: <OwnerLogin />
             },
             {
+                path: '/owner/attendance',
+                element: <OwnerRouteGuard><StaffAttendance /></OwnerRouteGuard>
+            },
+            {
                 path: '/register',
                 element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
             },
@@ -127,7 +132,7 @@ export let routes = createBrowserRouter([
                 path: '/subscription-plans',
                 element: <OwnerRouteGuard><SubscriptionPlans /></OwnerRouteGuard>
             },
-          
+
             {
                 path: '/customer/select-salon',
                 element: <CustomerRouteGuard><SalonSelection /></CustomerRouteGuard>
@@ -137,8 +142,8 @@ export let routes = createBrowserRouter([
                 element: <OwnerRouteGuard><OwnerDashboard /></OwnerRouteGuard>
             },
             {
-                path : '/customer/terms-and-conditions',
-                element : <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions/></CustomerRouteGuard>
+                path: '/customer/terms-and-conditions',
+                element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
             },
             {
                 path: '/owner/analytics',
@@ -251,7 +256,7 @@ export let routes = createBrowserRouter([
             {
                 path: 'customer/order-success',
                 element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
-            },   
+            },
             {
                 path: '/customer/about',
                 element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
@@ -288,7 +293,7 @@ export let routes = createBrowserRouter([
                 path: '/owner/terms-and-conditions',
                 element: <OwnerRouteGuard><OwnerTermsAndConditions /></OwnerRouteGuard>
             },
-            
+
             // New Footer Pages
             {
                 path: '/customer/influencer-program',

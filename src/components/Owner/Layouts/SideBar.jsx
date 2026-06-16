@@ -9,6 +9,7 @@ import ordersIcon from '../../../assets/Owner/Manage/Subscription/invoice_icon.s
 import helpIcon from '../../../assets/Owner/Dashboard/SideBar/help_icon.svg';
 import settingIcon from '../../../assets/Owner/Dashboard/SideBar/setting_icon.svg';
 import logoutIcon from '../../../assets/Owner/Dashboard/SideBar/logout_icon.svg';
+import attendanceIcon from '../../../assets/Owner/Attendance/total_attendance.svg'
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -230,6 +231,29 @@ const Sidebar = ({ isOpen, onClose }) => {
               }`}
             />
             <span>Orders</span>
+          </button>
+
+          {/* Attendance */}
+          <button
+            onClick={() => navigate('/owner/attendance')}
+            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+              ${location.pathname === '/owner/attendance'
+                ? 'text-red-600 bg-red-50'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            {location.pathname === '/owner/attendance' && (
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+            )}
+
+            <img
+              src={attendanceIcon}
+              alt="Attendance"
+              className={`w-[18px] h-[18px] sidebar-icon ${
+                location.pathname === '/owner/attendance' ? 'active-icon-glow' : 'opacity-60'
+              }`}
+            />
+            <span>Attendance</span>
           </button>
 
 
