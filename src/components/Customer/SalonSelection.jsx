@@ -200,7 +200,7 @@ const SalonSelection = () => {
       salonName: salon.salonName || salon.name
     };
     dispatch(switchTenant(payload)).unwrap().then(() => {
-      navigate('/customer/home');
+      navigate('/customer/salon');
     });
   };
 

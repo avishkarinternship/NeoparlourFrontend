@@ -458,7 +458,7 @@ const HomeScreen = () => {
         dispatch(switchTenant(payload))
             .unwrap()
             .then(() => {
-                navigate('/customer/home');
+                navigate('/customer/salon');
             })
             .catch((err) => {
                 const errMsg = String(err).toLowerCase();

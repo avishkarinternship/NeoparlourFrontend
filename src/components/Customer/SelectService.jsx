@@ -718,7 +718,28 @@ const SelectService = () => {
             setIsBookedOpen(true);
         } catch (error) {
             console.error('[SelectService] Error booking appointment:', error);
-            toast.error(error.response?.data?.message || 'Failed to book appointment. Please try again.');
+            const status = error.response?.status;
+            const message = String(error.response?.data?.message || error.message || '').toLowerCase();
+            
+            if (status === 401 || status === 403 || message.includes('token') || message.includes('unauthorized') || message.includes('not logged in')) {
+                toast.error('Please login to book an appointment.');
+                navigate('/customer/login', { 
+                    state: { 
+                        from: '/customer/book-service',
+                        bookingState: { 
+                            addedServices, 
+                            selectedExpert, 
+                            selectedSlot, 
+                            selectedDateObj, 
+                            selectedTime, 
+                            selectedOffer, 
+                            selectedCategory 
+                        } 
+                    } 
+                });
+            } else {
+                toast.error(error.response?.data?.message || 'Failed to book appointment. Please try again.');
+            }
         } finally {
             setBookingLoading(false);
         }
