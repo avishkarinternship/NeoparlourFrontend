@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
+import CustomerNavbar from './Layouts/NavBar';
+import OwnerNavbar from '../Owner/Layouts/Navbar';
+import OwnerSidebar from '../Owner/Layouts/SideBar';
 
 const toastStyle = {
   style: {
@@ -24,6 +27,7 @@ const toastStyle = {
 
 const Appointments = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Detect User Role dynamically
   const customerState = useSelector((state) => state.customer);
@@ -55,6 +59,8 @@ const Appointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
+  const [rescheduleReasonType, setRescheduleReasonType] = useState('');
+  const [customRescheduleReason, setCustomRescheduleReason] = useState('');
 
   // Mock Stylists for Assignment (Only relevant to Owner)
   const mockStylists = [
@@ -170,29 +176,54 @@ const Appointments = () => {
     const dateStr = appDate.toISOString().split('T')[0];
     const timeStr = appDate.toTimeString().slice(0, 5);
     setRescheduleData({ date: dateStr, time: timeStr });
+    setRescheduleReasonType('');
+    setCustomRescheduleReason('');
     setShowRescheduleModal(true);
   };
 
-  const confirmReschedule = () => {
+  const confirmReschedule = async () => {
     if (!rescheduleData.date || !rescheduleData.time) {
-      toast.error('Please select both a date and time.');
+      toast.error('Please select both a date and time.', toastStyle);
       return;
     }
 
-    const newAppointmentAt = `${rescheduleData.date}T${rescheduleData.time}:00Z`;
+    const selectedReason = rescheduleReasonType === 'Other' 
+      ? customRescheduleReason.trim() 
+      : rescheduleReasonType;
 
-    // Simulate updating local state and setting status to rescheduled
-    setAppointments(prev => prev.map(app => {
-      if (app.id === selectedAppointment.id) {
-        return { ...app, appointmentAt: newAppointmentAt, status: 'rescheduled' };
-      }
-      return app;
-    }));
+    if (!selectedReason) {
+      toast.error('Please select or specify a reason for rescheduling.', toastStyle);
+      return;
+    }
 
-    toast.success('Appointment rescheduled successfully!', {
-      style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
-    });
-    setShowRescheduleModal(false);
+    // Convert date + time to IST ZonedDateTime format (YYYY-MM-DDTHH:mm:00+05:30)
+    const zonedTime = `${rescheduleData.date}T${rescheduleData.time}:00+05:30`;
+
+    try {
+      const params = new URLSearchParams({ newTime: zonedTime });
+      const response = await axiosInstance.put(
+        `/appointments/${selectedAppointment.id}/reschedule?${params.toString()}`,
+        selectedReason
+      );
+
+      setAppointments(prev => prev.map(app => {
+        if (app.id === selectedAppointment.id) {
+          return { 
+            ...app, 
+            appointmentAt: response.data?.appointmentAt || `${rescheduleData.date}T${rescheduleData.time}:00Z`, 
+            status: 'rescheduled' 
+          };
+        }
+        return app;
+      }));
+
+      toast.success('Appointment rescheduled successfully!', toastStyle);
+      setShowRescheduleModal(false);
+    } catch (error) {
+      console.error('Failed to reschedule:', error);
+      const errorMsg = error.response?.data?.message || 'Failed to reschedule appointment.';
+      toast.error(errorMsg, toastStyle);
+    }
   };
 
   const handleCancelClick = (appointment) => {
@@ -386,268 +417,319 @@ const Appointments = () => {
     navigate(isCustomer ? '/' : '/owner/dashboard');
   };
 
-  return (
-    <div className="min-h-screen bg-[#fcfcfd] text-gray-900 font-sans pb-16">
-      
-      {/* Header Container */}
-      <div className="max-w-[1200px] mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        
-        {/* Left Section with Back and Navigation Title */}
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={handleBackNavigation}
-            className="w-12 h-12 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all"
-            title="Go Back"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+  const renderMainContent = () => {
+    return (
+      <>
+        {/* Header Container */}
+        <div className="max-w-[1200px] mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900 uppercase">
-              {isCustomer ? 'My Bookings' : 'Bookings'}
-            </h1>
-            <p className="text-gray-400 font-medium text-sm mt-0.5">
-              {isCustomer ? 'Track your salon sessions and scheduling' : 'Manage and monitor customer slots'}
-            </p>
+          {/* Left Section with Back and Navigation Title */}
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={handleBackNavigation}
+              className="w-12 h-12 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all"
+              title="Go Back"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-gray-900 uppercase">
+                {isCustomer ? 'My Bookings' : 'Bookings'}
+              </h1>
+              <p className="text-gray-400 font-medium text-sm mt-0.5">
+                {isCustomer ? 'Track your salon sessions and scheduling' : 'Manage and monitor customer slots'}
+              </p>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full md:max-w-xs">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input 
+              type="text"
+              placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
+            />
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative w-full md:max-w-xs">
-          <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
-          <input 
-            type="text"
-            placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
-          />
+        {/* Main Tabs Container */}
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="border-b border-gray-100 flex gap-8 md:gap-12 bg-white px-6 rounded-2xl shadow-sm border border-gray-50/50 mb-8 overflow-x-auto whitespace-nowrap">
+            {['TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setPage(0);
+                }}
+                className={`py-5 text-xs font-black tracking-[0.25em] transition-all relative ${
+                  activeTab === tab ? 'text-gray-900 font-black' : 'text-gray-300 hover:text-gray-500'
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#ff0b01] rounded-full animate-fade-in" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Main Tabs Container */}
-      <div className="max-w-[1200px] mx-auto px-6">
-        <div className="border-b border-gray-100 flex gap-8 md:gap-12 bg-white px-6 rounded-2xl shadow-sm border border-gray-50/50 mb-8 overflow-x-auto whitespace-nowrap">
-          {['TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setPage(0);
-              }}
-              className={`py-5 text-xs font-black tracking-[0.25em] transition-all relative ${
-                activeTab === tab ? 'text-gray-900 font-black' : 'text-gray-300 hover:text-gray-500'
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-[#ff0b01] rounded-full animate-fade-in" />
-              )}
-            </button>
-          ))}
+        {/* List Container */}
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
+            
+            {loading ? (
+              <div className="flex flex-col items-center py-24 gap-4">
+                <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Retrieving Bookings</p>
+              </div>
+            ) : filteredAppointments.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {filteredAppointments.map((app, index) => renderAppointmentCard(app, index))}
+              </div>
+            ) : (
+              <div className="text-center py-24">
+                <div className="w-20 h-20 bg-gray-50 border border-gray-100 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <p className="text-gray-300 font-black tracking-[0.4em] text-xs uppercase">No Bookings Found</p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs font-bold text-gray-400">
+                  Showing Page <span className="text-gray-900 font-extrabold">{page + 1}</span> of <span className="text-gray-900 font-extrabold">{totalPages}</span> ({totalElements} bookings)
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setPage(p => Math.max(p - 1, 0))}
+                    disabled={page === 0}
+                    className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
+                      page === 0
+                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
+                    disabled={page === totalPages - 1}
+                    className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
+                      page === totalPages - 1
+                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
-      </div>
 
-      {/* List Container */}
-      <div className="max-w-[1200px] mx-auto px-6">
-        <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
-          
-          {loading ? (
-            <div className="flex flex-col items-center py-24 gap-4">
-              <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
-              <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Retrieving Bookings</p>
+        {/* 1. ASSIGN STAFF MODAL (Owner Only) */}
+        {!isCustomer && showAssignModal && selectedAppointment && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
+            <div className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100">
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-6">Assign Luxury Stylist</h3>
+              
+              <div className="space-y-4">
+                {mockStylists.map(stylist => (
+                  <div 
+                    key={stylist.id}
+                    onClick={() => setSelectedStaffId(stylist.id)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                      selectedStaffId === stylist.id 
+                        ? 'border-[#ff0b01] bg-[#ff0b01]/5 shadow-md shadow-[#ff0b01]/5' 
+                        : 'border-gray-100 bg-[#fafafa] hover:bg-white hover:border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                        <img src={stylist.avatar} alt={stylist.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-gray-900">{stylist.name}</h4>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{stylist.role}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-amber-500 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md">★ {stylist.rating}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex gap-4">
+                <button 
+                  onClick={() => setShowAssignModal(false)}
+                  className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmAssignStaff}
+                  className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
-          ) : filteredAppointments.length > 0 ? (
-            <div className="divide-y divide-gray-100">
-              {filteredAppointments.map((app, index) => renderAppointmentCard(app, index))}
+          </div>
+        )}
+
+        {/* 2. RESCHEDULE MODAL */}
+        {showRescheduleModal && selectedAppointment && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
+            <div className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100">
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-6">Reschedule Slot</h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Date</label>
+                  <input 
+                    type="date"
+                    value={rescheduleData.date}
+                    onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Time</label>
+                  <input 
+                    type="time"
+                    value={rescheduleData.time}
+                    onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
+                    className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Reason for Rescheduling</label>
+                  <select
+                    value={rescheduleReasonType}
+                    onChange={(e) => setRescheduleReasonType(e.target.value)}
+                    className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold text-gray-800"
+                  >
+                    <option value="" disabled>Select a reason...</option>
+                    <option value="Rescheduled due to personal reason">Rescheduled due to personal reason</option>
+                    <option value="Change of plans">Change of plans</option>
+                    <option value="Work conflict / Late meeting">Work conflict / Late meeting</option>
+                    <option value="Health issues / Sick">Health issues / Sick</option>
+                    <option value="Other">Other (Type custom reason)</option>
+                  </select>
+                </div>
+
+                {rescheduleReasonType === 'Other' && (
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Custom Reason</label>
+                    <textarea
+                      value={customRescheduleReason}
+                      onChange={(e) => setCustomRescheduleReason(e.target.value)}
+                      placeholder="Enter custom reason for rescheduling..."
+                      className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold text-gray-800 h-24 resize-y"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 flex gap-4">
+                <button 
+                  onClick={() => setShowRescheduleModal(false)}
+                  className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmReschedule}
+                  className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
+                >
+                  Reschedule
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-24">
-              <div className="w-20 h-20 bg-gray-50 border border-gray-100 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-sm">
-                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </div>
+        )}
+
+        {/* 3. CANCEL MODAL */}
+        {showCancelModal && selectedAppointment && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
+            <div className="relative w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100 text-center">
+              <div className="w-16 h-16 bg-red-50 border border-red-100 text-[#ff0b01] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <p className="text-gray-300 font-black tracking-[0.4em] text-xs uppercase">No Bookings Found</p>
-            </div>
-          )}
+              
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Appointment</h3>
+              <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">Please provide a reason for cancelling this appointment. This action cannot be undone.</p>
+              <textarea 
+                value={cancelReason} 
+                onChange={(e) => setCancelReason(e.target.value)} 
+                placeholder="Reason for cancellation..." 
+                className="w-full border border-gray-200 rounded-xl p-3 h-24 resize-y text-xs mb-6 outline-none focus:border-[#ff0b01] transition-all font-medium" 
+              />
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-xs font-bold text-gray-400">
-                Showing Page <span className="text-gray-900 font-extrabold">{page + 1}</span> of <span className="text-gray-900 font-extrabold">{totalPages}</span> ({totalElements} bookings)
-              </p>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setPage(p => Math.max(p - 1, 0))}
-                  disabled={page === 0}
-                  className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
-                    page === 0
-                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
-                  }`}
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
                 >
-                  Previous
+                  No, Keep
                 </button>
-                <button
-                  onClick={() => setPage(p => Math.min(p + 1, totalPages - 1))}
-                  disabled={page === totalPages - 1}
-                  className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
-                    page === totalPages - 1
-                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
-                  }`}
+                <button 
+                  onClick={confirmCancel}
+                  className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
                 >
-                  Next
+                  Yes, Cancel
                 </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
+      </>
+    );
+  };
 
-        </div>
+  if (isCustomer) {
+    return (
+      <div className="min-h-screen bg-[#fcfcfd] text-gray-900 font-sans pb-16">
+        <CustomerNavbar />
+        {renderMainContent()}
       </div>
+    );
+  }
 
-      {/* 1. ASSIGN STAFF MODAL (Owner Only) */}
-      {!isCustomer && showAssignModal && selectedAppointment && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100">
-            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-6">Assign Luxury Stylist</h3>
-            
-            <div className="space-y-4">
-              {mockStylists.map(stylist => (
-                <div 
-                  key={stylist.id}
-                  onClick={() => setSelectedStaffId(stylist.id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedStaffId === stylist.id 
-                      ? 'border-[#ff0b01] bg-[#ff0b01]/5 shadow-md shadow-[#ff0b01]/5' 
-                      : 'border-gray-100 bg-[#fafafa] hover:bg-white hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                      <img src={stylist.avatar} alt={stylist.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-gray-900">{stylist.name}</h4>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{stylist.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-amber-500 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md">★ {stylist.rating}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+  return (
+    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
+      <OwnerNavbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-            <div className="mt-8 flex gap-4">
-              <button 
-                onClick={() => setShowAssignModal(false)}
-                className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={confirmAssignStaff}
-                className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-1 w-full items-stretch">
+        <OwnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      {/* 2. RESCHEDULE MODAL */}
-      {showRescheduleModal && selectedAppointment && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
-          <div className="relative w-full max-w-md bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100">
-            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-6">Reschedule Slot</h3>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Date</label>
-                <input 
-                  type="date"
-                  value={rescheduleData.date}
-                  onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Time</label>
-                <input 
-                  type="time"
-                  value={rescheduleData.time}
-                  onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
-                  className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="mt-8 flex gap-4">
-              <button 
-                onClick={() => setShowRescheduleModal(false)}
-                className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={confirmReschedule}
-                className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
-              >
-                Reschedule
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. CANCEL MODAL */}
-      {showCancelModal && selectedAppointment && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm p-6 animate-fade-in">
-          <div className="relative w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl p-8 border border-gray-100 text-center">
-            <div className="w-16 h-16 bg-red-50 border border-red-100 text-[#ff0b01] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            
-            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Appointment</h3>
-            <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">Please provide a reason for cancelling this appointment. This action cannot be undone.</p>
-            <textarea 
-              value={cancelReason} 
-              onChange={(e) => setCancelReason(e.target.value)} 
-              placeholder="Reason for cancellation..." 
-              className="w-full border border-gray-200 rounded-xl p-3 h-24 resize-y text-xs mb-6 outline-none focus:border-[#ff0b01] transition-all font-medium" 
-            />
-
-            <div className="flex gap-4">
-              <button 
-                onClick={() => setShowCancelModal(false)}
-                className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
-              >
-                No, Keep
-              </button>
-              <button 
-                onClick={confirmCancel}
-                className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
-              >
-                Yes, Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+        <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto pb-16">
+          {renderMainContent()}
+        </main>
+      </div>
     </div>
   );
 };

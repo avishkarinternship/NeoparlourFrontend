@@ -10,6 +10,19 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
     const { user, profile, isAuthenticated } = useSelector((state) => state.customer);
     const isLoggedIn = !!(user || profile) && isAuthenticated;
 
+    const isIncomplete = (name) => {
+        const t = (name || '').trim();
+        return !t || t.toLowerCase() === 'customer';
+    };
+
+    const getDisplayName = () => {
+        const rawName = profile?.fullName || user?.name || user?.username || '';
+        if (isIncomplete(rawName)) {
+            return profile?.mobile || user?.phone || user?.username || 'Profile';
+        }
+        return rawName;
+    };
+
     const handleLogout = () => {
         dispatch(logoutCustomerApi())
             .unwrap()
@@ -165,7 +178,7 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
                     {/* Name and Phone (Dynamic details, no static image) */}
                     <div className="pt-2">
                         <h4 className="font-bold text-gray-900 text-base tracking-tight leading-tight">
-                            {isLoggedIn ? (profile?.fullName || user?.name || user?.username) : 'Guest'}
+                            {isLoggedIn ? getDisplayName() : 'Guest'}
                         </h4>
                         <p className="text-xs text-gray-500 mt-1 font-medium tracking-wide">
                             {isLoggedIn ? (profile?.mobile || user?.mobile || user?.phone) : 'Login to experience more'}

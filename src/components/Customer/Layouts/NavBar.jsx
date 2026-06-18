@@ -9,6 +9,7 @@ import logoIcon from '../../../assets/CustomerRegister/logo_icon.svg';
 import signupIcon from '../../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../../assets/Customer/Navbar/login_icon.svg';
 import offersIcon from '../../../assets/Customer/Navbar/offers_icon.svg';
+import { Sparkles, MousePointerClick, User } from 'lucide-react';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -19,6 +20,23 @@ const Navbar = () => {
     const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
     const dispatch = useDispatch();
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
+
+    const isIncomplete = (name) => {
+        const t = (name || '').trim();
+        return !t || t.toLowerCase() === 'customer';
+    };
+
+    const getDisplayName = () => {
+        const rawName = profile?.fullName || user?.name || user?.username || '';
+        if (isIncomplete(rawName)) {
+            return profile?.mobile || user?.phone || user?.username || 'Profile';
+        }
+        return rawName;
+    };
+
+    const displayName = getDisplayName();
+    const displayInitial = ((displayName.startsWith('+') ? displayName.slice(1) : displayName).charAt(0) || 'P').toUpperCase();
+    const isNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
 
     useEffect(() => {
         if (isAuthenticated && user && !profile) {
@@ -61,19 +79,53 @@ const Navbar = () => {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                     {isAuthenticated && (user || profile) ? (
-                        <button 
-                            onClick={() => setIsProfileOpen(true)} 
-                            className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans"
-                        >
-                            {/* Circular Logo/Avatar */}
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-xs sm:text-sm shadow-sm flex-shrink-0">
-                                {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
-                            </div>
-                            {/* User Name */}
-                            <span className="text-xs font-black text-gray-800 tracking-tight hidden sm:inline">
-                                {profile?.fullName || user?.name || user?.username || 'Profile'}
-                            </span>
-                        </button>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            {isNameBlank ? (
+                                <div className="relative flex items-center gap-1.5 sm:gap-2">
+                                    {/* Bouncing cursor hand pointing at the button */}
+                                    <style>{`
+                                        @keyframes bounce-x {
+                                            0%, 100% { transform: translateX(0); }
+                                            50% { transform: translateX(4px); }
+                                        }
+                                        .animate-bounce-x {
+                                            animation: bounce-x 1s infinite;
+                                        }
+                                    `}</style>
+                                    <button
+                                        onClick={() => setIsProfileOpen(true)}
+                                        className="relative flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#FF0B01] hover:bg-[#e60a00] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group cursor-pointer border-0 shrink-0"
+                                    >
+                                        {/* Avatar */}
+                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-[#FF0B01] flex items-center justify-center shadow-sm flex-shrink-0">
+                                            <User className="w-4 h-4 text-[#FF0B01]" />
+                                        </div>
+                                        
+                                        {/* Button Text */}
+                                        <span className="text-xs font-black text-white tracking-tight px-1.5 uppercase sm:normal-case">
+                                            My Account
+                                        </span>
+                                    </button>
+                                    <div className="pointer-events-none select-none hidden sm:block animate-bounce-x shrink-0">
+                                        <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={() => setIsProfileOpen(true)} 
+                                    className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans"
+                                >
+                                    {/* Circular Logo/Avatar */}
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                        <User className="w-4 h-4 text-white" />
+                                    </div>
+                                    {/* User Name */}
+                                    <span className="text-xs font-black text-gray-800 tracking-tight hidden sm:inline">
+                                        {displayName}
+                                    </span>
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         <>
                             {/* Signup Button */}

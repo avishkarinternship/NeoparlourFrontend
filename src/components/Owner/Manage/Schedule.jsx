@@ -63,6 +63,7 @@ const Schedule = () => {
   const [actionType, setActionType] = useState('reschedule');
   const [newDateTime, setNewDateTime] = useState('');
   const [rescheduleReason, setRescheduleReason] = useState('');
+  const [rescheduleReasonType, setRescheduleReasonType] = useState('');
 
   // Staff Modal
   const [newStaffId, setNewStaffId] = useState('');
@@ -219,6 +220,8 @@ const Schedule = () => {
     const now = Date.now();
     if (!selectedAppointment || actionLoading || (now - lastActionTime < 800)) return;
 
+    let selectedReason = '';
+
     if (actionType === 'reschedule') {
       if (!newDateTime) {
         toast.error("Please select new date & time", toastStyle);
@@ -226,6 +229,15 @@ const Schedule = () => {
       }
       if (!isValidRescheduleTime(newDateTime)) {
         toast.error("Appointment must be rescheduled at least 45 minutes in advance", toastStyle);
+        return;
+      }
+
+      selectedReason = rescheduleReasonType === 'Other' 
+        ? rescheduleReason.trim() 
+        : rescheduleReasonType;
+
+      if (!selectedReason) {
+        toast.error("Please select or specify a reason for rescheduling", toastStyle);
         return;
       }
     }
@@ -244,7 +256,7 @@ const Schedule = () => {
         const params = new URLSearchParams({ newTime: zonedTime });
         await axiosInstance.put(
           `/appointments/${selectedAppointment.id}/reschedule?${params.toString()}`,
-          rescheduleReason.trim() || null
+          selectedReason
         );
         toast.success('Appointment rescheduled successfully', toastStyle);
       }
@@ -265,6 +277,7 @@ const Schedule = () => {
   const resetActionForm = () => {
     setNewDateTime('');
     setRescheduleReason('');
+    setRescheduleReasonType('');
   };
 
   const openActionModal = (appt, type = 'reschedule') => {
@@ -583,10 +596,46 @@ const Schedule = () => {
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Reason (Optional)</label>
-                <textarea value={rescheduleReason} onChange={(e) => setRescheduleReason(e.target.value)} placeholder={actionType === 'reschedule' ? "Reason for rescheduling..." : "Notes for completion..."} className="w-full border border-gray-300 rounded-xl p-3 h-24 resize-y text-sm" />
-              </div>
+              {actionType === 'reschedule' ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Reason for Rescheduling</label>
+                    <select
+                      value={rescheduleReasonType}
+                      onChange={(e) => setRescheduleReasonType(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white"
+                    >
+                      <option value="" disabled>Select a reason...</option>
+                      <option value="Staff not available">Staff not available</option>
+                      <option value="Salon fully booked / Slot overlap">Salon fully booked / Slot overlap</option>
+                      <option value="Power cut / Technical issue">Power cut / Technical issue</option>
+                      <option value="Emergency store closure">Emergency store closure</option>
+                      <option value="Other">Other (Type custom reason)</option>
+                    </select>
+                  </div>
+                  {rescheduleReasonType === 'Other' && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Custom Reason</label>
+                      <textarea
+                        value={rescheduleReason}
+                        onChange={(e) => setRescheduleReason(e.target.value)}
+                        placeholder="Reason for rescheduling..."
+                        className="w-full border border-gray-300 rounded-xl p-3 h-24 resize-y text-sm"
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Notes for Completion (Optional)</label>
+                  <textarea
+                    value={rescheduleReason}
+                    onChange={(e) => setRescheduleReason(e.target.value)}
+                    placeholder="Notes for completion..."
+                    className="w-full border border-gray-300 rounded-xl p-3 h-24 resize-y text-sm"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-8">

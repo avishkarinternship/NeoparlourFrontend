@@ -21,9 +21,21 @@ const OwnerLogin = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     dispatch(clearOwnerStaffError());
+
+    // Load saved owner/staff credentials if present
+    const savedUsername = localStorage.getItem('neoparlour_owner_remembered_username');
+    const savedPassword = localStorage.getItem('neoparlour_owner_remembered_password');
+    if (savedUsername && savedPassword) {
+      setFormData({
+        username: savedUsername,
+        password: savedPassword
+      });
+      setRememberMe(true);
+    }
   }, [dispatch]);
 
   const handleInputChange = (e) => {
@@ -34,6 +46,14 @@ const OwnerLogin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(loginOwner(formData)).unwrap().then(() => {
+      // Save or clear credentials based on rememberMe status
+      if (rememberMe) {
+        localStorage.setItem('neoparlour_owner_remembered_username', formData.username);
+        localStorage.setItem('neoparlour_owner_remembered_password', formData.password);
+      } else {
+        localStorage.removeItem('neoparlour_owner_remembered_username');
+        localStorage.removeItem('neoparlour_owner_remembered_password');
+      }
       navigate('/owner/dashboard');
     });
   };
@@ -141,6 +161,8 @@ const OwnerLogin = () => {
               <input 
                 type="checkbox" 
                 id="remember" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-5 h-5 text-[#ff0b01] border-gray-300 rounded focus:ring-[#ff0b01] accent-[#ff0b01] cursor-pointer" 
               />
               <label htmlFor="remember" className="text-xs text-gray-400 cursor-pointer font-bold">

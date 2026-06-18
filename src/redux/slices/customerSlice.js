@@ -19,6 +19,23 @@ export const loginCustomer = createAsyncThunk(
   }
 );
 
+// Async thunk for customer OTP login
+export const loginCustomerWithOtp = createAsyncThunk(
+  'customer/loginWithOtp',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/customer/login-with-otp', payload);
+      if (response.data.token) {
+        localStorage.setItem('customerToken', response.data.token);
+        localStorage.setItem('customerUser', JSON.stringify(response.data));
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed.');
+    }
+  }
+);
+
 // Async thunk for switching tenant (salon)
 export const switchTenant = createAsyncThunk(
   'customer/switchTenant',
@@ -158,6 +175,21 @@ const customerSlice = createSlice({
         state.token = action.payload.token;
       })
       .addCase(loginCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Login with OTP
+      .addCase(loginCustomerWithOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginCustomerWithOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.token = action.payload.token;
+      })
+      .addCase(loginCustomerWithOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

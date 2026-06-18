@@ -88,7 +88,7 @@ import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
 
 import Drawer from './Drawer';
 import Marquee from 'react-fast-marquee';
-import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation } from 'lucide-react';
+import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ProfilePopup from './ProfilePopup';
 import PasswordResetModal from './PasswordResetModal';
@@ -505,6 +505,23 @@ const HomeScreen = () => {
             }`;
     };
 
+    const isIncomplete = (name) => {
+        const t = (name || '').trim();
+        return !t || t.toLowerCase() === 'customer';
+    };
+
+    const getDisplayName = () => {
+        const rawName = profile?.fullName || user?.name || user?.username || '';
+        if (isIncomplete(rawName)) {
+            return profile?.mobile || user?.phone || user?.username || 'Profile';
+        }
+        return rawName;
+    };
+
+    const hsDisplayName = getDisplayName();
+    const hsDisplayInitial = ((hsDisplayName.startsWith('+') ? hsDisplayName.slice(1) : hsDisplayName).charAt(0) || 'P').toUpperCase();
+    const hsIsNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
+
 
     const servicesData = [
         { name: 'Salon', img: salonImg },
@@ -569,19 +586,53 @@ const HomeScreen = () => {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
                     {isAuthenticated && (user || profile) ? (
-                        <button 
-                            onClick={() => setIsProfileOpen(true)} 
-                            className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
-                        >
-                            {/* Circular Logo/Avatar */}
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-extrabold flex items-center justify-center text-sm shadow-sm">
-                                {((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase()}
-                            </div>
-                            {/* User Name */}
-                            <span className="text-xs font-black text-gray-800 tracking-tight">
-                                {profile?.fullName || user?.name || user?.username || 'Profile'}
-                            </span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {hsIsNameBlank ? (
+                                <div className="hidden md:flex items-center gap-1.5 sm:gap-2">
+                                    {/* Bouncing cursor hand pointing at the button */}
+                                    <style>{`
+                                        @keyframes bounce-x {
+                                            0%, 100% { transform: translateX(0); }
+                                            50% { transform: translateX(4px); }
+                                        }
+                                        .animate-bounce-x {
+                                            animation: bounce-x 1s infinite;
+                                        }
+                                    `}</style>
+                                    <button
+                                        onClick={() => setIsProfileOpen(true)}
+                                        className="relative flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FF0B01] hover:bg-[#e60a00] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group cursor-pointer border-0 shrink-0"
+                                    >
+                                        {/* Avatar */}
+                                        <div className="w-8 h-8 rounded-full bg-white text-[#FF0B01] flex items-center justify-center shadow-sm flex-shrink-0">
+                                            <User className="w-4 h-4 text-[#FF0B01]" />
+                                        </div>
+                                        
+                                        {/* Button Text */}
+                                        <span className="text-xs font-black text-white tracking-tight px-1.5 uppercase sm:normal-case">
+                                            My Account
+                                        </span>
+                                    </button>
+                                    <div className="pointer-events-none select-none animate-bounce-x shrink-0">
+                                        <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={() => setIsProfileOpen(true)} 
+                                    className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
+                                >
+                                    {/* Circular Logo/Avatar */}
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                        <User className="w-4 h-4 text-white" />
+                                    </div>
+                                    {/* User Name */}
+                                    <span className="text-xs font-black text-gray-800 tracking-tight">
+                                        {hsDisplayName}
+                                    </span>
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         <>
                             {/* Signup Button */}

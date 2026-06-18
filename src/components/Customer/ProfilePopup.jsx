@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, Mail, Phone, MapPin, Calendar, LogOut, User, Edit2, Save } from 'lucide-react';
+import { X, Mail, Phone, MapPin, Calendar, LogOut, User, Edit2, Save, Sparkles } from 'lucide-react';
 import { fetchCustomerProfile, logoutCustomerApi, updateCustomerProfile } from '../../redux/slices/customerSlice';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -147,7 +147,21 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
             });
     };
 
-    const firstInitial = ((profile?.fullName || user?.name || user?.username || 'P').charAt(0)).toUpperCase();
+    const isIncomplete = (name) => {
+        const t = (name || '').trim();
+        return !t || t.toLowerCase() === 'customer';
+    };
+
+    const getDisplayName = () => {
+        const rawName = profile?.fullName || user?.name || user?.username || '';
+        if (isIncomplete(rawName)) {
+            return profile?.mobile || user?.phone || user?.username || 'Profile';
+        }
+        return rawName;
+    };
+
+    const displayName = getDisplayName();
+    const firstInitial = ((displayName.startsWith('+') ? displayName.slice(1) : displayName).charAt(0) || 'P').toUpperCase();
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300 font-sans">
@@ -281,14 +295,22 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                 ) : (
                     <div className="flex flex-col items-center">
                         {/* Avatar */}
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white font-black text-3xl flex items-center justify-center shadow-lg mb-4">
-                            {firstInitial}
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-lg mb-4">
+                            <User className="w-10 h-10 text-white" />
                         </div>
 
-                        {/* Name */}
                         <h3 className="text-xl font-black text-gray-900 text-center tracking-tight mb-6">
-                            {profile?.fullName || user?.name || user?.username || 'Profile Details'}
+                            {displayName}
                         </h3>
+
+                        {isIncomplete(profile?.fullName || user?.name || '') && (
+                            <div className="w-full mb-6 px-4 py-3 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-[#FF0B01] flex-shrink-0 animate-pulse" />
+                                <p className="text-xs font-bold text-red-700">
+                                    Please complete your profile to personalize your experience.
+                                </p>
+                            </div>
+                        )}
 
                         {/* Info Fields */}
                         <div className="w-full space-y-4 max-h-[300px] overflow-y-auto pr-1">
