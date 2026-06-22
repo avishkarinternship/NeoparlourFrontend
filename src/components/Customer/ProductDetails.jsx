@@ -7,8 +7,6 @@ import {
   ArrowRight,
   Star
 } from 'lucide-react';
-import SearchNavBar from './Layouts/SearchNavBar';
-import Footer from './Layouts/Footer';
 import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
@@ -249,9 +247,8 @@ const ProductDetails = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-neutral-800 antialiased">
-      <SearchNavBar />
+    return (
+        <div className="min-h-screen bg-[#FAFAFA] font-sans text-neutral-800 antialiased">
 
       {/* --- MAIN PRODUCT ECOSYSTEM CANVAS --- */}
       <main className="max-w-7xl w-full mx-auto px-4 md:px-12 py-8 flex-1">
@@ -543,8 +540,6 @@ const ProductDetails = () => {
           )}
         </div>
       </main>
-
-      <Footer />
 
       {/* Direct Order Checkout Popup Modal */}
       {isOrderModalOpen && checkoutProduct && checkoutProduct.product && (

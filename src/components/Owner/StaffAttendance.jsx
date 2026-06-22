@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import Footer from './Layouts/Footer';
-import Navbar from './Layouts/Navbar';
-import Sidebar from './Layouts/SideBar';
 
 import searchIcon from '../../assets/Owner/Attendance/search.svg';
 import customOrder from '../../assets/Owner/Attendance/custom_order.svg';
@@ -271,12 +268,6 @@ export default function StaffAttendance() {
         : '';
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-            <Navbar />
-
-            <div className="flex flex-1">
-                <Sidebar />
-
                 <main className="flex-1 p-8 bg-[#FDFDFD] flex flex-col justify-between overflow-x-hidden">
                     <div>
                         {/* ── Page Header ───────────────────────────── */}
@@ -345,7 +336,7 @@ export default function StaffAttendance() {
 
                         {/* ── Leave summary cards (Leave Request tab) ─ */}
                         {activeTab === 'LEAVE_REQUEST' && (
-                            <div className="grid grid-cols-3 gap-4 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
                                     <p className="text-amber-600 text-xs font-semibold uppercase tracking-wide">Pending</p>
                                     <p className="text-3xl font-bold text-amber-500 mt-1">{pendingCount}</p>
@@ -754,10 +745,6 @@ export default function StaffAttendance() {
                             </>
                         )}
                     </div>
-
-                    <Footer />
                 </main>
-            </div>
-        </div>
     );
 }

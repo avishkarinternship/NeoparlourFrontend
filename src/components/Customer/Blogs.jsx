@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from './Layouts/NavBar';
-import CustomerFooter from './Layouts/Footer';
 import { Sparkles, Calendar, BookOpen, Clock, Heart, Share2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -67,7 +65,6 @@ const Blogs = () => {
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col justify-between overflow-x-hidden">
-            <Navbar />
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-16 lg:py-24">
                 
                 {/* Hero */}
@@ -177,7 +174,6 @@ const Blogs = () => {
                 )}
 
             </main>
-            <CustomerFooter />
         </div>
     );
 };

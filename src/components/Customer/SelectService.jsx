@@ -26,10 +26,8 @@ import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 
 // Imported Layout Components
-import Footer from './Layouts/Footer.jsx';
 import BillDetails from './BillDetails.jsx';
 import AppointmentBooked from './AppointmentBooked.jsx';
-import SearchNavBar from './Layouts/SearchNavBar.jsx';
 
 // Local SVG and Image Assets
 import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
@@ -718,22 +716,15 @@ const SelectService = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
-                <SearchNavBar />
-                <div className="flex-1 flex flex-col items-center justify-center py-32">
-                    <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Booking Portal...</p>
-                </div>
-                <Footer />
+            <div className="flex-1 flex flex-col items-center justify-center py-32">
+                <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Booking Portal...</p>
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
-
-            {/* ==================== NAVBAR ==================== */}
-            <SearchNavBar />
 
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
@@ -781,10 +772,10 @@ const SelectService = () => {
                 </div>
 
                 {/* Master Two-Column Grid Setup */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
 
-                    {/* LEFT CONTAINER CANVAS (2/3 Width) */}
-                    <div className="lg:col-span-2 space-y-8">
+                    {/* LEFT CONTAINER CANVAS (3/4 Width) */}
+                    <div className="lg:col-span-3 space-y-8">
 
                         {/* Services Picker Section */}
                         <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
@@ -1210,7 +1201,7 @@ const SelectService = () => {
                             )}
                         </section>
 
-                        {/* Promo Download App callout */}
+                        {/* Promo Download App callout
                         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm text-center">
                             <Smartphone className="w-8 h-8 text-[#FF0B01] mx-auto mb-3" />
                             <h4 className="text-sm font-black text-slate-900 tracking-tight uppercase">
@@ -1221,7 +1212,6 @@ const SelectService = () => {
                             </p>
 
                             <div className="flex flex-col gap-2.5 mt-5">
-                                {/* App Store Badge */}
                                 <a
                                     href="#"
                                     className="flex items-center bg-black text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
@@ -1233,7 +1223,6 @@ const SelectService = () => {
                                     </div>
                                 </a>
 
-                                {/* Google Play Badge */}
                                 <a
                                     href="#"
                                     className="flex items-center bg-[#FF0B01] text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
@@ -1246,6 +1235,7 @@ const SelectService = () => {
                                 </a>
                             </div>
                         </div>
+                        */ }
 
                         {/* Select Expert Section */}
                         <section ref={staffSectionRef} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
@@ -1404,9 +1394,6 @@ const SelectService = () => {
                     </div>
                 </div>
             </main>
-
-            {/* ==================== FOOTER ==================== */}
-            <Footer />
 
             {/* ==================== BILL DETAILS MODAL ==================== */}
             <BillDetails

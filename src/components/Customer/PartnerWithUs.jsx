@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Layouts/NavBar';
-import CustomerFooter from './Layouts/Footer';
 import partnerUs1 from '../../assets/HomePage/Partner/partner_us_1.png';
 import partnerUs2 from '../../assets/HomePage/Partner/partner_us_2.png';
 import partnerUs3 from '../../assets/HomePage/Partner/partner_us_3.png';
@@ -101,9 +99,6 @@ const PartnerWithUs = () => {
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-red-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
-            {/* Header Navbar */}
-            <Navbar />
-
             {/* Main Content */}
             <main className="flex-1">
                 {/* Hero Section */}
@@ -430,9 +425,6 @@ const PartnerWithUs = () => {
                     </div>
                 </section>
             </main>
-
-            {/* Footer Component */}
-            <CustomerFooter />
         </div>
     );
 };

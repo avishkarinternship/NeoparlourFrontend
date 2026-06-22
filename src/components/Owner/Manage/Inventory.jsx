@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from "../Layouts/ManageSideBar";
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -33,7 +30,7 @@ const PRODUCT_TYPES = ['consumable', 'tool', 'equipment', 'chemical', 'cosmetic'
 const SWAP_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
 
 const Inventory = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [activeTab, setActiveTab] = useState('add'); // 'add' | 'view' | 'swaps'
 
     // ==================== ADD INVENTORY STATES ====================
@@ -458,14 +455,8 @@ const Inventory = () => {
     const categories = ['All', 'Tools', 'Consumable', 'Products', 'Others'];
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab="Inventory" onTabChange={() => { }} />
-
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-white border-l border-gray-200 overflow-auto">
+        <>
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
                     <div className="max-w-7xl mx-auto">
                         <h1 className="text-3xl font-light tracking-tight mb-8">Inventory Management</h1>
 
@@ -880,7 +871,6 @@ const Inventory = () => {
                         )}
                     </div>
                 </main>
-            </div>
 
             {/* Assign Modal */}
             {showAssignModal && selectedInventory && (
@@ -1003,7 +993,7 @@ const Inventory = () => {
                                         <button onClick={() => openEditModal(staff)} className="text-red-600 hover:text-red-700">✏️ Edit</button>
                                     </div>
 
-                                    <div className="grid grid-cols-5 gap-4 text-center border-t border-b py-4 text-sm">
+                                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 text-center border-t border-b py-4 text-sm">
                                         <div><p className="text-gray-400 text-xs">Allocated</p><p className="font-bold">{staff.allocatedQuantity}</p></div>
                                         <div><p className="text-gray-400 text-xs">Used</p><p className="font-bold">{staff.usedQuantity || 0}</p></div>
                                         <div><p className="text-gray-400 text-xs">Remaining</p><p className="font-bold text-green-600">{staff.remainingQuantity}</p></div>
@@ -1172,8 +1162,7 @@ const Inventory = () => {
                 </div>
             )}
 
-            <Footer />
-        </div>
+        </>
     );
 };
 

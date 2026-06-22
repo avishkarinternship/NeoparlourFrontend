@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Layouts/Navbar';
-import Footer from './Layouts/Footer';
-import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';
 
 export default function NotificationsScreen() {
@@ -10,7 +7,6 @@ export default function NotificationsScreen() {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         fetchNotifications(page);
@@ -51,12 +47,6 @@ export default function NotificationsScreen() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            
-            <div className="flex flex-1">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-5xl mx-auto w-full">
                     <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Notifications</h1>
                     
@@ -126,9 +116,5 @@ export default function NotificationsScreen() {
                         )}
                     </div>
                 </main>
-            </div>
-            
-            <Footer />
-        </div>
     );
 }

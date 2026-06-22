@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from "../Layouts/ManageSideBar";
-import Navbar from '../Layouts/Navbar';
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { CalendarClock, CheckCircle, XCircle, Eye, X } from 'lucide-react';
@@ -31,7 +28,7 @@ const toastStyle = {
 
 const Schedule = () => {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
   const [appointments, setAppointments] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -370,14 +367,8 @@ const Schedule = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-      <div className="flex flex-1 w-full">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <ManageSideBar activeTab="Schedule" onTabChange={() => { }} />
-
-        <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+    <>
+        <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
           <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-3xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">
             {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => (
               <button
@@ -546,9 +537,6 @@ const Schedule = () => {
             <button onClick={() => fetchAppointments(currentPage + 1)} disabled={currentPage >= totalPages - 1 || loading} className="px-6 py-2 border rounded-xl disabled:opacity-50">Next</button>
           </div>
         </main>
-      </div>
-
-      <Footer />
 
       {/* Cancel Modal */}
       {showCancelModal && selectedAppointment && (
@@ -934,7 +922,7 @@ const Schedule = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

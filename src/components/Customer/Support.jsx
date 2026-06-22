@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from './Layouts/NavBar';
-import Footer from './Layouts/NavBar'; // Wait, Footer lives in Layouts/Footer, let's import it correctly!
-import CustomerFooter from './Layouts/Footer';
 import { Mail, Phone, Clock, MapPin, Send, Sparkles, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -43,9 +40,6 @@ const Support = () => {
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-red-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
-            {/* Header Navbar */}
-            <Navbar />
-
             {/* Main Support Body */}
             <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-16 lg:py-24">
                 {/* Hero Section */}
@@ -185,9 +179,6 @@ const Support = () => {
                     </div>
                 </div>
             </main>
-
-            {/* Footer */}
-            <CustomerFooter />
         </div>
     );
 };

@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
-import CustomerNavbar from './Layouts/NavBar';
-import OwnerNavbar from '../Owner/Layouts/Navbar';
-import OwnerSidebar from '../Owner/Layouts/SideBar';
 
 const toastStyle = {
   style: {
@@ -27,7 +24,6 @@ const toastStyle = {
 
 const Appointments = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Detect User Role dynamically
   const customerState = useSelector((state) => state.customer);
@@ -712,25 +708,16 @@ const Appointments = () => {
 
   if (isCustomer) {
     return (
-      <div className="min-h-screen bg-[#fcfcfd] text-gray-900 font-sans pb-16">
-        <CustomerNavbar />
+      <div className="bg-[#fcfcfd] text-gray-900 font-sans pb-16">
         {renderMainContent()}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-      <OwnerNavbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-      <div className="flex flex-1 w-full items-stretch">
-        <OwnerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-        <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto pb-16">
-          {renderMainContent()}
-        </main>
-      </div>
-    </div>
+    <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto pb-16">
+      {renderMainContent()}
+    </main>
   );
 };
 

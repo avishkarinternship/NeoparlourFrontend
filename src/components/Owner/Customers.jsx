@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import Navbar from './Layouts/Navbar';
-import Sidebar from './Layouts/SideBar';
-import Footer from './Layouts/Footer';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -45,7 +42,6 @@ const formatStatusText = (status) => {
 
 const Customers = () => {
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Filters
     const [customerName, setCustomerName] = useState('');
@@ -135,12 +131,6 @@ const Customers = () => {
     const hasFilters = Object.values(appliedFilters).some(Boolean);
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full items-stretch">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
                 <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
                     {/* Page Header */}
                     <div className="mb-8">
@@ -393,10 +383,6 @@ const Customers = () => {
                         </div>
                     )}
                 </main>
-            </div>
-
-            <Footer />
-        </div>
     );
 };
 

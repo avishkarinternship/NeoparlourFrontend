@@ -11,10 +11,7 @@ import dateIcon from '../../../assets/Owner/Manage/Staff/BirthDateIcon.svg';
 import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg';
 import idIcon from '../../../assets/Owner/Manage/Staff/team_member_icon.svg';
 
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from '../Layouts/ManageSideBar';
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -24,7 +21,7 @@ const toastStyle = {
 
 const Staff = () => {
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
     // Form States
     const [formData, setFormData] = useState({
@@ -193,14 +190,8 @@ const Staff = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full items-stretch">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab="Staff" onTabChange={() => { }} />
-
-                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+        <>
+                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
                     {/* Add New Staff Form */}
                     <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
                         <h2 className="text-xl font-bold mb-6">Add New Staff</h2>
@@ -312,9 +303,6 @@ const Staff = () => {
                         )}
                     </div>
                 </main>
-            </div>
-
-            <Footer />
 
             {/* Edit Staff Modal Overlay */}
             {isEditModalOpen && (
@@ -466,7 +454,7 @@ const Staff = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

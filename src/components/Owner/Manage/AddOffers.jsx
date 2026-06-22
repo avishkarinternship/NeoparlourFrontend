@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from "../Layouts/ManageSideBar";
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -35,7 +32,7 @@ const DISCOUNT_TYPES = [
 
 const AddOffers = () => {
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [activeFilter, setActiveFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('add');
 
@@ -392,14 +389,7 @@ const AddOffers = () => {
     });
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full items-stretch">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab="Add Offers" onTabChange={() => { }} />
-
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
                         {/* Tabs */}
                         <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-10 max-w-md border border-gray-100 shadow-sm">
@@ -758,10 +748,6 @@ const AddOffers = () => {
                         )}
                     </div>
                 </main>
-            </div>
-
-            <Footer />
-        </div>
     );
 };
 

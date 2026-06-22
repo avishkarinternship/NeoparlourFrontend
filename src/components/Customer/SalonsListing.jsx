@@ -7,12 +7,9 @@ import searchService from '../../services/searchService';
 import toast from 'react-hot-toast';
 import { Navigation } from 'lucide-react';
 
-import NavBar from './Layouts/NavBar';
-
 import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
 import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
 import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
-import Footer from './Layouts/Footer';
 
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import salonOneIcon from '../../assets/Customer/HomeScreen/Recommended/salon_one.jpg';
@@ -357,8 +354,6 @@ const SalonsListing = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-sans overflow-x-hidden">
-            <NavBar />
-
             {/* Hero Search Section */}
             <section className="relative z-35 overflow-visible">
                 {/* Background decorative elements */}
@@ -806,8 +801,6 @@ const SalonsListing = () => {
                     </div>
                 )}
             </section>
-
-            <Footer />
         </div>
     );
 };

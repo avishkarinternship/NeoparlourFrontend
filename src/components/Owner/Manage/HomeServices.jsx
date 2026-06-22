@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from "../Layouts/ManageSideBar";
+
 import axiosInstance from '../../../api/axiosInstance';
 
 const toastStyle = {
@@ -12,7 +9,7 @@ const toastStyle = {
 };
 
 const HomeServices = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
     const [serviceCharge, setServiceCharge] = useState('0.0');
     const [originalCharge, setOriginalCharge] = useState('0.0');
@@ -83,14 +80,7 @@ const HomeServices = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full items-stretch">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab="Home Services" onTabChange={() => { }} />
-
-                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
                     {/* Header */}
                     <div className="mb-10">
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-3">
@@ -176,10 +166,6 @@ const HomeServices = () => {
                         </p>
                     </div>
                 </main>
-            </div>
-
-            <Footer />
-        </div>
     );
 };
 

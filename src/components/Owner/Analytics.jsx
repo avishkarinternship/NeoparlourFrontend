@@ -16,9 +16,6 @@ import {
   Area
 } from 'recharts';
 
-import Sidebar from './Layouts/SideBar';
-import Navbar from './Layouts/Navbar';
-import Footer from './Layouts/Footer';
 import axiosInstance from '../../api/axiosInstance';
 
 // Helper to format X-axis labels based on the view type (timezone-safe)
@@ -76,7 +73,6 @@ const CustomTooltip = ({ active, payload, label, viewType }) => {
 };
 
 const Analytics = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const getFirstDayOfMonth = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -294,17 +290,6 @@ const Analytics = () => {
   }) : [];
 
   return (
-    <div className="w-full min-h-screen bg-[#FAFAFA] text-gray-800 antialiased font-sans flex flex-col">
-      {/* GLOBAL TOP NAVIGATION PANEL */}
-      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-      
-      {/* TWO COLUMN ROOT FRAMEWORK: SIDEBAR + MAIN WORKSPACE AREA */}
-      <div className="flex flex-1 w-full">
-        
-        {/* PRIMARY LEFT SIDEBAR DRAWER FRAME */}
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-        {/* COMPONENT CONTENT BODY ENGINE CONTAINER */}
         <div className="flex-1 px-6 py-6 overflow-x-hidden">
           
           {/* SECTION 1: APPOINTMENTS REVENUE */}
@@ -692,12 +677,7 @@ const Analytics = () => {
               </div>
             </div>
           </div>
-          
-          {/* FOOTER PLACEMENT */}
-          <Footer />
         </div>
-      </div>
-    </div>
   );
 }
 export default Analytics;

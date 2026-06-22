@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
-import Footer from './Layouts/Footer';
-import SearchNavBar from './Layouts/SearchNavBar';
 
 // Importing your local assets
 import productOne from '../../assets/Customer/ProductSearch/product_one.jpg';
@@ -156,8 +154,6 @@ const ProductSearch = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans antialiased text-[#131313] relative overflow-x-hidden">
-      
-      <SearchNavBar />
  
       {/* --- CORE PRODUCT SHOWCASE MATRIX --- */}
       <main className="space-y-12 py-12 px-6 md:px-12 max-w-[1400px] mx-auto">
@@ -282,39 +278,7 @@ const ProductSearch = () => {
           </div>
         )}
       </main>
-
-      {/* --- FOOTER COMPONENT MAPPING --- */}
-      <Footer />
     </div>
-  );
-}
-
-// --- HELPER INLINE SUBCOMPONENTS ---
-
-function FooterLinkGroup({ title, links }) {
-  return (
-    <div className="flex flex-col">
-      <h4 className="text-base font-bold capitalize text-black mb-4">
-        {title}
-      </h4>
-      <ul className="space-y-2.5">
-        {links.map((link, idx) => (
-          <li key={idx} className="flex items-start text-xs font-medium text-[#505050] hover:text-black transition cursor-pointer select-none">
-            <span className="mr-2 text-[10px] text-[#505050]/70">•</span>
-            <span>{link}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function NeoLogoIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path fillRule="evenodd" clipRule="evenodd" d="M50.815 0.71C51.524 5.928 50.204 10.244 46.635 13.679 42.628 17.538 38.473 21.241 34.405 25.038c-.508.472-.775.503-1.253-.021-1.16-1.275-2.352-2.518-3.595-3.703-.58-.556-.477-.845.062-1.333 6.42-5.815 12.82-11.657 19.225-17.494.596-.54 1.192-1.07 1.978-1.773z" fill="#878787" />
-      <path fillRule="evenodd" clipRule="evenodd" d="M45.068 28.004c-3.868-2.402-8.542-2.397-12.317-.01C25.324 20.499 17.918 12.995 10.527 5.464 8.791 3.687 7.132 1.83 5.432 0c-.267.299-.344.341-.354.399-.837 4.998-.093 9.576 3.528 13.336 1.895 1.966 3.873 3.854 5.804 5.784 2.625 2.611 5.25 5.223 7.874 7.835 2.959 3.325 5.691 6.393 8.537 9.586.344-.855.55-1.458.817-2.025 1.941-4.064 6.79-5.773 10.775-3.812 2.887 1.421 4.747 4.49 4.495 7.689-.262 3.366-1.972 5.831-5.11 7.048-3.23 1.248-6.281.634-8.644-1.925-4.12-4.46-8.059-9.09-12.126-13.6-2.656-2.953-6.046-4.39-9.996-4.018-5.362.509-9.44 4.159-10.693 9.272C-1.196 40.453.863 45.687 5.06 48.414c4.448 2.895 9.723 2.716 14.088-.635 1.1-.85 1.829-1.023 2.553.23 0 0 4.294 2.56 7.314 2.22-3.205-3.624-6.179-6.98-9.255-10.468-.344.876-.545 1.495-.822 2.072-1.921 3.933-6.39 5.606-10.396 3.912-3.826-1.62-5.783-6.078-4.406-10.053 1.977-5.748 9.342-7.269 13.549-2.701 4.067 4.41 7.925 9.014 11.977 13.44 3.23 3.53 7.293 4.757 11.936 3.561 4.833-1.243 8.397-5.26 8.9-10.043.54-5.134-1.36-9.214-5.762-11.946zM27.138 28.664c-.776.08-1.526-.686-1.547-1.499-.02-.792.719-1.547 1.495-1.537.79.01 1.546.771 1.479 1.563-.072.876-.596 1.39-1.438 1.474z" fill="#EF3E23" />
-    </svg>
   );
 }
 

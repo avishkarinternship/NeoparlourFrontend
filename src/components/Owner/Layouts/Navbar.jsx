@@ -272,7 +272,7 @@ export default function Navbar({ onToggleSidebar }) {
 
           {/* Absolute Search Dropdown results */}
           {showDropdown && (query.trim().length > 0 || searching) && (
-            <div className="absolute top-full right-0 w-[280px] sm:left-0 sm:w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
+            <div className="absolute top-full right-0 w-[92vw] sm:left-0 sm:w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4">
               {searching &&
                 (!searchResults.staff || searchResults.staff.length === 0) &&
                 (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
@@ -559,7 +559,7 @@ export default function Navbar({ onToggleSidebar }) {
           </button>
           
           {showNotifications && (
-            <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl w-[380px] z-50 overflow-hidden border border-gray-100 flex flex-col max-h-[450px]">
+            <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl w-[92vw] sm:w-[380px] z-50 overflow-hidden border border-gray-100 flex flex-col max-h-[450px]">
               <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h3 className="font-bold text-gray-900 text-sm">Notifications</h3>
               </div>

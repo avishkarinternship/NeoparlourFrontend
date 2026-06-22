@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Layouts/Navbar';
-import Footer from './Layouts/Footer';
-import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
@@ -121,7 +118,6 @@ const getTodayDateString = () => {
 
 const OwnerDashboard = () => {
     const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // API states
     const [viewType, setViewType] = useState('day');
     const [customStartDate, setCustomStartDate] = useState(getFirstDayOfMonth());
@@ -414,18 +410,6 @@ const OwnerDashboard = () => {
     const todaysAppointments = upcomingAppointments.filter(appt => isTodayDate(appt.appointmentAt));
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-
-            {/* --- TOP NAVBAR --- */}
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            {/* --- MAIN LAYOUT WRAPPER --- */}
-            <div className="flex flex-1">
-
-                {/* --- SIDEBAR --- */}
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-                {/* --- MAIN GRID DASHBOARD CANVAS --- */}
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
                     {/* Workspace Header Title */}
                     <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
@@ -827,12 +811,6 @@ const OwnerDashboard = () => {
 
                     </div>
                 </main>
-            </div>
-
-            {/* --- SITE FOOTER --- */}
-            <Footer />
-
-        </div>
     );
 };
 

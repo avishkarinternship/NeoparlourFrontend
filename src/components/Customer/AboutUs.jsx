@@ -18,18 +18,6 @@ import {
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../redux/slices/customerSlice';
-import ProfilePopup from './ProfilePopup';
-import Drawer from './Drawer';
-import PasswordResetModal from './PasswordResetModal';
-// Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
-import signupIcon from '../../assets/Customer/Navbar/signup_icon.svg';
-import loginIcon from '../../assets/Customer/Navbar/login_icon.svg';
-import offersIcon from '../../assets/Customer/Navbar/offers_icon.svg';
-
-import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
-import Footer from '../Customer/Layouts/Footer';
-
 import ourStoryImage from '../../assets/Customer/AboutUs/our_story.jpg';
 // Add these to your imports
 import verifiedIcon from '../../assets/Customer/AboutUs/verified_salon.svg';
@@ -44,165 +32,10 @@ const AboutUs = () => {
     const currentPath = location.pathname;
     const dispatch = useDispatch();
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
-
-    useEffect(() => {
-        if (isAuthenticated && user && !profile) {
-            const customerId = user.id || user.user?.id;
-            if (customerId) {
-                dispatch(fetchCustomerProfile(customerId));
-            }
-        }
-    }, [isAuthenticated, user, profile, dispatch]);
-
-    const isIncomplete = (name) => {
-        const t = (name || '').trim();
-        return !t || t.toLowerCase() === 'customer';
-    };
-
-    const getDisplayName = () => {
-        const rawName = profile?.fullName || user?.name || user?.username || '';
-        if (isIncomplete(rawName)) {
-            return profile?.mobile || user?.phone || user?.username || 'Profile';
-        }
-        return rawName;
-    };
-
-    const displayName = getDisplayName();
-    const isNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
-
-    const navLinkClass = (paths) => {
-        const isActive = paths.some(p => currentPath === p);
-        return `pb-1 transition-colors ${isActive
-            ? 'text-orange-500 border-b-2 border-orange-500'
-            : 'hover:text-gray-900'
-            }`;
-    };
+    // Inline navbar states and display variables removed since shared Navbar handles them internally.
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-red-500 selection:text-white">
-
-            {/* 1. NAVBAR */}
-            <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans">
-                {/* Logo Section */}
-                <div className="flex items-center gap-2 cursor-pointer">
-                    <img src={logoIcon} alt="NeoParlour" className="h-8 object-contain" />
-                    <span className="text-xl font-black tracking-tight text-gray-900">NeoParlour</span>
-                </div>
-
-                {/* Desktop Navigation Links */}
-                <div className="hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider text-gray-600">
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3">
-                    {isAuthenticated && (user || profile) ? (
-                        <div className="flex items-center gap-2">
-                            {isNameBlank ? (
-                                <div className="relative hidden md:flex items-center gap-1.5 sm:gap-2">
-                                    <style>{`
-                                        @keyframes bounce-x {
-                                            0%, 100% { transform: translateX(0); }
-                                            50% { transform: translateX(4px); }
-                                        }
-                                        .animate-bounce-x {
-                                            animation: bounce-x 1s infinite;
-                                        }
-                                    `}</style>
-                                    <button
-                                        onClick={() => setIsProfileOpen(true)}
-                                        className="relative flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FF0B01] hover:bg-[#e60a00] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group cursor-pointer border-0 shrink-0"
-                                    >
-                                        {/* Avatar */}
-                                        <div className="w-8 h-8 rounded-full bg-white text-[#FF0B01] flex items-center justify-center shadow-sm flex-shrink-0">
-                                            <User className="w-4 h-4 text-[#FF0B01]" />
-                                        </div>
-                                        {/* Button Text */}
-                                        <span className="text-xs font-black text-white tracking-tight px-1.5">
-                                            My Account
-                                        </span>
-                                    </button>
-                                    <div className="pointer-events-none select-none animate-bounce-x shrink-0">
-                                        <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
-                                    </div>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => setIsProfileOpen(true)}
-                                    className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
-                                >
-                                    {/* Circular Logo/Avatar */}
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
-                                        <User className="w-4 h-4 text-white" />
-                                    </div>
-                                    {/* User Name */}
-                                    <span className="text-xs font-black text-gray-800 tracking-tight">
-                                        {displayName}
-                                    </span>
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            {/* Signup Button */}
-                            <button onClick={() => navigate('/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
-                                <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
-                                SIGNUP
-                            </button>
-
-                            {/* Login Button */}
-                            <button onClick={() => navigate('/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
-                                <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
-                                LOGIN
-                            </button>
-                        </>
-                    )}
-
-                    {/* Hamburger Menu Icon */}
-                    <button
-                        onClick={() => setIsDrawerOpen(true)}
-                        className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-1"
-                        title="Menu"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </nav>
-
-            {/* Slide-out Drawer */}
-            <Drawer
-                isOpen={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
-                onProfileClick={() => setIsProfileOpen(true)}
-                onChangePasswordClick={() => setIsPasswordResetOpen(true)}
-                setCurrentView={(view) => {
-                    if (view === 'about') navigate('/customer/about');
-                    if (view === 'home') navigate('/customer/home');
-                }}
-            />
-
-            {/* Customer Profile Popup Modal */}
-            <ProfilePopup
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-            />
-
-            {/* Password Reset Modal */}
-            <PasswordResetModal
-                isOpen={isPasswordResetOpen}
-                onClose={() => setIsPasswordResetOpen(false)}
-            />
-
-
             {/* 2. HERO SECTION */}
             <section id="home" className="relative overflow-hidden bg-gradient-to-b from-red-50/30 to-white py-16 lg:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -512,9 +345,7 @@ const AboutUs = () => {
                     </div>
                 </div>
             </section>
-
             {/* 8. FOOTER */}
-            <Footer />
 
         </div>
     );

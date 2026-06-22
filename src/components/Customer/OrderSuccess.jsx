@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import SearchNavBar from './Layouts/SearchNavBar';
-import Footer from './Layouts/Footer';
 import { ArrowLeft, ShoppingBag, MapPin, PhoneCall, CheckCircle } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 
@@ -55,8 +53,7 @@ const OrderSuccess = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-neutral-800 antialiased">
-        <SearchNavBar />
+      <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col text-neutral-800 antialiased">
         <main className="max-w-md w-full mx-auto px-6 py-16 flex-1 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-6">
             <ShoppingBag className="w-8 h-8 text-neutral-400" />
@@ -72,15 +69,12 @@ const OrderSuccess = () => {
             Go to Products
           </button>
         </main>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-neutral-800 antialiased">
-      <SearchNavBar />
-
       <main className="max-w-2xl w-full mx-auto px-4 md:px-8 py-12 flex-1">
         
         {/* Success Glyph and Status Banner */}
@@ -218,8 +212,6 @@ const OrderSuccess = () => {
         </div>
 
       </main>
-
-      <Footer />
     </div>
   );
 };

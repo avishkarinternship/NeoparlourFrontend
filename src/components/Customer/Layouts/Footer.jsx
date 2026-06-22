@@ -26,8 +26,10 @@ const Footer = () => {
                     <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Company</h4>
                     <ul className="space-y-3 text-sm font-semibold text-gray-700">
                         <li onClick={() => navigate('/customer/influencer-program')} className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
+                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Careers</li>
                         <li onClick={() => navigate('/customer/about')} className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
                         <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
+                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
                         <li onClick={() => navigate('/customer/blogs')} className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
                     </ul>
                 </div>
@@ -49,6 +51,30 @@ const Footer = () => {
                         <li className="cursor-pointer hover:text-gray-900 transition-colors">• Emails</li>
                     </ul>
                 </div>
+
+                {/* App Download Store Badges
+                <div className="md:col-span-2 flex flex-col gap-3 w-full sm:max-w-48 justify-self-start md:justify-self-end">
+                    <a href="#" className="bg-black hover:bg-neutral-900 text-white rounded-xl py-2 px-4 flex items-center gap-3 shadow transition">
+                        <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z" />
+                        </svg>
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-gray-400">Get it on</span>
+                            <span className="text-sm font-bold tracking-tight">App Store</span>
+                        </div>
+                    </a>
+
+                    <a href="#" className="bg-[#FF190D] hover:bg-red-700 text-white rounded-xl py-2 px-4 flex items-center gap-3 shadow transition">
+                        <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M5.25 3.062c-.156.172-.25.438-.25.781v16.313c0 .344.094.609.25.781l.063.063 9.125-9.125v-.125L5.313 3l-.063.063zM16.656 14.5l3.188-1.813c.906-.516.906-1.359 0-1.875L16.656 9.5l-2.188 2.188v.125l2.188 2.188zM14.469 11.812L5.438 3.125c-.141-.125-.344-.141-.531-.047l9.563 9.563v-.828zM14.469 12.188l-9.563 9.563c.188.094.391.078.531-.047l9.031-8.688v-.828z" />
+                        </svg>
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-red-200">Get it on</span>
+                            <span className="text-sm font-bold tracking-tight">Google Play</span>
+                        </div>
+                    </a>
+                </div>
+                */ }
 
             </div>
 

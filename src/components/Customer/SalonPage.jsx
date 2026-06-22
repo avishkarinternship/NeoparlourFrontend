@@ -21,9 +21,7 @@ import {
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 
-// Imported Layout Components
-import Footer from './Layouts/Footer.jsx';
-import SearchNavBar from './Layouts/SearchNavBar.jsx';
+
 
 // Local SVG and Image Assets
 import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
@@ -487,13 +485,9 @@ const SalonPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
-                <SearchNavBar />
-                <div className="flex-1 flex flex-col items-center justify-center py-32">
-                    <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Salon Portal...</p>
-                </div>
-                <Footer />
+            <div className="flex-1 flex flex-col items-center justify-center py-32">
+                <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Salon Portal...</p>
             </div>
         );
     }
@@ -502,9 +496,6 @@ const SalonPage = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
-
-            {/* ==================== NAVBAR ==================== */}
-            <SearchNavBar />
 
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
@@ -531,8 +522,8 @@ const SalonPage = () => {
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
                         <div className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${isSalonOpenNow()
-                                ? 'bg-green-50 border border-green-200 text-green-700'
-                                : 'bg-red-50 border border-red-200 text-red-600'
+                            ? 'bg-green-50 border border-green-200 text-green-700'
+                            : 'bg-red-50 border border-red-200 text-red-600'
                             }`}>
                             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
                             <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open' : 'Closed'}</span>
@@ -551,10 +542,10 @@ const SalonPage = () => {
                 </div>
 
                 {/* Master Two-Column Grid Setup */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
 
-                    {/* LEFT CONTAINER CANVAS (2/3 Width) */}
-                    <div className="lg:col-span-2 space-y-8">
+                    {/* LEFT CONTAINER CANVAS (3/4 Width) */}
+                    <div className="lg:col-span-3 space-y-8">
 
                         {/* Salon Images Grid Layout */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
@@ -652,7 +643,7 @@ const SalonPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                                    className="w-full sm:w-auto bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm shadow-red-500/10"
+                                                    className="w-full sm:w-auto bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-3 rounded-full transition duration-300 shadow-sm shadow-red-500/10 whitespace-nowrap"
                                                 >
                                                     Book with Offer
                                                 </button>
@@ -670,7 +661,7 @@ const SalonPage = () => {
                         {/* Services Categories icons list */}
                         <section ref={servicesSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
                             <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Services
+                                <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> SERVICES CATEGORIES
                             </h3>
                             {!servicesLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-6">
@@ -725,8 +716,8 @@ const SalonPage = () => {
                                             key={idx}
                                             onClick={() => imgUrl && idx !== 0 && swapGalleryImage(idx)}
                                             className={`h-24 sm:h-28 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border bg-slate-50 transition-all ${imgUrl
-                                                    ? 'cursor-pointer border-slate-100 hover:border-red-200 hover:scale-105'
-                                                    : 'border-slate-100'
+                                                ? 'cursor-pointer border-slate-100 hover:border-red-200 hover:scale-105'
+                                                : 'border-slate-100'
                                                 }`}
                                             title={imgUrl && idx !== 0 ? "Click to swap with main image" : ""}
                                         >
@@ -762,8 +753,8 @@ const SalonPage = () => {
                                         <div
                                             key={day}
                                             className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${isToday
-                                                    ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 shadow-sm'
-                                                    : 'hover:bg-slate-50'
+                                                ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 shadow-sm'
+                                                : 'hover:bg-slate-50'
                                                 }`}
                                         >
                                             <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
@@ -824,8 +815,8 @@ const SalonPage = () => {
                                                     }
                                                 })}
                                                 className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${isTopRated
-                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
-                                                        : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
+                                                    ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
+                                                    : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
                                                     }`}
                                             >
                                                 {/* Top Rated Badge */}
@@ -871,8 +862,8 @@ const SalonPage = () => {
                                                                     <Star
                                                                         key={i}
                                                                         className={`w-3.5 h-3.5 ${i < Math.round(parseFloat(rating))
-                                                                                ? 'text-amber-400 fill-amber-400'
-                                                                                : 'text-slate-200'
+                                                                            ? 'text-amber-400 fill-amber-400'
+                                                                            : 'text-slate-200'
                                                                             }`}
                                                                     />
                                                                 ))}
@@ -908,8 +899,8 @@ const SalonPage = () => {
                                                             }
                                                         })}
                                                         className={`mt-4 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${isTopRated
-                                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
-                                                                : 'bg-slate-900 hover:bg-black text-white shadow-sm'
+                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
+                                                            : 'bg-slate-900 hover:bg-black text-white shadow-sm'
                                                             }`}
                                                     >
                                                         Book Now
@@ -969,8 +960,8 @@ const SalonPage = () => {
                                                 setAvailableStaffForSlot([]);
                                             }}
                                             className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
-                                                    ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
-                                                    : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
+                                                ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
                                                 }`}
                                         >
                                             <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
@@ -1009,8 +1000,8 @@ const SalonPage = () => {
                                                     });
                                                 }}
                                                 className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isSelected
-                                                        ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
-                                                        : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300'
+                                                    ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
+                                                    : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300'
                                                     }`}
                                             >
                                                 {slot.displayTime}
@@ -1180,7 +1171,7 @@ const SalonPage = () => {
 
 
 
-                        {/* Promo Download App callout */}
+                        {/* Promo Download App callout
                         <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm text-center">
                             <Smartphone className="w-8 h-8 text-[#FF0B01] mx-auto mb-3" />
                             <h4 className="text-sm font-black text-slate-900 tracking-tight uppercase">
@@ -1191,7 +1182,6 @@ const SalonPage = () => {
                             </p>
 
                             <div className="flex flex-col gap-2.5 mt-5">
-                                {/* App Store Badge */}
                                 <a
                                     href="#"
                                     className="flex items-center bg-black text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
@@ -1203,7 +1193,6 @@ const SalonPage = () => {
                                     </div>
                                 </a>
 
-                                {/* Google Play Badge */}
                                 <a
                                     href="#"
                                     className="flex items-center bg-[#FF0B01] text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
@@ -1216,14 +1205,11 @@ const SalonPage = () => {
                                 </a>
                             </div>
                         </div>
+                        */ }
 
                     </div>
                 </div>
             </main>
-
-            {/* ==================== FOOTER ==================== */}
-            <Footer />
-
         </div>
     );
 };

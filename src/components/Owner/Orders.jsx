@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './Layouts/Navbar';
-import Sidebar from './Layouts/SideBar';
-import Footer from './Layouts/Footer';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -55,7 +52,6 @@ const LazyImage = ({ src, alt, className }) => {
 };
 
 const Orders = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('ordered'); // 'ordered' | 'completed' | 'cancelled'
     
 
@@ -228,17 +224,6 @@ const Orders = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            {/* GLOBAL TOP NAVIGATION PANEL */}
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            {/* TWO COLUMN INTEGRATION BODY WRAPPER CONTAINER */}
-            <div className="flex flex-1 w-full items-stretch">
-                
-                {/* PRIMARY WORKSPACE FLOW NAVIGATION CONTROL */}
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-                {/* ACTIVE SUBSYSTEM MONITOR DISPLAY CANVAS ENVIRONMENT */}
                 <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-6">
                     
                     {/* Header Title Section Line Block */}
@@ -622,11 +607,6 @@ const Orders = () => {
                     )}
 
                 </main>
-            </div>
-
-            {/* GLOBAL REUSABLE APPLICATION FOOTER PANEL */}
-            <Footer />
-        </div>
     );
 };
 

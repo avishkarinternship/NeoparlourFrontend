@@ -51,6 +51,12 @@ import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 
+// Import layouts
+import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
+import OwnerLayout from '../components/Owner/Layouts/OwnerLayout'
+import OwnerManageLayout from '../components/Owner/Layouts/OwnerManageLayout'
+import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
+
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
     const ownerToken = localStorage.getItem('ownerStaffToken');
@@ -89,10 +95,7 @@ export let routes = createBrowserRouter([
         path: '/',
         element: <App />,
         children: [
-            {
-                path: '/',
-                element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
-            },
+            // Standalone customer auth / select salon routes (no layouts)
             {
                 path: '/customer/login',
                 element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
@@ -102,16 +105,16 @@ export let routes = createBrowserRouter([
                 element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
             },
             {
+                path: '/customer-login',
+                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+            },
+            {
                 path: '/owner/login',
                 element: <OwnerLogin />
             },
             {
                 path: '/owner-login',
                 element: <OwnerLogin />
-            },
-            {
-                path: '/owner/attendance',
-                element: <OwnerRouteGuard><StaffAttendance /></OwnerRouteGuard>
             },
             {
                 path: '/register',
@@ -130,183 +133,205 @@ export let routes = createBrowserRouter([
                 element: <OwnerRegister />
             },
             {
-                path: '/subscription-plans',
-                element: <OwnerRouteGuard><SubscriptionPlans /></OwnerRouteGuard>
-            },
-
-            {
                 path: '/customer/select-salon',
                 element: <CustomerRouteGuard><SalonSelection /></CustomerRouteGuard>
             },
+
+            // Customer Layout wrapper routes
             {
-                path: '/owner/dashboard',
-                element: <OwnerRouteGuard><OwnerDashboard /></OwnerRouteGuard>
-            },
-            {
-                path: '/customer/terms-and-conditions',
-                element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
-            },
-            {
-                path: '/owner/analytics',
-                element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/orders',
-                element: <OwnerRouteGuard><Orders /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/billing',
-                element: <OwnerRouteGuard><Billing /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/settings',
-                element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/schedule',
-                element: <OwnerRouteGuard><Schedule /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/services',
-                element: <OwnerRouteGuard><Services /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/inventory',
-                element: <OwnerRouteGuard><Inventory /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/staff',
-                element: <OwnerRouteGuard><Staff /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/feedback',
-                element: <OwnerRouteGuard><Feedback /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/home-services',
-                element: <OwnerRouteGuard><HomeServices /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/subscription',
-                element: <OwnerRouteGuard><Subscription /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/add-offers',
-                element: <OwnerRouteGuard><AddOffers /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/add-products',
-                element: <OwnerRouteGuard><AddProducts /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/manage/add-package',
-                element: <OwnerRouteGuard><AddPackages /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/customers',
-                element: <OwnerRouteGuard><Customers /></OwnerRouteGuard>
-            },
-            {
-                path: '/customer/my-salons',
-                element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
-            },
-            {
-                path: '/owner/appointments',
-                element: <OwnerRouteGuard><Appointments /></OwnerRouteGuard>
-            },
-            {
-                path: '/owner/notifications',
-                element: <NotificationsScreen />
-            },
-            {
-                path: '/customer/appointments',
-                element: <CustomerRouteGuard><Appointments /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer-login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/home',
-                element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/features',
-                element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/salon',
-                element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/book-service',
-                element: <CustomerRouteGuard isPublic={true}><SelectService /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/product-search',
-                element: <CustomerRouteGuard isPublic={true}><ProductSearch /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/product-details',
-                element: <CustomerRouteGuard isPublic={true}><ProductDetails /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/appointment-success',
-                element: <CustomerRouteGuard><AppointmentSuccess /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/order-success',
-                element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
-            },
-            {
-                path: 'customer/my-orders',
-                element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
-            },   
-            {
-                path: '/customer/about',
-                element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/support',
-                element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/partner-with-us',
-                element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/salons',
-                element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/privacy-policy',
-                element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
-            },
-            {
-                path: '/owner/privacy-policy',
-                element: <OwnerRouteGuard><PrivacyPolicyScreen /></OwnerRouteGuard>
-            },
-            {
-                path: '/settings',
-                element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
-            },
-            {
-                path: '/signup',
-                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
-            },
-            {
-                path: '/owner/terms-and-conditions',
-                element: <OwnerRouteGuard><OwnerTermsAndConditions /></OwnerRouteGuard>
+                element: <CustomerLayout />,
+                children: [
+                    {
+                        path: '/',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/home',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/features',
+                        element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/about',
+                        element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/support',
+                        element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/partner-with-us',
+                        element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/salons',
+                        element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/influencer-program',
+                        element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/blogs',
+                        element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/my-salons',
+                        element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/appointments',
+                        element: <CustomerRouteGuard><Appointments /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/salon',
+                        element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/book-service',
+                        element: <CustomerRouteGuard isPublic={true}><SelectService /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/product-search',
+                        element: <CustomerRouteGuard isPublic={true}><ProductSearch /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/product-details',
+                        element: <CustomerRouteGuard isPublic={true}><ProductDetails /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/product-payment',
+                        element: <CustomerRouteGuard><ProductPaymentMethod /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/appointment-success',
+                        element: <CustomerRouteGuard><AppointmentSuccess /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/order-success',
+                        element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/my-orders',
+                        element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
+                    }
+                ]
             },
 
-            // New Footer Pages
+            // Owner Layout wrapper routes
             {
-                path: '/customer/influencer-program',
-                element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
-            },
-            {
-                path: '/customer/blogs',
-                element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+                element: <OwnerLayout />,
+                children: [
+                    {
+                        path: '/owner/dashboard',
+                        element: <OwnerRouteGuard><OwnerDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/analytics',
+                        element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/orders',
+                        element: <OwnerRouteGuard><Orders /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/billing',
+                        element: <OwnerRouteGuard><Billing /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/settings',
+                        element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/settings',
+                        element: <OwnerRouteGuard><Settings /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/customers',
+                        element: <OwnerRouteGuard><Customers /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/appointments',
+                        element: <OwnerRouteGuard><Appointments /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/notifications',
+                        element: <OwnerRouteGuard><NotificationsScreen /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/attendance',
+                        element: <OwnerRouteGuard><StaffAttendance /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/subscription-plans',
+                        element: <OwnerRouteGuard><SubscriptionPlans /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/privacy-policy',
+                        element: <OwnerRouteGuard><PrivacyPolicyScreen /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/terms-and-conditions',
+                        element: <OwnerRouteGuard><OwnerTermsAndConditions /></OwnerRouteGuard>
+                    },
+
+                    // Nested Owner Manage Layout wrapper routes
+                    {
+                        element: <OwnerManageLayout />,
+                        children: [
+                            {
+                                path: '/owner/manage/schedule',
+                                element: <OwnerRouteGuard><Schedule /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/services',
+                                element: <OwnerRouteGuard><Services /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/inventory',
+                                element: <OwnerRouteGuard><Inventory /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/staff',
+                                element: <OwnerRouteGuard><Staff /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/feedback',
+                                element: <OwnerRouteGuard><Feedback /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/home-services',
+                                element: <OwnerRouteGuard><HomeServices /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/subscription',
+                                element: <OwnerRouteGuard><Subscription /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/add-offers',
+                                element: <OwnerRouteGuard><AddOffers /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/add-products',
+                                element: <OwnerRouteGuard><AddProducts /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/add-package',
+                                element: <OwnerRouteGuard><AddPackages /></OwnerRouteGuard>
+                            }
+                        ]
+                    }
+                ]
             },
 
             {

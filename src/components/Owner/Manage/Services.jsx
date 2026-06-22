@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from "../Layouts/ManageSideBar";
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -41,7 +38,7 @@ const toastStyle = {
 
 const Service = () => {
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         const saved = localStorage.getItem('manageSidebarOpen');
@@ -258,14 +255,7 @@ const Service = () => {
 
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar />
-
-                <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto">
+                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
                     <div className="max-w-5xl mx-auto">
 
                         {/* ==================== SERVICE TAB ==================== */}
@@ -567,10 +557,6 @@ const Service = () => {
                             </>
                     </div>
                 </main>
-            </div>
-
-            <Footer />
-        </div>
     );
 };
 

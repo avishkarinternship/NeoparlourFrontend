@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../Layouts/Navbar';
-import Sidebar from '../Layouts/SideBar';
-import Footer from '../Layouts/Footer';
-import ManageSideBar from '../Layouts/ManageSideBar';
+
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -26,7 +23,7 @@ const toastStyle = {
 };
 
 const Subscription = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [subscriptionPlans, setSubscriptionPlans] = useState([]);
     const [userSubscriptions, setUserSubscriptions] = useState([]);
     const [loadingPlans, setLoadingPlans] = useState(true);
@@ -80,14 +77,7 @@ const Subscription = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-gray-800 antialiased">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-
-            <div className="flex flex-1 w-full items-stretch">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <ManageSideBar activeTab="Subscription" onTabChange={() => { }} />
-
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-10">
+                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white md:border-l md:border-gray-200 space-y-10">
                     {/* Subscription Plans Section */}
                     <div className="space-y-6 max-w-5xl mx-auto">
                         <div className="inline-block border-b-2 border-red-600 pb-1">
@@ -219,10 +209,6 @@ const Subscription = () => {
                         </div>
                     </div>
                 </main>
-            </div>
-
-            <Footer />
-        </div>
     );
 };
 

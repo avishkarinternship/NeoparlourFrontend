@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 // Relative path asset declarations from user specifications
 import firstImage from '../../assets/Customer/FeaturesScreen/first_image.jpg';
@@ -7,183 +7,14 @@ import analyticsReview from '../../assets/Customer/FeaturesScreen/analytics_revi
 import inventoryManagement from '../../assets/Customer/FeaturesScreen/inventory_management.jpg';
 import schedulingMadeSimple from '../../assets/Customer/FeaturesScreen/scheduling_made_easy.jpg';
 import easyInvoices from '../../assets/Customer/FeaturesScreen/easy_invoice.jpg';
-import Drawer from './Drawer';
 
-// Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
-import signupIcon from '../../assets/Customer/Navbar/signup_icon.svg';
-import loginIcon from '../../assets/Customer/Navbar/login_icon.svg';
-import offersIcon from '../../assets/Customer/Navbar/offers_icon.svg';
-
-import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
-
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchCustomerProfile } from '../../redux/slices/customerSlice';
-import ProfilePopup from './ProfilePopup';
-import PasswordResetModal from './PasswordResetModal';
-import Footer from './Layouts/Footer';
-import { User, MousePointerClick } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Features = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const currentPath = location.pathname;
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
-  const dispatch = useDispatch();
-  const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
-
-  useEffect(() => {
-    if (isAuthenticated && user && !profile) {
-      const customerId = user.id || user.user?.id;
-      if (customerId) {
-        dispatch(fetchCustomerProfile(customerId));
-      }
-    }
-  }, [isAuthenticated, user, profile, dispatch]);
-
-  const isIncomplete = (name) => {
-    const t = (name || '').trim();
-    return !t || t.toLowerCase() === 'customer';
-  };
-
-  const getDisplayName = () => {
-    const rawName = profile?.fullName || user?.name || user?.username || '';
-    if (isIncomplete(rawName)) {
-      return profile?.mobile || user?.phone || user?.username || 'Profile';
-    }
-    return rawName;
-  };
-
-  const displayName = getDisplayName();
-  const isNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
-
-  const navLinkClass = (paths) => {
-    const isActive = paths.some(p => currentPath === p);
-    return `pb-1 transition-colors ${isActive
-        ? 'text-orange-500 border-b-2 border-orange-500'
-        : 'hover:text-gray-900'
-      }`;
-  };
 
   return (
     <div className="w-full min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden antialiased">
-
-      {/* 1. NAVBAR */}
-      <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans">
-        {/* Logo Section */}
-        <div className="flex items-center gap-2 cursor-pointer">
-          <img src={logoIcon} alt="NeoParlour" className="h-8 object-contain" />
-          <span className="text-xl font-black tracking-tight text-gray-900">NeoParlour</span>
-        </div>
-
-        {/* Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider text-gray-600">
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          {isAuthenticated && (user || profile) ? (
-            <div className="flex items-center gap-2">
-              {isNameBlank ? (
-                <div className="relative hidden md:flex items-center gap-1.5 sm:gap-2">
-                  <style>{`
-                    @keyframes bounce-x {
-                      0%, 100% { transform: translateX(0); }
-                      50% { transform: translateX(4px); }
-                    }
-                    .animate-bounce-x {
-                      animation: bounce-x 1s infinite;
-                    }
-                  `}</style>
-                  <button
-                    onClick={() => setIsProfileOpen(true)}
-                    className="relative flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FF0B01] hover:bg-[#e60a00] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer border-0 shrink-0"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-white text-[#FF0B01] flex items-center justify-center shadow-sm flex-shrink-0">
-                      <User className="w-4 h-4 text-[#FF0B01]" />
-                    </div>
-                    <span className="text-xs font-black text-white tracking-tight px-1.5">
-                      My Account
-                    </span>
-                  </button>
-                  <div className="pointer-events-none select-none animate-bounce-x shrink-0">
-                    <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsProfileOpen(true)}
-                  className="hidden md:flex items-center gap-2.5 px-3 py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-2 pr-4 font-sans"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-black text-gray-800 tracking-tight">
-                    {displayName}
-                  </span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              {/* Signup Button */}
-              <button onClick={() => navigate('/owner/register')} className="px-4 py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition text-gray-500">
-                <img src={signupIcon} alt="Signup" className="w-5 h-5 object-contain" />
-                SIGNUP
-              </button>
-
-              {/* Login Button */}
-              <button onClick={() => navigate('/customer/login')} className="px-4 py-2 text-xs font-bold bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition">
-                <img src={loginIcon} alt="Login" className="w-5 h-5 object-contain" />
-                LOGIN
-              </button>
-            </>
-          )}
-
-          {/* Hamburger Menu Icon */}
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-1"
-            title="Menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
-        </div>
-      </nav>
-
-      {/* Slide-out Drawer */}
-      <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onProfileClick={() => setIsProfileOpen(true)}
-        onChangePasswordClick={() => setIsPasswordResetOpen(true)}
-        setCurrentView={(view) => {
-          if (view === 'home') navigate('/customer/home');
-          if (view === 'about') navigate('/customer/about');
-        }}
-      />
-
-      {/* Customer Profile Popup Modal */}
-      <ProfilePopup
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-      />
-
-      {/* Password Reset Modal */}
-      <PasswordResetModal 
-        isOpen={isPasswordResetOpen} 
-        onClose={() => setIsPasswordResetOpen(false)} 
-      />
 
 
       {/* ================= HERO SECTION ================= */}
@@ -354,10 +185,6 @@ const Features = () => {
           </div>
         </div>
       </section>
-
-      {/* ================= COMPREHENSIVE BRAND FOOTER MATRIX ================= */}
-      {/* 11. FOOTER */}
-      <Footer />
     </div>
   );
 };

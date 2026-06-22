@@ -21,9 +21,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [showManageDrawer, setShowManageDrawer] = useState(isManagePath);
 
   useEffect(() => {
-    if (isManagePath) {
-      setShowManageDrawer(true);
-    }
+    setShowManageDrawer(isManagePath);
   }, [location.pathname, isManagePath]);
 
   const subMenu = [
@@ -115,12 +113,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           <button
             onClick={() => handleManageClick(isMobile)}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
-              ${isManagePath || showManageDrawer
+              ${isManagePath
                 ? 'text-red-600 bg-red-50'
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
-            {(isManagePath || showManageDrawer) && (
+            {isManagePath && (
               <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
             )}
 
@@ -128,7 +126,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               src={manageIcon}
               alt="Manage"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                isManagePath || showManageDrawer ? 'active-icon-glow' : 'opacity-60'
+                isManagePath ? 'active-icon-glow' : 'opacity-60'
               }`}
             />
             <span>Manage</span>

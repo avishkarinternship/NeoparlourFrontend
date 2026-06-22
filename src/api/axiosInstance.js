@@ -49,7 +49,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       const hasAuthHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
       const isLoginRequest = error.config?.url?.includes('/customer/login');
-      
+
       if (hasAuthHeader && !isLoginRequest) {
         console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request...");
         localStorage.removeItem('customerToken');
@@ -57,13 +57,13 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('customerProfile');
         localStorage.removeItem('ownerStaffToken');
         localStorage.removeItem('ownerStaffUser');
-        
+
         // Remove authorization header
         if (error.config.headers) {
           delete error.config.headers.Authorization;
           delete error.config.headers.authorization;
         }
-        
+
         // Retry the request
         return axiosInstance(error.config);
       } else {

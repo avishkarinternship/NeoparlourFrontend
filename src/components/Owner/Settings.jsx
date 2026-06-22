@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
-import Navbar from "./Layouts/Navbar";
-import Sidebar from "./Layouts/SideBar";
-import Footer from "./Layouts/Footer";
 
 const Settings = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("owner");
 
     const [isOwnerEdit, setIsOwnerEdit] = useState(false);
@@ -148,21 +144,6 @@ const [popupMessage, setPopupMessage] = useState("");
 
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
-
-            <Navbar
-                onToggleSidebar={() =>
-                    setIsSidebarOpen(!isSidebarOpen)
-                }
-            />
-
-            <div className="flex flex-1">
-
-                <Sidebar
-                    isOpen={isSidebarOpen}
-                    onClose={() => setIsSidebarOpen(false)}
-                />
-
                 <main className="flex-1 p-8 overflow-y-auto">
                     {/* TABS */}
                     <div className="flex space-x-4 mb-8 border-b border-gray-200">
@@ -490,12 +471,6 @@ const [popupMessage, setPopupMessage] = useState("");
     </div>
 )}
                 </main>
-            </div>
-
-
-
-            <Footer />
-        </div>
     );
 };
 

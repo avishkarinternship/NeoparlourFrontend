@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Layouts/NavBar';
-import Footer from './Layouts/Footer';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
 
@@ -115,7 +113,6 @@ const MySalons = () => {
 
     return (
         <div className="min-h-screen bg-[#fcfcfd] text-gray-900 font-sans flex flex-col">
-            <Navbar />
 
             {/* Page Header */}
             <div className="max-w-[1200px] w-full mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row md:items-center gap-4">
@@ -325,8 +322,6 @@ const MySalons = () => {
                     </div>
                 )}
             </div>
-
-            <Footer />
         </div>
     );
 };

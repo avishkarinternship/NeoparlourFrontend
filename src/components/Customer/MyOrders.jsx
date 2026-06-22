@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
-import SearchNavBar from './Layouts/SearchNavBar';
-import Footer from './Layouts/Footer';
 import toast from 'react-hot-toast';
 import { ShoppingBag, Calendar, CheckCircle2, AlertCircle, Clock, ShoppingCart } from 'lucide-react';
 
@@ -85,9 +83,7 @@ const MyOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col justify-between text-neutral-800 antialiased">
-      <SearchNavBar />
-
+    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col text-neutral-800 antialiased">
       <main className="max-w-4xl w-full mx-auto px-4 md:px-8 py-12 flex-1">
         
         {/* Page Title & Breadcrumbs */}
@@ -205,8 +201,6 @@ const MyOrders = () => {
         )}
 
       </main>
-
-      <Footer />
     </div>
   );
 };
