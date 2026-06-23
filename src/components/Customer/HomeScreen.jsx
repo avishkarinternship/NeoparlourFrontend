@@ -626,6 +626,7 @@ const HomeScreen = () => {
                                         }));
                                         setShowCityDropdown(true);
                                         setIsLocationChanged(true);
+                                        setShowSearchDropdown(false);
                                     }}
                                     onFocus={() => setShowCityDropdown(true)}
                                     className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
@@ -659,6 +660,7 @@ const HomeScreen = () => {
                                                     setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
                                                     setShowCityDropdown(false);
                                                     setIsLocationChanged(true);
+                                                    setShowSearchDropdown(false);
                                                 }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
                                             ))
                                         ) : (
@@ -683,6 +685,7 @@ const HomeScreen = () => {
                                             }));
                                             setShowAreaDropdown(true);
                                             setIsLocationChanged(true);
+                                            setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
                                         className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
@@ -704,6 +707,7 @@ const HomeScreen = () => {
                                                     setSearchData(p => ({ ...p, areaName: area.name }));
                                                     setShowAreaDropdown(false);
                                                     setIsLocationChanged(true);
+                                                    setShowSearchDropdown(false);
                                                 }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
                                                     {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
                                                 </div>
