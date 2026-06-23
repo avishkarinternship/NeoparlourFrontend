@@ -51,6 +51,7 @@ import NotificationsScreen from '../components/Owner/NotificationsScreen'
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
 import StaffAttendance from '../components/Owner/StaffAttendance'
+import Cart from '../components/Customer/Cart'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -229,6 +230,10 @@ export let routes = createBrowserRouter([
                     {
                         path: 'customer/my-orders',
                         element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/cart',
+                        element: <CustomerRouteGuard><Cart /></CustomerRouteGuard>
                     }
                 ]
             },

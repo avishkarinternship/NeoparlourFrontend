@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, Mail, Phone, MapPin, Calendar, LogOut, User, Edit2, Save, Sparkles } from 'lucide-react';
+import { X, Phone, Calendar, LogOut, User, Edit2, Save, Sparkles } from 'lucide-react';
 import { fetchCustomerProfile, logoutCustomerApi, updateCustomerProfile } from '../../redux/slices/customerSlice';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -204,19 +204,6 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                                 />
                             </div>
 
-                            {/* Email */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter email address"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
-                                />
-                            </div>
-
                             {/* Mobile Number */}
                             <div className="flex flex-col gap-1 w-full">
                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile Number</label>
@@ -256,19 +243,6 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                                     value={formData.birthdate}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
-                                />
-                            </div>
-
-                            {/* Address */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Home Address</label>
-                                <textarea
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter your address"
-                                    rows="2"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700 resize-none"
                                 />
                             </div>
                         </div>
@@ -314,15 +288,6 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
 
                         {/* Info Fields */}
                         <div className="w-full space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                            {/* Email */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</span>
-                                    <span className="text-sm font-semibold text-gray-700 truncate">{profile?.email || 'Not provided'}</span>
-                                </div>
-                            </div>
-
                             {/* Mobile */}
                             <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
                                 <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -353,15 +318,6 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Address */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Home Address</span>
-                                    <span className="text-sm font-semibold text-gray-700 leading-normal">{profile?.address || 'Not provided'}</span>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Buttons Footer */}

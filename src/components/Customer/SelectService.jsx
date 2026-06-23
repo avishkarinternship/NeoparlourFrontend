@@ -211,6 +211,19 @@ const SelectService = () => {
         return null;
     });
 
+    // --- HOME SERVICE STATES ---
+    const [homeService, setHomeService] = useState(false);
+    const [homeServiceCharges, setHomeServiceCharges] = useState(0);
+    const [customerAddress, setCustomerAddress] = useState(() => {
+        try {
+            const profile = JSON.parse(localStorage.getItem('customerProfile')) || {};
+            return profile.address || '';
+        } catch (e) {
+            return '';
+        }
+    });
+    const [fetchingHomeCharges, setFetchingHomeCharges] = useState(false);
+
     useEffect(() => {
         if (!selectedSlot && (!selectedExpert || selectedExpert === 'any')) {
             setFirstSelected(null);
@@ -313,9 +326,20 @@ const SelectService = () => {
             }
         };
 
+        const fetchHomeServiceCharges = async () => {
+            try {
+                const res = await axiosInstance.get(`/salons/${activeSalonId}/home-service-charges`);
+                const charge = parseFloat(res.data) || 0;
+                setHomeServiceCharges(charge);
+            } catch (error) {
+                console.error("Error loading home service charges:", error);
+            }
+        };
+
         fetchSalonDetails();
         fetchAllServices();
         checkFavStatus();
+        fetchHomeServiceCharges();
     }, [activeSalonId, navigate, isAuthenticated]);
 
     const handleToggleFavourite = async () => {
@@ -556,6 +580,24 @@ const SelectService = () => {
     };
 
     // --- ACTIONS ---
+    const handleHomeServiceToggle = async (e) => {
+        const checked = e.target.checked;
+        setHomeService(checked);
+        if (checked && homeServiceCharges === 0 && activeSalonId) {
+            setFetchingHomeCharges(true);
+            try {
+                const res = await axiosInstance.get(`/salons/${activeSalonId}/home-service-charges`);
+                const charge = parseFloat(res.data) || 0;
+                setHomeServiceCharges(charge);
+            } catch (error) {
+                console.error("Error loading home service charges:", error);
+                toast.error("Failed to fetch home service charges");
+            } finally {
+                setFetchingHomeCharges(false);
+            }
+        }
+    };
+
     const handleDiscardOffer = () => {
         if (selectedOffer && selectedOffer.services) {
             const offerServiceIds = selectedOffer.services.map(s => s.id);
@@ -583,6 +625,10 @@ const SelectService = () => {
     const handleBookClick = () => {
         if (addedServices.length === 0) {
             toast.error('Please select at least one service to proceed.');
+            return;
+        }
+        if (homeService && !customerAddress.trim()) {
+            toast.error('Please enter your complete address for home service.');
             return;
         }
         if (!token) {
@@ -639,7 +685,7 @@ const SelectService = () => {
     });
 
     // Selected Expert details
-    const selectedExpertObj = staffList.find(s => s.id === selectedExpert) || (selectedExpert === 'any' ? { name: 'Any Stylist (Auto Assign)' } : { name: 'Stylist' });
+    const selectedExpertObj = staffList.find(s => s.id === selectedExpert) || (selectedExpert === 'any' ? { name: 'No Preference' } : { name: 'Stylist' });
 
     // Customer details from cache
     const customerUser = JSON.parse(localStorage.getItem('customerUser')) || {};
@@ -674,13 +720,17 @@ const SelectService = () => {
         offerDiscount = Math.round(offerOriginalTotal * ((selectedOffer.percentage || 0) / 100));
         offerFinalTotal = offerOriginalTotal - offerDiscount;
     }
-    const grandTotal = serviceSubtotal - discountAmount;
+    const grandTotal = serviceSubtotal - discountAmount + (homeService ? homeServiceCharges : 0);
 
     // Staff avatar fallback map
     const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
     const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
 
     const handleConfirmBooking = async () => {
+        if (homeService && !customerAddress.trim()) {
+            toast.error('Please enter your complete address for home service.');
+            return;
+        }
         setBookingLoading(true);
         try {
             let appointmentAtStr = selectedSlot?.startTime || null;
@@ -710,16 +760,17 @@ const SelectService = () => {
                 customerId: customerProfile.id || null,
                 salonId: parseInt(activeSalonId, 10),
                 staffId: selectedExpert && selectedExpert !== 'any' ? parseInt(selectedExpert, 10) : null,
-                staffName: selectedExpertObj?.name && selectedExpertObj.name !== 'Any Stylist (Auto Assign)' ? selectedExpertObj.name : null,
+                staffName: selectedExpertObj?.name && selectedExpertObj.name !== 'No Preference' ? selectedExpertObj.name : null,
                 customerName: customerName,
                 customerNumber: customerPhone,
                 appointmentAt: appointmentAtStr,
                 serviceDuration: durationMinutes,
                 totalPrice: serviceSubtotal,
                 discountAmount: discountAmount,
-                finalAmount: serviceSubtotal - discountAmount,
-                homeCharge: salon?.homeServiceCharges || 0.00,
-                homeService: false,
+                finalAmount: serviceSubtotal - discountAmount + (homeService ? homeServiceCharges : 0),
+                homeCharge: homeService ? homeServiceCharges : 0.00,
+                homeService: homeService,
+                address: homeService ? customerAddress : null,
                 status: 'booked',
                 services: appointmentServices
             };
@@ -816,6 +867,11 @@ const SelectService = () => {
                                     Code: {salon.salonCode}
                                 </span>
                             )}
+                            {homeServiceCharges > 0 && (
+                                <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
+                                    Home Service: ₹{homeServiceCharges}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
@@ -842,11 +898,11 @@ const SelectService = () => {
                     </div>
                 </div>
 
-                {/* Master Two-Column Grid Setup */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                {/* Master Two-Column Flex Layout */}
+                <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
 
-                    {/* LEFT CONTAINER CANVAS (3/4 Width) */}
-                    <div className="lg:col-span-3 space-y-8">
+                    {/* LEFT CONTAINER CANVAS (60% Width) */}
+                    <div className="w-full lg:w-[60%] shrink-0 space-y-8">
 
                         {/* Services Picker Section */}
                         <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
@@ -1135,7 +1191,7 @@ const SelectService = () => {
                                     <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
                                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
                                     {selectedExpert && selectedExpert !== 'any' && (
-                                        <p className="text-[10px] text-slate-350 font-medium mt-1">Try selecting a different date or "Auto Assign"</p>
+                                        <p className="text-[10px] text-slate-350 font-medium mt-1">Try selecting a different date or "No Preference"</p>
                                     )}
                                 </div>
                             ) : (
@@ -1183,8 +1239,8 @@ const SelectService = () => {
 
                     </div>
 
-                    {/* RIGHT CONTAINER SIDEBAR (1/3 Width) */}
-                    <div className="space-y-6 lg:sticky lg:top-6">
+                    {/* RIGHT CONTAINER SIDEBAR (40% Width) */}
+                    <div className="w-full lg:w-[40%] space-y-6 lg:sticky lg:top-6">
 
                         {/* Real-time Booking Summary Card */}
                         <section className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
@@ -1248,7 +1304,7 @@ const SelectService = () => {
                                     </div>
 
                                     {/* Cost breakdown ledger */}
-                                    <div className="border-t border-slate-100 pt-3 space-y-2 text-xs font-semibold text-slate-500">
+                                    <div className="border-t border-slate-100 pt-3 space-y-2.5 text-xs font-semibold text-slate-500">
                                         <div className="flex justify-between">
                                             <span>Subtotal</span>
                                             <span className="text-slate-800 font-bold">₹{serviceSubtotal}</span>
@@ -1263,7 +1319,52 @@ const SelectService = () => {
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between text-sm font-black text-slate-950 pt-2 border-t border-dashed border-slate-100">
+                                        {/* Home Service toggle */}
+                                        <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-800">Home Service?</span>
+                                                <span className="text-[9px] text-slate-400 font-medium normal-case">Avail services at your place</span>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={homeService} 
+                                                    onChange={handleHomeServiceToggle}
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF0B01]"></div>
+                                            </label>
+                                        </div>
+
+                                        {fetchingHomeCharges && (
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pl-1">
+                                                <span className="w-3 h-3 border-2 border-[#FF0B01] border-t-transparent rounded-full animate-spin"></span>
+                                                Fetching home charges...
+                                            </div>
+                                        )}
+
+                                        {homeService && !fetchingHomeCharges && (
+                                            <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                {homeServiceCharges > 0 && (
+                                                    <div className="flex justify-between text-xs font-bold text-slate-700 bg-red-50/50 border border-red-100/50 p-2.5 rounded-xl">
+                                                        <span>Home Charges</span>
+                                                        <span className="text-[#FF0B01]">₹{homeServiceCharges}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">Delivery Address <span className="text-[#FF0B01] font-black">*</span></label>
+                                                    <textarea
+                                                        value={customerAddress}
+                                                        onChange={(e) => setCustomerAddress(e.target.value)}
+                                                        placeholder="Enter complete home address"
+                                                        rows="2"
+                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-slate-700 resize-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between text-sm font-black text-slate-950 pt-2.5 border-t border-dashed border-slate-100">
                                             <span>Grand Total</span>
                                             <span className="text-base text-[#FF0B01] font-black">₹{grandTotal}</span>
                                         </div>
@@ -1338,8 +1439,7 @@ const SelectService = () => {
                                             <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-slate-400'}`} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-xs font-black text-slate-900 uppercase">Auto Assign</h4>
-                                            <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-relaxed">System will auto-assign the best available expert for your services.</p>
+                                            <h4 className="text-xs font-black text-slate-900 uppercase">No Preference</h4>
                                         </div>
                                         <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
                                             <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
@@ -1390,7 +1490,7 @@ const SelectService = () => {
                                                 
                                                 {/* Center details */}
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs font-black text-slate-900 truncate uppercase">{staff.name}</h4>
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">{staff.name}</h4>
                                                     <p className="text-[10px] text-slate-400 mt-0.5 font-bold uppercase">{role}</p>
                                                     
                                                     {/* Star Rating - use actual rating */}
@@ -1480,6 +1580,9 @@ const SelectService = () => {
                 customerPhone={customerPhone}
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== APPOINTMENT BOOKED MODAL ==================== */}
@@ -1494,6 +1597,9 @@ const SelectService = () => {
                 customerPhone={customerPhone}
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== LOGIN PROMPT MODAL ==================== */}

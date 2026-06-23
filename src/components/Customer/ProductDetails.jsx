@@ -1,18 +1,34 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { 
   Plus, 
   Minus,
   ArrowRight,
-  Star
+  Star,
+  ShoppingCart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { addToCart } from '../../redux/slices/cartSlice';
 
 const ProductDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.customer);
   const productState = location.state?.product || null;
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add products to cart.");
+      navigate('/customer/login');
+      return;
+    }
+    if (product) {
+      dispatch(addToCart({ productId: product.id, quantity }));
+    }
+  };
 
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const queryId = queryParams.get('id');
@@ -409,7 +425,15 @@ const ProductDetails = () => {
             )}
 
             {/* CTA action buttons */}
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={handleAddToCart}
+                disabled={product?.stock === 0}
+                className="flex-1 h-14 border-2 border-[#FF0B01] text-[#FF0B01] hover:bg-red-50 font-extrabold text-[15px] tracking-wider rounded-2xl transition-all duration-300 uppercase flex items-center justify-center gap-2 disabled:border-gray-200 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Add to Cart
+              </button>
               <button 
                 onClick={() => {
                   setCheckout({
@@ -419,9 +443,9 @@ const ProductDetails = () => {
                   });
                 }}
                 disabled={product?.stock === 0}
-                className="w-full h-14 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[15px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-100 disabled:shadow-none disabled:cursor-not-allowed"
+                className="flex-1 h-14 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[15px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-100 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
               >
-                {product?.stock === 0 ? 'Out of Stock' : 'Proceed to Checkout'}
+                {product?.stock === 0 ? 'Out of Stock' : 'Buy Now'}
               </button>
             </div>
             

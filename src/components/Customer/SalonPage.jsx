@@ -176,6 +176,7 @@ const SalonPage = () => {
     const [galleryImages, setGalleryImages] = useState([]);
     const [offers, setOffers] = useState([]);
     const [offersLoading, setOffersLoading] = useState(false);
+    const [homeServiceCharges, setHomeServiceCharges] = useState(0);
 
     // Refs for scrolling lazy-load
     const servicesSectionRef = useRef(null);
@@ -286,9 +287,20 @@ const SalonPage = () => {
             }
         };
 
+        const fetchHomeServiceCharges = async () => {
+            try {
+                const res = await axiosInstance.get(`/salons/${activeSalonId}/home-service-charges`);
+                const charge = parseFloat(res.data) || 0;
+                setHomeServiceCharges(charge);
+            } catch (error) {
+                console.error("Error loading home service charges:", error);
+            }
+        };
+
         fetchSalonDetails();
         fetchActiveOffers();
         checkFavStatus();
+        fetchHomeServiceCharges();
     }, [activeSalonId, navigate, isAuthenticated]);
 
     const handleToggleFavourite = async () => {
@@ -615,6 +627,11 @@ const SalonPage = () => {
                             {salon?.salonCode && (
                                 <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
                                     Code: {salon.salonCode}
+                                </span>
+                            )}
+                            {homeServiceCharges > 0 && (
+                                <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
+                                    Home Service: ₹{homeServiceCharges}
                                 </span>
                             )}
                         </div>

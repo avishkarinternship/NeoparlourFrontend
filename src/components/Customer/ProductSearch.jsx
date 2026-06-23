@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
+import { ShoppingCart } from 'lucide-react';
+import { addToCart } from '../../redux/slices/cartSlice';
+import toast from 'react-hot-toast';
 
 // Importing your local assets
 import productOne from '../../assets/Customer/ProductSearch/product_one.jpg';
@@ -13,7 +17,18 @@ import productSix from '../../assets/Customer/ProductSearch/product_five.jpg';
 const ProductSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.customer);
   const activeSalonId = location.state?.salonId || localStorage.getItem('activeSalonId');
+
+  const handleAddToCart = (productId) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add products to cart.");
+      navigate('/customer/login');
+      return;
+    }
+    dispatch(addToCart({ productId, quantity: 1 }));
+  };
 
   const [groupedProducts, setGroupedProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(false);
@@ -238,11 +253,11 @@ const ProductSearch = () => {
                       </div>
 
                       {/* Dynamic Action Trigger Button */}
-                      <div className="mt-3.5 pt-1 px-0.5">
+                      <div className="mt-3.5 pt-1 px-0.5 flex gap-2">
                         <button 
                           onClick={() => navigate('/customer/product-details', { state: { product } })}
                           disabled={product.stock === 0}
-                          className={`w-full py-2 rounded-lg text-xs font-bold tracking-wider transition uppercase ${
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold tracking-wider transition uppercase ${
                             product.stock === 0
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-75'
                               : 'bg-[#FF0B01] text-white hover:bg-red-700 shadow-xs'
@@ -250,6 +265,15 @@ const ProductSearch = () => {
                         >
                           {product.stock === 0 ? 'Out of Stock' : 'Buy Now'}
                         </button>
+                        {product.stock > 0 && (
+                          <button
+                            onClick={() => handleAddToCart(product.id)}
+                            className="p-2 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-[#FF0B01] transition border border-gray-200 cursor-pointer shrink-0"
+                            title="Add to Cart"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
 
                     </div>

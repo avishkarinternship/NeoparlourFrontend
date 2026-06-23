@@ -11,12 +11,15 @@ const AppointmentBooked = ({
   customerName = '', 
   customerPhone = '',
   selectedOffer = null,
-  discountAmount = 0
+  discountAmount = 0,
+  homeService = false,
+  homeCharge = 0,
+  address = ''
 }) => {
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-  const grandTotal = Math.max(0, serviceTotal - discountAmount);
+  const grandTotal = Math.max(0, serviceTotal - discountAmount + (homeService ? homeCharge : 0));
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans antialiased">
@@ -94,6 +97,13 @@ const AppointmentBooked = ({
               <span className="text-gray-900 font-semibold">{expert?.name || 'Any Stylist'}</span>
             </div>
 
+            {homeService && homeCharge > 0 && (
+              <div className="flex justify-between items-center">
+                <span>Home Service Charge</span>
+                <span className="text-gray-900 font-semibold">₹ {homeCharge}</span>
+              </div>
+            )}
+
             {/* Total Highlight Row */}
             <div className="flex justify-between items-center text-sm font-bold text-gray-900 pt-2 border-t border-dashed border-gray-150">
               <span>Grand Total</span>
@@ -105,13 +115,22 @@ const AppointmentBooked = ({
           <hr className="w-full border-gray-200 my-1" />
 
           {/* Customer Metadata Block */}
-          <div className="w-full space-y-1.5 pt-4 text-left self-start">
-            <h3 className="text-sm font-bold text-gray-900">
-              Personal Details
-            </h3>
-            <p className="text-xs font-medium text-gray-600 tracking-wide">
-              {customerName} - {customerPhone}
-            </p>
+          <div className="w-full space-y-3 pt-4 text-left self-start">
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-bold text-gray-900">
+                Personal Details
+              </h3>
+              <p className="text-xs font-medium text-gray-600 tracking-wide">
+                {customerName} - {customerPhone}
+              </p>
+            </div>
+
+            {homeService && (
+              <div className="space-y-1 bg-red-50/50 border border-red-100/50 rounded-2xl p-3 w-full">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[#FF0B01]">Home Service Address</h3>
+                <p className="text-xs font-semibold text-slate-700 leading-normal">{address || 'No address specified'}</p>
+              </div>
+            )}
           </div>
 
         </div>

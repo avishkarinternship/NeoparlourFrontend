@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
-import { Search, MapPin, ChevronDown, Calendar, UserPlus, LogIn, Sparkles, MousePointerClick, User } from 'lucide-react';
+import { Search, MapPin, ChevronDown, Calendar, UserPlus, LogIn, Sparkles, MousePointerClick, User, ShoppingCart } from 'lucide-react';
+import { fetchCart } from '../../../redux/slices/cartSlice';
 import Drawer from '../Drawer'; // Adjust path based on your file structure
 import ProfilePopup from '../ProfilePopup';
 import PasswordResetModal from '../PasswordResetModal';
@@ -40,6 +41,15 @@ const SearchNavBar = () => {
           }
       }
   }, [isAuthenticated, user, profile, dispatch]);
+
+  const { cart } = useSelector((state) => state.cart);
+  const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+  useEffect(() => {
+      if (isAuthenticated) {
+          dispatch(fetchCart());
+      }
+  }, [isAuthenticated, dispatch]);
 
   return (
     <header className="w-full border-b border-[#E8E8E8] px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between bg-white sticky top-0 z-50 shadow-sm font-sans">
@@ -151,6 +161,22 @@ const SearchNavBar = () => {
               <span className="hidden sm:inline">Login</span>
             </button>
           </>
+        )}
+
+        {/* Cart Icon button */}
+        {isAuthenticated && (
+            <button
+                onClick={() => navigate('/customer/cart')}
+                className="p-1.5 sm:p-2 text-gray-500 hover:text-[#FF0B01] hover:bg-gray-100 rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0"
+                title="Shopping Cart"
+            >
+                <ShoppingCart className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
+                {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#FF0B01] text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border border-white">
+                        {cartCount}
+                    </span>
+                )}
+            </button>
         )}
 
         {/* Hamburger Menu Icon - Visible across all screens */}

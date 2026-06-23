@@ -14,7 +14,8 @@ export default function CustomerLayout() {
     '/customer/book-service',
     '/customer/appointment-success',
     '/customer/order-success',
-    '/customer/my-orders'
+    '/customer/my-orders',
+    '/customer/cart'
   ];
 
   const isSearchRoute = searchRoutes.some(route =>

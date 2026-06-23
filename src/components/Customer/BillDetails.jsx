@@ -13,12 +13,15 @@ const BillDetails = ({
   customerPhone = '',
   selectedOffer = null,
   discountAmount = 0,
-  loading = false
+  loading = false,
+  homeService = false,
+  homeCharge = 0,
+  address = ''
 }) => {
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-  const grandTotal = Math.max(0, serviceTotal - discountAmount);
+  const grandTotal = Math.max(0, serviceTotal - discountAmount + (homeService ? homeCharge : 0));
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 font-sans antialiased">
@@ -173,6 +176,13 @@ const BillDetails = ({
               </div>
             )}
 
+            {homeService && homeCharge > 0 && (
+              <div className="flex justify-between text-xs text-slate-500 font-semibold">
+                <span>Home Service Charge</span>
+                <span className="text-slate-800 font-bold">₹{homeCharge}</span>
+              </div>
+            )}
+
             <div className="border-t border-dashed border-slate-200 pt-2.5 flex justify-between items-center">
               <span className="text-sm font-black text-slate-900">Grand Total</span>
               <span className="text-lg font-black text-[#FF0B01]">₹{grandTotal}</span>
@@ -180,9 +190,18 @@ const BillDetails = ({
           </div>
 
           {/* Personal Details */}
-          <div className="space-y-1">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personal Details</h3>
-            <p className="text-xs font-semibold text-slate-700">{customerName} · {customerPhone}</p>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personal Details</h3>
+              <p className="text-xs font-semibold text-slate-700">{customerName} · {customerPhone}</p>
+            </div>
+
+            {homeService && (
+              <div className="space-y-1 bg-red-50/50 border border-red-100/50 rounded-2xl p-3">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[#FF0B01]">Home Service Address</h3>
+                <p className="text-xs font-semibold text-slate-700 leading-normal">{address || 'No address specified'}</p>
+              </div>
+            )}
           </div>
 
         </div>

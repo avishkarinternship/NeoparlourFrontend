@@ -9,7 +9,8 @@ import logoIcon from '../../../assets/CustomerRegister/logo_icon.svg';
 import signupIcon from '../../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../../assets/Customer/Navbar/login_icon.svg';
 import offersIcon from '../../../assets/Customer/Navbar/offers_icon.svg';
-import { Sparkles, MousePointerClick, User } from 'lucide-react';
+import { Sparkles, MousePointerClick, User, ShoppingCart } from 'lucide-react';
+import { fetchCart } from '../../../redux/slices/cartSlice';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -46,6 +47,15 @@ const Navbar = () => {
             }
         }
     }, [isAuthenticated, user, profile, dispatch]);
+
+    const { cart } = useSelector((state) => state.cart);
+    const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchCart());
+        }
+    }, [isAuthenticated, dispatch]);
 
     const navLinkClass = (paths) => {
         const isActive = paths.some(p => currentPath === p);
@@ -140,6 +150,22 @@ const Navbar = () => {
                                 <span className="hidden sm:inline">LOGIN</span>
                             </button>
                         </>
+                    )}
+
+                    {/* Cart Icon button */}
+                    {isAuthenticated && (
+                        <button
+                            onClick={() => navigate('/customer/cart')}
+                            className="p-1.5 sm:p-2 text-gray-500 hover:text-[#FF0B01] hover:bg-gray-100 rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0"
+                            title="Shopping Cart"
+                        >
+                            <ShoppingCart className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-[#FF0B01] text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border border-white">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
                     )}
 
                     {/* Hamburger Menu Icon - Opens the slider directly on screen */}
