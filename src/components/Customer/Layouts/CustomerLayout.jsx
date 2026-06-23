@@ -17,7 +17,9 @@ export default function CustomerLayout() {
     '/customer/my-orders'
   ];
 
-  const isSearchRoute = searchRoutes.some(route => location.pathname.startsWith(route));
+  const isSearchRoute = searchRoutes.some(route =>
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
 
   return (
     <div className="w-full min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden antialiased flex flex-col justify-between">

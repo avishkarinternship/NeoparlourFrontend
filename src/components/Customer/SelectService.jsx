@@ -20,7 +20,8 @@ import {
     Compass,
     Info,
     CheckCircle2,
-    Map
+    Map,
+    Heart
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -153,6 +154,7 @@ const SelectService = () => {
     const [categories, setCategories] = useState([]);
     const [staffList, setStaffList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFavourite, setIsFavourite] = useState(false);
 
     // Track loaded statuses to prevent multiple calls
     const [servicesLoaded, setServicesLoaded] = useState(false);
@@ -298,9 +300,57 @@ const SelectService = () => {
             }
         };
 
+        const checkFavStatus = async () => {
+            if (isAuthenticated && activeSalonId) {
+                try {
+                    const res = await axiosInstance.get(`/customer/favourites/${activeSalonId}/check`);
+                    setIsFavourite(res.data);
+                } catch (err) {
+                    console.error("Failed to check favourite status:", err);
+                }
+            } else {
+                setIsFavourite(false);
+            }
+        };
+
         fetchSalonDetails();
         fetchAllServices();
-    }, [activeSalonId, navigate]);
+        checkFavStatus();
+    }, [activeSalonId, navigate, isAuthenticated]);
+
+    const handleToggleFavourite = async () => {
+        if (!isAuthenticated) {
+            toast.error("Please login to add to favourites", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+            navigate('/customer/login');
+            return;
+        }
+
+        const salonName = salon?.name || salon?.salonName || 'this salon';
+        const newFavStatus = !isFavourite;
+        setIsFavourite(newFavStatus); // Optimistic UI update
+
+        try {
+            if (newFavStatus) {
+                await axiosInstance.post(`/customer/favourites/${activeSalonId}`);
+                toast.success(`Added ${salonName} to favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            } else {
+                await axiosInstance.delete(`/customer/favourites/${activeSalonId}`);
+                toast.success(`Removed ${salonName} from favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            }
+        } catch (err) {
+            console.error("Failed to toggle favourite status:", err);
+            setIsFavourite(!newFavStatus); // Revert
+            toast.error(err.response?.data?.message || "Failed to update favourite status", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+        }
+    };
 
     // --- Compute durationMinutes from selected services ---
     const durationMinutes = useMemo(() => {
@@ -741,32 +791,53 @@ const SelectService = () => {
             <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
 
                 {/* Header Block */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                    <div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div className="min-w-0 flex-1 space-y-2.5">
                         <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight uppercase">
                             {salon?.name || salon?.salonName || 'Salon Details'}
                         </h1>
-                        <p className="text-xs text-slate-400 font-bold mt-1.5 flex items-center gap-1.5 uppercase">
+                        <p className="text-xs text-slate-400 font-bold flex items-center gap-1.5 uppercase">
                             <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                            {[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}
+                            <span>{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
                         </p>
-                    </div>
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                        <div className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm ${
-                            isSalonOpenNow() 
-                                ? 'bg-green-50 border border-green-200 text-green-700' 
-                                : 'bg-red-50 border border-red-200 text-red-600'
-                        }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
-                            {isSalonOpenNow() ? 'Open Now' : 'Closed'} | {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} To {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${
+                                isSalonOpenNow() 
+                                    ? 'bg-green-50 border border-green-200 text-green-700' 
+                                    : 'bg-red-50 border border-red-200 text-red-600'
+                            }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
+                                <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open Now' : 'Closed'}</span>
+                                <span className="text-slate-300">|</span>
+                                <span className="whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
+                            </div>
+                            {salon?.salonCode && (
+                                <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
+                                    Code: {salon.salonCode}
+                                </span>
+                            )}
                         </div>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
                         <button 
                             type="button" 
                             onClick={handleShare}
-                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-600 transition shadow-sm"
+                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-600 transition shadow-sm cursor-pointer"
                             title="Share Salon"
                         >
                             <Share2 className="w-4.5 h-4.5" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleToggleFavourite}
+                            className={`p-2.5 border rounded-2xl transition shadow-sm cursor-pointer ${
+                                isFavourite 
+                                    ? 'bg-red-50 border-red-200 text-[#ff0b01]' 
+                                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                            title={isFavourite ? "Remove from Favourites" : "Mark as Favourite"}
+                        >
+                            <Heart className={`w-4.5 h-4.5 ${isFavourite ? 'fill-[#ff0b01] text-[#ff0b01]' : 'text-slate-600'}`} />
                         </button>
                     </div>
                 </div>

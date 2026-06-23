@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
     Scissors,
     MapPin,
@@ -16,7 +17,8 @@ import {
     ChevronRight,
     Phone,
     Mail,
-    Calendar
+    Calendar,
+    Heart
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -123,11 +125,43 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
     return <img src={src} alt={alt} className={className} />;
 };
 
+const formatDiscountText = (text) => {
+    const textStr = String(text);
+    if (textStr.startsWith('₹')) {
+        return (
+            <span className="flex items-baseline font-black text-[#ff0b01]">
+                <span className="text-xs sm:text-sm mr-0.5">₹</span>
+                <span className="text-xl sm:text-2xl md:text-3xl">{textStr.slice(1)}</span>
+            </span>
+        );
+    }
+    if (textStr.endsWith('%')) {
+        return (
+            <span className="flex items-baseline font-black text-[#ff0b01]">
+                <span className="text-xl sm:text-2xl md:text-3xl">{textStr.slice(0, -1)}</span>
+                <span className="text-xs sm:text-sm ml-0.5">%</span>
+            </span>
+        );
+    }
+    const num = parseFloat(textStr);
+    if (!isNaN(num)) {
+        return (
+            <span className="flex items-baseline font-black text-[#ff0b01]">
+                <span className="text-xl sm:text-2xl md:text-3xl">{textStr}</span>
+                <span className="text-xs sm:text-sm ml-0.5">%</span>
+            </span>
+        );
+    }
+    return <span className="text-xl sm:text-2xl md:text-3xl font-black text-[#ff0b01]">{textStr}</span>;
+};
+
 const SalonPage = () => {
     const navigate = useNavigate();
     const activeSalonId = localStorage.getItem('activeSalonId');
+    const { isAuthenticated } = useSelector((state) => state.customer);
 
     // --- STATE ---
+    const [isFavourite, setIsFavourite] = useState(false);
     const [salon, setSalon] = useState(null);
     const [services, setServices] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -239,9 +273,57 @@ const SalonPage = () => {
             }
         };
 
+        const checkFavStatus = async () => {
+            if (isAuthenticated && activeSalonId) {
+                try {
+                    const res = await axiosInstance.get(`/customer/favourites/${activeSalonId}/check`);
+                    setIsFavourite(res.data);
+                } catch (err) {
+                    console.error("Failed to check favourite status:", err);
+                }
+            } else {
+                setIsFavourite(false);
+            }
+        };
+
         fetchSalonDetails();
         fetchActiveOffers();
-    }, [activeSalonId, navigate]);
+        checkFavStatus();
+    }, [activeSalonId, navigate, isAuthenticated]);
+
+    const handleToggleFavourite = async () => {
+        if (!isAuthenticated) {
+            toast.error("Please login to add to favourites", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+            navigate('/customer/login');
+            return;
+        }
+
+        const salonName = salon?.name || salon?.salonName || 'this salon';
+        const newFavStatus = !isFavourite;
+        setIsFavourite(newFavStatus); // Optimistic UI update
+
+        try {
+            if (newFavStatus) {
+                await axiosInstance.post(`/customer/favourites/${activeSalonId}`);
+                toast.success(`Added ${salonName} to favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            } else {
+                await axiosInstance.delete(`/customer/favourites/${activeSalonId}`);
+                toast.success(`Removed ${salonName} from favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            }
+        } catch (err) {
+            console.error("Failed to toggle favourite status:", err);
+            setIsFavourite(!newFavStatus); // Revert
+            toast.error(err.response?.data?.message || "Failed to update favourite status", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+        }
+    };
 
     // --- FETCH SALON SLOTS on mount / date change ---
     useEffect(() => {
@@ -510,33 +592,60 @@ const SalonPage = () => {
             <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
 
                 {/* Salon Headline Block */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
-                    <div className="min-w-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                    <div className="min-w-0 flex-1 space-y-2.5">
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 tracking-tight uppercase truncate">
                             {salon?.name || salon?.salonName || 'Salon Details'}
                         </h1>
-                        <p className="text-[10px] sm:text-xs text-slate-400 font-bold mt-1 sm:mt-1.5 flex items-center gap-1.5 uppercase">
+                        <p className="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1.5 uppercase">
                             <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
                             <span className="truncate">{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
                         </p>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                        <div className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all shadow-sm ${isSalonOpenNow()
-                            ? 'bg-green-50 border border-green-200 text-green-700'
-                            : 'bg-red-50 border border-red-200 text-red-600'
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${
+                                isSalonOpenNow()
+                                    ? 'bg-green-50 border border-green-200 text-green-700'
+                                    : 'bg-red-50 border border-red-200 text-red-600'
                             }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
-                            <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open' : 'Closed'}</span>
-                            <span className="hidden xs:inline">|</span>
-                            <span className="hidden xs:inline whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
+                                <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open' : 'Closed'}</span>
+                                <span className="text-slate-300">|</span>
+                                <span className="whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
+                            </div>
+                            {salon?.salonCode && (
+                                <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
+                                    Code: {salon.salonCode}
+                                </span>
+                            )}
                         </div>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/customer/book-service')}
+                            className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
+                        >
+                            Book Services
+                        </button>
                         <button
                             type="button"
                             onClick={handleShare}
-                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-605 transition shadow-sm"
+                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-605 transition shadow-sm cursor-pointer"
                             title="Share Salon"
                         >
                             <Share2 className="w-4.5 h-4.5" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleToggleFavourite}
+                            className={`p-2.5 border rounded-2xl transition shadow-sm cursor-pointer ${
+                                isFavourite 
+                                    ? 'bg-red-50 border-red-200 text-[#ff0b01]' 
+                                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                            title={isFavourite ? "Remove from Favourites" : "Mark as Favourite"}
+                        >
+                            <Heart className={`w-4.5 h-4.5 ${isFavourite ? 'fill-[#ff0b01] text-[#ff0b01]' : 'text-slate-600'}`} />
                         </button>
                     </div>
                 </div>
@@ -544,8 +653,8 @@ const SalonPage = () => {
                 {/* Master Two-Column Grid Setup */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
 
-                    {/* LEFT CONTAINER CANVAS (3/4 Width) */}
-                    <div className="lg:col-span-3 space-y-8">
+                    {/* LEFT CONTAINER CANVAS (Full Width since sidebar has no active cards) */}
+                    <div className="lg:col-span-4 space-y-8">
 
                         {/* Salon Images Grid Layout */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
@@ -604,55 +713,127 @@ const SalonPage = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div>                        {/* Photos Gallery Section (placed directly below header images) */}
+                        {galleryImages.filter(Boolean).length > 0 && (
+                            <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                        <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Photos Gallery
+                                    </h3>
+                                    <span className="bg-red-50 text-[#ff0b01] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        {galleryImages.filter(Boolean).length} photos
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5">
+                                    {galleryImages.map((imgUrl, idx) => {
+                                        if (!imgUrl) return null;
+                                        const isMain = idx === 0;
+                                        return (
+                                            <div
+                                                key={idx}
+                                                onClick={() => !isMain && swapGalleryImage(idx)}
+                                                className={`h-16 sm:h-20 rounded-xl overflow-hidden shadow-xs border transition-all duration-300 relative group ${
+                                                    isMain
+                                                        ? 'border-[#ff0b01] ring-2 ring-red-500/10 scale-[0.98]'
+                                                        : 'border-slate-100 hover:border-red-300 hover:scale-105 cursor-pointer'
+                                                }`}
+                                                title={isMain ? "Currently active main image" : "Click to view as main image"}
+                                            >
+                                                <img
+                                                    src={getSalonImageSrc(imgUrl)}
+                                                    alt={`Gallery ${idx}`}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                />
+                                                {isMain ? (
+                                                    <div className="absolute inset-0 bg-[#ff0b01]/5 flex items-center justify-center">
+                                                        <span className="bg-[#ff0b01] text-white text-[8px] font-black uppercase px-1 rounded-sm">Main</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 pointer-events-none">
+                                                        <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
 
-                        {/* Offers Available For You */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
-                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Offers Available For You
+                        {/* Offers Available For You (Redesigned with attractive, premium styling) */}
+                        <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-visible relative">
+                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Exclusive Offers for You
                             </h3>
                             {offersLoading ? (
                                 <div className="flex flex-col items-center justify-center py-6">
-                                    <div className="animate-spin h-6 w-6 border-2 border-[#FF0B01] border-t-transparent rounded-full mb-2"></div>
+                                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full mb-2"></div>
                                     <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Syncing Exclusive Deals...</p>
                                 </div>
                             ) : offers.length > 0 ? (
-                                <div className="space-y-4">
-                                    {offers.map((offer) => (
-                                        <div
-                                            key={offer.id}
-                                            className="border border-red-100 bg-red-50/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:scale-[1.005] transition-all duration-300"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
-                                                    <span className="text-xl font-bold text-[#FF0B01]">%</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {offers.map((offer) => {
+                                        const isPercentage = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
+                                        const value = offer.discountValue ?? offer.percentage ?? 0;
+                                        const discountText = isPercentage ? `${value}%` : `₹${value}`;
+                                        const offText = "OFF";
+                                        
+                                        return (
+                                            <div
+                                                key={offer.id}
+                                                className="flex flex-row relative bg-white border border-red-100 hover:border-red-300 hover:shadow-[0_15px_30px_-10px_rgba(255,11,1,0.14)] hover:-translate-y-0.5 rounded-2xl transition-all duration-300 group"
+                                            >
+                                                {/* Left Side (Voucher Value Card) */}
+                                                <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 bg-gradient-to-br from-red-50/70 via-red-50/30 to-white flex flex-col items-center justify-center p-3 rounded-l-2xl relative border-r border-dashed border-red-100/60 overflow-hidden">
+                                                    {formatDiscountText(discountText)}
+                                                    <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">{offText}</span>
+                                                    <span className="text-red-500/5 select-none font-black text-5xl absolute -left-1 -bottom-2 pointer-events-none group-hover:scale-110 transition-transform duration-500">%</span>
                                                 </div>
-                                                <div>
-                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{offer.name}</h4>
-                                                    <p className="text-xs text-slate-500 mt-0.5 font-semibold">
-                                                        {offer.percentage}% OFF on: {offer.services?.map(s => s.name).join(', ') || 'Select Services'}
-                                                    </p>
-                                                    {offer.validTo && (
-                                                        <p className="text-[10px] text-slate-450 mt-1 font-extrabold uppercase tracking-wider">
-                                                            Valid till: {new Date(offer.validTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+
+                                                {/* Tear Notch Cutouts */}
+                                                <div className="absolute -top-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.02)]"></div>
+                                                <div className="absolute -bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"></div>
+                                                
+                                                {/* Dashed Separator Line */}
+                                                <div className="absolute top-2.5 bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] border-l border-dashed border-red-150 -translate-x-[0.5px] pointer-events-none z-10"></div>
+
+                                                {/* Right Side (Voucher Details) */}
+                                                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0 bg-white rounded-r-2xl">
+                                                    <div>
+                                                        <h4 className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-tight truncate group-hover:text-[#ff0b01] transition-colors">{offer.name}</h4>
+                                                        <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 font-semibold leading-relaxed line-clamp-2">
+                                                            {offer.description || `Get ${discountText} off on ${offer.services?.map(s => s.name).join(', ') || 'selected services'}.`}
                                                         </p>
-                                                    )}
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50 mt-4">
+                                                        <div className="min-w-0">
+                                                            {offer.validTo ? (
+                                                                <>
+                                                                    <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Expires on</span>
+                                                                    <span className="text-[10px] text-slate-650 font-bold block mt-1 truncate">
+                                                                        {new Date(offer.validTo).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wider block">Limited Time</span>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
+                                                            className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
+                                                        >
+                                                            Claim Deal
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-1 w-full sm:w-auto shrink-0">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                                    className="w-full sm:w-auto bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-3 rounded-full transition duration-300 shadow-sm shadow-red-500/10 whitespace-nowrap"
-                                                >
-                                                    Book with Offer
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
-                                <div className="border border-slate-100 border-dashed rounded-xl sm:rounded-2xl p-6 text-center shadow-xs">
+                                <div className="border border-slate-100 border-dashed rounded-2xl p-6 text-center shadow-xs">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">No active offers available today.</p>
                                 </div>
                             )}
@@ -695,48 +876,7 @@ const SalonPage = () => {
                             )}
                         </section>
 
-                        {/* Photos Gallery Section */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
-                            <div className="flex justify-between items-center mb-5">
-                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                    <Compass className="w-4.5 h-4.5 text-[#FF0B01]" /> Photos
-                                </h3>
-                                <span
-                                    onClick={() => navigate('/customer/book-service')}
-                                    className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
-                                >
-                                    See More
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                                {[0, 1, 2].map((idx) => {
-                                    const imgUrl = galleryImages[idx];
-                                    return (
-                                        <div
-                                            key={idx}
-                                            onClick={() => imgUrl && idx !== 0 && swapGalleryImage(idx)}
-                                            className={`h-24 sm:h-28 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border bg-slate-50 transition-all ${imgUrl
-                                                ? 'cursor-pointer border-slate-100 hover:border-red-200 hover:scale-105'
-                                                : 'border-slate-100'
-                                                }`}
-                                            title={imgUrl && idx !== 0 ? "Click to swap with main image" : ""}
-                                        >
-                                            {imgUrl ? (
-                                                <img
-                                                    src={getSalonImageSrc(imgUrl)}
-                                                    alt={`Gallery ${idx}`}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                    <Compass className="w-6 h-6 animate-pulse" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
+
 
                         {/* Opening Times */}
                         <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
@@ -1128,86 +1268,7 @@ const SalonPage = () => {
 
                     </div>
 
-                    {/* RIGHT CONTAINER SIDEBAR (1/3 Width - Sticky) */}
-                    <div className="space-y-6 lg:sticky lg:top-6">
 
-                        {/* Sticky Salon Summary details Card */}
-                        <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm">
-                            <h3 className="text-base font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">
-                                {salon?.name || 'Salon Details'}
-                            </h3>
-
-                            <div className="space-y-3.5 text-xs text-slate-655 font-semibold mb-6">
-                                <div className="flex items-center gap-1.5">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${isSalonOpenNow() ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                                    <span className={`text-[10px] font-black uppercase tracking-tight ${isSalonOpenNow() ? 'text-green-600' : 'text-red-550'}`}>
-                                        {isSalonOpenNow() ? 'Open Now' : 'Closed'}
-                                    </span>
-                                    <span className="text-slate-400">|</span>
-                                    <span className="text-slate-500 uppercase">
-                                        {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-start gap-2 pt-3 border-t border-slate-50">
-                                    <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                                    <div>
-                                        <span className="text-slate-400 block font-bold uppercase tracking-wider text-[9px]">Address</span>
-                                        <span className="text-slate-900 block mt-1 leading-relaxed">{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                <button
-                                    type="button"
-                                    onClick={() => navigate('/customer/book-service')}
-                                    className="w-full bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95"
-                                >
-                                    Book Services
-                                </button>
-                            </div>
-                        </div>
-
-
-
-                        {/* Promo Download App callout
-                        <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm text-center">
-                            <Smartphone className="w-8 h-8 text-[#FF0B01] mx-auto mb-3" />
-                            <h4 className="text-sm font-black text-slate-900 tracking-tight uppercase">
-                                Get Into Neoparlour App Today!
-                            </h4>
-                            <p className="text-xs text-slate-500 font-medium mt-2 leading-relaxed">
-                                Get access to exclusive offers, track bookings, and book in 1-tap.
-                            </p>
-
-                            <div className="flex flex-col gap-2.5 mt-5">
-                                <a
-                                    href="#"
-                                    className="flex items-center bg-black text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
-                                >
-                                    <img src={appleIcon} alt="App Store" className="w-5 h-5 mr-2" />
-                                    <div className="text-left leading-none">
-                                        <span className="text-[8px] uppercase tracking-wider block text-gray-400">Download on</span>
-                                        <span className="text-xs font-bold font-sans block mt-0.5">App Store</span>
-                                    </div>
-                                </a>
-
-                                <a
-                                    href="#"
-                                    className="flex items-center bg-[#FF0B01] text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
-                                >
-                                    <img src={playstoreIcon} alt="Google Play" className="w-5 h-5 mr-2" />
-                                    <div className="text-left leading-none">
-                                        <span className="text-[8px] uppercase tracking-wider block text-red-200">Get it on</span>
-                                        <span className="text-xs font-bold font-sans block mt-0.5">Google Play</span>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                        */ }
-
-                    </div>
                 </div>
             </main>
         </div>

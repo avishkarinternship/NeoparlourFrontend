@@ -36,6 +36,47 @@ const toastStyle = {
     }
 };
 
+const PREDEFINED_CATEGORIES = {
+    "Hair Services": [
+        "Hair Cut", "Hair Styling", "Hair Wash", "Blow Dry", "Hair Coloring", 
+        "Highlights / Streaks", "Hair Spa", "Hair Treatment", "Keratin Treatment", 
+        "Hair Smoothening", "Hair Straightening", "Perming / Curling", "Hair Extensions"
+    ],
+    "Skin Care": [
+        "Facial", "Cleanup", "Skin Polishing", "Bleaching", "De-Tan Treatment", 
+        "Face Treatment", "Anti-Aging Treatment", "Acne Treatment", 
+        "Skin Brightening Treatment", "Chemical Peel"
+    ],
+    "Hair Removal": [
+        "Waxing", "Threading", "Eyebrow Shaping", "Upper Lip", "Forehead", 
+        "Full Face Waxing", "Full Body Waxing"
+    ],
+    "Nail Care": [
+        "Manicure", "Pedicure", "Nail Cutting", "Nail Shaping", "Nail Art", 
+        "Nail Extensions", "Gel Polish"
+    ],
+    "Makeup": [
+        "Party Makeup", "Bridal Makeup", "Engagement Makeup", "Reception Makeup", 
+        "HD Makeup", "Basic Makeup"
+    ],
+    "Grooming": [
+        "Beard Trim", "Beard Styling", "Shaving", "Moustache Styling", 
+        "Eyebrow Styling", "Eyelash Services"
+    ],
+    "Spa & Massage": [
+        "Head Massage", "Body Massage", "Relaxation Massage", "Aroma Therapy", 
+        "Body Scrub", "Body Wrap"
+    ],
+    "Bridal Packages": [
+        "Bridal Hair", "Bridal Makeup", "Bridal Facial", "Bridal Manicure/Pedicure", 
+        "Pre-Bridal Package"
+    ],
+    "Hair Treatment": [
+        "Hair Fall Treatment", "Dandruff Treatment", "Scalp Treatment", 
+        "Damage Repair", "Protein Treatment"
+    ]
+};
+
 const Service = () => {
     const location = useLocation();
 
@@ -55,8 +96,10 @@ const Service = () => {
     }, []);
 
     // ==================== SERVICE STATES ====================
-    const [serviceName, setServiceName] = useState('');
-    const [category, setCategory] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [customCategory, setCustomCategory] = useState('');
+    const [selectedServiceName, setSelectedServiceName] = useState('');
+    const [customServiceName, setCustomServiceName] = useState('');
     const [price, setPrice] = useState('');
     const [duration, setDuration] = useState('');
     const [services, setServices] = useState([]);
@@ -125,16 +168,19 @@ const Service = () => {
     const validateServiceForm = () => {
         const errors = {};
 
-        if (!serviceName?.trim()) {
-            errors.serviceName = "Service name is required";
-        } else if (serviceName.trim().length < 3) {
-            errors.serviceName = "Service name must be at least 3 characters";
-        } else if (serviceName.trim().length > 100) {
-            errors.serviceName = "Service name cannot exceed 100 characters";
+        const finalCategory = selectedCategory === 'Other' ? customCategory.trim() : selectedCategory;
+        const finalServiceName = (selectedCategory === 'Other' || selectedServiceName === 'Other') ? customServiceName.trim() : selectedServiceName;
+
+        if (!finalCategory) {
+            errors.category = "Please select or type a category";
         }
 
-        if (!category) {
-            errors.category = "Please select a category";
+        if (!finalServiceName) {
+            errors.serviceName = "Please select or type a service name";
+        } else if (finalServiceName.length < 3) {
+            errors.serviceName = "Service name must be at least 3 characters";
+        } else if (finalServiceName.length > 100) {
+            errors.serviceName = "Service name cannot exceed 100 characters";
         }
 
         const priceNum = parseFloat(price);
@@ -154,8 +200,10 @@ const Service = () => {
     };
 
     const resetServiceForm = () => {
-        setServiceName('');
-        setCategory('');
+        setSelectedCategory('');
+        setCustomCategory('');
+        setSelectedServiceName('');
+        setCustomServiceName('');
         setPrice('');
         setDuration('');
         setFormErrors({});
@@ -163,8 +211,29 @@ const Service = () => {
     };
 
     const handleEditService = (service) => {
-        setServiceName(service.name || '');
-        setCategory(service.category || '');
+        const cat = service.category || '';
+        const name = service.name || '';
+
+        // Determine Category mapping
+        if (PREDEFINED_CATEGORIES[cat]) {
+            setSelectedCategory(cat);
+            setCustomCategory('');
+
+            // Determine Service Name mapping
+            if (PREDEFINED_CATEGORIES[cat].includes(name)) {
+                setSelectedServiceName(name);
+                setCustomServiceName('');
+            } else {
+                setSelectedServiceName('Other');
+                setCustomServiceName(name);
+            }
+        } else {
+            setSelectedCategory('Other');
+            setCustomCategory(cat);
+            setSelectedServiceName('Other');
+            setCustomServiceName(name);
+        }
+
         setPrice(service.price?.toString() || '');
         setDuration(service.duration?.toString() || '');
         setEditingServiceId(service.id);
@@ -194,10 +263,13 @@ const Service = () => {
 
         setSubmitting(true);
 
+        const finalCategory = selectedCategory === 'Other' ? customCategory.trim() : selectedCategory;
+        const finalServiceName = (selectedCategory === 'Other' || selectedServiceName === 'Other') ? customServiceName.trim() : selectedServiceName;
+
         try {
             const payload = {
-                name: serviceName.trim(),
-                category: category,
+                name: finalServiceName,
+                category: finalCategory,
                 duration: parseInt(duration, 10),
                 price: parseFloat(price),
                 active: true
@@ -272,45 +344,104 @@ const Service = () => {
                                 <div className="max-w-3xl border border-gray-100 rounded-3xl p-8 bg-white shadow-md hover:shadow-lg transition-all duration-300 mb-8">
                                     <form onSubmit={handleServiceSave} className="space-y-5">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="relative">
-                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
-                                                    <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Service Name"
-                                                        value={serviceName}
-                                                        onChange={(e) => {
-                                                            setServiceName(e.target.value);
-                                                            if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
-                                                        }}
-                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
-                                                    />
-                                                </div>
-                                                {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
-                                            </div>
-
+                                            {/* Category Option (GIVEN FIRST) */}
                                             <div className="relative">
                                                 <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
                                                     <img src={categoryIcon} alt="Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <select
-                                                        value={category}
+                                                        value={selectedCategory}
                                                         onChange={(e) => {
-                                                            setCategory(e.target.value);
+                                                            const val = e.target.value;
+                                                            setSelectedCategory(val);
+                                                            setSelectedServiceName('');
+                                                            setCustomCategory('');
+                                                            setCustomServiceName('');
                                                             if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
+                                                            if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                         }}
                                                         className="w-full text-sm font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
                                                     >
                                                         <option value="" disabled hidden>Category</option>
-                                                        <option value="Hair Cut">Hair Cut</option>
-                                                        <option value="Skin Care">Skin Care</option>
-                                                        <option value="Shaving">Shaving</option>
-                                                        <option value="Hair Styling">Hair Styling</option>
+                                                        {Object.keys(PREDEFINED_CATEGORIES).map((catName) => (
+                                                            <option key={catName} value={catName}>{catName}</option>
+                                                        ))}
+                                                        <option value="Other">Other (Type Custom Category)</option>
                                                     </select>
                                                     <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                                 </div>
                                                 {formErrors.category && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.category}</p>}
                                             </div>
-
+ 
+                                            {/* Custom Category Input (Only if selectedCategory === 'Other') */}
+                                            {selectedCategory === 'Other' && (
+                                                <div className="relative">
+                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                        <img src={categoryIcon} alt="Custom Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Custom Category Name"
+                                                            value={customCategory}
+                                                            onChange={(e) => {
+                                                                setCustomCategory(e.target.value);
+                                                                if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
+                                                            }}
+                                                            className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        />
+                                                    </div>
+                                                    {formErrors.category && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.category}</p>}
+                                                </div>
+                                            )}
+ 
+                                            {/* Predefined Service Select (Only if selectedCategory is predefined and not 'Other') */}
+                                            {selectedCategory && selectedCategory !== 'Other' && (
+                                                <div className="relative">
+                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                        <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
+                                                        <select
+                                                            value={selectedServiceName}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setSelectedServiceName(val);
+                                                                if (val !== 'Other') {
+                                                                    setCustomServiceName('');
+                                                                }
+                                                                if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
+                                                            }}
+                                                            className="w-full text-sm font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
+                                                        >
+                                                            <option value="" disabled hidden>Service Name</option>
+                                                            {(PREDEFINED_CATEGORIES[selectedCategory] || []).map((srvName) => (
+                                                                <option key={srvName} value={srvName}>{srvName}</option>
+                                                            ))}
+                                                            <option value="Other">Other (Type Custom Service)</option>
+                                                        </select>
+                                                        <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
+                                                    </div>
+                                                    {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
+                                                </div>
+                                            )}
+ 
+                                            {/* Custom Service Name Input (If selectedCategory === 'Other' OR selectedServiceName === 'Other') */}
+                                            {(selectedCategory === 'Other' || selectedServiceName === 'Other') && (
+                                                <div className="relative">
+                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                        <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Custom Service Name"
+                                                            value={customServiceName}
+                                                            onChange={(e) => {
+                                                                setCustomServiceName(e.target.value);
+                                                                if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
+                                                            }}
+                                                            className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        />
+                                                    </div>
+                                                    {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
+                                                </div>
+                                            )}
+ 
+                                            {/* Price Input */}
                                             <div className="relative">
                                                 <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
                                                     <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -337,7 +468,8 @@ const Service = () => {
                                                 </div>
                                                 {formErrors.price && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.price}</p>}
                                             </div>
-
+ 
+                                            {/* Duration Input */}
                                             <div className="relative">
                                                 <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
                                                     <img src={durationIcon} alt="Duration" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -403,10 +535,12 @@ const Service = () => {
                                                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
                                                  >
                                                      <option value="">All Categories</option>
-                                                     <option value="Hair Cut">Hair Cut</option>
-                                                     <option value="Skin Care">Skin Care</option>
-                                                     <option value="Shaving">Shaving</option>
-                                                     <option value="Hair Styling">Hair Styling</option>
+                                                     {Array.from(new Set([
+                                                         ...Object.keys(PREDEFINED_CATEGORIES),
+                                                         ...services.map(s => s.category).filter(Boolean)
+                                                     ])).map(catName => (
+                                                         <option key={catName} value={catName}>{catName}</option>
+                                                     ))}
                                                  </select>
                                              </div>
                                          </div>
@@ -451,40 +585,80 @@ const Service = () => {
                                          <div className={`grid gap-4 max-w-3xl ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                                              {filteredServices.length > 0 ? (
                                                  filteredServices.map((service) => {
-                                                // Local theme helper for category styles
                                                 const getCategoryTheme = (cat) => {
-                                                    switch (cat) {
-                                                        case 'Hair Cut':
-                                                            return {
-                                                                accent: 'bg-[#FF0B01]',
-                                                                bg: 'bg-red-50/70',
-                                                                text: 'text-[#FF0B01]',
-                                                                border: 'border-red-100/50',
-                                                            };
-                                                        case 'Skin Care':
-                                                            return {
-                                                                accent: 'bg-amber-400',
-                                                                bg: 'bg-amber-50/70',
-                                                                text: 'text-amber-700',
-                                                                border: 'border-amber-100/50',
-                                                            };
-                                                        case 'Shaving':
-                                                            return {
-                                                                accent: 'bg-blue-400',
-                                                                bg: 'bg-blue-50/70',
-                                                                text: 'text-blue-700',
-                                                                border: 'border-blue-100/50',
-                                                            };
-                                                        default:
-                                                            return {
-                                                                accent: 'bg-green-400',
-                                                                bg: 'bg-green-50/70',
-                                                                text: 'text-green-700',
-                                                                border: 'border-green-100/50',
-                                                            };
-                                                    }
-                                                };
-                                                const theme = getCategoryTheme(service.category);
+                                                     const norm = (cat || '').toLowerCase().trim();
+                                                     if (norm.includes('hair services') || norm.includes('hair treatment') || norm === 'hair cut' || norm === 'hair styling') {
+                                                         return {
+                                                             accent: 'bg-[#FF0B01]',
+                                                             bg: 'bg-red-50/70',
+                                                             text: 'text-[#FF0B01]',
+                                                             border: 'border-red-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('skin care')) {
+                                                         return {
+                                                             accent: 'bg-amber-500',
+                                                             bg: 'bg-amber-50/70',
+                                                             text: 'text-amber-700',
+                                                             border: 'border-amber-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('hair removal')) {
+                                                         return {
+                                                             accent: 'bg-purple-500',
+                                                             bg: 'bg-purple-50/70',
+                                                             text: 'text-purple-700',
+                                                             border: 'border-purple-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('nail care')) {
+                                                         return {
+                                                             accent: 'bg-teal-500',
+                                                             bg: 'bg-teal-50/70',
+                                                             text: 'text-teal-700',
+                                                             border: 'border-teal-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('makeup')) {
+                                                         return {
+                                                             accent: 'bg-rose-500',
+                                                             bg: 'bg-rose-50/70',
+                                                             text: 'text-rose-700',
+                                                             border: 'border-rose-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('grooming') || norm.includes('shaving')) {
+                                                         return {
+                                                             accent: 'bg-blue-500',
+                                                             bg: 'bg-blue-50/70',
+                                                             text: 'text-blue-700',
+                                                             border: 'border-blue-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('spa') || norm.includes('massage')) {
+                                                         return {
+                                                             accent: 'bg-emerald-500',
+                                                             bg: 'bg-emerald-50/70',
+                                                             text: 'text-emerald-700',
+                                                             border: 'border-emerald-100/50',
+                                                         };
+                                                     }
+                                                     if (norm.includes('bridal')) {
+                                                         return {
+                                                             accent: 'bg-pink-500',
+                                                             bg: 'bg-pink-50/70',
+                                                             text: 'text-pink-700',
+                                                             border: 'border-pink-100/50',
+                                                         };
+                                                     }
+                                                     return {
+                                                         accent: 'bg-gray-400',
+                                                         bg: 'bg-gray-50/70',
+                                                         text: 'text-gray-700',
+                                                         border: 'border-gray-100/50',
+                                                     };
+                                                 };
+                                                 const theme = getCategoryTheme(service.category);
 
                                                 return (
                                                      <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:border-gray-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all duration-300 relative overflow-hidden group pl-7 gap-4">

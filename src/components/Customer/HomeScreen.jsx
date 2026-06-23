@@ -140,6 +140,7 @@ const HomeScreen = () => {
 
     const cityDropdownRef = useRef(null);
     const areaDropdownRef = useRef(null);
+    const searchDropdownRef = useRef(null);
 
     const navigate = useNavigate();
     const [showLoginPopup, setShowLoginPopup] = useState(false);
@@ -149,6 +150,12 @@ const HomeScreen = () => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
 
+    // Search Dropdown States
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [searchSalonsList, setSearchSalonsList] = useState([]);
+    const [searchDropdownLoading, setSearchDropdownLoading] = useState(false);
+    const [isLocationChanged, setIsLocationChanged] = useState(false);
+
     // Click outside dropdowns handler
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -157,6 +164,9 @@ const HomeScreen = () => {
             }
             if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
                 setShowAreaDropdown(false);
+            }
+            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target)) {
+                setShowSearchDropdown(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -232,6 +242,7 @@ const HomeScreen = () => {
                         });
                         localStorage.setItem('customerCity', result.city);
                         localStorage.setItem('customerArea', result.area || '');
+                        setIsLocationChanged(false);
                         
                         // Immediately dispatch salon search
                         dispatch(
@@ -335,6 +346,7 @@ const HomeScreen = () => {
                         cityName: result.city || detectedCity,
                         areaName: result.area || ''
                     });
+                    setIsLocationChanged(false);
 
                     if (isClickTriggered) {
                         toast.success(`Location detected: ${detectedCity}! Recommended list updated.`);
@@ -418,9 +430,11 @@ const HomeScreen = () => {
     };
 
     const handleLocationSearch = async () => {
-        console.log(searchData);
-
         if (!searchData.cityName && !searchData.areaName) return;
+
+        setSearchDropdownLoading(true);
+        setShowSearchDropdown(true);
+        setIsLocationChanged(true);
 
         if (searchData.cityName) {
             localStorage.setItem('customerCity', searchData.cityName);
@@ -428,14 +442,41 @@ const HomeScreen = () => {
         }
 
         try {
-            await dispatch(
-                searchSalonsByLocation({
-                    cityName: searchData.cityName,
-                    areaName: searchData.areaName,
-                })
-            ).unwrap();
+            let results = [];
+            if (searchData.areaName) {
+                const response = await axiosInstance.get('/salons/location-search', {
+                    params: { cityName: searchData.cityName, areaName: searchData.areaName }
+                });
+                results = response.data || [];
+            } else {
+                const response = await axiosInstance.get('/salons/by-city', {
+                    params: { cityName: searchData.cityName }
+                });
+                results = response.data?.content || response.data || [];
+            }
+
+            const formatted = results.map(s => ({
+                name: s.salonName || s.name,
+                location: s.areaName || s.cityName,
+                cityName: s.cityName,
+                areaName: s.areaName,
+                img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
+                rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
+                isApiSalon: true,
+                originalSalon: s
+            }));
+
+            // Sort by rating descending (highest rated first)
+            formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+
+            setSearchSalonsList(formatted);
+            setRecommendedList(formatted);
         } catch (error) {
-            console.log(error);
+            console.error("Location search failed:", error);
+            setSearchSalonsList([]);
+            setRecommendedList([]);
+        } finally {
+            setSearchDropdownLoading(false);
         }
     };
 
@@ -569,120 +610,170 @@ const HomeScreen = () => {
                     </p>
 
 
-                    <div className="w-full max-w-4xl bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
-                        <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
-                            <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder={isDetectingLocation ? "DETECTING..." : "SELECT CITY"}
-                                value={searchData.cityName}
-                                onChange={(e) => {
-                                    isUserTypingCityRef.current = true;
-                                    setSearchData((prev) => ({
-                                        ...prev,
-                                        cityName: e.target.value,
-                                    }));
-                                    setShowCityDropdown(true);
-                                }}
-                                onFocus={() => setShowCityDropdown(true)}
-                                className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
-                            <button
-                                type="button"
-                                onClick={handleDetectLocation}
-                                disabled={isDetectingLocation}
-                                className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${
-                                    isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
-                                }`}
-                                title="Detect Current Location"
-                            >
-                                {isDetectingLocation ? (
-                                    <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
-                                ) : (
-                                    <Navigation className="w-4 h-4 -rotate-45" />
-                                )}
-                            </button>
-                            {showCityDropdown && searchData.cityName && (
-                                <div className="absolute left-0 top-full z-40 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
-                                    {isLoadingCities ? (
-                                        <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
-                                            <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
-                                            Locating...
-                                        </div>
-                                    ) : citySuggestions.length > 0 ? (
-                                        citySuggestions.map((city, idx) => (
-                                            <div key={idx} onClick={() => {
-                                                isUserTypingCityRef.current = false;
-                                                isUserTypingAreaRef.current = false;
-                                                setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
-                                                setShowCityDropdown(false);
-                                            }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
-                                        ))
-                                    ) : (
-                                        <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2" ref={areaDropdownRef}>
-                            <div className="flex items-center gap-3 w-full">
-                                <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
+                    <div className="relative w-full max-w-4xl z-50 animate-fade-in" ref={searchDropdownRef}>
+                        <div className="bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
+                            <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
+                                <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
-                                    placeholder="SELECT AREA"
-                                    value={searchData.areaName}
+                                    placeholder={isDetectingLocation ? "DETECTING..." : "SELECT CITY"}
+                                    value={searchData.cityName}
                                     onChange={(e) => {
-                                        isUserTypingAreaRef.current = true;
+                                        isUserTypingCityRef.current = true;
                                         setSearchData((prev) => ({
                                             ...prev,
-                                            areaName: e.target.value,
+                                            cityName: e.target.value,
                                         }));
-                                        setShowAreaDropdown(true);
+                                        setShowCityDropdown(true);
+                                        setIsLocationChanged(true);
                                     }}
-                                    onFocus={() => setShowAreaDropdown(true)}
-                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
-                                />
-                            </div>
-                            <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
-                            {showAreaDropdown && searchData.areaName && (
-                                <div className="absolute left-0 top-full z-40 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
-                                    {isLoadingAreas ? (
-                                        <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
-                                            <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
-                                            Locating...
-                                        </div>
-                                    ) : areaSuggestions.length > 0 ? (
-                                        areaSuggestions.map((area, idx) => (
-                                            <div key={idx} onClick={() => {
-                                                isUserTypingCityRef.current = false;
-                                                isUserTypingAreaRef.current = false;
-                                                setSearchData(p => ({ ...p, areaName: area.name }));
-                                                setShowAreaDropdown(false);
-                                            }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
-                                                {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
-                                            </div>
-                                        ))
+                                    onFocus={() => setShowCityDropdown(true)}
+                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                                <button
+                                    type="button"
+                                    onClick={handleDetectLocation}
+                                    disabled={isDetectingLocation}
+                                    className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${
+                                        isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                                    }`}
+                                    title="Detect Current Location"
+                                >
+                                    {isDetectingLocation ? (
+                                        <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
                                     ) : (
-                                        <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                                        <Navigation className="w-4 h-4 -rotate-45" />
                                     )}
+                                </button>
+                                {showCityDropdown && searchData.cityName && (
+                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                        {isLoadingCities ? (
+                                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                                <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                                Locating...
+                                            </div>
+                                        ) : citySuggestions.length > 0 ? (
+                                            citySuggestions.map((city, idx) => (
+                                                <div key={idx} onClick={() => {
+                                                    isUserTypingCityRef.current = false;
+                                                    isUserTypingAreaRef.current = false;
+                                                    setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
+                                                    setShowCityDropdown(false);
+                                                    setIsLocationChanged(true);
+                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
+                                            ))
+                                        ) : (
+                                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2" ref={areaDropdownRef}>
+                                <div className="flex items-center gap-3 w-full">
+                                    <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
+                                    <input
+                                        type="text"
+                                        placeholder="SELECT AREA"
+                                        value={searchData.areaName}
+                                        onChange={(e) => {
+                                            isUserTypingAreaRef.current = true;
+                                            setSearchData((prev) => ({
+                                                ...prev,
+                                                areaName: e.target.value,
+                                            }));
+                                            setShowAreaDropdown(true);
+                                            setIsLocationChanged(true);
+                                        }}
+                                        onFocus={() => setShowAreaDropdown(true)}
+                                        className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
+                                    />
                                 </div>
-                            )}
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
+                                {showAreaDropdown && searchData.areaName && (
+                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                        {isLoadingAreas ? (
+                                            <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                                <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                                Locating...
+                                            </div>
+                                        ) : areaSuggestions.length > 0 ? (
+                                            areaSuggestions.map((area, idx) => (
+                                                <div key={idx} onClick={() => {
+                                                    isUserTypingCityRef.current = false;
+                                                    isUserTypingAreaRef.current = false;
+                                                    setSearchData(p => ({ ...p, areaName: area.name }));
+                                                    setShowAreaDropdown(false);
+                                                    setIsLocationChanged(true);
+                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
+                                                    {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleLocationSearch}
+                                className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
+                            >
+                                {searchDropdownLoading ? 'SEARCHING...' : 'SEARCH'}
+                            </button>
                         </div>
 
-                        {/* <div className="flex items-center justify-between px-4 py-2 w-full gap-2">
-                            <div className="flex items-center gap-3 w-full">
-                                <img src={dateIcon} alt="Date" className="w-5 h-5 object-contain flex-shrink-0" />
-                                <input type="text" placeholder="Date" className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                        {/* Search Dropdown of Salons in Rows */}
+                        {showSearchDropdown && (
+                            <div className="absolute left-0 right-0 top-full mt-2.5 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden max-h-96 overflow-y-auto custom-scrollbar p-3 space-y-2 z-50">
+                                {searchDropdownLoading ? (
+                                    <div className="flex items-center justify-center py-8 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                                        <div className="h-5 w-5 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                        Searching Salons...
+                                    </div>
+                                ) : searchSalonsList.length > 0 ? (
+                                    <div className="divide-y divide-gray-50 text-left">
+                                        {searchSalonsList.map((salon) => (
+                                            <div
+                                                key={salon.id}
+                                                onClick={() => {
+                                                    setShowSearchDropdown(false);
+                                                    handleSalonSelect(salon.originalSalon);
+                                                }}
+                                                className="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer transition rounded-xl"
+                                            >
+                                                <div className="flex items-center gap-3.5 min-w-0">
+                                                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 flex items-center justify-center">
+                                                        {salon.img ? (
+                                                            <img src={salon.img} alt={salon.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-[#FF2A14] text-white font-black text-sm uppercase">
+                                                                {salon.name?.[0]}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <h4 className="text-sm font-bold text-gray-900 uppercase truncate tracking-tight">{salon.name}</h4>
+                                                        <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5 font-medium">
+                                                            <MapPin className="w-3.5 h-3.5 text-[#FF2A14]" />
+                                                            <span className="truncate">{salon.location}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-600 px-2.5 py-1 rounded-full text-[10px] font-black shrink-0">
+                                                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                                                    <span>{salon.rating}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="py-8 text-center">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No salons found in this location</p>
+                                    </div>
+                                )}
                             </div>
-                            <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" />
-                        </div> */}
-
-                        <button
-                            onClick={handleLocationSearch}
-                            className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0"
-                        >
-                            {loading ? 'Searching...' : 'SEARCH'}
-                        </button>
+                        )}
                     </div>
                 </div>
 
@@ -694,168 +785,7 @@ const HomeScreen = () => {
                 </div>
             </section>
 
-            {/* Salon Search Results Section */}
-            {(loading || (salonResults && salonResults.length > 0)) && (
-                <section id="results-section" className="py-16 bg-[#F9FAFB] px-6 border-b" data-aos="fade-up">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col items-center mb-12 text-center">
-                            <h2 className="text-[#FF2A14] text-xs font-black tracking-[0.3em] uppercase mb-3">Found Destinations</h2>
-                            <h3 className="text-gray-900 text-3xl font-black uppercase tracking-tight">Premium Salons Nearby</h3>
-                        </div>
 
-                        {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {Array.from({ length: 3 }).map((_, idx) => (
-                                    <div key={idx} className="rounded-[32px] bg-white border border-gray-100 p-6 space-y-4 animate-pulse">
-                                        <div className="h-44 bg-slate-200 rounded-2xl" />
-                                        <div className="w-16 h-16 bg-slate-200 rounded-2xl -mt-14 ml-2 border-[3px] border-white relative z-20" />
-                                        <div className="space-y-3 pt-2">
-                                            <div className="h-4 bg-slate-200 rounded w-1/4" />
-                                            <div className="h-6 bg-slate-200 rounded w-3/4" />
-                                            <div className="h-4 bg-slate-200 rounded w-1/2" />
-                                            <div className="h-3 bg-slate-200 rounded w-2/3" />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {salonResults.map((salon, index) => {
-                                    const currentlyOpen = isOpen(salon.openingTime, salon.closingTime);
-                                    const hasImage = !!salon.imageUrl;
-                                    const coverImg = hasImage ? getSalonImageSrc(salon.imageUrl, null) : null;
-                                    const rating = salon.rating != null ? parseFloat(salon.rating).toFixed(1) : null;
-                                    const reviewsCount = (((salon.salonId || 0) * 17) % 80) + 40;
-                                    return (
-                                        <div
-                                            key={salon.salonId || index}
-                                            onClick={() => handleSalonSelect(salon)}
-                                            className="group relative flex flex-col rounded-[32px] bg-white border border-gray-100/80 hover:border-[#FF2A14]/30 hover:shadow-[0_24px_50px_-15px_rgba(255,42,20,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden text-left shadow-[0_4px_20px_rgba(0,0,0,0.015)]"
-                                        >
-                                            {/* Card Header: Cover Image block with metadata tags overlay */}
-                                            <div className="h-44 relative overflow-hidden bg-gray-50 flex-shrink-0">
-                                                {hasImage ? (
-                                                    <>
-                                                        <img
-                                                            src={coverImg}
-                                                            alt={salon.salonName}
-                                                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
-                                                    </>
-                                                ) : (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9FAFB] py-6">
-                                                        <svg className="w-14 h-14 text-rose-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                            <circle cx="9" cy="17" r="3.5" />
-                                                            <circle cx="15" cy="17" r="3.5" />
-                                                            <path d="M11.5 14.5L16 5.5" strokeLinecap="round" />
-                                                            <path d="M12.5 14.5L8 5.5" strokeLinecap="round" />
-                                                            <circle cx="12" cy="11.5" r="0.75" fill="currentColor" />
-                                                        </svg>
-                                                        <span className="text-[11px] font-semibold text-gray-400">No image available</span>
-                                                    </div>
-                                                )}
-
-                                                {/* Top Metadata Badges */}
-                                                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                                                    {/* Open / Closed Badge */}
-                                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm border ${currentlyOpen
-                                                            ? 'bg-white/95 border-emerald-500/20 text-emerald-700'
-                                                            : 'bg-white/95 border-rose-500/20 text-rose-700'
-                                                        }`}>
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${currentlyOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                        {currentlyOpen ? 'Open' : 'Closed'}
-                                                    </div>
-
-                                                    {/* Deterministic Rating Badge */}
-                                                    {rating != null ? (
-                                                        <div className="bg-white/95 backdrop-blur-md border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                                            <span>{rating} ({reviewsCount}+)</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="bg-emerald-600 text-white rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest flex items-center shadow-sm">
-                                                            NEW
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Dynamic Avatar Overlay */}
-                                            <div className="relative -mt-8 ml-6 z-20 w-16 h-16 bg-white rounded-2xl overflow-hidden border-[3px] border-white shadow-xl group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-                                                {salon.imageBase64 ? (
-                                                    <img src={`data:image/png;base64,${salon.imageBase64}`} alt={salon.salonName} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-[#FF2A14] to-[#FF6B57] text-white text-2xl font-black">
-                                                        {salon.salonName ? salon.salonName[0].toUpperCase() : 'S'}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Card Body Details */}
-                                            <div className="p-6 pt-3 flex flex-col flex-grow text-left">
-                                                <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
-                                                    <Sparkles className="w-2.5 h-2.5" /> NEOPARLOUR PARTNER
-                                                </span>
-
-                                                <div className="flex items-start justify-between gap-2 mb-2">
-                                                    <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
-                                                        {salon.salonName}
-                                                    </h4>
-                                                    {salon.salonCode && (
-                                                        <span className="text-[9px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-2 py-0.5 rounded uppercase tracking-widest flex-shrink-0 mt-1">
-                                                            {salon.salonCode}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
-                                                    <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                    <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
-                                                </div>
-
-                                                <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
-                                                    {salon.address || 'Dhankawadi'}
-                                                </p>
-
-                                                {/* Home Service Badge */}
-                                                {salon.homeServiceCharges ? (
-                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                                        <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                        <span>Home Service (₹{salon.homeServiceCharges})</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                                        <Home className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                        <span>Home Service (₹50)</span>
-                                                    </div>
-                                                )}
-
-                                                {/* Card Footer */}
-                                                <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">
-                                                    <div className="flex items-center gap-1.5 text-gray-400">
-                                                        <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                                        <span className="text-[11px] font-black tracking-widest">
-                                                            {salon.openingTime?.slice(0, 5) || '09:00'} - {salon.closingTime?.slice(0, 5) || '21:00'}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[#FF2A14] group-hover:gap-1.5 transition-all group/btn">
-                                                        <span>Book Session</span>
-                                                        <div className="h-7 w-7 rounded-full bg-red-50 flex items-center justify-center text-[#FF2A14] group-hover/btn:bg-[#FF2A14] group-hover/btn:text-white transition-all duration-300">
-                                                            <ArrowRight className="w-3.5 h-3.5" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </section>
-            )}
 
             {/* 3. FIXED STATS SECTION */}
             <section id="stats-section" className="pt-16 pb-12 border-b">
@@ -877,13 +807,22 @@ const HomeScreen = () => {
                 </div>
             </section>
 
-            {/* 4. RECOMMENDED SECTION */}
+            {/* 4. PREMIUM SALONS NEARBY SECTION */}
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold">Recommended</h3>
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
+                    <div>
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Premium Salons Nearby</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
+                            {isLocationChanged 
+                                ? "Showing salons according to your typed city and area name" 
+                                : "Showing salons of your current location"
+                            }
+                        </p>
+                    </div>
                     <button 
                         onClick={() => navigate('/customer/salons')}
-                        className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
                     >
                         See More
                         <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -903,7 +842,7 @@ const HomeScreen = () => {
                             </div>
                         ))
                     ) : (
-                        recommendedList.map((salon, idx) => (
+                        recommendedList.slice(0, 8).map((salon, idx) => (
                             <div 
                                 key={idx} 
                                 onClick={() => handleRecommendedCardClick(salon)}
@@ -923,13 +862,18 @@ const HomeScreen = () => {
                                     </div>
                                 </div>
                                 <div className="p-4 bg-white">
-                                    <h4 className="font-bold text-gray-800">{salon.name}</h4>
+                                    <h4 className="font-bold text-gray-800 uppercase tracking-tight">{salon.name}</h4>
                                     <p className="text-xs text-gray-500">{salon.location}</p>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
+                {(!isPageLoading && recommendedList.length === 0) && (
+                    <div className="text-center py-10 bg-gray-55 rounded-2xl border border-dashed border-gray-200 mt-4">
+                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">No salons found nearby</p>
+                    </div>
+                )}
             </section>
 
             {/* 5. SERVICES GRID */}

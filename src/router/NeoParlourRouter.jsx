@@ -43,6 +43,7 @@ import Support from '../components/Customer/Support'
 import PartnerWithUs from '../components/Customer/PartnerWithUs'
 import SalonsListing from '../components/Customer/SalonsListing'
 import Customers from '../components/Owner/Customers'
+import Favourites from '../components/Customer/Favourites'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
 
@@ -188,6 +189,10 @@ export let routes = createBrowserRouter([
                     {
                         path: '/customer/my-salons',
                         element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/favourites',
+                        element: <CustomerRouteGuard><Favourites /></CustomerRouteGuard>
                     },
                     {
                         path: '/customer/appointments',

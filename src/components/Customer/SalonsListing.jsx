@@ -54,6 +54,7 @@ const SalonsListing = () => {
     const [searchedCity, setSearchedCity] = useState('');
     const [switchingId, setSwitchingId] = useState(null);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [favouriteIds, setFavouriteIds] = useState(new Set());
 
     const isShowingStatic = salons.length === 0;
     const displaySalons = isShowingStatic ? staticSalons : salons;
@@ -67,6 +68,66 @@ const SalonsListing = () => {
             }
         }
     }, [isAuthenticated, user, profile, dispatch]);
+
+    // Fetch favourites on mount if authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            const fetchFavourites = async () => {
+                try {
+                    const res = await axiosInstance.get('/customer/favourites');
+                    const ids = new Set((res.data || []).map(fav => fav.salonId));
+                    setFavouriteIds(ids);
+                } catch (err) {
+                    console.error("Failed to fetch favourites:", err);
+                }
+            };
+            fetchFavourites();
+        } else {
+            setFavouriteIds(new Set());
+        }
+    }, [isAuthenticated]);
+
+    const handleToggleFavourite = async (salonId, salonName, e) => {
+        e.stopPropagation();
+        if (!isAuthenticated) {
+            toast.error("Please login to add to favourites", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+            navigate('/customer/login');
+            return;
+        }
+
+        const isFav = favouriteIds.has(salonId);
+        const newFavs = new Set(favouriteIds);
+        if (isFav) {
+            newFavs.delete(salonId);
+        } else {
+            newFavs.add(salonId);
+        }
+        setFavouriteIds(newFavs); // Optimistic UI update
+
+        try {
+            if (isFav) {
+                await axiosInstance.delete(`/customer/favourites/${salonId}`);
+                toast.success(`Removed ${salonName} from favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            } else {
+                await axiosInstance.post(`/customer/favourites/${salonId}`);
+                toast.success(`Added ${salonName} to favourites`, {
+                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+                });
+            }
+        } catch (err) {
+            console.error("Failed to toggle favourite:", err);
+            // Revert optimistic update
+            const revertFavs = new Set(favouriteIds);
+            setFavouriteIds(revertFavs);
+            toast.error(err.response?.data?.message || "Failed to update favourites", {
+                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
+            });
+        }
+    };
 
     // Click outside dropdowns
     useEffect(() => {
@@ -640,6 +701,18 @@ const SalonsListing = () => {
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Floating Heart Button */}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleToggleFavourite(salonId, salon.salonName || salon.name, e)}
+                                            className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-md border border-gray-150 flex items-center justify-center text-[#ff0b01] hover:scale-110 active:scale-95 transition-all cursor-pointer z-20"
+                                            title={favouriteIds.has(salonId) ? "Remove from Favourites" : "Mark as Favourite"}
+                                        >
+                                            <svg className={`w-4 h-4 ${favouriteIds.has(salonId) ? 'fill-[#ff0b01]' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                            </svg>
+                                        </button>
                                     </div>
 
                                     {/* Avatar Logo Overlay */}
