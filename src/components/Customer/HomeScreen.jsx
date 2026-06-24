@@ -127,6 +127,7 @@ const HomeScreen = () => {
     const [searchData, setSearchData] = useState({
         cityName: localStorage.getItem('customerCity') || '',
         areaName: localStorage.getItem('customerArea') || '',
+        category: '',
     });
     const [isPageLoading, setIsPageLoading] = useState(true);
     const geoFetchedRef = useRef(false);
@@ -422,15 +423,23 @@ const HomeScreen = () => {
     };
 
     const handleServiceCardClick = (service) => {
-        if (locationPermission !== 'granted') {
-            requestLocationAndFetchSalons(true);
-        } else {
-            toast.success(`Exploring ${service.name} services near you!`);
+        setSearchData(prev => ({
+            ...prev,
+            category: service.name
+        }));
+        
+        const city = searchData.cityName || localStorage.getItem('customerCity');
+        if (!city) {
+            toast.error("Please select a city first to explore salons!");
+            return;
         }
+        
+        handleLocationSearch(service.name);
     };
 
-    const handleLocationSearch = async () => {
-        if (!searchData.cityName && !searchData.areaName) return;
+    const handleLocationSearch = async (forcedCategory = null) => {
+        const activeCategory = forcedCategory !== null && typeof forcedCategory === 'string' ? forcedCategory : searchData.category;
+        if (!searchData.cityName && !searchData.areaName && !activeCategory) return;
 
         setSearchDropdownLoading(true);
         setShowSearchDropdown(true);
@@ -443,9 +452,13 @@ const HomeScreen = () => {
 
         try {
             let results = [];
-            if (searchData.areaName) {
+            if (activeCategory || searchData.areaName) {
                 const response = await axiosInstance.get('/salons/location-search', {
-                    params: { cityName: searchData.cityName, areaName: searchData.areaName }
+                    params: {
+                        cityName: searchData.cityName || undefined,
+                        areaName: searchData.areaName || undefined,
+                        category: activeCategory || undefined
+                    }
                 });
                 results = response.data || [];
             } else {
@@ -486,8 +499,12 @@ const HomeScreen = () => {
         localStorage.setItem('activeSalonId', salonId);
         localStorage.setItem('activeSalonName', salonName);
         
+        const hasCategory = !!searchData.category;
+        const targetPath = hasCategory ? '/customer/book-service' : '/customer/salon';
+        const navState = hasCategory ? { state: { selectedCategory: searchData.category } } : undefined;
+
         if (!token) {
-            navigate('/customer/salon');
+            navigate(targetPath, navState);
             return;
         }
         const payload = {
@@ -498,7 +515,7 @@ const HomeScreen = () => {
         dispatch(switchTenant(payload))
             .unwrap()
             .then(() => {
-                navigate('/customer/salon');
+                navigate(targetPath, navState);
             })
             .catch((err) => {
                 const errMsg = String(err).toLowerCase();
@@ -547,12 +564,15 @@ const HomeScreen = () => {
 
 
     const servicesData = [
-        { name: 'Salon', img: salonImg },
-        { name: 'Wellness & Spa', img: wellnessImg },
-        { name: 'Nail & Lashes', img: nailLashesImg },
-        { name: 'Spa', img: spaImg },
-        { name: 'Nail Salon', img: nailSalonImg },
-        { name: 'Skin Clinic', img: skinClinicImg },
+        { name: 'Hair Services', img: salonImg },
+        { name: 'Skin Care', img: skinClinicImg },
+        { name: 'Hair Removal', img: wellnessImg },
+        { name: 'Nail Care', img: nailLashesImg },
+        { name: 'Makeup', img: nailSalonImg },
+        { name: 'Grooming', img: salonImg },
+        { name: 'Spa & Massage', img: spaImg },
+        { name: 'Bridal Packages', img: wellnessImg },
+        { name: 'Hair Treatment', img: salonImg },
     ];
 
     const faqData = [
@@ -717,6 +737,36 @@ const HomeScreen = () => {
                                         )}
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Category/Service Select Dropdown */}
+                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
+                                <div className="flex items-center gap-3 w-full">
+                                    <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                    <select
+                                        value={searchData.category}
+                                        onChange={(e) => {
+                                            setSearchData((prev) => ({
+                                                ...prev,
+                                                category: e.target.value,
+                                            }));
+                                            setShowSearchDropdown(false);
+                                        }}
+                                        className="w-full outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer appearance-none"
+                                    >
+                                        <option value="">SELECT SERVICE</option>
+                                        <option value="Hair Services">Hair Services</option>
+                                        <option value="Skin Care">Skin Care</option>
+                                        <option value="Hair Removal">Hair Removal</option>
+                                        <option value="Nail Care">Nail Care</option>
+                                        <option value="Makeup">Makeup</option>
+                                        <option value="Grooming">Grooming</option>
+                                        <option value="Spa & Massage">Spa & Massage</option>
+                                        <option value="Bridal Packages">Bridal Packages</option>
+                                        <option value="Hair Treatment">Hair Treatment</option>
+                                    </select>
+                                </div>
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 pointer-events-none" />
                             </div>
 
                             <button

@@ -58,11 +58,14 @@ export const switchTenant = createAsyncThunk(
 
 export const searchSalonsByLocation = createAsyncThunk(
   'customer/searchSalonsByLocation',
-  async ({ cityName, areaName }, { rejectWithValue }) => {
+  async ({ cityName, areaName, category }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(
-        `/salons/location-search?cityName=${cityName}&areaName=${areaName}`
-      );
+      const params = {};
+      if (cityName) params.cityName = cityName;
+      if (areaName) params.areaName = areaName;
+      if (category) params.category = category;
+
+      const response = await axiosInstance.get('/salons/location-search', { params });
       return response.data;
     } catch (error) {
       return rejectWithValue(

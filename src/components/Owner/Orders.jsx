@@ -99,12 +99,10 @@ const Orders = () => {
         if (maxAmount) params.maxAmount = maxAmount;
 
         if (fromDate) {
-            // Set to start of day in UTC
-            params.fromDate = new Date(fromDate + 'T00:00:00Z').toISOString();
+            params.fromDate = fromDate + 'T00:00:00.000+05:30';
         }
         if (toDate) {
-            // Set to end of day in UTC
-            params.toDate = new Date(toDate + 'T23:59:59Z').toISOString();
+            params.toDate = toDate + 'T23:59:59.999+05:30';
         }
 
         axiosInstance.get('/orders/search', { params })

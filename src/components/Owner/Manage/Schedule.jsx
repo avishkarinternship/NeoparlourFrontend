@@ -363,7 +363,8 @@ const Schedule = () => {
   const getTodayDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 30);
-    return now.toISOString().slice(0, 16);
+    const istTime = new Date(now.getTime() + (330 * 60000));
+    return istTime.toISOString().slice(0, 16);
   };
 
   return (

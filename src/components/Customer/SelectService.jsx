@@ -254,7 +254,22 @@ const SelectService = () => {
     const dateObjToInstant = (dateObj) => {
         if (!dateObj) return null;
         const [dd, mm, yyyy] = dateObj.fullDate.split('-');
-        return `${yyyy}-${mm}-${dd}T00:00:00Z`;
+        return `${yyyy}-${mm}-${dd}T00:00:00.000+05:30`;
+    };
+
+    const getISTZonedDateTime = (dateInput) => {
+        if (!dateInput) return null;
+        const date = new Date(dateInput);
+        if (isNaN(date.getTime())) return dateInput;
+        
+        const istTime = new Date(date.getTime() + (330 * 60000));
+        const year = istTime.getUTCFullYear();
+        const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(istTime.getUTCDate()).padStart(2, '0');
+        const hours = String(istTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(istTime.getUTCSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000+05:30`;
     };
 
     // Helper to get the set of available staff IDs for quick lookup
@@ -734,7 +749,9 @@ const SelectService = () => {
         setBookingLoading(true);
         try {
             let appointmentAtStr = selectedSlot?.startTime || null;
-            if (!appointmentAtStr && selectedDateObj && selectedTime) {
+            if (appointmentAtStr) {
+                appointmentAtStr = getISTZonedDateTime(appointmentAtStr);
+            } else if (selectedDateObj && selectedTime) {
                 const match = selectedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
                 if (match) {
                     let hour = parseInt(match[1], 10);
@@ -744,7 +761,7 @@ const SelectService = () => {
                     if (ampm === 'AM' && hour === 12) hour = 0;
                     
                     const [dd, mm, yyyy] = selectedDateObj.fullDate.split('-');
-                    appointmentAtStr = `${yyyy}-${mm}-${dd}T${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00Z`;
+                    appointmentAtStr = `${yyyy}-${mm}-${dd}T${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00.000+05:30`;
                 }
             }
 

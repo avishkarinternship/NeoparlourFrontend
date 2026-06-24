@@ -5,7 +5,7 @@ import axiosInstance from '../../api/axiosInstance';
 import { switchTenant, fetchCustomerProfile, searchSalonsByLocation } from '../../redux/slices/customerSlice';
 import searchService from '../../services/searchService';
 import toast from 'react-hot-toast';
-import { Navigation } from 'lucide-react';
+import { Navigation, Sparkles } from 'lucide-react';
 
 import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
 import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
@@ -28,12 +28,16 @@ const staticSalons = [
 
 const SalonsListing = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
     const { token, user, isAuthenticated, profile } = useSelector((state) => state.customer);
+
+    const isFromProducts = location.state?.purpose === 'products';
 
     // Search state
     const [cityName, setCityName] = useState(localStorage.getItem('customerCity') || '');
     const [areaName, setAreaName] = useState(localStorage.getItem('customerArea') || '');
+    const [category, setCategory] = useState(location.state?.selectedCategory || location.state?.category || '');
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
     const [isLoadingCities, setIsLoadingCities] = useState(false);
@@ -186,14 +190,15 @@ const SalonsListing = () => {
     }, [areaName]);
 
     // Fetch salons by city and area
-    const fetchSalons = async (city, area = '', pageNum = 0) => {
+    const fetchSalons = async (city, area = '', pageNum = 0, cat = '') => {
         if (!city || city.trim().length === 0) return;
         setLoading(true);
         try {
             const results = await dispatch(
                 searchSalonsByLocation({
                     cityName: city.trim(),
-                    areaName: area ? area.trim() : ''
+                    areaName: area ? area.trim() : '',
+                    category: cat ? cat.trim() : undefined
                 })
             ).unwrap();
             setSalons(results || []);
@@ -215,6 +220,7 @@ const SalonsListing = () => {
     useEffect(() => {
         const storedCity = localStorage.getItem('customerCity');
         const storedArea = localStorage.getItem('customerArea') || '';
+        const initialCategory = location.state?.selectedCategory || location.state?.category || '';
         
         if (storedCity) {
             isUserTypingCityRef.current = false;
@@ -223,7 +229,7 @@ const SalonsListing = () => {
                 isUserTypingAreaRef.current = false;
                 setAreaName(storedArea);
             }
-            fetchSalons(storedCity, storedArea);
+            fetchSalons(storedCity, storedArea, 0, initialCategory);
         } else if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -241,7 +247,7 @@ const SalonsListing = () => {
                                 isUserTypingAreaRef.current = false;
                                 setAreaName(geo.area);
                             }
-                            fetchSalons(geo.city, geo.area || '');
+                            fetchSalons(geo.city, geo.area || '', 0, initialCategory);
                         }
                     } catch (err) {
                         console.error('Geolocation error:', err);
@@ -263,12 +269,12 @@ const SalonsListing = () => {
         localStorage.setItem('customerCity', cityName.trim());
         localStorage.setItem('customerArea', areaName.trim());
         setPage(0);
-        fetchSalons(cityName.trim(), areaName.trim());
+        fetchSalons(cityName.trim(), areaName.trim(), 0, category);
     };
 
     const handlePageChange = (newPage) => {
         if (newPage < 0 || newPage >= totalPages) return;
-        fetchSalons(searchedCity, areaName, newPage);
+        fetchSalons(searchedCity, areaName, newPage, category);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -293,7 +299,7 @@ const SalonsListing = () => {
                         localStorage.setItem('customerArea', result.area || '');
                         
                         // Immediately fetch salons
-                        fetchSalons(result.city, result.area || '');
+                        fetchSalons(result.city, result.area || '', 0, category);
                         toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
                     } else {
                         toast.error("Could not determine your city. Please enter it manually.");
@@ -342,7 +348,7 @@ const SalonsListing = () => {
                                     isUserTypingAreaRef.current = false;
                                     setAreaName(geo.area);
                                 }
-                                fetchSalons(geo.city, 0);
+                                fetchSalons(geo.city, geo.area || '', 0, category);
                                 toast.success(`Location detected: ${geo.city}`);
                             }
                         } catch (err) {
@@ -365,8 +371,16 @@ const SalonsListing = () => {
         localStorage.setItem('activeSalonId', salonId);
         localStorage.setItem('activeSalonName', salonName);
 
+        const hasCategory = !!category;
+        const targetPath = isFromProducts 
+            ? '/customer/product-search' 
+            : (hasCategory ? '/customer/book-service' : '/customer/salon');
+        const navState = (hasCategory && !isFromProducts) 
+            ? { state: { selectedCategory: category } } 
+            : undefined;
+
         if (!token) {
-            navigate('/customer/salon');
+            navigate(targetPath, navState);
             return;
         }
         setSwitchingId(salonId);
@@ -379,7 +393,7 @@ const SalonsListing = () => {
             .unwrap()
             .then(() => {
                 toast.success(`Switched to ${salonName}`);
-                navigate('/customer/salon');
+                navigate(targetPath, navState);
             })
             .catch((err) => {
                 const errMsg = String(err).toLowerCase();
@@ -426,10 +440,18 @@ const SalonsListing = () => {
                     {/* Page Title */}
                     <div className="text-center mb-10">
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-3">
-                            Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2A14] to-[#FF6B5A]">Salons</span> Near You
+                            {isFromProducts ? (
+                                <>Select a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2A14] to-[#FF6B5A]">Salon</span> to Browse Products</>
+                            ) : (
+                                <>Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2A14] to-[#FF6B5A]">Salons</span> Near You</>
+                            )}
                         </h1>
                         <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto font-medium">
-                            Find and book the best salons in your city. Premium experiences, trusted professionals.
+                            {isFromProducts ? (
+                                "Select one of our partner salons below to view their premium beauty formulations and place orders."
+                            ) : (
+                                "Find and book the best salons in your city. Premium experiences, trusted professionals."
+                            )}
                         </p>
                     </div>
 
@@ -549,6 +571,37 @@ const SalonsListing = () => {
                                         )}
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Category/Service Select Dropdown */}
+                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
+                                <div className="flex items-center gap-3 w-full">
+                                    <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                    <select
+                                        value={category}
+                                        onChange={(e) => {
+                                            const newCat = e.target.value;
+                                            setCategory(newCat);
+                                            if (cityName.trim()) {
+                                                setPage(0);
+                                                fetchSalons(cityName.trim(), areaName.trim(), 0, newCat);
+                                            }
+                                        }}
+                                        className="w-full outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer appearance-none text-left"
+                                    >
+                                        <option value="">SELECT SERVICE</option>
+                                        <option value="Hair Services">Hair Services</option>
+                                        <option value="Skin Care">Skin Care</option>
+                                        <option value="Hair Removal">Hair Removal</option>
+                                        <option value="Nail Care">Nail Care</option>
+                                        <option value="Makeup">Makeup</option>
+                                        <option value="Grooming">Grooming</option>
+                                        <option value="Spa & Massage">Spa & Massage</option>
+                                        <option value="Bridal Packages">Bridal Packages</option>
+                                        <option value="Hair Treatment">Hair Treatment</option>
+                                    </select>
+                                </div>
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 pointer-events-none" />
                             </div>
 
                             {/* Search Button */}

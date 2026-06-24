@@ -9,6 +9,15 @@ import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/u
 import todaysAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/todays_appointment_icon.svg';
 import appointmentActivityIcon from '../../assets/Owner/Dashboard/CenterScreen/appointment_activity.svg';
 
+const getISTMidnightString = () => {
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (330 * 60000));
+    const istYear = istTime.getUTCFullYear();
+    const istMonth = istTime.getUTCMonth();
+    const istDate = istTime.getUTCDate();
+    return `${istYear}-${String(istMonth + 1).padStart(2, '0')}-${String(istDate).padStart(2, '0')}T00:00:00.000+05:30`;
+};
+
 // Helper to format X-axis labels based on the view type (timezone-safe)
 const formatLabel = (label, viewType) => {
     if (!label) return '';
@@ -179,9 +188,7 @@ const OwnerDashboard = () => {
     const fetchUpcomingAppointments = useCallback(async (signal) => {
         setUpcomingLoading(true);
         try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const fromDateStr = today.toISOString();
+            const fromDateStr = getISTMidnightString();
 
             const response = await axiosInstance.get('/appointments/search/advanced', {
                 params: { status: 'booked', fromDate: fromDateStr, page: 0, size: 3 },
@@ -202,9 +209,7 @@ const OwnerDashboard = () => {
     const fetchCompletedAppointments = useCallback(async (signal) => {
         setCompletedLoading(true);
         try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const fromDateStr = today.toISOString();
+            const fromDateStr = getISTMidnightString();
 
             const response = await axiosInstance.get('/appointments/search/advanced', {
                 params: { status: 'completed', fromDate: fromDateStr, page: 0, size: 5 },
@@ -225,9 +230,7 @@ const OwnerDashboard = () => {
     const fetchUnallocatedAppointments = useCallback(async (signal) => {
         setUnallocatedLoading(true);
         try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const fromDateStr = today.toISOString();
+            const fromDateStr = getISTMidnightString();
 
             const response = await axiosInstance.get('/appointments/search/advanced', {
                 params: { status: 'booked', isStaffAllocated: false, fromDate: fromDateStr, page: 0, size: 10 },
@@ -248,9 +251,7 @@ const OwnerDashboard = () => {
     const fetchCancelledAppointments = useCallback(async (signal) => {
         setCancelledLoading(true);
         try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const fromDateStr = today.toISOString();
+            const fromDateStr = getISTMidnightString();
 
             const response = await axiosInstance.get('/appointments/search/advanced', {
                 params: { status: 'cancelled', fromDate: fromDateStr, page: 0, size: 3 },

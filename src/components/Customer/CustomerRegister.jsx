@@ -10,6 +10,11 @@ import searchService from '../../services/searchService';
 import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
+const getISTString = (date = new Date()) => {
+  const tzoffset = -330; // IST is UTC+5:30
+  return new Date(date.getTime() - (tzoffset * 60000)).toISOString().slice(0, -1) + '+05:30';
+};
+
 const CustomerRegister = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -191,7 +196,7 @@ const CustomerRegister = () => {
       ...formData,
       role: 'CUSTOMER',
       tncAccepted: true,
-      tncAcceptedAt: new Date().toISOString(),
+      tncAcceptedAt: getISTString(),
       tncVersion: '1.0',
     };
 

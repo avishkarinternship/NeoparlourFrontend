@@ -83,9 +83,12 @@ const Dashboard = () => {
         let isMounted = true;
         setLoadingAppointments(true);
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const fromDateStr = today.toISOString();
+        const now = new Date();
+        const istTime = new Date(now.getTime() + (330 * 60000));
+        const istYear = istTime.getUTCFullYear();
+        const istMonth = istTime.getUTCMonth();
+        const istDate = istTime.getUTCDate();
+        const fromDateStr = `${istYear}-${String(istMonth + 1).padStart(2, '0')}-${String(istDate).padStart(2, '0')}T00:00:00.000+05:30`;
         
         axiosInstance.get(`/appointments/search/advanced?page=0&size=3&status=booked&fromDate=${fromDateStr}`)
             .then(res => {

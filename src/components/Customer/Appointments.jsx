@@ -71,12 +71,14 @@ const Appointments = () => {
     try {
       const customerFilter = isCustomer && customerMobile ? `&mobile=${encodeURIComponent(customerMobile)}` : '';
       
-      const today = new Date();
-      const startLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
-      const endLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      const now = new Date();
+      const istTime = new Date(now.getTime() + (330 * 60000));
+      const istYear = istTime.getUTCFullYear();
+      const istMonth = istTime.getUTCMonth();
+      const istDate = istTime.getUTCDate();
       
-      const startOfTodayISO = startLocal.toISOString();
-      const endOfTodayISO = endLocal.toISOString();
+      const startOfTodayISO = `${istYear}-${String(istMonth + 1).padStart(2, '0')}-${String(istDate).padStart(2, '0')}T00:00:00.000+05:30`;
+      const endOfTodayISO = `${istYear}-${String(istMonth + 1).padStart(2, '0')}-${String(istDate).padStart(2, '0')}T23:59:59.999+05:30`;
 
       let queryParams = `page=${page}&size=10&sort=appointmentAt,desc${customerFilter}`;
       
@@ -169,8 +171,9 @@ const Appointments = () => {
     setSelectedAppointment(appointment);
     // Preset current date & time if available
     const appDate = new Date(appointment.appointmentAt);
-    const dateStr = appDate.toISOString().split('T')[0];
-    const timeStr = appDate.toTimeString().slice(0, 5);
+    const istAppDate = new Date(appDate.getTime() + (330 * 60000));
+    const dateStr = istAppDate.toISOString().split('T')[0];
+    const timeStr = istAppDate.toISOString().split('T')[1].slice(0, 5);
     setRescheduleData({ date: dateStr, time: timeStr });
     setRescheduleReasonType('');
     setCustomRescheduleReason('');
@@ -206,7 +209,7 @@ const Appointments = () => {
         if (app.id === selectedAppointment.id) {
           return { 
             ...app, 
-            appointmentAt: response.data?.appointmentAt || `${rescheduleData.date}T${rescheduleData.time}:00Z`, 
+            appointmentAt: response.data?.appointmentAt || `${rescheduleData.date}T${rescheduleData.time}:00+05:30`, 
             status: 'rescheduled' 
           };
         }

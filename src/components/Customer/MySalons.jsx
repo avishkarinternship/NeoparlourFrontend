@@ -65,8 +65,8 @@ const MySalons = () => {
             const params = new URLSearchParams();
             if (filters.salonName) params.append('salonName', filters.salonName);
             if (filters.lastStatus) params.append('lastStatus', filters.lastStatus);
-            if (filters.fromDate) params.append('fromDate', `${filters.fromDate}T00:00:00`);
-            if (filters.toDate) params.append('toDate', `${filters.toDate}T23:59:59`);
+            if (filters.fromDate) params.append('fromDate', `${filters.fromDate}T00:00:00.000+05:30`);
+            if (filters.toDate) params.append('toDate', `${filters.toDate}T23:59:59.999+05:30`);
             params.append('page', page);
             params.append('size', 12);
             params.append('sortBy', 'lastVisitDate');

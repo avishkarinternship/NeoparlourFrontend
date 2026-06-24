@@ -23,6 +23,11 @@ const convertToBase64 = (file) => {
   });
 };
 
+const getISTString = (date = new Date()) => {
+  const tzoffset = -330; // IST is UTC+5:30
+  return new Date(date.getTime() - (tzoffset * 60000)).toISOString().slice(0, -1) + '+05:30';
+};
+
 const OwnerRegister = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -428,7 +433,7 @@ const OwnerRegister = () => {
       openingTime: formData.openingTime + ':00',
       closingTime: formData.closingTime + ':00',
       tncAccepted: true,
-      tncAcceptedAt: new Date().toISOString(),
+      tncAcceptedAt: getISTString(),
       tncVersion: '1.0',
       imageBase64: profileImageBase64 || null,
       salonImagesBase64: activeSalonImages.length > 0 ? activeSalonImages : null,

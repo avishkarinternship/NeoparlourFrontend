@@ -70,8 +70,8 @@ const Customers = () => {
             if (filters.customerMobile) params.append('customerMobile', filters.customerMobile);
             if (filters.lastStatus) params.append('lastStatus', filters.lastStatus);
             if (filters.minVisits) params.append('minVisits', filters.minVisits);
-            if (filters.fromDate) params.append('fromDate', `${filters.fromDate}T00:00:00`);
-            if (filters.toDate) params.append('toDate', `${filters.toDate}T23:59:59`);
+            if (filters.fromDate) params.append('fromDate', `${filters.fromDate}T00:00:00.000+05:30`);
+            if (filters.toDate) params.append('toDate', `${filters.toDate}T23:59:59.999+05:30`);
             if (filters.minRevenue) params.append('minRevenue', filters.minRevenue);
             params.append('page', page);
             params.append('size', 12);

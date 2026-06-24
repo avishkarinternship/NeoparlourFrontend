@@ -170,7 +170,7 @@ const AddOffers = () => {
 
     const toInstant = (datetimeLocal) => {
         if (!datetimeLocal) return null;
-        return datetimeLocal + ':00Z';
+        return datetimeLocal + ':00.000+05:30';
     };
 
     const resetForm = () => {

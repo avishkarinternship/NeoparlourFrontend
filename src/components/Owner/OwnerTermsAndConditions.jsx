@@ -27,7 +27,7 @@ export default function OwnerTermsAndConditions() {
             console.log("Terms Accepted Record Captured:", {
                 version: "1.0",
                 effectiveDate: "27/May/2026",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date(new Date().getTime() + 330 * 60000).toISOString().slice(0, -1) + '+05:30',
                 status: "Legally Binding Electronic Consent"
             });
         }

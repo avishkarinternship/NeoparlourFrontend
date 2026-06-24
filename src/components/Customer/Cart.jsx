@@ -149,11 +149,11 @@ export default function Cart() {
             </p>
           </div>
           <button 
-            onClick={() => navigate('/customer/product-search')}
+            onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
             className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" />
-            Discover Products
+            Continue Browsing
           </button>
         </div>
       </div>
@@ -344,6 +344,15 @@ export default function Cart() {
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
+                className="w-full py-3.5 mt-3 border border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-extrabold text-[13px] tracking-wider rounded-2xl shadow-xs transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4 text-neutral-400" />
+                Continue Browsing
               </button>
             </div>
           </div>
