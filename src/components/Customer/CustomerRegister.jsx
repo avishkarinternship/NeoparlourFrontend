@@ -7,7 +7,7 @@ import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation } fr
 import searchService from '../../services/searchService';
 
 // Using existing assets
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
 const getISTString = (date = new Date()) => {

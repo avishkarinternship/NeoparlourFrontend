@@ -5,7 +5,7 @@ import { loginOwner, clearOwnerStaffError } from '../../redux/slices/ownerStaffS
 import { User, Lock, Sparkles, AlertCircle } from 'lucide-react';
 
 // Using existing assets
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import rightBackground from '../../assets/CustomerLogin/right_background.jpg';
 
 const OwnerLogin = () => {

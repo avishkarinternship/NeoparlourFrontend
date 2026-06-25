@@ -57,6 +57,43 @@ const Appointments = () => {
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
   const [rescheduleReasonType, setRescheduleReasonType] = useState('');
   const [customRescheduleReason, setCustomRescheduleReason] = useState('');
+  const [rescheduleSlots, setRescheduleSlots] = useState([]);
+  const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
+
+  const fetchRescheduleSlots = async (dateStr, appointment) => {
+    if (!dateStr || !appointment) return;
+    setRescheduleSlotsLoading(true);
+    try {
+      const dateInstant = `${dateStr}T00:00:00.000+05:30`;
+      const staffId = appointment.staffId;
+      const salonId = appointment.salonId;
+      const duration = appointment.serviceDuration || 30;
+
+      let res;
+      if (staffId) {
+        res = await axiosInstance.get(`/appointments/public/staff/${staffId}/available-slots`, {
+          params: {
+            salonId,
+            durationMinutes: duration,
+            selectedDate: dateInstant
+          }
+        });
+      } else {
+        res = await axiosInstance.get('/appointments/public/salon-slots', {
+          params: {
+            salonId,
+            selectedDate: dateInstant
+          }
+        });
+      }
+      setRescheduleSlots(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch slots for rescheduling:', error);
+      setRescheduleSlots([]);
+    } finally {
+      setRescheduleSlotsLoading(false);
+    }
+  };
 
   // Mock Stylists for Assignment (Only relevant to Owner)
   const mockStylists = [
@@ -177,7 +214,9 @@ const Appointments = () => {
     setRescheduleData({ date: dateStr, time: timeStr });
     setRescheduleReasonType('');
     setCustomRescheduleReason('');
+    setRescheduleSlots([]);
     setShowRescheduleModal(true);
+    fetchRescheduleSlots(dateStr, appointment);
   };
 
   const confirmReschedule = async () => {
@@ -607,19 +646,68 @@ const Appointments = () => {
                   <input 
                     type="date"
                     value={rescheduleData.date}
-                    onChange={(e) => setRescheduleData(prev => ({ ...prev, date: e.target.value }))}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      setRescheduleData(prev => ({ ...prev, date: newDate, time: '' }));
+                      fetchRescheduleSlots(newDate, selectedAppointment);
+                    }}
                     className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
                   />
                 </div>
 
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Time</label>
-                  <input 
-                    type="time"
-                    value={rescheduleData.time}
-                    onChange={(e) => setRescheduleData(prev => ({ ...prev, time: e.target.value }))}
-                    className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold"
-                  />
+                  {rescheduleSlotsLoading ? (
+                    <div className="flex items-center justify-center py-4 bg-[#fafafa] border border-gray-100 rounded-xl">
+                      <div className="animate-spin h-5 w-5 border-2 border-[#ff0b01] border-t-transparent rounded-full mr-2"></div>
+                      <span className="text-xs text-gray-400 font-bold uppercase">Loading slots...</span>
+                    </div>
+                  ) : rescheduleSlots.length === 0 ? (
+                    <div className="text-center py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-xs text-gray-400 font-bold uppercase">
+                      No slots available for this date
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-[#fafafa] border border-gray-100 rounded-xl">
+                      {rescheduleSlots.map((slot, idx) => {
+                        let timeValue = "";
+                        try {
+                          const dateObj = new Date(slot.startTime);
+                          const istDate = new Date(dateObj.getTime() + (330 * 60000));
+                          timeValue = istDate.toISOString().split('T')[1].slice(0, 5);
+                        } catch (e) {
+                          const match = slot.startTime?.match(/T(\d{2}:\d{2})/);
+                          timeValue = match ? match[1] : "";
+                        }
+
+                        const isSelected = rescheduleData.time === timeValue;
+
+                        return (
+                          <button
+                            type="button"
+                            key={slot.startTime || idx}
+                            disabled={slot.busy}
+                            onClick={() => setRescheduleData(prev => ({ ...prev, time: timeValue }))}
+                            className={`py-2 px-1 rounded-lg border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center ${
+                              slot.busy
+                                ? 'bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed opacity-60'
+                                : isSelected
+                                ? 'bg-gradient-to-b from-[#ff0b01] to-red-650 border-transparent text-white shadow-md'
+                                : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                            }`}
+                          >
+                            <span>{slot.displayTime}</span>
+                            {slot.discountMessage && (
+                              <span className={`text-[8px] font-extrabold mt-0.5 px-1 py-0.2 rounded-full ${
+                                isSelected ? 'bg-white text-[#ff0b01]' : 'bg-green-100 text-green-700'
+                              }`}>
+                                {slot.discountMessage}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div>

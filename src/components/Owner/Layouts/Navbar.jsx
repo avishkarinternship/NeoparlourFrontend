@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
 
 // 1. Keep these correct relative imports (climbing out of your layout folder to src/assets)
-import logoIcon from '../../../assets/Owner/logo_icon.svg';
+import logoIcon from '../../../assets/Neoparlour_logo.png';
 import profileIcon from '../../../assets/Owner/profile.jpg';
 
 

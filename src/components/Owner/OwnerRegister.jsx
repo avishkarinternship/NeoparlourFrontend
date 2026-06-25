@@ -8,7 +8,7 @@ import { User, Mail, Phone, Lock, Building, MapPin, Clock, ShieldCheck, Sparkles
 import searchService from '../../services/searchService';
 
 // Using existing assets
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
 const convertToBase64 = (file) => {

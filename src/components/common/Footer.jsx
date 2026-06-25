@@ -1,6 +1,6 @@
 import React from 'react';
 
-import logoIcon from '../../assets/Owner/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 
 const Footer = () => {
   return (

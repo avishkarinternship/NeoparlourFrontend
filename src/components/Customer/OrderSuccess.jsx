@@ -7,8 +7,17 @@ const OrderSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const order = location.state?.order || null;
   const product = location.state?.product || null;
+
+  const orders = useMemo(() => {
+    if (location.state?.orders) {
+      return location.state.orders;
+    }
+    if (location.state?.order) {
+      return [location.state.order];
+    }
+    return null;
+  }, [location.state]);
 
   const getProductImageSrc = (imageUrl, fallbackImg) => {
     if (!imageUrl) return fallbackImg;
@@ -28,30 +37,12 @@ const OrderSuccess = () => {
     return `${base}${cleanedUrl.startsWith('/') ? '' : '/'}${cleanedUrl}`;
   };
 
-  const itemDetails = useMemo(() => {
-    if (!order || !order.items || order.items.length === 0) return null;
-    return order.items[0];
-  }, [order]);
+  const orderIdsStr = useMemo(() => {
+    if (!orders) return '';
+    return orders.map(o => `#NP-${o.id}`).join(', ');
+  }, [orders]);
 
-  const pricingBreakdown = useMemo(() => {
-    if (!itemDetails || !product) return null;
-    const qty = itemDetails.quantity || 1;
-    const originalPrice = product.price || itemDetails.price;
-    const finalPrice = itemDetails.price;
-    
-    const originalTotal = originalPrice * qty;
-    const finalTotal = finalPrice * qty;
-    const discountAmount = originalTotal - finalTotal;
-
-    return {
-      originalTotal,
-      finalTotal,
-      discountAmount,
-      hasDiscount: discountAmount > 0
-    };
-  }, [itemDetails, product]);
-
-  if (!order) {
+  if (!orders || orders.length === 0) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col text-neutral-800 antialiased">
         <main className="max-w-md w-full mx-auto px-6 py-16 flex-1 flex flex-col items-center justify-center text-center">
@@ -95,8 +86,8 @@ const OrderSuccess = () => {
             <h1 className="text-2xl md:text-3xl font-extrabold text-neutral-900 tracking-tight">
               Order Placed Successfully!
             </h1>
-            <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest">
-              Order ID: #NP-{order.id}
+            <p className="text-xs text-neutral-450 font-bold uppercase tracking-widest">
+              Order ID(s): {orderIdsStr}
             </p>
           </div>
 
@@ -109,103 +100,143 @@ const OrderSuccess = () => {
           </div>
         </div>
 
-        {/* Order Details Accordion Card */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-          <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wider border-b border-gray-100 pb-3">
-            Order Details
-          </h3>
+        {/* Order Details cards */}
+        {orders.map((ord) => {
+          const pricing = (() => {
+            if (product && orders.length === 1 && ord.items?.length === 1 && ord.items[0].productId === product.id) {
+              const item = ord.items[0];
+              const qty = item.quantity || 1;
+              const originalPrice = product.price || item.price;
+              const finalPrice = item.price;
+              const originalTotal = originalPrice * qty;
+              const finalTotal = finalPrice * qty;
+              const discountAmount = originalTotal - finalTotal;
+              return {
+                originalTotal,
+                finalTotal,
+                discountAmount,
+                hasDiscount: discountAmount > 0
+              };
+            }
+            const originalTotal = ord.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+            const finalTotal = ord.totalAmount || originalTotal;
+            const discountAmount = originalTotal - finalTotal;
+            return {
+              originalTotal,
+              finalTotal,
+              discountAmount,
+              hasDiscount: discountAmount > 0
+            };
+          })();
 
-          {/* Product Info Block */}
-          {itemDetails && (
-            <div className="flex gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100/50">
-              <div className="w-16 h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
-                {itemDetails.productImageUrl || product?.imageUrl ? (
-                  <img
-                    src={getProductImageSrc(itemDetails.productImageUrl || product.imageUrl)}
-                    alt={itemDetails.productName}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">No Image</div>
+          return (
+            <div key={ord.id} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6 mb-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wider">
+                  Order Details — #NP-{ord.id}
+                </h3>
+                {ord.status && (
+                  <span className="text-[10px] bg-red-50 text-[#FF0B01] border border-red-100 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                    {ord.status}
+                  </span>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-extrabold text-neutral-900 truncate">
-                  {itemDetails.productName}
-                </h4>
-                <p className="text-xs text-neutral-400 font-semibold truncate mt-0.5">
-                  {product?.description || "Premium Product Formulation"}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-red-50 text-[#FF0B01] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-                    Qty: {itemDetails.quantity}
-                  </span>
-                  <span className="text-xs text-neutral-500 font-bold font-sans">
-                    @ ₹ {itemDetails.price} each
-                  </span>
+
+              {/* Items List */}
+              <div className="space-y-3">
+                {ord.items && ord.items.map((item) => (
+                  <div key={item.id || item.productId} className="flex gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100/50">
+                    <div className="w-16 h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
+                      {item.productImageUrl || (product && item.productId === product.id ? product.imageUrl : null) ? (
+                        <img
+                          src={getProductImageSrc(item.productImageUrl || (product && item.productId === product.id ? product.imageUrl : null))}
+                          alt={item.productName}
+                          className="max-w-full max-h-full object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">No Image</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-extrabold text-neutral-900 truncate">
+                        {item.productName}
+                      </h4>
+                      <p className="text-xs text-neutral-400 font-semibold truncate mt-0.5">
+                        Premium Product Formulation
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs bg-red-50 text-[#FF0B01] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                          Qty: {item.quantity}
+                        </span>
+                        <span className="text-xs text-neutral-500 font-bold font-sans">
+                          @ ₹ {item.price} each
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contact & Venue details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <PhoneCall className="w-3.5 h-3.5 text-neutral-400" />
+                    Customer Contact
+                  </h4>
+                  <div className="text-xs font-semibold text-neutral-700 space-y-1 font-sans">
+                    <p className="text-neutral-900 font-bold">{ord.customerName}</p>
+                    <p>{ord.customerMobile || ord.customerPhone || "—"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                    Collection Venue
+                  </h4>
+                  <div className="text-xs font-semibold text-neutral-700 space-y-1 font-sans">
+                    <p className="text-neutral-900 font-bold">{ord.salonName || "Salon Premise Collection"}</p>
+                    {ord.salonAddress && <p className="text-gray-500">{ord.salonAddress}</p>}
+                    <p className="text-[10px] text-gray-400">Salon ID: #{ord.salonId || 1}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Delivery & Status Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-            <div className="space-y-3">
-              <h4 className="text-xs font-black text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                <PhoneCall className="w-3.5 h-3.5 text-neutral-400" />
-                Customer Contact
-              </h4>
-              <div className="text-xs font-semibold text-neutral-700 space-y-1 font-sans">
-                <p className="text-neutral-900 font-bold">{order.customerName}</p>
-                <p>{order.customerMobile || "—"}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="text-xs font-black text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-neutral-400" />
-                Collection Venue
-              </h4>
-              <div className="text-xs font-semibold text-neutral-700 space-y-1 font-sans">
-                <p className="text-neutral-900 font-bold">{order.salonName || "Salon Premise Collection"}</p>
-                {order.salonAddress && <p className="text-gray-500">{order.salonAddress}</p>}
-                <p className="text-[10px] text-gray-400">Salon ID: #{order.salonId || 1}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Price Summary Breakdown */}
-          {pricingBreakdown && (
-            <div className="border-t border-gray-100 pt-4 space-y-2.5 font-sans">
-              <div className="flex justify-between text-xs font-semibold text-neutral-500">
-                <span>Subtotal</span>
-                <span>₹ {pricingBreakdown.originalTotal}</span>
-              </div>
-              {pricingBreakdown.hasDiscount && (
-                <div className="flex justify-between text-xs font-semibold text-green-600">
-                  <span>Discount Applied</span>
-                  <span>- ₹ {pricingBreakdown.discountAmount}</span>
+              {/* Price Summary Breakdown */}
+              {pricing && (
+                <div className="border-t border-gray-100 pt-4 space-y-2.5 font-sans">
+                  <div className="flex justify-between text-xs font-semibold text-neutral-500">
+                    <span>Subtotal</span>
+                    <span>₹ {pricing.originalTotal}</span>
+                  </div>
+                  {pricing.hasDiscount && (
+                    <div className="flex justify-between text-xs font-semibold text-green-600">
+                      <span>Discount Applied</span>
+                      <span>- ₹ {pricing.discountAmount}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-baseline text-sm font-extrabold text-neutral-900 pt-2 border-t border-gray-50">
+                    <span className="text-base">Amount Paid</span>
+                    <span className="text-lg text-[#FF0B01]">₹ {pricing.finalTotal}</span>
+                  </div>
                 </div>
               )}
-              <div className="flex justify-between items-baseline text-sm font-extrabold text-neutral-900 pt-2 border-t border-gray-50">
-                <span className="text-base">Amount Paid</span>
-                <span className="text-lg text-[#FF0B01]">₹ {pricingBreakdown.finalTotal}</span>
-              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
 
         {/* Action Controls */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => navigate('/customer/product-search')}
-            className="flex-1 max-w-xs py-3.5 bg-white border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white text-neutral-800 text-xs font-black uppercase tracking-wider rounded-2xl transition duration-200 text-center"
+            className="flex-1 max-w-xs py-3.5 bg-white border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white text-neutral-800 text-xs font-black uppercase tracking-wider rounded-2xl transition duration-200 text-center cursor-pointer"
           >
             Continue Shopping
           </button>
           <button
             onClick={() => navigate('/customer/home')}
-            className="flex-1 max-w-xs py-3.5 bg-[#FF0B01] hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-md transition duration-200 text-center"
+            className="flex-1 max-w-xs py-3.5 bg-[#FF0B01] hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-md transition duration-200 text-center cursor-pointer"
           >
             Go to Home
           </button>

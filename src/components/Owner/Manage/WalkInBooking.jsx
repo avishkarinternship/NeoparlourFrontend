@@ -24,26 +24,26 @@ import {
     Heart
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import axiosInstance from '../../api/axiosInstance';
+import axiosInstance from '../../../api/axiosInstance';
 
 // Imported Layout Components
-import BillDetails from './BillDetails.jsx';
-import AppointmentBooked from './AppointmentBooked.jsx';
+import BillDetails from '../../Customer/BillDetails.jsx';
+import AppointmentBooked from '../../Customer/AppointmentBooked.jsx';
 
 // Local SVG and Image Assets
-import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
-import hairSpaIcon from '../../assets/Customer/BookingScreen/hair_spa.svg';
-import hairStylingIcon from '../../assets/Customer/BookingScreen/hair_styling.svg';
-import hairWashIcon from '../../assets/Customer/BookingScreen/hair_wash.svg';
-import coloringIcon from '../../assets/Customer/BookingScreen/coloring.svg';
-import shavingIcon from '../../assets/Customer/BookingScreen/shaving.svg';
-import straighteningIcon from '../../assets/Customer/BookingScreen/straightning.svg';
-import appleIcon from '../../assets/Customer/BookingScreen/apple_icon.svg';
-import playstoreIcon from '../../assets/Customer/BookingScreen/playstore_icon.svg';
+import hairCutIcon from '../../../assets/Customer/BookingScreen/hair_cut.svg';
+import hairSpaIcon from '../../../assets/Customer/BookingScreen/hair_spa.svg';
+import hairStylingIcon from '../../../assets/Customer/BookingScreen/hair_styling.svg';
+import hairWashIcon from '../../../assets/Customer/BookingScreen/hair_wash.svg';
+import coloringIcon from '../../../assets/Customer/BookingScreen/coloring.svg';
+import shavingIcon from '../../../assets/Customer/BookingScreen/shaving.svg';
+import straighteningIcon from '../../../assets/Customer/BookingScreen/straightning.svg';
+import appleIcon from '../../../assets/Customer/BookingScreen/apple_icon.svg';
+import playstoreIcon from '../../../assets/Customer/BookingScreen/playstore_icon.svg';
 
-import expertOneImg from '../../assets/Customer/BookingScreen/Expert_One.png';
-import expertTwoImg from '../../assets/Customer/BookingScreen/Expert_Two.png';
-import expertThreeImg from '../../assets/Customer/BookingScreen/Expert_Three.png';
+import expertOneImg from '../../../assets/Customer/BookingScreen/Expert_One.png';
+import expertTwoImg from '../../../assets/Customer/BookingScreen/Expert_Two.png';
+import expertThreeImg from '../../../assets/Customer/BookingScreen/Expert_Three.png';
 
 // --- LOCAL ASYNC IMAGE COMPONENT ---
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
@@ -141,11 +141,11 @@ const getNextDays = () => {
     return days;
 };
 
-const SelectService = () => {
+const WalkInBooking = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const activeSalonId = localStorage.getItem('activeSalonId');
-    const { isAuthenticated, token } = useSelector((state) => state.customer);
+    const ownerStaffToken = localStorage.getItem('ownerStaffToken');
 
     // --- STATE ---
     const [salon, setSalon] = useState(null);
@@ -248,9 +248,11 @@ const SelectService = () => {
     const displayedSlots = (firstSelected === 'staff') ? staffSlots : salonSlots;
 
     // --- MODAL STATE ---
+    const [isWalkInPopupOpen, setIsWalkInPopupOpen] = useState(false);
     const [isBillOpen, setIsBillOpen] = useState(false);
     const [isBookedOpen, setIsBookedOpen] = useState(false);
-    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+    const [walkInName, setWalkInName] = useState('');
+    const [walkInPhone, setWalkInPhone] = useState('');
     const [bookingLoading, setBookingLoading] = useState(false);
     const [showDiscardOfferModal, setShowDiscardOfferModal] = useState(false);
 
@@ -304,8 +306,8 @@ const SelectService = () => {
     // Load Salon Details immediately on mount
     useEffect(() => {
         if (!activeSalonId) {
-            toast.error('No active salon selected. Redirecting to search.');
-            navigate('/customer/salons');
+            toast.error('No active salon selected. Redirecting to dashboard.');
+            navigate('/owner/dashboard');
             return;
         }
 
@@ -321,67 +323,8 @@ const SelectService = () => {
             }
         };
 
-        const checkFavStatus = async () => {
-            if (isAuthenticated && activeSalonId) {
-                try {
-                    const res = await axiosInstance.get(`/customer/favourites/${activeSalonId}/check`);
-                    setIsFavourite(res.data);
-                } catch (err) {
-                    console.error("Failed to check favourite status:", err);
-                }
-            } else {
-                setIsFavourite(false);
-            }
-        };
-
-        const fetchHomeServiceCharges = async () => {
-            try {
-                const res = await axiosInstance.get(`/salons/${activeSalonId}/home-service-charges`);
-                const charge = parseFloat(res.data) || 0;
-                setHomeServiceCharges(charge);
-            } catch (error) {
-                console.error("Error loading home service charges:", error);
-            }
-        };
-
         fetchSalonDetails();
-        checkFavStatus();
-        fetchHomeServiceCharges();
-    }, [activeSalonId, navigate, isAuthenticated]);
-
-    const handleToggleFavourite = async () => {
-        if (!isAuthenticated) {
-            toast.error("Please login to add to favourites", {
-                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
-            });
-            navigate('/customer/login');
-            return;
-        }
-
-        const salonName = salon?.name || salon?.salonName || 'this salon';
-        const newFavStatus = !isFavourite;
-        setIsFavourite(newFavStatus); // Optimistic UI update
-
-        try {
-            if (newFavStatus) {
-                await axiosInstance.post(`/customer/favourites/${activeSalonId}`);
-                toast.success(`Added ${salonName} to favourites`, {
-                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
-                });
-            } else {
-                await axiosInstance.delete(`/customer/favourites/${activeSalonId}`);
-                toast.success(`Removed ${salonName} from favourites`, {
-                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
-                });
-            }
-        } catch (err) {
-            console.error("Failed to toggle favourite status:", err);
-            setIsFavourite(!newFavStatus); // Revert
-            toast.error(err.response?.data?.message || "Failed to update favourite status", {
-                style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
-            });
-        }
-    };
+    }, [activeSalonId, navigate]);
 
     // --- Compute durationMinutes from selected services ---
     const durationMinutes = useMemo(() => {
@@ -652,15 +595,16 @@ const SelectService = () => {
             toast.error('Please select at least one service to proceed.');
             return;
         }
-        if (homeService && !customerAddress.trim()) {
-            toast.error('Please enter your complete address for home service.');
+        if (!selectedSlot) {
+            toast.error('Please select a date and time slot.');
             return;
         }
-        if (!token) {
-            setShowLoginPrompt(true);
+        if (!ownerStaffToken) {
+            toast.error('Authentication expired. Please log in.');
+            navigate('/owner/login');
             return;
         }
-        setIsBillOpen(true);
+        setIsWalkInPopupOpen(true);
     };
 
     const handleShare = () => {
@@ -765,8 +709,12 @@ const SelectService = () => {
     const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
 
     const handleConfirmBooking = async () => {
-        if (homeService && !customerAddress.trim()) {
-            toast.error('Please enter your complete address for home service.');
+        if (!walkInName.trim()) {
+            toast.error('Please enter customer name.');
+            return;
+        }
+        if (!walkInPhone.trim()) {
+            toast.error('Please enter customer mobile number.');
             return;
         }
         setBookingLoading(true);
@@ -796,22 +744,22 @@ const SelectService = () => {
             }));
 
             const bookingPayload = {
-                userId: customerUser.id || null,
-                customerId: customerProfile.id || null,
+                userId: null,
+                customerId: null,
                 salonId: parseInt(activeSalonId, 10),
                 staffId: selectedExpert && selectedExpert !== 'any' ? parseInt(selectedExpert, 10) : null,
                 staffName: selectedExpertObj?.name && selectedExpertObj.name !== 'No Preference' ? selectedExpertObj.name : null,
-                customerName: customerName,
-                customerNumber: customerPhone,
+                customerName: walkInName,
+                customerNumber: walkInPhone,
                 appointmentAt: appointmentAtStr,
                 serviceDuration: durationMinutes,
                 totalPrice: serviceSubtotal,
                 discountAmount: discountAmount,
                 weekdayDiscountAmount: weekdayDiscountAmount,
-                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount + (homeService ? homeServiceCharges : 0)),
-                homeCharge: homeService ? homeServiceCharges : 0.00,
-                homeService: homeService,
-                address: homeService ? customerAddress : null,
+                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount),
+                homeCharge: 0.00,
+                homeService: false,
+                address: null,
                 status: 'booked',
                 services: appointmentServices
             };
@@ -823,33 +771,20 @@ const SelectService = () => {
                 bookingPayload.discountValue = selectedOffer.percentage;
             }
 
-            const res = await axiosInstance.post('/appointments/book', bookingPayload);
-            toast.success('Appointment booked successfully!');
-            setIsBillOpen(false);
+            const res = await axiosInstance.post('/appointments/walk-in', bookingPayload);
+            toast.success('Walk-in appointment booked successfully!');
+            setIsWalkInPopupOpen(false);
             setIsBookedOpen(true);
         } catch (error) {
-            console.error('[SelectService] Error booking appointment:', error);
+            console.error('[WalkInBooking] Error booking walk-in appointment:', error);
             const status = error.response?.status;
             const message = String(error.response?.data?.message || error.message || '').toLowerCase();
             
             if (status === 401 || status === 403 || message.includes('token') || message.includes('unauthorized') || message.includes('not logged in')) {
-                toast.error('Please login to book an appointment.');
-                navigate('/customer/login', { 
-                    state: { 
-                        from: '/customer/book-service',
-                        bookingState: { 
-                            addedServices, 
-                            selectedExpert, 
-                            selectedSlot, 
-                            selectedDateObj, 
-                            selectedTime, 
-                            selectedOffer, 
-                            selectedCategory 
-                        } 
-                    } 
-                });
+                toast.error('Session expired. Please log in.');
+                navigate('/owner/login');
             } else {
-                toast.error(error.response?.data?.message || 'Failed to book appointment. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to book walk-in appointment. Please try again.');
             }
         } finally {
             setBookingLoading(false);
@@ -871,11 +806,11 @@ const SelectService = () => {
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/owner/dashboard')}>Dashboard</span>
                     <span>&gt;</span>
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>Salon Description</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/owner/manage/schedule')}>Manage</span>
                     <span>&gt;</span>
-                    <span className="text-slate-900 font-black">Select Service</span>
+                    <span className="text-slate-900 font-black">Walk-in Booking</span>
                 </div>
             </nav>
 
@@ -908,11 +843,6 @@ const SelectService = () => {
                                     Code: {salon.salonCode}
                                 </span>
                             )}
-                            {homeServiceCharges > 0 && (
-                                <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
-                                    Home Service: ₹{homeServiceCharges}
-                                </span>
-                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
@@ -923,18 +853,6 @@ const SelectService = () => {
                             title="Share Salon"
                         >
                             <Share2 className="w-4.5 h-4.5" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleToggleFavourite}
-                            className={`p-2.5 border rounded-2xl transition shadow-sm cursor-pointer ${
-                                isFavourite 
-                                    ? 'bg-red-50 border-red-200 text-[#ff0b01]' 
-                                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                            }`}
-                            title={isFavourite ? "Remove from Favourites" : "Mark as Favourite"}
-                        >
-                            <Heart className={`w-4.5 h-4.5 ${isFavourite ? 'fill-[#ff0b01] text-[#ff0b01]' : 'text-slate-600'}`} />
                         </button>
                     </div>
                 </div>
@@ -1634,37 +1552,40 @@ const SelectService = () => {
                 date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}
                 time={selectedTime}
                 expert={selectedExpertObj}
-                customerName={customerName}
-                customerPhone={customerPhone}
+                customerName={walkInName}
+                customerPhone={walkInPhone}
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
                 weekdayDiscountPercent={weekdayDiscountPercent}
-                homeService={homeService}
-                homeCharge={homeService ? homeServiceCharges : 0}
-                address={homeService ? customerAddress : ''}
+                homeService={false}
+                homeCharge={0}
+                address={''}
             />
 
             {/* ==================== APPOINTMENT BOOKED MODAL ==================== */}
             <AppointmentBooked
                 isOpen={isBookedOpen}
-                onClose={() => setIsBookedOpen(false)}
+                onClose={() => {
+                    setIsBookedOpen(false);
+                    navigate('/owner/manage/schedule');
+                }}
                 selectedServices={selectedServiceObjects}
                 date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}
                 time={selectedTime}
                 expert={selectedExpertObj}
-                customerName={customerName}
-                customerPhone={customerPhone}
+                customerName={walkInName}
+                customerPhone={walkInPhone}
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
-                homeService={homeService}
-                homeCharge={homeService ? homeServiceCharges : 0}
-                address={homeService ? customerAddress : ''}
+                homeService={false}
+                homeCharge={0}
+                address={''}
             />
 
-            {/* ==================== LOGIN PROMPT MODAL ==================== */}
-            {showLoginPrompt && (
+            {/* ==================== WALK-IN DETAILS POPUP ==================== */}
+            {isWalkInPopupOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl p-8 max-w-md w-full relative overflow-hidden transition-all duration-300 transform scale-100">
                         {/* Decorative background accent */}
@@ -1673,14 +1594,37 @@ const SelectService = () => {
                         <div className="flex flex-col items-center text-center space-y-6">
                             {/* Icon container */}
                             <div className="w-16 h-16 bg-red-50 rounded-[24px] flex items-center justify-center shadow-lg shadow-red-500/10 shrink-0">
-                                <Sparkles className="w-8 h-8 text-[#FF0B01] animate-pulse" />
+                                <Sparkles className="w-8 h-8 text-[#FF0B01]" />
                             </div>
 
-                            <div className="space-y-2">
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Login Required</h3>
-                                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                    To confirm your slot and book this appointment, please log in to your account. We will preserve your selected services and booking details!
+                            <div className="space-y-2 w-full">
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Walk-In Customer Details</h3>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+                                    Please enter the customer's name and mobile number to proceed with the booking.
                                 </p>
+                                
+                                <div className="space-y-3 text-left">
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Customer Name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Enter Customer Name"
+                                            value={walkInName}
+                                            onChange={(e) => setWalkInName(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#FF0B01] focus:ring-1 focus:ring-[#FF0B01]/30 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Mobile Number</label>
+                                        <input
+                                            type="tel"
+                                            placeholder="Enter Mobile Number"
+                                            value={walkInPhone}
+                                            onChange={(e) => setWalkInPhone(e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#FF0B01] focus:ring-1 focus:ring-[#FF0B01]/30 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* CTAs */}
@@ -1688,28 +1632,25 @@ const SelectService = () => {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setShowLoginPrompt(false);
-                                        navigate('/customer/login', {
-                                            state: {
-                                                from: location.pathname,
-                                                bookingState: {
-                                                    addedServices,
-                                                    selectedDateObj,
-                                                    selectedTime,
-                                                    selectedExpert,
-                                                    selectedOffer
-                                                }
-                                            }
-                                        });
+                                        if (!walkInName.trim()) {
+                                            toast.error('Please enter customer name.');
+                                            return;
+                                        }
+                                        if (!walkInPhone.trim()) {
+                                            toast.error('Please enter customer mobile number.');
+                                            return;
+                                        }
+                                        setIsWalkInPopupOpen(false);
+                                        setIsBillOpen(true);
                                     }}
-                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
+                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15 cursor-pointer"
                                 >
-                                    Log In Now
+                                    Review Bill
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setShowLoginPrompt(false)}
-                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
+                                    onClick={() => setIsWalkInPopupOpen(false)}
+                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
@@ -1748,14 +1689,14 @@ const SelectService = () => {
                                         handleDiscardOffer();
                                         setShowDiscardOfferModal(false);
                                     }}
-                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
+                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15 cursor-pointer"
                                 >
                                     Yes, Discard Offer
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowDiscardOfferModal(false)}
-                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
+                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
                                 >
                                     No, Keep Offer
                                 </button>
@@ -1769,4 +1710,4 @@ const SelectService = () => {
     );
 };
 
-export default SelectService;
+export default WalkInBooking;

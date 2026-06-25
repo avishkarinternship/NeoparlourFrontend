@@ -109,8 +109,8 @@ export default function Cart() {
 
     setCheckoutLoading(true);
     try {
-      await dispatch(checkoutAll()).unwrap();
-      navigate('/customer/my-orders');
+      const orders = await dispatch(checkoutAll()).unwrap();
+      navigate('/customer/order-success', { state: { orders } });
     } catch (err) {
       console.error("Checkout failed:", err);
       toast.error(err || "Checkout failed. Please try again.", toastStyle);

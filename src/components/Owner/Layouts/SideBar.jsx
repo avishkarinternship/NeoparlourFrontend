@@ -26,6 +26,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const subMenu = [
     { label: 'Schedule', path: '/owner/manage/schedule' },
+    { label: 'Walk-in Booking', path: '/owner/manage/walk-in' },
     { label: 'Service', path: '/owner/manage/services' },
     { label: 'Inventory', path: '/owner/manage/inventory' },
     { label: 'Staff', path: '/owner/manage/staff' },

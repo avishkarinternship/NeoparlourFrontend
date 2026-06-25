@@ -13,6 +13,8 @@ const BillDetails = ({
   customerPhone = '',
   selectedOffer = null,
   discountAmount = 0,
+  weekdayDiscountAmount = 0,
+  weekdayDiscountPercent = 0,
   loading = false,
   homeService = false,
   homeCharge = 0,
@@ -21,7 +23,7 @@ const BillDetails = ({
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-  const grandTotal = Math.max(0, serviceTotal - discountAmount + (homeService ? homeCharge : 0));
+  const grandTotal = Math.max(0, serviceTotal - discountAmount - weekdayDiscountAmount + (homeService ? homeCharge : 0));
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 font-sans antialiased">
@@ -173,6 +175,15 @@ const BillDetails = ({
                   <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Offer Discount
                 </span>
                 <span>-₹{discountAmount}</span>
+              </div>
+            )}
+
+            {weekdayDiscountAmount > 0 && (
+              <div className="flex justify-between text-xs text-green-600 font-bold">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Weekday Discount ({weekdayDiscountPercent}%)
+                </span>
+                <span>-₹{weekdayDiscountAmount}</span>
               </div>
             )}
 

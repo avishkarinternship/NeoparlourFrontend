@@ -29,6 +29,7 @@ const Settings = () => {
         closingTime: "",
         weeklyOffDay: "",
         homeServiceCharges: "",
+        weekdayDiscount: "",
     });
 
     const [showPopup, setShowPopup] = useState(false);
@@ -369,6 +370,20 @@ const [popupMessage, setPopupMessage] = useState("");
                                                 value={salonProfile.homeServiceCharges || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
+                                                className="w-full border rounded-xl px-4 py-3 mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-500">Weekday Discount (%)</label>
+                                            <input
+                                                type="number"
+                                                name="weekdayDiscount"
+                                                value={salonProfile.weekdayDiscount !== null && salonProfile.weekdayDiscount !== undefined ? salonProfile.weekdayDiscount : ''}
+                                                disabled={!isSalonEdit}
+                                                onChange={handleSalonChange}
+                                                min="0"
+                                                max="100"
+                                                step="0.1"
                                                 className="w-full border rounded-xl px-4 py-3 mt-1"
                                             />
                                         </div>

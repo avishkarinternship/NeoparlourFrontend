@@ -33,6 +33,11 @@ const ManageSideBar = () => {
       path: '/owner/manage/schedule'
     },
     {
+      label: 'Walk-in Booking',
+      icon: scheduleIcon,
+      path: '/owner/manage/walk-in'
+    },
+    {
       label: 'Service',
       icon: serviceIcon,
       path: '/owner/manage/services'

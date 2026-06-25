@@ -12,7 +12,7 @@ import searchService from '../../services/searchService';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import signupIcon from '../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../assets/Customer/Navbar/login_icon.svg';
 import offersIcon from '../../assets/Customer/Navbar/offers_icon.svg';
@@ -84,7 +84,7 @@ import subFiveImg from '../../assets/Customer/HomeScreen/Review/sub_five_img.svg
 import subSixImg from '../../assets/Customer/HomeScreen/Review/sub_six_img.svg';
 
 //footer
-import footerLogoIcon from '../../assets/Owner/logo_icon.svg';
+import footerLogoIcon from '../../assets/Neoparlour_logo.png';
 
 import Marquee from 'react-fast-marquee';
 import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User } from 'lucide-react';

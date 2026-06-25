@@ -7,7 +7,7 @@ import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
 
 // Using existing assets
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import rightBackground from '../../assets/CustomerLogin/right_background.jpg';
 
 const toastStyle = {

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import logoIcon from '../../assets/Owner/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import profileIcon from '../../assets/Owner/profile.jpg';
 
 const Navbar = ({ onToggleSidebar }) => {

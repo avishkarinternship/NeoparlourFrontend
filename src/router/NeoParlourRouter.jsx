@@ -25,6 +25,7 @@ import Subscription from '../components/Owner/Manage/Subscription'
 import AddOffers from '../components/Owner/Manage/AddOffers'
 import AddProducts from '../components/Owner/Manage/AddProducts'
 import AddPackages from '../components/Owner/Manage/AddPackages'
+import WalkInBooking from '../components/Owner/Manage/WalkInBooking'
 import Features from '../components/Customer/Features'
 import HomeScreen from '../components/Customer/HomeScreen'
 import AboutUs from '../components/Customer/AboutUs'
@@ -302,6 +303,10 @@ export let routes = createBrowserRouter([
                             {
                                 path: '/owner/manage/schedule',
                                 element: <OwnerRouteGuard><Schedule /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/walk-in',
+                                element: <OwnerRouteGuard><WalkInBooking /></OwnerRouteGuard>
                             },
                             {
                                 path: '/owner/manage/services',

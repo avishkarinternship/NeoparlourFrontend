@@ -11,7 +11,7 @@ import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.
 import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
 import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
 
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import salonOneIcon from '../../assets/Customer/HomeScreen/Recommended/salon_one.jpg';
 import salonTwoIcon from '../../assets/Customer/HomeScreen/Recommended/salon_two.jpg';
 import salonThreeIcon from '../../assets/Customer/HomeScreen/Recommended/salon_three.jpg';

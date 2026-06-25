@@ -5,7 +5,7 @@ import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
 import Drawer from '../Drawer'; // Drawer.jsx lives in Customer/, not Customer/Layouts/
 import ProfilePopup from '../ProfilePopup';
 import PasswordResetModal from '../PasswordResetModal';
-import logoIcon from '../../../assets/CustomerRegister/logo_icon.svg'; 
+import logoIcon from '../../../assets/Neoparlour_logo.png'; 
 import signupIcon from '../../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../../assets/Customer/Navbar/login_icon.svg';
 import offersIcon from '../../../assets/Customer/Navbar/offers_icon.svg';

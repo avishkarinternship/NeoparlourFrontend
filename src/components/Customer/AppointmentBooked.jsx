@@ -12,6 +12,7 @@ const AppointmentBooked = ({
   customerPhone = '',
   selectedOffer = null,
   discountAmount = 0,
+  weekdayDiscountAmount = 0,
   homeService = false,
   homeCharge = 0,
   address = ''
@@ -19,7 +20,7 @@ const AppointmentBooked = ({
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
-  const grandTotal = Math.max(0, serviceTotal - discountAmount + (homeService ? homeCharge : 0));
+  const grandTotal = Math.max(0, serviceTotal - discountAmount - weekdayDiscountAmount + (homeService ? homeCharge : 0));
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans antialiased">
@@ -101,6 +102,13 @@ const AppointmentBooked = ({
               <div className="flex justify-between items-center">
                 <span>Home Service Charge</span>
                 <span className="text-gray-900 font-semibold">₹ {homeCharge}</span>
+              </div>
+            )}
+
+            {weekdayDiscountAmount > 0 && (
+              <div className="flex justify-between items-center text-green-600 font-bold">
+                <span>Weekday Discount</span>
+                <span>-₹ {weekdayDiscountAmount}</span>
               </div>
             )}
 

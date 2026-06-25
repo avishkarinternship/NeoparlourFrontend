@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import logoIcon from '../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../assets/Neoparlour_logo.png';
 import usernameIcon from '../assets/CustomerRegister/username_icon.svg';
 import salonIdIcon from '../assets/CustomerRegister/username_icon.svg';
 import specialityIcon from '../assets/CustomerRegister/username_icon.svg';

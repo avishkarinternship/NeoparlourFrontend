@@ -12,7 +12,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { toast } from 'react-hot-toast';
 
 // Icons/Assets
-import logoIcon from '../../assets/CustomerRegister/logo_icon.svg';
+import logoIcon from '../../assets/Neoparlour_logo.png';
 import mobileIcon from '../../assets/CustomerRegister/mobile_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
