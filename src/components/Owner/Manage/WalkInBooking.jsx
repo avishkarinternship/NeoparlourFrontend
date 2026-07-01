@@ -595,6 +595,10 @@ const WalkInBooking = () => {
             toast.error('Please select at least one service to proceed.');
             return;
         }
+        if (homeService && !customerAddress.trim()) {
+            toast.error('Please enter complete address for home service.');
+            return;
+        }
         if (!selectedSlot) {
             toast.error('Please select a date and time slot.');
             return;
@@ -656,10 +660,19 @@ const WalkInBooking = () => {
     // Derived staff list to display
     const displayedStaffList = useMemo(() => {
         if (firstSelected === 'slot') {
-            return availableStaffList.map(s => ({
-                ...s,
-                id: s.staffId || s.id
-            }));
+            return availableStaffList.map(s => {
+                const staffId = s.staffId || s.id;
+                const fullStaff = staffList.find(item => item.id === staffId);
+                return {
+                    ...s,
+                    ...fullStaff,
+                    id: staffId,
+                    name: s.name || s.staffName || fullStaff?.name || 'Stylist',
+                    speciality: s.speciality || fullStaff?.speciality,
+                    imagePath: s.imagePath || fullStaff?.imagePath,
+                    rating: s.rating !== undefined ? s.rating : fullStaff?.rating
+                };
+            });
         }
         return staffList;
     }, [firstSelected, availableStaffList, staffList]);
@@ -756,10 +769,10 @@ const WalkInBooking = () => {
                 totalPrice: serviceSubtotal,
                 discountAmount: discountAmount,
                 weekdayDiscountAmount: weekdayDiscountAmount,
-                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount),
-                homeCharge: 0.00,
-                homeService: false,
-                address: null,
+                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount + (homeService ? homeServiceCharges : 0)),
+                homeCharge: homeService ? homeServiceCharges : 0.00,
+                homeService: homeService,
+                address: homeService ? customerAddress : null,
                 status: 'booked',
                 services: appointmentServices
             };
@@ -1558,9 +1571,9 @@ const WalkInBooking = () => {
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
                 weekdayDiscountPercent={weekdayDiscountPercent}
-                homeService={false}
-                homeCharge={0}
-                address={''}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== APPOINTMENT BOOKED MODAL ==================== */}
@@ -1579,9 +1592,9 @@ const WalkInBooking = () => {
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
-                homeService={false}
-                homeCharge={0}
-                address={''}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== WALK-IN DETAILS POPUP ==================== */}

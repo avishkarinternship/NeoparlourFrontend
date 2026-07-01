@@ -712,10 +712,19 @@ const SelectService = () => {
     // Derived staff list to display
     const displayedStaffList = useMemo(() => {
         if (firstSelected === 'slot') {
-            return availableStaffList.map(s => ({
-                ...s,
-                id: s.staffId || s.id
-            }));
+            return availableStaffList.map(s => {
+                const staffId = s.staffId || s.id;
+                const fullStaff = staffList.find(item => item.id === staffId);
+                return {
+                    ...s,
+                    ...fullStaff,
+                    id: staffId,
+                    name: s.name || s.staffName || fullStaff?.name || 'Stylist',
+                    speciality: s.speciality || fullStaff?.speciality,
+                    imagePath: s.imagePath || fullStaff?.imagePath,
+                    rating: s.rating !== undefined ? s.rating : fullStaff?.rating
+                };
+            });
         }
         return staffList;
     }, [firstSelected, availableStaffList, staffList]);
