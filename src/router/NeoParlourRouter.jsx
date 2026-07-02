@@ -4,6 +4,7 @@ import App from '../App'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
 import OwnerLogin from '../components/Owner/OwnerLogin'
+import OwnerForgotPassword from '../components/Owner/OwnerForgotPassword'
 import CustomerRegister from '../components/Customer/CustomerRegister'
 import OwnerRegister from '../components/Owner/OwnerRegister'
 import SalonSelection from '../components/Customer/SalonSelection'
@@ -118,6 +119,14 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner-login',
                 element: <OwnerLogin />
+            },
+            {
+                path: '/owner/forgot-password',
+                element: <OwnerForgotPassword />
+            },
+            {
+                path: '/owner-forgot-password',
+                element: <OwnerForgotPassword />
             },
             {
                 path: '/register',

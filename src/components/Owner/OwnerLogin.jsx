@@ -171,7 +171,7 @@ const OwnerLogin = () => {
             </div>
             
             <div className="text-xs space-y-2 border-t pt-4">
-              <a href="#" className="text-[#ff0b01] font-bold block hover:underline">Forgot Password?</a>
+              <Link to="/owner/forgot-password" className="text-[#ff0b01] font-bold block hover:underline">Forgot Password?</Link>
               <p className="text-gray-400 font-semibold">
                 Are you a Customer? <Link to="/customer/login" className="text-[#ff0b01] font-black hover:underline ml-1.5">Customer Login</Link>
               </p>

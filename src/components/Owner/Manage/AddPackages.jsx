@@ -256,21 +256,30 @@ const AddPackages = () => {
         }
     };
 
-    const handleEdit = (pkg) => {
-        setFormData({
-            name: pkg.name || '',
-            description: pkg.description || '',
-            packagePrice: pkg.packagePrice || '',
-            active: pkg.active !== false,
-            serviceIds: pkg.services?.map(s => s.id) || [],
-            usageLimitPerCustomer: pkg.usageLimitPerCustomer || '',
-            totalUsageLimit: pkg.totalUsageLimit || ''
-        });
-        setSelectedServices(pkg.services?.map(s => s.id) || []);
-        setIsEditing(true);
-        setEditingId(pkg.id);
-        setActiveTab('add');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const handleEdit = async (pkg) => {
+        const toastId = toast.loading('Loading package details...', toastStyle);
+        try {
+            const response = await axiosInstance.get(`/packages/${pkg.id}`);
+            const fullPkg = response.data;
+            setFormData({
+                name: fullPkg.name || '',
+                description: fullPkg.description || '',
+                packagePrice: fullPkg.packagePrice || '',
+                active: fullPkg.active !== false,
+                serviceIds: fullPkg.services?.map(s => s.id) || [],
+                usageLimitPerCustomer: fullPkg.usageLimitPerCustomer || '',
+                totalUsageLimit: fullPkg.totalUsageLimit || ''
+            });
+            setSelectedServices(fullPkg.services?.map(s => s.id) || []);
+            setIsEditing(true);
+            setEditingId(fullPkg.id);
+            setActiveTab('add');
+            toast.dismiss(toastId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error('Failed to fetch package details:', error);
+            toast.error('Failed to load package details', { id: toastId, ...toastStyle });
+        }
     };
 
     const handleDelete = async (id) => {

@@ -471,6 +471,16 @@ const Schedule = () => {
                             </span>
                           )}
                         </div>
+                        {currentSubTab === 'Cancelled' && appt.cancelReason && (
+                          <div className="text-[11px] font-bold text-red-500 mt-2 bg-red-50/50 border border-red-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                            🚫 Cancellation Reason: {appt.cancelReason}
+                          </div>
+                        )}
+                        {currentSubTab === 'Scheduled' && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
+                          <div className="text-[11px] font-bold text-amber-600 mt-2 bg-amber-50/50 border border-amber-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                            🔄 Reschedule Reason: {appt.ownerRescheduleReason || appt.customerRescheduleReason || 'Rescheduled'}
+                          </div>
+                        )}
                       </div>
                     </div>
 

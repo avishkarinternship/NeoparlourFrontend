@@ -33,12 +33,25 @@ const Settings = () => {
     });
 
     const [showPopup, setShowPopup] = useState(false);
-const [popupMessage, setPopupMessage] = useState("");
+    const [popupMessage, setPopupMessage] = useState("");
+
+    // Salon image upload states
+    const [logoBase64, setLogoBase64] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+
+    const [existingSalonImages, setExistingSalonImages] = useState([]);
+    const [newGalleryBase64s, setNewGalleryBase64s] = useState([]);
+    const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
 
     useEffect(() => {
         fetchOwnerProfile();
-        fetchSalonProfile();
     }, []);
+
+    useEffect(() => {
+        if (activeTab === 'salon') {
+            fetchSalonProfile();
+        }
+    }, [activeTab]);
 
     const fetchOwnerProfile = async () => {
         try {
@@ -60,11 +73,65 @@ const [popupMessage, setPopupMessage] = useState("");
     const fetchSalonProfile = async () => {
         try {
             const response = await axiosInstance.get("/salons/profile");
-
             setSalonProfile(response.data);
+            setExistingSalonImages(response.data.salonImages || []);
+            // reset new uploads
+            setLogoBase64(null);
+            setLogoPreview(null);
+            setNewGalleryBase64s([]);
+            setNewGalleryPreviews([]);
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Image size must be under 2MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setLogoBase64(reader.result);
+            setLogoPreview(URL.createObjectURL(file));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleGalleryUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const promises = files.map(file => {
+            return new Promise((resolve, reject) => {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert(`${file.name} is too large (max 2MB)`);
+                    resolve(null);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({ base64: reader.result, preview: URL.createObjectURL(file) });
+                reader.onerror = () => reject(null);
+                reader.readAsDataURL(file);
+            });
+        });
+
+        Promise.all(promises).then(results => {
+            const valid = results.filter(Boolean);
+            setNewGalleryBase64s(prev => [...prev, ...valid.map(v => v.base64)]);
+            setNewGalleryPreviews(prev => [...prev, ...valid.map(v => v.preview)]);
+        });
+    };
+
+    const removeExistingGalleryImage = (indexToRemove) => {
+        setExistingSalonImages(prev => prev.filter((_, i) => i !== indexToRemove));
+    };
+
+    const removeNewGalleryImage = (indexToRemove) => {
+        setNewGalleryBase64s(prev => prev.filter((_, i) => i !== indexToRemove));
+        setNewGalleryPreviews(prev => prev.filter((_, i) => i !== indexToRemove));
     };
 
     const handleOwnerChange = (e) => {
@@ -119,14 +186,24 @@ const [popupMessage, setPopupMessage] = useState("");
 
     const updateSalonProfile = async () => {
         try {
+            const payload = {
+                ...salonProfile,
+                salonImages: existingSalonImages,
+                imageBase64: logoBase64 || null,
+                salonImagesBase64: newGalleryBase64s.length > 0 ? newGalleryBase64s : null
+            };
+
             await axiosInstance.put(
                 `/salons/profile`,
-                salonProfile
+                payload
             );
 
             setPopupMessage("Salon profile updated successfully");
             setShowPopup(true);
             setIsSalonEdit(false);
+
+            // Refresh to load newly saved URLs and clear upload states
+            fetchSalonProfile();
         } catch (error) {
             console.log(error);
         }
@@ -429,6 +506,95 @@ const [popupMessage, setPopupMessage] = useState("");
                                     </div>
                                 </div>
 
+                                <div className="mb-6 border-t pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Salon Images</h3>
+                                    
+                                    {/* Salon Logo */}
+                                    <div className="mb-6">
+                                        <label className="text-sm font-semibold text-gray-600 block mb-2">Salon Logo (Main Image)</label>
+                                        <div className="flex items-center space-x-6">
+                                            <div className="w-24 h-24 rounded-xl border overflow-hidden bg-gray-50 flex items-center justify-center relative shadow-sm">
+                                                {logoPreview ? (
+                                                    <img src={logoPreview} alt="New Logo Preview" className="w-full h-full object-cover" />
+                                                ) : salonProfile.imageUrl ? (
+                                                    <img src={salonProfile.imageUrl} alt="Salon Logo" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">No Logo</span>
+                                                )}
+                                            </div>
+                                            {isSalonEdit && (
+                                                <div>
+                                                    <label className="cursor-pointer bg-gray-800 hover:bg-black text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow transition-colors inline-block">
+                                                        Change Logo
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            onChange={handleLogoUpload} 
+                                                            className="hidden" 
+                                                        />
+                                                    </label>
+                                                    <p className="text-[10px] text-gray-400 mt-2 font-medium">JPG, PNG, GIF up to 2MB</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Gallery Images */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-600 block mb-3">Salon Gallery Images</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {/* Existing Gallery Images */}
+                                            {existingSalonImages.map((imgUrl, idx) => (
+                                                <div key={`existing-${idx}`} className="aspect-square rounded-2xl border overflow-hidden bg-gray-50 relative group shadow-sm">
+                                                    <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                                                    {isSalonEdit && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeExistingGalleryImage(idx)}
+                                                            className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow transition-colors"
+                                                            title="Delete Image"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Newly Uploaded Gallery Images */}
+                                            {newGalleryPreviews.map((previewUrl, idx) => (
+                                                <div key={`new-${idx}`} className="aspect-square rounded-2xl border border-dashed border-red-200 overflow-hidden bg-red-50/20 relative group shadow-sm">
+                                                    <img src={previewUrl} alt={`New Gallery Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                                                    {isSalonEdit && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeNewGalleryImage(idx)}
+                                                            className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow transition-colors"
+                                                            title="Delete Image"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Add Gallery Image Card */}
+                                            {isSalonEdit && (
+                                                <label className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#FF0B01] hover:bg-red-50/5 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 group">
+                                                    <span className="text-2xl text-gray-400 group-hover:text-[#FF0B01] transition-colors">+</span>
+                                                    <span className="text-[10px] font-black text-gray-400 group-hover:text-[#FF0B01] uppercase tracking-wider transition-colors">Add Image</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        multiple 
+                                                        onChange={handleGalleryUpload} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                </div>
 
                                 <div className="mt-8">
                                     <button

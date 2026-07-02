@@ -33,6 +33,30 @@ const SearchNavBar = () => {
   const displayInitial = ((displayName.startsWith('+') ? displayName.slice(1) : displayName).charAt(0) || 'P').toUpperCase();
   const isNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
 
+  const getProfileCompletion = () => {
+      if (!profile) return 0;
+      let filled = 0;
+      const name = (profile.fullName || user?.name || user?.username || '').trim();
+      if (name && name.toLowerCase() !== 'customer') filled++;
+      
+      const phone = (profile.mobile || user?.phone || '').trim();
+      if (phone) filled++;
+      
+      const gen = (profile.gender || '').trim();
+      if (gen && gen !== 'Select Gender') filled++;
+      
+      const addr = (profile.address || '').trim();
+      if (addr) filled++;
+      
+      const mail = (profile.email || user?.email || '').trim();
+      if (mail) filled++;
+      
+      return filled / 5;
+  };
+
+  const completion = getProfileCompletion();
+  const isCompleted = completion === 1;
+
   useEffect(() => {
       if (isAuthenticated && user && !profile) {
           const customerId = user.id || user.user?.id;
@@ -97,8 +121,45 @@ const SearchNavBar = () => {
       <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
         {isAuthenticated && (user || profile) ? (
           <div className="flex items-center gap-2 sm:gap-3">
-              {isNameBlank ? (
+              {!isCompleted ? (
                   <div className="relative flex items-center gap-1.5 sm:gap-2">
+                      <button
+                          onClick={() => setIsProfileOpen(true)}
+                          className="relative flex items-center justify-center w-11 h-11 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 group cursor-pointer border-0 shrink-0 p-0 bg-transparent"
+                          title={`Profile is ${(completion * 100).toFixed(0)}% complete. Click to complete.`}
+                      >
+                          {/* Progress Ring SVG */}
+                          <svg className="absolute w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                              {/* Background Track Circle */}
+                              <circle
+                                  stroke="#E2E8F0"
+                                  strokeWidth="3"
+                                  fill="transparent"
+                                  r="15"
+                                  cx="18"
+                                  cy="18"
+                              />
+                              {/* Active Progress Circle */}
+                              <circle
+                                  stroke="#FF0B01"
+                                  strokeWidth="3"
+                                  strokeDasharray="94.25"
+                                  strokeDashoffset={94.25 - (completion * 94.25)}
+                                  strokeLinecap="round"
+                                  fill="transparent"
+                                  r="15"
+                                  cx="18"
+                                  cy="18"
+                                  style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+                              />
+                          </svg>
+
+                          {/* Avatar inside */}
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-[#FF0B01] flex items-center justify-center shadow-sm relative z-10">
+                              <User className="w-4.5 h-4.5 text-[#FF0B01]" />
+                          </div>
+                      </button>
+                      
                       {/* Bouncing cursor hand pointing at the button */}
                       <style>{`
                           @keyframes bounce-x {
@@ -109,20 +170,6 @@ const SearchNavBar = () => {
                               animation: bounce-x 1s infinite;
                           }
                       `}</style>
-                      <button
-                          onClick={() => setIsProfileOpen(true)}
-                          className="relative flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#FF0B01] hover:bg-[#e60a00] text-white shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group cursor-pointer border-0 shrink-0"
-                      >
-                          {/* Avatar */}
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-[#FF0B01] flex items-center justify-center shadow-sm flex-shrink-0">
-                              <User className="w-4 h-4 text-[#FF0B01]" />
-                          </div>
-                          
-                          {/* Button Text */}
-                          <span className="text-xs font-black text-white tracking-tight px-1.5 uppercase sm:normal-case">
-                              My Account
-                          </span>
-                      </button>
                       <div className="pointer-events-none select-none hidden sm:block animate-bounce-x shrink-0">
                           <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
                       </div>

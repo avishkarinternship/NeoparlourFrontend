@@ -186,14 +186,62 @@ const SelectService = () => {
     // Date & Time states
     const nextDays = getNextDays();
     const [selectedDateObj, setSelectedDateObj] = useState(() => {
-        return location.state?.selectedDateObj || nextDays[0];
+        if (location.state?.selectedDateObj) {
+            return location.state.selectedDateObj;
+        }
+        const stored = localStorage.getItem('bookingSelectedDateObj');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                const exists = nextDays.find(d => d.fullDate === parsed.fullDate);
+                if (exists) return exists;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return nextDays[0];
     });
     const [selectedTime, setSelectedTime] = useState(() => {
-        return location.state?.selectedTime || null;
+        return location.state?.selectedTime || localStorage.getItem('bookingSelectedTime') || null;
     });
     const [selectedSlot, setSelectedSlot] = useState(() => {
-        return location.state?.selectedSlot || null;
+        if (location.state?.selectedSlot) {
+            return location.state.selectedSlot;
+        }
+        const stored = localStorage.getItem('bookingSelectedSlot');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return null;
     }); // Full slot object {startTime, displayTime}
+
+    useEffect(() => {
+        if (selectedDateObj) {
+            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+        } else {
+            localStorage.removeItem('bookingSelectedDateObj');
+        }
+    }, [selectedDateObj]);
+
+    useEffect(() => {
+        if (selectedTime) {
+            localStorage.setItem('bookingSelectedTime', selectedTime);
+        } else {
+            localStorage.removeItem('bookingSelectedTime');
+        }
+    }, [selectedTime]);
+
+    useEffect(() => {
+        if (selectedSlot) {
+            localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+        } else {
+            localStorage.removeItem('bookingSelectedSlot');
+        }
+    }, [selectedSlot]);
 
     // --- API-BASED SLOT & AVAILABILITY STATE ---
     const [salonSlots, setSalonSlots] = useState([]);       // All salon slots for the day
@@ -203,14 +251,26 @@ const SelectService = () => {
     const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
 
     const [selectedExpert, setSelectedExpert] = useState(() => {
-        return location.state?.selectedExpert || 'any';
+        if (location.state?.selectedExpert) {
+            return location.state.selectedExpert;
+        }
+        return localStorage.getItem('bookingSelectedExpert') || 'any';
     });
 
+    useEffect(() => {
+        if (selectedExpert && selectedExpert !== 'any') {
+            localStorage.setItem('bookingSelectedExpert', selectedExpert);
+        } else {
+            localStorage.removeItem('bookingSelectedExpert');
+        }
+    }, [selectedExpert]);
+
     const [firstSelected, setFirstSelected] = useState(() => {
-        if (location.state?.selectedSlot) {
+        if (location.state?.selectedSlot || localStorage.getItem('bookingSelectedSlot')) {
             return 'slot';
         }
-        if (location.state?.selectedExpert && location.state.selectedExpert !== 'any') {
+        const expert = location.state?.selectedExpert || localStorage.getItem('bookingSelectedExpert');
+        if (expert && expert !== 'any') {
             return 'staff';
         }
         return null;
@@ -834,6 +894,13 @@ const SelectService = () => {
 
             const res = await axiosInstance.post('/appointments/book', bookingPayload);
             toast.success('Appointment booked successfully!');
+            
+            // Clear selections from localStorage
+            localStorage.removeItem('bookingSelectedSlot');
+            localStorage.removeItem('bookingSelectedTime');
+            localStorage.removeItem('bookingSelectedExpert');
+            localStorage.removeItem('bookingSelectedDateObj');
+            
             setIsBillOpen(false);
             setIsBookedOpen(true);
         } catch (error) {

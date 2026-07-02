@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -23,14 +24,15 @@ const toastStyle = {
 };
 
 const Subscription = () => {
+    const navigate = useNavigate();
 
     const [subscriptionPlans, setSubscriptionPlans] = useState([]);
     const [userSubscriptions, setUserSubscriptions] = useState([]);
     const [loadingPlans, setLoadingPlans] = useState(true);
     const [loadingSubs, setLoadingSubs] = useState(true);
 
-    // Replace with actual salonId from auth/context (example: 1)
-    const salonId = 1; // TODO: Get from auth context
+    const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    const salonId = localStorage.getItem('activeSalonId') || ownerUser.tenantName || ownerUser.salonId || ownerUser.user?.salonId || ownerUser.salon?.id || 1;
 
     // Fetch Subscription Plans
     const fetchPlans = async () => {
@@ -46,11 +48,11 @@ const Subscription = () => {
         }
     };
 
-    // Fetch Owner's Active Subscriptions
+    // Fetch Owner's Subscriptions List
     const fetchSubscriptions = async () => {
         try {
             setLoadingSubs(true);
-            const response = await axiosInstance.get(`/subscriptions/salon/${salonId}/status/active`);
+            const response = await axiosInstance.get(`/subscriptions/salon/${salonId}`);
             setUserSubscriptions(response.data || []);
         } catch (error) {
             toast.error('Failed to load your subscriptions', toastStyle);
@@ -58,6 +60,34 @@ const Subscription = () => {
         } finally {
             setLoadingSubs(false);
         }
+    };
+
+    const getPlanDetails = (sub) => {
+        const plan = subscriptionPlans.find(p => p.planCode === sub.planCode) || {};
+        return {
+            name: sub.planName || plan.planName || sub.planCode,
+            amount: sub.amountInPaise ? (sub.amountInPaise / 100) : (plan.amountInPaise ? plan.amountInPaise / 100 : 0)
+        };
+    };
+
+    const getActiveDurationMonths = (startDateStr, endDateStr) => {
+        if (!startDateStr || !endDateStr) return null;
+        const start = new Date(startDateStr);
+        const end = new Date(endDateStr);
+        const diffMs = end - start;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return Math.round(diffDays / 30.44);
+    };
+
+    const getRemainingMonths = (endDateStr) => {
+        if (!endDateStr) return null;
+        const end = new Date(endDateStr);
+        const now = new Date();
+        if (end <= now) return 0;
+        const diffMs = end - now;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        const remaining = diffDays / 30.44;
+        return Math.max(0, Math.round(remaining * 10) / 10);
     };
 
     useEffect(() => {
@@ -68,12 +98,25 @@ const Subscription = () => {
     const handlePlanAction = (planCode) => {
         // Redirect to payment flow
         console.log(`Initiating checkout for plan: ${planCode}`);
-        // You can call /subscriptions/create-order here
+        navigate('/subscription-plans');
     };
 
-    const handleDownloadInvoice = (invoiceId) => {
-        console.log(`Downloading invoice: ${invoiceId}`);
-        // Implement actual download logic
+    const handleDownloadInvoice = async (invoiceId) => {
+        const toastId = toast.loading('Generating invoice PDF...', toastStyle);
+        try {
+            const response = await axiosInstance.get(`/invoices/subscription/${invoiceId}`, {
+                responseType: 'blob'
+            });
+            const file = new Blob([response.data], { type: 'application/pdf' });
+            const fileURL = URL.createObjectURL(file);
+            
+            window.open(fileURL, '_blank');
+            
+            toast.success('Invoice opened successfully!', { id: toastId, ...toastStyle });
+        } catch (error) {
+            console.error('Failed to download invoice:', error);
+            toast.error('Failed to download invoice. Please try again.', { id: toastId, ...toastStyle });
+        }
     };
 
     return (
@@ -166,41 +209,93 @@ const Subscription = () => {
                             </span>
                         </div>
 
-                        <div className="bg-[#F8F9FA] px-6 py-3 rounded-lg grid grid-cols-4 gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <div className="bg-[#F8F9FA] px-6 py-3 rounded-lg grid grid-cols-5 gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                             <div>Invoice</div>
                             <div>Plan</div>
                             <div>Amount</div>
+                            <div>Status</div>
                             <div className="text-right pr-14">Billing Date</div>
                         </div>
 
                         <div className="divide-y divide-gray-100 px-2">
                             {userSubscriptions.length > 0 ? (
-                                userSubscriptions.map((sub) => (
-                                    <div
-                                        key={sub.id}
-                                        className="grid grid-cols-4 gap-4 items-center py-4 text-[12px] text-gray-800 font-medium"
-                                    >
-                                        <div className="flex items-center space-x-2.5">
-                                            <img src={invoiceIcon} alt="Invoice" className="w-4 h-4" />
-                                            <span className="font-semibold text-gray-900">SUB-{sub.id}</span>
-                                        </div>
-                                        <div className="text-gray-700">{sub.planName || sub.planCode}</div>
-                                        <div className="font-bold text-gray-900">
-                                            ₹{(sub.amountInPaise || 0) / 100}
-                                        </div>
-                                        <div className="flex items-center justify-end space-x-7 text-right">
-                                            <span className="text-gray-500 text-[11px]">
-                                                {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}
-                                            </span>
-                                            <button
-                                                onClick={() => handleDownloadInvoice(sub.id)}
-                                                className="p-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
+                                [...userSubscriptions]
+                                    .sort((a, b) => {
+                                        if (a.status === 'active' && b.status !== 'active') return -1;
+                                        if (a.status !== 'active' && b.status === 'active') return 1;
+                                        return b.id - a.id;
+                                    })
+                                    .map((sub) => {
+                                        const planInfo = getPlanDetails(sub);
+                                        const isActive = sub.status === 'active';
+                                        const isPending = sub.status === 'pending';
+                                        const isEnded = sub.status === 'ended' || (sub.endDate && new Date(sub.endDate) < new Date());
+                                        
+                                        const totalMonths = getActiveDurationMonths(sub.startDate, sub.endDate);
+                                        const remainingMonths = getRemainingMonths(sub.endDate);
+
+                                        return (
+                                            <div
+                                                key={sub.id}
+                                                className={`grid grid-cols-5 gap-4 items-center py-4 px-4 text-[12px] rounded-xl transition-all duration-200 ${
+                                                    isActive
+                                                        ? 'bg-red-50/40 border border-red-100/80 text-gray-900 font-semibold'
+                                                        : 'text-gray-600 font-medium opacity-70 hover:opacity-100'
+                                                }`}
                                             >
-                                                <img src={billingIcon} alt="Download" className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
+                                                <div className="flex items-center space-x-2.5">
+                                                    <img src={invoiceIcon} alt="Invoice" className="w-4 h-4" />
+                                                    <span className={`font-semibold ${isActive ? 'text-[#FF0B01]' : 'text-gray-900'}`}>SUB-{sub.id}</span>
+                                                </div>
+                                                <div className="text-gray-700">{planInfo.name}</div>
+                                                <div className="font-bold text-gray-900">
+                                                    ₹{planInfo.amount}
+                                                </div>
+                                                <div>
+                                                    {isActive ? (
+                                                        <div className="space-y-0.5">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-green-100 text-green-800 uppercase tracking-wider">
+                                                                Currently In Use
+                                                            </span>
+                                                            {totalMonths && (
+                                                                <div className="text-[10px] text-gray-500 font-semibold leading-tight">
+                                                                    Active: {totalMonths} months {remainingMonths !== null && `(${remainingMonths} left)`}
+                                                                </div>
+                                                            )}
+                                                            <div className="text-[9px] text-gray-400 font-semibold leading-tight">
+                                                                Starting from: {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'} till {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'N/A'}
+                                                            </div>
+                                                        </div>
+                                                    ) : isPending ? (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-yellow-100 text-yellow-800 uppercase tracking-wider">
+                                                            Pending
+                                                        </span>
+                                                    ) : isEnded ? (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gray-100 text-gray-800 uppercase tracking-wider">
+                                                            Ended
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gray-100 text-gray-800 uppercase tracking-wider">
+                                                            {sub.status || 'Inactive'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center justify-end space-x-7 text-right">
+                                                    <span className="text-gray-500 text-[11px]">
+                                                        {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleDownloadInvoice(sub.id)}
+                                                        disabled={isPending}
+                                                        className={`p-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 ${isPending ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                                        title={isPending ? 'Invoice not available for pending subscription' : 'Download Invoice'}
+                                                    >
+                                                        <img src={billingIcon} alt="Download" className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                             ) : (
                                 <div className="text-center py-12 text-gray-500">
                                     No billing history available
