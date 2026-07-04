@@ -573,8 +573,12 @@ const OwnerDashboard = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-red-50 text-[#ff0b01] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize">
-                                                    {appt.status}
+                                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
+                                                    appt.status === 'in_progress' 
+                                                        ? 'bg-orange-50 text-orange-600' 
+                                                        : 'bg-red-50 text-[#ff0b01]'
+                                                }`}>
+                                                    {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                                                 </span>
                                             </div>
                                         </div>
@@ -735,10 +739,25 @@ const OwnerDashboard = () => {
                                         <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
-                                                    {staff.imageUrl ? (
-                                                        <img src={staff.imageUrl} alt={staff.name} className="w-full h-full object-cover" />
+                                                    {staff.imageUrl || staff.imagePath ? (
+                                                        <img 
+                                                            src={staff.imageUrl || staff.imagePath} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                            onError={(e) => {
+                                                                e.target.src = staff.gender === 'FEMALE' 
+                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                            }}
+                                                        />
                                                     ) : (
-                                                        staff.name ? staff.name.charAt(0) : 'S'
+                                                        <img 
+                                                            src={staff.gender === 'FEMALE' 
+                                                                ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                        />
                                                     )}
                                                 </div>
                                                 <div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { User } from 'lucide-react';
 
 // Icons
 import cameraIcon from '../../../assets/Owner/Manage/Services/camera_icon.svg';
@@ -49,6 +50,50 @@ const Staff = () => {
     const [loading, setLoading] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
 
+    const [imageBase64, setImageBase64] = useState('');
+    const [imagePreview, setImagePreview] = useState('');
+    const [editImageBase64, setEditImageBase64] = useState('');
+    const [editImagePreview, setEditImagePreview] = useState('');
+
+    const convertToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
+            fileReader.onload = () => {
+                resolve(fileReader.result);
+            };
+            fileReader.onerror = (error) => {
+                reject(error);
+            };
+        });
+    };
+
+    const handleImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const base64 = await convertToBase64(file);
+                setImageBase64(base64);
+                setImagePreview(base64);
+            } catch (error) {
+                toast.error("Failed to convert image", toastStyle);
+            }
+        }
+    };
+
+    const handleEditImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const base64 = await convertToBase64(file);
+                setEditImageBase64(base64);
+                setEditImagePreview(base64);
+            } catch (error) {
+                toast.error("Failed to convert image", toastStyle);
+            }
+        }
+    };
+
     // Filters
     const [filters, setFilters] = useState({
         name: '',
@@ -89,6 +134,8 @@ const Staff = () => {
             name: '', phone: '', email: '', password: '', address: '', birthdate: '', gender: ''
         });
         setEditingStaffId(null);
+        setImageBase64('');
+        setImagePreview('');
     };
 
     const handleSubmit = async (e) => {
@@ -100,12 +147,15 @@ const Staff = () => {
 
         setFormLoading(true);
         try {
-            const payload = { ...formData };
+            const payload = { 
+                ...formData,
+                imageBase64: imageBase64 || null
+            };
             if (payload.gender === 'Other') {
                 payload.gender = 'OTHERS';
             }
 
-            await axiosInstance.post('staff', payload);
+            await axiosInstance.post('auth/staff', payload);
             toast.success('Staff created successfully', toastStyle);
             resetForm();
             fetchStaff();
@@ -131,6 +181,8 @@ const Staff = () => {
                 birthdate: staff.birthdate ? staff.birthdate.split('T')[0] : '',
                 gender: staff.gender || ''
             });
+            setEditImagePreview(staff.imageUrl || '');
+            setEditImageBase64('');
         } catch (error) {
             toast.error('Failed to load staff details', toastStyle);
             setIsEditModalOpen(false);
@@ -149,7 +201,10 @@ const Staff = () => {
 
         setFormLoading(true);
         try {
-            const payload = { ...editFormData };
+            const payload = { 
+                ...editFormData,
+                imageBase64: editImageBase64 || null
+            };
             if (payload.gender === 'Other') {
                 payload.gender = 'OTHERS';
             }
@@ -171,6 +226,8 @@ const Staff = () => {
         setEditFormData({
             name: '', phone: '', email: '', address: '', birthdate: '', gender: ''
         });
+        setEditImageBase64('');
+        setEditImagePreview('');
     };
 
     useEffect(() => {
@@ -197,6 +254,31 @@ const Staff = () => {
                         <h2 className="text-xl font-bold mb-6">Add New Staff</h2>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
+                            {/* Profile Image Uploader */}
+                            <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-2xl max-w-md">
+                                <div className="relative w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center border border-gray-300 flex-shrink-0">
+                                    {imagePreview ? (
+                                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-8 h-8 text-gray-400" />
+                                    )}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-gray-700">Profile Picture</span>
+                                    <span className="text-[10px] text-gray-400 mb-2">Square image recommended</span>
+                                    <label className="cursor-pointer bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 text-gray-700 shadow-sm w-fit">
+                                        Choose File
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            id="staffImageInput"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
                                     <img src={nameIcon} alt="Name" className="w-4 h-4 mr-2.5" />
@@ -263,8 +345,17 @@ const Staff = () => {
                                 {staffList.map((staff) => (
                                     <div key={staff.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-all gap-4">
                                         <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
-                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                                                {staff.name?.charAt(0)}
+                                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200 overflow-hidden flex-shrink-0">
+                                                <img
+                                                    src={staff.imageUrl || (staff.gender === 'FEMALE' ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png' : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')}
+                                                    alt={staff.name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.src = staff.gender === 'FEMALE' 
+                                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                    }}
+                                                />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <h4 className="font-semibold text-gray-900 truncate">{staff.name}</h4>
@@ -341,6 +432,30 @@ const Staff = () => {
                             ) : (
                                 <form onSubmit={handleSubmitEdit} className="space-y-4">
                                     <div className="space-y-3.5">
+                                        {/* Edit Profile Image Uploader */}
+                                        <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                            <div className="relative w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center border border-gray-300 flex-shrink-0">
+                                                {editImagePreview ? (
+                                                    <img src={editImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-8 h-8 text-gray-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-bold text-gray-700">Profile Picture</span>
+                                                <span className="text-[10px] text-gray-400 mb-2">Square image recommended</span>
+                                                <label className="cursor-pointer bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 text-gray-700 shadow-sm w-fit">
+                                                    Choose File
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={handleEditImageChange}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
                                             <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">

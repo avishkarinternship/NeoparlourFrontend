@@ -1059,18 +1059,24 @@ const SalonPage = () => {
                                                     {/* Avatar */}
                                                     <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
                                                         }`}>
-                                                        {staff.imagePath ? (
-                                                            <AsyncImage
-                                                                imagePath={staff.imagePath}
-                                                                alt={staff.name}
-                                                                className="w-full h-full object-cover"
-                                                                fallbackText={staff.name?.[0] || 'S'}
+                                                        {staff.imageUrl || staff.imagePath ? (
+                                                            <img 
+                                                                src={staff.imageUrl || staff.imagePath} 
+                                                                alt={staff.name} 
+                                                                className="w-full h-full object-cover" 
+                                                                onError={(e) => {
+                                                                    e.target.src = staff.gender === 'FEMALE' 
+                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                }}
                                                             />
                                                         ) : (
-                                                            <img
-                                                                src={getExpertImg(index)}
-                                                                alt={staff.name}
-                                                                className="w-full h-full object-cover"
+                                                            <img 
+                                                                src={staff.gender === 'FEMALE' 
+                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                                alt={staff.name} 
+                                                                className="w-full h-full object-cover" 
                                                             />
                                                         )}
                                                     </div>

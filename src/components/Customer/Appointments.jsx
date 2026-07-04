@@ -322,12 +322,13 @@ const Appointments = () => {
   const renderAppointmentCard = (app, index) => {
     const { date, time } = formatDateTime(app.appointmentAt);
     const isRescheduled = app.status?.toLowerCase() === 'rescheduled';
+    const isInProgress = app.status?.toLowerCase() === 'in_progress';
     
     return (
       <div 
         key={app.id || index}
         className={`py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all duration-300 ${
-          isRescheduled ? 'bg-amber-50/30 rounded-2xl px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
+          isInProgress ? 'bg-orange-50/30 rounded-2xl px-6 border-l-4 border-orange-500 my-2 shadow-sm' : isRescheduled ? 'bg-amber-50/30 rounded-2xl px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
         }`}
       >
         {/* Customer & Info Card */}
@@ -348,6 +349,11 @@ const Appointments = () => {
                 </svg>
               </div>
             )}
+            {isInProgress && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white text-xs select-none" title="In Progress">
+                🔥
+              </div>
+            )}
           </div>
 
           {/* Text info */}
@@ -357,6 +363,11 @@ const Appointments = () => {
               {isRescheduled && (
                 <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
                   Rescheduled
+                </span>
+              )}
+              {isInProgress && (
+                <span className="px-2 py-0.5 bg-orange-100 text-orange-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-orange-200">
+                  In Progress
                 </span>
               )}
             </div>
@@ -399,7 +410,7 @@ const Appointments = () => {
           </div>
 
           {/* Action buttons (Only for TODAY, UPCOMING, and PREVIOUS tabs) */}
-          {(activeTab === 'TODAY' || activeTab === 'UPCOMING' || activeTab === 'PREVIOUS') && (
+          {(activeTab === 'TODAY' || activeTab === 'UPCOMING' || activeTab === 'PREVIOUS') && !isInProgress && (
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => handleReschedule(app)}

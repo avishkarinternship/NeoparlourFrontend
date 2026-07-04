@@ -309,7 +309,9 @@ const Dashboard = () => {
                                                 <div className="flex md:flex-col items-end justify-between md:justify-center gap-1.5 pt-2 md:pt-0 border-t md:border-0 border-gray-100">
                                                     <p className="text-[14px] font-black text-gray-900">₹{appt.finalAmount.toFixed(2)}</p>
                                                     <span className={`inline-block text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                                                        appt.status === 'booked' 
+                                                        appt.status === 'in_progress'
+                                                        ? 'bg-orange-50 text-orange-600'
+                                                        : appt.status === 'booked' 
                                                         ? 'bg-green-50 text-green-600' 
                                                         : appt.status === 'cancelled' 
                                                         ? 'bg-red-50 text-red-600' 
@@ -317,7 +319,7 @@ const Dashboard = () => {
                                                         ? 'bg-blue-50 text-blue-600'
                                                         : 'bg-gray-50 text-gray-600'
                                                     }`}>
-                                                        {appt.status}
+                                                        {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                                                     </span>
                                                 </div>
                                             </div>

@@ -1605,16 +1605,22 @@ const SelectService = () => {
                                                     >
                                                         {/* Stylist Image left block */}
                                                         <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 relative shrink-0">
-                                                            {staff.imagePath ? (
-                                                                <AsyncImage 
-                                                                    imagePath={staff.imagePath} 
+                                                            {staff.imageUrl || staff.imagePath ? (
+                                                                <img 
+                                                                    src={staff.imageUrl || staff.imagePath} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
-                                                                    fallbackText={staff.name?.[0] || 'S'} 
+                                                                    onError={(e) => {
+                                                                        e.target.src = staff.gender === 'FEMALE' 
+                                                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                    }}
                                                                 />
                                                             ) : (
                                                                 <img 
-                                                                    src={getExpertImg(index)} 
+                                                                    src={staff.gender === 'FEMALE' 
+                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
                                                                 />

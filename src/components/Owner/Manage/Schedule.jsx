@@ -442,7 +442,7 @@ const Schedule = () => {
                 return (
                   <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-8 gap-4">
                     {/* Left status vertical border indicator */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${appt.status?.toLowerCase() === 'in_progress' ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
                     
                     <div 
                       onClick={() => handleViewAppointment(appt.id)}
@@ -476,7 +476,12 @@ const Schedule = () => {
                             🚫 Cancellation Reason: {appt.cancelReason}
                           </div>
                         )}
-                        {currentSubTab === 'Scheduled' && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
+                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() === 'in_progress' && (
+                          <div className="text-[11px] font-bold text-orange-600 mt-2 bg-orange-50/50 border border-orange-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                            🔥 In Progress
+                          </div>
+                        )}
+                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() !== 'in_progress' && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
                           <div className="text-[11px] font-bold text-amber-600 mt-2 bg-amber-50/50 border border-amber-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
                             🔄 Reschedule Reason: {appt.ownerRescheduleReason || appt.customerRescheduleReason || 'Rescheduled'}
                           </div>
@@ -492,7 +497,18 @@ const Schedule = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && (
+                      
+                      {appt.status?.toLowerCase() === 'in_progress' && (
+                        <button 
+                          onClick={() => handleComplete(appt)} 
+                          className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
+                        >
+                          <CheckCircle className="w-4.5 h-4.5" />
+                          Complete Session
+                        </button>
+                      )}
+
+                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && appt.status?.toLowerCase() !== 'in_progress' && (
                         <>
                           <button 
                             onClick={() => openActionModal(appt, 'reschedule')} 
@@ -753,6 +769,7 @@ const Schedule = () => {
                   <div className="flex items-center gap-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${
                       selectedAppointmentDetails.status === 'booked' ? 'bg-[#FF0B01]' :
+                      selectedAppointmentDetails.status === 'in_progress' ? 'bg-orange-500' :
                       selectedAppointmentDetails.status === 'completed' ? 'bg-green-500' :
                       'bg-gray-400'
                     }`}></span>

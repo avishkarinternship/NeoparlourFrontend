@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Sparkles } from 'lucide-react';
 
 const AppointmentBooked = ({ 
   isOpen, 
@@ -15,7 +15,9 @@ const AppointmentBooked = ({
   weekdayDiscountAmount = 0,
   homeService = false,
   homeCharge = 0,
-  address = ''
+  address = '',
+  isFirstBooking = false,
+  defaultSalonName = ''
 }) => {
   if (!isOpen) return null;
 
@@ -141,7 +143,29 @@ const AppointmentBooked = ({
             )}
           </div>
 
-        </div>
+          {/* First Booking Celebration Banner */}
+          {isFirstBooking && defaultSalonName && (
+            <div className="px-8 pb-6">
+              <div className="relative overflow-hidden bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/60 rounded-2xl p-4">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-amber-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+                <div className="relative z-10 flex items-start gap-3">
+                  <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-amber-800 uppercase tracking-wider">
+                      🎉 First Booking Perk!
+                    </h4>
+                    <p className="text-[11px] text-amber-700 font-medium mt-1 leading-relaxed">
+                      <span className="font-bold">{defaultSalonName}</span> has been set as your default salon for quicker future bookings. You can change this anytime in your Favourites.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+      </div>
       </div>
     </div>
   );

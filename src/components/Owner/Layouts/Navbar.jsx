@@ -315,15 +315,25 @@ export default function Navbar({ onToggleSidebar }) {
                             >
                               <div className="flex items-center space-x-2.5">
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
-                                  {staff.imagePath ? (
-                                    <AsyncImage
-                                      imagePath={staff.imagePath}
-                                      alt={staff.name}
-                                      className="w-full h-full object-cover"
-                                      fallbackText={nameInitial}
+                                  {staff.imageUrl || staff.imagePath ? (
+                                    <img 
+                                      src={staff.imageUrl || staff.imagePath} 
+                                      alt={staff.name} 
+                                      className="w-full h-full object-cover" 
+                                      onError={(e) => {
+                                        e.target.src = staff.gender === 'FEMALE' 
+                                          ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                          : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                      }}
                                     />
                                   ) : (
-                                    nameInitial
+                                    <img 
+                                      src={staff.gender === 'FEMALE' 
+                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                      alt={staff.name} 
+                                      className="w-full h-full object-cover" 
+                                    />
                                   )}
                                 </div>
                                 <div className="min-w-0">
