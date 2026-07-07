@@ -416,7 +416,7 @@ const OwnerDashboard = () => {
                     <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
 
                     {/* Responsive Workspace Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         {/* 1. Revenue Graph Card (Upgraded UI) */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[350px]">
