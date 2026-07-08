@@ -23,9 +23,9 @@ export default function ServerHealth() {
   const checkServerStatus = async () => {
     setCheckingStatus(true);
     try {
-      // Check the backend actuator health endpoint
-      const res = await axiosInstance.get('/actuator/health');
-      if (res.status === 200 || res.data?.status === 'UP') {
+      // Ping a public REST endpoint on the main port to test server connection
+      const res = await axiosInstance.get('/subscriptions/plans');
+      if (res.status === 200) {
         setServerStatus('up');
       } else {
         setServerStatus('down');
