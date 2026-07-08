@@ -161,7 +161,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Analytics */}
           <button
-            onClick={() => navigate('/owner/analytics')}
+            onClick={() => {
+              navigate('/owner/analytics');
+              if (isMobile && onClose) onClose();
+            }}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/analytics'
                 ? 'text-red-600 bg-red-50'
@@ -180,6 +183,36 @@ const Sidebar = ({ isOpen, onClose }) => {
               }`}
             />
             <span>Analytics</span>
+          </button>
+
+          {/* Server Health */}
+          <button
+            onClick={() => {
+              navigate('/owner/monitoring');
+              if (isMobile && onClose) onClose();
+            }}
+            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+              ${location.pathname === '/owner/monitoring'
+                ? 'text-red-600 bg-red-50'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            {location.pathname === '/owner/monitoring' && (
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+            )}
+
+            <svg
+              className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                location.pathname === '/owner/monitoring' ? 'active-icon-glow text-red-600' : 'opacity-60'
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+            </svg>
+            <span>Server Health</span>
           </button>
 
           {/* Customers */}

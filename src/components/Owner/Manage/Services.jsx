@@ -173,19 +173,25 @@ const Service = () => {
 
 
 
-    const fetchCategories = async () => {
+    const fetchCategories = async (currentServices = []) => {
+        const PREDEFINED = ["Hair Services", "Skin Care", "Hair Removal", "Nail Care", "Makeup", "Grooming", "Spa & Massage", "Bridal Packages", "Hair Treatment"];
+        let fetchedCats = [];
         try {
             const response = await axiosInstance.get('/services/categories');
-            const cats = (response.data || []).map(c => typeof c === 'object' ? c.name : c);
-            if (cats.length > 0) {
-                setCategories(cats);
-                return;
-            }
+            fetchedCats = (response.data || []).map(c => typeof c === 'object' ? c.name : c);
         } catch (error) {
             console.error('Failed to fetch categories:', error);
         }
-        // Fallback to static master categories list
-        setCategories(["Hair Services", "Skin Care", "Hair Removal", "Nail Care", "Makeup", "Grooming", "Spa & Massage", "Bridal Packages", "Hair Treatment"]);
+
+        const serviceCats = currentServices.map(s => getNormalisedCategory(s.category)).filter(Boolean);
+
+        const combined = Array.from(new Set([
+            ...PREDEFINED,
+            ...fetchedCats,
+            ...serviceCats
+        ]));
+
+        setCategories(combined);
     };
 
     const handleSwapServices = async (serviceId1, serviceId2) => {
@@ -437,6 +443,7 @@ const Service = () => {
                 return matchesName && matchesCategory;
             });
             setFilteredServices(filtered);
+            await fetchCategories(allServices);
         } catch (error) {
             console.error('Failed to fetch services:', error);
         } finally {
@@ -459,6 +466,7 @@ const Service = () => {
                 return matchesName && matchesCategory;
             });
             setFilteredServices(filtered);
+            await fetchCategories(allServices);
         } catch (error) {
             console.error('Failed to search services:', error);
             toast.error('Failed to load services', toastStyle);
@@ -470,7 +478,6 @@ const Service = () => {
 
     useEffect(() => {
         fetchServices();
-        fetchCategories();
     }, []);
 
     const toggleCategoryExpand = (catName) => {
@@ -908,42 +915,35 @@ const Service = () => {
                                              <h4 className="text-base font-bold text-gray-800">Search Services</h4>
                                              <p className="text-xs font-semibold text-gray-400 max-w-md mx-auto">Use the filters above and click Search to display the services list.</p>
                                          </div>
-                                     ) : loading ? (
+) : loading ? (
                                          <div className="py-10 flex flex-col items-center justify-center gap-2 max-w-3xl">
                                              <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                                              <span className="text-xs font-semibold text-gray-400">Loading services...</span>
                                          </div>
                                      ) : (
                                          <div className="space-y-4 max-w-3xl">
-                                             {(() => {
-                                                 const displayCategories = Array.from(new Set([
-                                                     "Hair Services", "Skin Care", "Hair Removal", "Nail Care", "Makeup", "Grooming", "Spa & Massage", "Bridal Packages", "Hair Treatment",
-                                                     ...categories,
-                                                     ...services.map(s => getNormalisedCategory(s.category)).filter(Boolean)
-                                                 ])).filter(cat => {
-                                                     if (searchCategory) {
-                                                         return cat.toLowerCase() === searchCategory.toLowerCase();
-                                                     }
-                                                     return true;
-                                                 });
+                                             {categories.filter(cat => {
+                                                 if (searchCategory) {
+                                                     return cat.toLowerCase() === searchCategory.toLowerCase();
+                                                 }
+                                                 return true;
+                                             }).map((cat, catIdx) => {
+                                                 const catServices = filteredServices.filter(s => getNormalisedCategory(s.category) === cat);
+                                                 const isExpanded = !!expandedCats[cat];
+                                                 const isDragged = draggedCategory === cat;
+                                                 const isDragOver = dragOverCategory === cat;
 
-                                                 return displayCategories.map((cat, catIdx) => {
-                                                     const catServices = filteredServices.filter(s => getNormalisedCategory(s.category) === cat);
-                                                     const isExpanded = !!expandedCats[cat];
-                                                     const isDragged = draggedCategory === cat;
-                                                     const isDragOver = dragOverCategory === cat;
-
-                                                     return (
-                                                         <div 
-                                                             key={cat} 
-                                                             draggable
-                                                             onDragStart={(e) => handleCategoryDragStart(e, cat)}
-                                                             onDragOver={(e) => handleCategoryDragOver(e, cat)}
-                                                             onDragLeave={(e) => handleCategoryDragLeave(e, cat)}
-                                                             onDragEnd={handleCategoryDragEnd}
-                                                             onDrop={(e) => handleCategoryDrop(e, cat)}
-                                                             className={`bg-white border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100 hover:border-gray-200'}`}
-                                                         >
+                                                 return (
+                                                     <div 
+                                                         key={cat} 
+                                                         draggable
+                                                         onDragStart={(e) => handleCategoryDragStart(e, cat)}
+                                                         onDragOver={(e) => handleCategoryDragOver(e, cat)}
+                                                         onDragLeave={(e) => handleCategoryDragLeave(e, cat)}
+                                                         onDragEnd={handleCategoryDragEnd}
+                                                         onDrop={(e) => handleCategoryDrop(e, cat)}
+                                                         className={`bg-white border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100 hover:border-gray-200'}`}
+                                                     >
                                                          {/* Category Header Row */}
                                                          <div 
                                                              onClick={() => toggleCategoryExpand(cat)}
@@ -1198,10 +1198,9 @@ const Service = () => {
                                                              </div>
                                                          )}
                                                       </div>
-                                                  );
-                                              })
-                                              })()}
-                                          </div>
+                                              );
+                                          })}
+                                      </div>
                                       )}
                                  </div>
                                  </>
