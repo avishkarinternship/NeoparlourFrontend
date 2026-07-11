@@ -331,8 +331,8 @@ const WalkInBooking = () => {
         const objs = allServices.length > 0
             ? allServices.filter(s => addedServices.includes(s.id))
             : [];
-        const total = objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
-        return total || 30;
+        if (objs.length === 0) return 0;
+        return objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
     }, [addedServices, allServices]);
 
     // --- FETCH SALON SLOTS on mount / date change ---
@@ -1188,7 +1188,7 @@ const WalkInBooking = () => {
                                                 }`}
                                             >
                                                 <span>{slot.displayTime}</span>
-                                                {slot.discountMessage && (
+                                                {slot.discountPercentage > 0 && slot.discountMessage && (
                                                     <span className={`text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full ${
                                                         isSelectedTime ? 'bg-white text-[#FF0B01]' : 'bg-green-100 text-green-700'
                                                     }`}>

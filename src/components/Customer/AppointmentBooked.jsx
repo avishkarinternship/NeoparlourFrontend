@@ -109,7 +109,7 @@ const AppointmentBooked = ({
 
             {weekdayDiscountAmount > 0 && (
               <div className="flex justify-between items-center text-green-600 font-bold">
-                <span>Weekday Discount</span>
+                <span>Slot Discount</span>
                 <span>-₹ {weekdayDiscountAmount}</span>
               </div>
             )}

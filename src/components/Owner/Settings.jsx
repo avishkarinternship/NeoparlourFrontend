@@ -30,7 +30,13 @@ const Settings = () => {
         weeklyOffDay: "",
         homeServiceCharges: "",
         weekdayDiscount: "",
+        morningDiscount: "",
+        afternoonDiscount: "",
+        eveningDiscount: "",
+        nightDiscount: "",
     });
+
+    const [discountMode, setDiscountMode] = useState("NONE"); // "NONE", "WEEKDAY", "CATEGORY"
 
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState("");
@@ -73,13 +79,35 @@ const Settings = () => {
     const fetchSalonProfile = async () => {
         try {
             const response = await axiosInstance.get("/salons/profile");
-            setSalonProfile(response.data);
-            setExistingSalonImages(response.data.salonImages || []);
+            const data = response.data;
+            setSalonProfile({
+                ...data,
+                weekdayDiscount: data.weekdayDiscount !== null && data.weekdayDiscount !== undefined ? data.weekdayDiscount : "",
+                morningDiscount: data.morningDiscount !== null && data.morningDiscount !== undefined ? data.morningDiscount : "",
+                afternoonDiscount: data.afternoonDiscount !== null && data.afternoonDiscount !== undefined ? data.afternoonDiscount : "",
+                eveningDiscount: data.eveningDiscount !== null && data.eveningDiscount !== undefined ? data.eveningDiscount : "",
+                nightDiscount: data.nightDiscount !== null && data.nightDiscount !== undefined ? data.nightDiscount : "",
+            });
+            setExistingSalonImages(data.salonImages || []);
             // reset new uploads
             setLogoBase64(null);
             setLogoPreview(null);
             setNewGalleryBase64s([]);
             setNewGalleryPreviews([]);
+
+            // Determine active discount mode
+            if (data.weekdayDiscount > 0) {
+                setDiscountMode("WEEKDAY");
+            } else if (
+                data.morningDiscount > 0 ||
+                data.afternoonDiscount > 0 ||
+                data.eveningDiscount > 0 ||
+                data.nightDiscount > 0
+            ) {
+                setDiscountMode("CATEGORY");
+            } else {
+                setDiscountMode("NONE");
+            }
         } catch (error) {
             console.log(error);
         }
@@ -192,6 +220,43 @@ const Settings = () => {
                 imageBase64: logoBase64 || null,
                 salonImagesBase64: newGalleryBase64s.length > 0 ? newGalleryBase64s : null
             };
+
+            // Map and parse fields according to the chosen discount mode
+            if (discountMode === "NONE") {
+                payload.weekdayDiscount = 0;
+                payload.morningDiscount = 0;
+                payload.afternoonDiscount = 0;
+                payload.eveningDiscount = 0;
+                payload.nightDiscount = 0;
+            } else if (discountMode === "WEEKDAY") {
+                const val = payload.weekdayDiscount === "" ? 0 : parseFloat(payload.weekdayDiscount);
+                if (isNaN(val) || val < 0 || val > 100) {
+                    alert("Weekday Discount must be a number between 0 and 100.");
+                    return;
+                }
+                payload.weekdayDiscount = val;
+                payload.morningDiscount = 0;
+                payload.afternoonDiscount = 0;
+                payload.eveningDiscount = 0;
+                payload.nightDiscount = 0;
+            } else if (discountMode === "CATEGORY") {
+                const m = payload.morningDiscount === "" ? 0 : parseFloat(payload.morningDiscount);
+                const a = payload.afternoonDiscount === "" ? 0 : parseFloat(payload.afternoonDiscount);
+                const e = payload.eveningDiscount === "" ? 0 : parseFloat(payload.eveningDiscount);
+                const n = payload.nightDiscount === "" ? 0 : parseFloat(payload.nightDiscount);
+                if (isNaN(m) || m < 0 || m > 100 ||
+                    isNaN(a) || a < 0 || a > 100 ||
+                    isNaN(e) || e < 0 || e > 100 ||
+                    isNaN(n) || n < 0 || n > 100) {
+                    alert("Time category discounts must be numbers between 0 and 100.");
+                    return;
+                }
+                payload.weekdayDiscount = 0;
+                payload.morningDiscount = m;
+                payload.afternoonDiscount = a;
+                payload.eveningDiscount = e;
+                payload.nightDiscount = n;
+            }
 
             await axiosInstance.put(
                 `/salons/profile`,
@@ -450,21 +515,134 @@ const Settings = () => {
                                                 className="w-full border rounded-xl px-4 py-3 mt-1"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="text-sm text-gray-500">Weekday Discount (%)</label>
-                                            <input
-                                                type="number"
-                                                name="weekdayDiscount"
-                                                value={salonProfile.weekdayDiscount !== null && salonProfile.weekdayDiscount !== undefined ? salonProfile.weekdayDiscount : ''}
-                                                disabled={!isSalonEdit}
-                                                onChange={handleSalonChange}
-                                                min="0"
-                                                max="100"
-                                                step="0.1"
-                                                className="w-full border rounded-xl px-4 py-3 mt-1"
-                                            />
+                                    </div>
+                                </div>
+
+                                <div className="mb-6 border-t pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Discount Settings</h3>
+                                    
+                                    <div className="mb-6">
+                                        <label className="text-sm font-semibold text-gray-600 block mb-3">Active Discount Mode</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            {[
+                                                { mode: "NONE", label: "No Discount", desc: "Disable all slot discounts" },
+                                                { mode: "WEEKDAY", label: "Weekday Discount", desc: "Same discount for all Mon-Fri slots" },
+                                                { mode: "CATEGORY", label: "Time-Category Discounts", desc: "Different slot discounts throughout the day" }
+                                            ].map((opt) => (
+                                                <button
+                                                    key={opt.mode}
+                                                    type="button"
+                                                    disabled={!isSalonEdit}
+                                                    onClick={() => setDiscountMode(opt.mode)}
+                                                    className={`p-4 rounded-xl border-2 text-left transition-all flex flex-col justify-between ${
+                                                        !isSalonEdit ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                                                    } ${
+                                                        discountMode === opt.mode
+                                                            ? 'border-red-500 bg-red-50/20 text-red-950 shadow-sm'
+                                                            : 'border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300'
+                                                    }`}
+                                                >
+                                                    <span className="text-sm font-bold block">{opt.label}</span>
+                                                    <span className="text-xs text-gray-400 mt-1 font-medium leading-tight">{opt.desc}</span>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
+
+                                    {discountMode === "WEEKDAY" && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div>
+                                                <label className="text-sm text-gray-500">Weekday Discount (%)</label>
+                                                <input
+                                                    type="number"
+                                                    name="weekdayDiscount"
+                                                    value={salonProfile.weekdayDiscount !== null && salonProfile.weekdayDiscount !== undefined ? salonProfile.weekdayDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 10"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {discountMode === "CATEGORY" && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Morning Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">06:00 AM - 12:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="morningDiscount"
+                                                    value={salonProfile.morningDiscount !== null && salonProfile.morningDiscount !== undefined ? salonProfile.morningDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 15"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Afternoon Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">12:00 PM - 04:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="afternoonDiscount"
+                                                    value={salonProfile.afternoonDiscount !== null && salonProfile.afternoonDiscount !== undefined ? salonProfile.afternoonDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 10"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Evening Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">04:00 PM - 08:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="eveningDiscount"
+                                                    value={salonProfile.eveningDiscount !== null && salonProfile.eveningDiscount !== undefined ? salonProfile.eveningDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 5"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Night Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">08:00 PM - 06:00 AM</span>
+                                                <input
+                                                    type="number"
+                                                    name="nightDiscount"
+                                                    value={salonProfile.nightDiscount !== null && salonProfile.nightDiscount !== undefined ? salonProfile.nightDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 20"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {discountMode === "NONE" && (
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-dashed border-gray-200 text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider">
+                                            Discounts are currently disabled.
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mb-6">

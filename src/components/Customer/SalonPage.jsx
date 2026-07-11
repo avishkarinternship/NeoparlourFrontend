@@ -431,7 +431,7 @@ const SalonPage = () => {
                     params: {
                         salonId: activeSalonId,
                         selectedTime: selectedSlot.startTime,
-                        durationMinutes: 30 // default for salon page (no services selected yet)
+                        durationMinutes: 0 // default for salon page (no services selected yet)
                     }
                 });
                 setAvailableStaffForSlot(res.data || []);

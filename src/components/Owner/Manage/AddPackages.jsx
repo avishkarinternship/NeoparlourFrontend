@@ -668,21 +668,15 @@ const AddPackages = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="mt-6 pt-4 border-t border-gray-100 flex gap-3">
-                                                    <button
-                                                        onClick={() => handleEdit(pkg)}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
-                                                    >
-                                                        <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(pkg.id)}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 text-red-650 hover:bg-red-100 text-xs font-bold transition-all border border-red-200 py-3 rounded-xl"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
+                                                <div className="mt-6 pt-4 border-t border-gray-100">
+                                                     <button
+                                                         onClick={() => handleEdit(pkg)}
+                                                         className="w-full flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
+                                                     >
+                                                         <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
+                                                         Edit
+                                                     </button>
+                                                 </div>
                                             </div>
                                         );
                                     })}

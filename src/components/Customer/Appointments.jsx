@@ -707,7 +707,7 @@ const Appointments = () => {
                             }`}
                           >
                             <span>{slot.displayTime}</span>
-                            {slot.discountMessage && (
+                            {slot.discountPercentage > 0 && slot.discountMessage && (
                               <span className={`text-[8px] font-extrabold mt-0.5 px-1 py-0.2 rounded-full ${
                                 isSelected ? 'bg-white text-[#ff0b01]' : 'bg-green-100 text-green-700'
                               }`}>
