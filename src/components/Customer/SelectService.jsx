@@ -186,14 +186,62 @@ const SelectService = () => {
     // Date & Time states
     const nextDays = getNextDays();
     const [selectedDateObj, setSelectedDateObj] = useState(() => {
-        return location.state?.selectedDateObj || nextDays[0];
+        if (location.state?.selectedDateObj) {
+            return location.state.selectedDateObj;
+        }
+        const stored = localStorage.getItem('bookingSelectedDateObj');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                const exists = nextDays.find(d => d.fullDate === parsed.fullDate);
+                if (exists) return exists;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return nextDays[0];
     });
     const [selectedTime, setSelectedTime] = useState(() => {
-        return location.state?.selectedTime || null;
+        return location.state?.selectedTime || localStorage.getItem('bookingSelectedTime') || null;
     });
     const [selectedSlot, setSelectedSlot] = useState(() => {
-        return location.state?.selectedSlot || null;
+        if (location.state?.selectedSlot) {
+            return location.state.selectedSlot;
+        }
+        const stored = localStorage.getItem('bookingSelectedSlot');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return null;
     }); // Full slot object {startTime, displayTime}
+
+    useEffect(() => {
+        if (selectedDateObj) {
+            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+        } else {
+            localStorage.removeItem('bookingSelectedDateObj');
+        }
+    }, [selectedDateObj]);
+
+    useEffect(() => {
+        if (selectedTime) {
+            localStorage.setItem('bookingSelectedTime', selectedTime);
+        } else {
+            localStorage.removeItem('bookingSelectedTime');
+        }
+    }, [selectedTime]);
+
+    useEffect(() => {
+        if (selectedSlot) {
+            localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+        } else {
+            localStorage.removeItem('bookingSelectedSlot');
+        }
+    }, [selectedSlot]);
 
     // --- API-BASED SLOT & AVAILABILITY STATE ---
     const [salonSlots, setSalonSlots] = useState([]);       // All salon slots for the day
@@ -203,14 +251,26 @@ const SelectService = () => {
     const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
 
     const [selectedExpert, setSelectedExpert] = useState(() => {
-        return location.state?.selectedExpert || 'any';
+        if (location.state?.selectedExpert) {
+            return location.state.selectedExpert;
+        }
+        return localStorage.getItem('bookingSelectedExpert') || 'any';
     });
 
+    useEffect(() => {
+        if (selectedExpert && selectedExpert !== 'any') {
+            localStorage.setItem('bookingSelectedExpert', selectedExpert);
+        } else {
+            localStorage.removeItem('bookingSelectedExpert');
+        }
+    }, [selectedExpert]);
+
     const [firstSelected, setFirstSelected] = useState(() => {
-        if (location.state?.selectedSlot) {
+        if (location.state?.selectedSlot || localStorage.getItem('bookingSelectedSlot')) {
             return 'slot';
         }
-        if (location.state?.selectedExpert && location.state.selectedExpert !== 'any') {
+        const expert = location.state?.selectedExpert || localStorage.getItem('bookingSelectedExpert');
+        if (expert && expert !== 'any') {
             return 'staff';
         }
         return null;
@@ -388,8 +448,8 @@ const SelectService = () => {
         const objs = allServices.length > 0
             ? allServices.filter(s => addedServices.includes(s.id))
             : [];
-        const total = objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
-        return total || 30;
+        if (objs.length === 0) return 0;
+        return objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
     }, [addedServices, allServices]);
 
     // --- FETCH SALON SLOTS on mount / date change ---
@@ -712,10 +772,19 @@ const SelectService = () => {
     // Derived staff list to display
     const displayedStaffList = useMemo(() => {
         if (firstSelected === 'slot') {
-            return availableStaffList.map(s => ({
-                ...s,
-                id: s.staffId || s.id
-            }));
+            return availableStaffList.map(s => {
+                const staffId = s.staffId || s.id;
+                const fullStaff = staffList.find(item => item.id === staffId);
+                return {
+                    ...s,
+                    ...fullStaff,
+                    id: staffId,
+                    name: s.name || s.staffName || fullStaff?.name || 'Stylist',
+                    speciality: s.speciality || fullStaff?.speciality,
+                    imagePath: s.imagePath || fullStaff?.imagePath,
+                    rating: s.rating !== undefined ? s.rating : fullStaff?.rating
+                };
+            });
         }
         return staffList;
     }, [firstSelected, availableStaffList, staffList]);
@@ -825,6 +894,13 @@ const SelectService = () => {
 
             const res = await axiosInstance.post('/appointments/book', bookingPayload);
             toast.success('Appointment booked successfully!');
+            
+            // Clear selections from localStorage
+            localStorage.removeItem('bookingSelectedSlot');
+            localStorage.removeItem('bookingSelectedTime');
+            localStorage.removeItem('bookingSelectedExpert');
+            localStorage.removeItem('bookingSelectedDateObj');
+            
             setIsBillOpen(false);
             setIsBookedOpen(true);
         } catch (error) {
@@ -1257,7 +1333,7 @@ const SelectService = () => {
                                                 }`}
                                             >
                                                 <span>{slot.displayTime}</span>
-                                                {slot.discountMessage && (
+                                                {slot.discountPercentage > 0 && slot.discountMessage && (
                                                     <span className={`text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full ${
                                                         isSelectedTime ? 'bg-white text-[#FF0B01]' : 'bg-green-100 text-green-700'
                                                     }`}>
@@ -1529,16 +1605,22 @@ const SelectService = () => {
                                                     >
                                                         {/* Stylist Image left block */}
                                                         <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 relative shrink-0">
-                                                            {staff.imagePath ? (
-                                                                <AsyncImage 
-                                                                    imagePath={staff.imagePath} 
+                                                            {staff.imageUrl || staff.imagePath ? (
+                                                                <img 
+                                                                    src={staff.imageUrl || staff.imagePath} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
-                                                                    fallbackText={staff.name?.[0] || 'S'} 
+                                                                    onError={(e) => {
+                                                                        e.target.src = staff.gender === 'FEMALE' 
+                                                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                    }}
                                                                 />
                                                             ) : (
                                                                 <img 
-                                                                    src={getExpertImg(index)} 
+                                                                    src={staff.gender === 'FEMALE' 
+                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
                                                                 />

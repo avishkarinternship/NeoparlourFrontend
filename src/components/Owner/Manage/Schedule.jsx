@@ -70,6 +70,15 @@ const Schedule = () => {
   const [loadingViewAppointment, setLoadingViewAppointment] = useState(false);
   const [selectedAppointmentDetails, setSelectedAppointmentDetails] = useState(null);
 
+  // Extend Appointment Modal States
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [extendAppointment, setExtendAppointment] = useState(null);
+  const [extendServices, setExtendServices] = useState([]);
+  const [extendLoading, setExtendLoading] = useState(false);
+  const [extendConflict, setExtendConflict] = useState(null);
+  const [availableServices, setAvailableServices] = useState([]);
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('');
+
   const handleViewAppointment = async (id) => {
     setLoadingViewAppointment(true);
     try {
@@ -367,6 +376,71 @@ const Schedule = () => {
     return istTime.toISOString().slice(0, 16);
   };
 
+  // ==================== GAP TIME HELPER ====================
+  const getGapMinutes = (appt) => {
+    if (!appt.estimatedEndAt || !appt.nextAppointmentAt) return null;
+    const end = new Date(appt.estimatedEndAt);
+    const next = new Date(appt.nextAppointmentAt);
+    const diff = Math.round((next - end) / 60000);
+    return diff > 0 ? diff : null;
+  };
+
+  // ==================== EXTEND APPOINTMENT ====================
+  const openExtendModal = async (appt) => {
+    setExtendAppointment(appt);
+    setExtendServices([]);
+    setExtendConflict(null);
+    setServiceSearchQuery('');
+    setShowExtendModal(true);
+    try {
+      const res = await axiosInstance.get('/services');
+      setAvailableServices(res.data?.filter(s => s.active !== false) || []);
+    } catch {
+      setAvailableServices([]);
+    }
+  };
+
+  const addExtendService = (svc) => {
+    if (extendServices.find(s => s.serviceId === String(svc.id))) return;
+    setExtendServices(prev => [...prev, {
+      serviceId: String(svc.id),
+      serviceName: svc.name,
+      price: svc.price,
+      duration: svc.duration
+    }]);
+  };
+
+  const removeExtendService = (serviceId) => {
+    setExtendServices(prev => prev.filter(s => s.serviceId !== serviceId));
+  };
+
+  const handleExtendSubmit = async () => {
+    if (!extendAppointment || extendServices.length === 0) {
+      toast.error('Please add at least one service to extend', toastStyle);
+      return;
+    }
+    setExtendLoading(true);
+    setExtendConflict(null);
+    try {
+      await axiosInstance.put(`/appointments/${extendAppointment.id}/extend`, {
+        services: extendServices,
+        offerId: null,
+        packageId: null
+      });
+      toast.success('Appointment extended successfully!', toastStyle);
+      setShowExtendModal(false);
+      fetchAppointments(currentPage);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        setExtendConflict(error.response.data);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to extend appointment', toastStyle);
+      }
+    } finally {
+      setExtendLoading(false);
+    }
+  };
+
   return (
     <>
         <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
@@ -442,7 +516,7 @@ const Schedule = () => {
                 return (
                   <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-8 gap-4">
                     {/* Left status vertical border indicator */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${appt.status?.toLowerCase() === 'in_progress' ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
                     
                     <div 
                       onClick={() => handleViewAppointment(appt.id)}
@@ -471,6 +545,28 @@ const Schedule = () => {
                             </span>
                           )}
                         </div>
+                        {currentSubTab === 'Cancelled' && appt.cancelReason && (
+                          <div className="text-[11px] font-bold text-red-500 mt-2 bg-red-50/50 border border-red-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                            🚫 Cancellation Reason: {appt.cancelReason}
+                          </div>
+                        )}
+                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() === 'in_progress' && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <div className="text-[11px] font-bold text-orange-600 bg-orange-50/50 border border-orange-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                              🔥 In Progress
+                            </div>
+                            {(() => { const gap = getGapMinutes(appt); return gap ? (
+                              <div className="text-[11px] font-bold text-blue-600 bg-blue-50/50 border border-blue-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                                ⏸ {gap}m break before next appt
+                              </div>
+                            ) : null; })()}
+                          </div>
+                        )}
+                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() !== 'in_progress' && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
+                          <div className="text-[11px] font-bold text-amber-600 mt-2 bg-amber-50/50 border border-amber-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
+                            🔄 Reschedule Reason: {appt.ownerRescheduleReason || appt.customerRescheduleReason || 'Rescheduled'}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -482,7 +578,27 @@ const Schedule = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && (
+                      
+                      {appt.status?.toLowerCase() === 'in_progress' && (
+                        <>
+                          <button 
+                            onClick={() => openExtendModal(appt)} 
+                            className="bg-orange-500 text-white px-4 py-2.5 rounded-xl hover:bg-orange-600 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
+                          >
+                            <span className="text-base leading-none">➕</span>
+                            Extend
+                          </button>
+                          <button 
+                            onClick={() => handleComplete(appt)} 
+                            className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
+                          >
+                            <CheckCircle className="w-4.5 h-4.5" />
+                            Complete Session
+                          </button>
+                        </>
+                      )}
+
+                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && appt.status?.toLowerCase() !== 'in_progress' && (
                         <>
                           <button 
                             onClick={() => openActionModal(appt, 'reschedule')} 
@@ -743,6 +859,7 @@ const Schedule = () => {
                   <div className="flex items-center gap-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${
                       selectedAppointmentDetails.status === 'booked' ? 'bg-[#FF0B01]' :
+                      selectedAppointmentDetails.status === 'in_progress' ? 'bg-orange-500' :
                       selectedAppointmentDetails.status === 'completed' ? 'bg-green-500' :
                       'bg-gray-400'
                     }`}></span>
@@ -920,6 +1037,142 @@ const Schedule = () => {
           <div className="bg-white rounded-2xl p-6 shadow-2xl flex items-center gap-3 border border-gray-100">
             <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
+          </div>
+        </div>
+      )}
+
+      {/* ===== EXTEND APPOINTMENT MODAL ===== */}
+      {showExtendModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900 tracking-tight">➕ Extend Appointment</h3>
+                <p className="text-[11px] text-gray-400 font-medium mt-0.5">{extendAppointment?.customerName} · #{extendAppointment?.id}</p>
+              </div>
+              <button onClick={() => setShowExtendModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              {/* Service Search */}
+              <div>
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-2 block">Search &amp; Add Services</label>
+                <input
+                  type="text"
+                  placeholder="Search services by name or category..."
+                  value={serviceSearchQuery}
+                  onChange={(e) => setServiceSearchQuery(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 bg-gray-50/60 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-400/10 transition-all"
+                />
+                {serviceSearchQuery.trim() && (
+                  <div className="mt-2 border border-gray-100 rounded-2xl overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                    {availableServices
+                      .filter(s =>
+                        s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                        s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase())
+                      )
+                      .slice(0, 12)
+                      .map(svc => (
+                        <button
+                          key={svc.id}
+                          onClick={() => { addExtendService(svc); setServiceSearchQuery(''); }}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition text-left border-b border-gray-50 last:border-b-0 cursor-pointer"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{svc.name}</p>
+                            <p className="text-[10px] text-gray-400 font-medium">{svc.category} · {svc.duration} mins</p>
+                          </div>
+                          <span className="text-sm font-bold text-orange-600">₹{svc.price}</span>
+                        </button>
+                      ))}
+                    {availableServices.filter(s =>
+                        s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                        s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-4 py-4 text-xs text-gray-400 font-medium text-center">No services found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Services */}
+              {extendServices.length > 0 && (
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-2 block">Added Services</label>
+                  <div className="space-y-2">
+                    {extendServices.map(svc => (
+                      <div key={svc.serviceId} className="flex items-center justify-between bg-orange-50/60 border border-orange-100 rounded-xl px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{svc.serviceName}</p>
+                          <p className="text-[10px] text-gray-500 font-medium">{svc.duration} mins · ₹{svc.price}</p>
+                        </div>
+                        <button
+                          onClick={() => removeExtendService(svc.serviceId)}
+                          className="w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-700 flex justify-between">
+                    <span>Total Added</span>
+                    <span>₹{extendServices.reduce((a, s) => a + (s.price || 0), 0)} · {extendServices.reduce((a, s) => a + (s.duration || 0), 0)} mins</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Conflict Warning */}
+              {extendConflict && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                  <p className="text-xs font-extrabold uppercase tracking-widest text-red-600 mb-2">⚠️ Scheduling Conflict</p>
+                  <p className="text-sm text-red-700 font-medium mb-3">{extendConflict.message || "This extension conflicts with the staff member's next appointment."}</p>
+                  {extendConflict.suggestedStaff && extendConflict.suggestedStaff.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500 mb-2">Available Alternative Staff</p>
+                      <div className="space-y-1.5">
+                        {extendConflict.suggestedStaff.map(staff => (
+                          <div key={staff.id} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-gray-100">
+                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                              {staff.name?.charAt(0) || '?'}
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-gray-800">{staff.name}</p>
+                              {staff.specialization && <p className="text-[10px] text-gray-400">{staff.specialization}</p>}
+                            </div>
+                            <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg">Available</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-5 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowExtendModal(false)}
+                className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExtendSubmit}
+                disabled={extendLoading || extendServices.length === 0}
+                className="flex-1 py-3 rounded-2xl bg-orange-500 text-white font-bold text-xs uppercase tracking-wider hover:bg-orange-600 transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {extendLoading ? (
+                  <><div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> Extending...</>
+                ) : (
+                  'Confirm Extension'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

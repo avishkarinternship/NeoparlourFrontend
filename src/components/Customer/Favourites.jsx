@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
-import { switchTenant } from '../../redux/slices/customerSlice';
+import { switchTenant, fetchDefaultSalon, setDefaultSalon } from '../../redux/slices/customerSlice';
 import toast from 'react-hot-toast';
-import { Heart, Trash2, MapPin, Star, Clock, ChevronRight } from 'lucide-react';
+import { Heart, Trash2, MapPin, Star, Clock, ChevronRight, Crown } from 'lucide-react';
 
 const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -13,11 +13,12 @@ const toastStyle = {
 const Favourites = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { token } = useSelector((state) => state.customer);
+    const { token, defaultSalon } = useSelector((state) => state.customer);
 
     const [favourites, setFavourites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [switchingId, setSwitchingId] = useState(null);
+    const [settingDefaultId, setSettingDefaultId] = useState(null);
 
     // Fetch all favourites
     const fetchFavourites = useCallback(async () => {
@@ -35,7 +36,8 @@ const Favourites = () => {
 
     useEffect(() => {
         fetchFavourites();
-    }, [fetchFavourites]);
+        dispatch(fetchDefaultSalon());
+    }, [fetchFavourites, dispatch]);
 
     // Remove single favourite
     const handleRemoveFavourite = async (salonId, salonName, e) => {
@@ -110,6 +112,20 @@ const Favourites = () => {
             .finally(() => {
                 setSwitchingId(null);
             });
+    };
+
+    // Set a salon as the default favourite
+    const handleSetDefault = async (salonId, salonName, e) => {
+        e.stopPropagation();
+        setSettingDefaultId(salonId);
+        try {
+            await dispatch(setDefaultSalon(salonId)).unwrap();
+            toast.success(`${salonName} set as your default salon`, toastStyle);
+        } catch (error) {
+            toast.error(error || 'Failed to set default salon', toastStyle);
+        } finally {
+            setSettingDefaultId(null);
+        }
     };
 
     const getSalonImageSrc = (imageUrl) => {
@@ -229,6 +245,14 @@ const Favourites = () => {
                                             <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                             <span>{ratingVal}</span>
                                         </div>
+
+                                        {/* Default Salon Badge */}
+                                        {(fav.isDefault || defaultSalon?.salonId === fav.salonId) && (
+                                            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-white rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-widest flex items-center gap-1 shadow-md z-10">
+                                                <Crown className="w-3 h-3" />
+                                                <span>Default</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Card Body */}
@@ -257,9 +281,28 @@ const Favourites = () => {
                                                 Added {fav.favouritedAt ? new Date(fav.favouritedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'recently'}
                                             </span>
 
-                                            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#ff0b01] group-hover:gap-1.5 transition-all">
-                                                <span>Book Session</span>
-                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            <div className="flex items-center gap-2.5">
+                                                {/* Set as Default Button */}
+                                                {!(fav.isDefault || defaultSalon?.salonId === fav.salonId) && (
+                                                    <button
+                                                        onClick={(e) => handleSetDefault(fav.salonId, fav.salonName, e)}
+                                                        disabled={settingDefaultId === fav.salonId}
+                                                        className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-lg px-2 py-1 transition-all cursor-pointer disabled:opacity-50"
+                                                        title="Set as your default salon"
+                                                    >
+                                                        <Crown className="w-3 h-3" />
+                                                        {settingDefaultId === fav.salonId ? (
+                                                            <span className="animate-pulse">Setting...</span>
+                                                        ) : (
+                                                            <span>Set Default</span>
+                                                        )}
+                                                    </button>
+                                                )}
+
+                                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#ff0b01] group-hover:gap-1.5 transition-all">
+                                                    <span>Book Session</span>
+                                                    <ChevronRight className="w-3.5 h-3.5" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

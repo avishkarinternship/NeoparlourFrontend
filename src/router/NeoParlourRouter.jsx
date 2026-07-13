@@ -4,6 +4,7 @@ import App from '../App'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
 import OwnerLogin from '../components/Owner/OwnerLogin'
+import OwnerForgotPassword from '../components/Owner/OwnerForgotPassword'
 import CustomerRegister from '../components/Customer/CustomerRegister'
 import OwnerRegister from '../components/Owner/OwnerRegister'
 import SalonSelection from '../components/Customer/SalonSelection'
@@ -15,6 +16,9 @@ import Analytics from '../components/Owner/Analytics'
 import Orders from '../components/Owner/Orders'
 import Billing from '../components/Owner/Billing'
 import Settings from '../components/Owner/Settings'
+import ServerHealth from '../components/Owner/ServerHealth'
+import AdminSalons from '../components/Owner/AdminSalons'
+import AdminSubscriptions from '../components/Owner/AdminSubscriptions'
 import Schedule from '../components/Owner/Manage/Schedule'
 import Services from '../components/Owner/Manage/Services'
 import Inventory from '../components/Owner/Manage/Inventory'
@@ -126,6 +130,14 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner-login',
                 element: <OwnerLogin />
+            },
+            {
+                path: '/owner/forgot-password',
+                element: <OwnerForgotPassword />
+            },
+            {
+                path: '/owner-forgot-password',
+                element: <OwnerForgotPassword />
             },
             {
                 path: '/register',
@@ -290,6 +302,18 @@ export let routes = createBrowserRouter([
                     {
                         path: '/owner/analytics',
                         element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/monitoring',
+                        element: <OwnerRouteGuard><ServerHealth /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/salons',
+                        element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/subscriptions',
+                        element: <OwnerRouteGuard><AdminSubscriptions /></OwnerRouteGuard>
                     },
                     {
                         path: '/owner/orders',

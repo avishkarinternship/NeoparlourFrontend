@@ -181,7 +181,7 @@ const BillDetails = ({
             {weekdayDiscountAmount > 0 && (
               <div className="flex justify-between text-xs text-green-600 font-bold">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Weekday Discount ({weekdayDiscountPercent}%)
+                  <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Slot Discount ({weekdayDiscountPercent}% Off)
                 </span>
                 <span>-₹{weekdayDiscountAmount}</span>
               </div>

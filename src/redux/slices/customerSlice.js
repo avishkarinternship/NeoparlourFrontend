@@ -135,6 +135,35 @@ export const updateCustomerProfile = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch customer's default favourite salon
+export const fetchDefaultSalon = createAsyncThunk(
+  'customer/fetchDefaultSalon',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/customer/favourites/default');
+      return response.data;
+    } catch (error) {
+      // 404 means no default salon set — not an error
+      if (error.response?.status === 404) {
+        return null;
+      }
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch default salon.');
+    }
+  }
+);
+
+// Async thunk to set a salon as the customer's default favourite
+export const setDefaultSalon = createAsyncThunk(
+  'customer/setDefaultSalon',
+  async (salonId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/customer/favourites/${salonId}/default`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to set default salon.');
+    }
+  }
+);
 
 const initialState = {
   user: JSON.parse(localStorage.getItem('customerUser')) || null,
@@ -144,6 +173,7 @@ const initialState = {
   loading: false,
   error: null,
   salonResults: [],
+  defaultSalon: null,
 };
 
 const customerSlice = createSlice({
@@ -155,6 +185,7 @@ const customerSlice = createSlice({
       state.profile = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.defaultSalon = null;
       localStorage.removeItem('customerToken');
       localStorage.removeItem('customerUser');
       localStorage.removeItem('customerProfile');
@@ -250,6 +281,20 @@ const customerSlice = createSlice({
       })
       .addCase(updateCustomerProfile.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Default Salon
+      .addCase(fetchDefaultSalon.fulfilled, (state, action) => {
+        state.defaultSalon = action.payload;
+      })
+      .addCase(fetchDefaultSalon.rejected, (state) => {
+        state.defaultSalon = null;
+      })
+      // Set Default Salon
+      .addCase(setDefaultSalon.fulfilled, (state, action) => {
+        state.defaultSalon = action.payload;
+      })
+      .addCase(setDefaultSalon.rejected, (state, action) => {
         state.error = action.payload;
       })
   },

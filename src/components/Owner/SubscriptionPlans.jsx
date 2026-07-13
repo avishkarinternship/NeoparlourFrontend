@@ -91,71 +91,56 @@ const SubscriptionPlans = () => {
     try {
       setPayingPlanCode(plan.planCode);
       
-      // 1. Create order on the backend with @RequestParam: planCode & userId
-      const orderResponse = await axiosInstance.post(`/subscriptions/create-order?planCode=${plan.planCode}&userId=${ownerUser?.id || ''}`);
-      const orderData = orderResponse.data;
+      // 1. Create AutoPay subscription on backend
+      const response = await axiosInstance.post(
+        `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${ownerUser?.id || ''}`
+      );
+      
+      const data = response.data;
+      if (!data.ok) {
+        toast.error("Failed to initiate subscription: " + (data.error || "Unknown error"));
+        setPayingPlanCode(null);
+        return;
+      }
 
-      // Backend returns "id" (not "order_id") as the Razorpay order identifier
-      const razorpayOrderId = orderData.id;
-
-      // 2. Open Razorpay Checkout Payment Sheet
+      // 2. Open Razorpay Checkout Payment Sheet in Subscription (AutoPay) mode
       const options = {
-        key: orderData.key,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "NeoParlour Network",
-        description: `Subscription: ${orderData.planCode || plan.planCode}`,
-        order_id: razorpayOrderId,
-        handler: async function (response) {
+        key: data.key,
+        subscription_id: data.subscriptionId,
+        name: "NeoParlour Salon Subscription",
+        description: data.planName,
+        handler: async function (transaction) {
           try {
-            toast.loading('Verifying your payment and setting up your salon...', { id: 'payment-verifying' });
+            toast.loading('Verifying your subscription and setting up your salon...', { id: 'payment-verifying' });
+            console.log("AutoPay authorization successful. Payment ID: ", transaction.razorpay_payment_id);
             
-            // Use razorpay response values, with stored orderId as fallback
-            const orderId = response.razorpay_order_id || razorpayOrderId;
-            const paymentId = response.razorpay_payment_id;
-            const signature = response.razorpay_signature;
+            // Post-payment success flow:
+            // Re-login the owner to get a fresh JWT token containing the new salonId
+            const savedPhone = localStorage.getItem('tempRegisterPhone');
+            const savedPassword = localStorage.getItem('tempRegisterPassword');
 
-            // 3. Verify Payment on backend using @RequestParam query params
-            const verifyResponse = await axiosInstance.post(
-              `/subscriptions/verify-payment?razorpayOrderId=${encodeURIComponent(orderId)}&razorpayPaymentId=${encodeURIComponent(paymentId)}&razorpaySignature=${encodeURIComponent(signature)}&userId=${ownerUser?.id || ''}`,
-              null,
-              { skipGlobalToast: true }
-            );
-
-            const { success, message } = verifyResponse.data;
-
-            if (success) {
-              // 4. Re-login the owner to get a fresh JWT token containing the new salonId
-              const savedPhone = localStorage.getItem('tempRegisterPhone');
-              const savedPassword = localStorage.getItem('tempRegisterPassword');
-
-              if (savedPhone && savedPassword) {
-                try {
-                  await dispatch(loginOwner({ username: savedPhone, password: savedPassword })).unwrap();
-                } catch (loginErr) {
-                  console.error('Re-login after payment failed:', loginErr);
-                }
+            if (savedPhone && savedPassword) {
+              try {
+                await dispatch(loginOwner({ username: savedPhone, password: savedPassword })).unwrap();
+              } catch (loginErr) {
+                console.error('Re-login after payment failed:', loginErr);
               }
-
-              // Clean up temporary local storage variables
-              localStorage.removeItem('tempSalonDetails');
-              localStorage.removeItem('tempRegisterPhone');
-              localStorage.removeItem('tempRegisterPassword');
-
-              toast.dismiss('payment-verifying');
-
-              // Show the beautiful success dialog
-              setSuccessPlanName(plan.planName);
-              setShowSuccessDialog(true);
-            } else {
-              toast.dismiss('payment-verifying');
-              toast.error(message || 'Payment verification failed.');
             }
+
+            // Clean up temporary local storage variables
+            localStorage.removeItem('tempSalonDetails');
+            localStorage.removeItem('tempRegisterPhone');
+            localStorage.removeItem('tempRegisterPassword');
+
+            toast.dismiss('payment-verifying');
+
+            // Show the beautiful success dialog
+            setSuccessPlanName(plan.planName);
+            setShowSuccessDialog(true);
           } catch (err) {
             toast.dismiss('payment-verifying');
-            console.error('Payment verification failed', err);
-            const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not verify payment. Please contact support.';
-            toast.error(errMsg);
+            console.error('Subscription verification failed', err);
+            toast.error('Could not verify subscription setup. Please contact support.');
           } finally {
             setPayingPlanCode(null);
           }
@@ -179,8 +164,8 @@ const SubscriptionPlans = () => {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error('Order creation failed', error);
-      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Could not generate Razorpay order. Please try again.';
+      console.error('AutoPay subscription initiation failed', error);
+      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Could not generate Razorpay subscription. Please try again.';
       toast.error(errMsg);
       setPayingPlanCode(null);
     }

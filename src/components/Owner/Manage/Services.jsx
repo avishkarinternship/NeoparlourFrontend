@@ -18,6 +18,18 @@ import dateIcon from '../../../assets/Owner/Manage/Staff/BirthDateIcon.svg';
 import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg';
 import idIcon from '../../../assets/Owner/Manage/Staff/team_member_icon.svg';
 
+// Category Logos
+import hairIcon from '../../../assets/Logos/Hair.svg';
+import skinCareIcon from '../../../assets/Logos/Skin care.svg';
+import hairRemovalIcon from '../../../assets/Logos/Hair removal.svg';
+import nailCareIcon from '../../../assets/Logos/Nail care.svg';
+import makeupIcon from '../../../assets/Logos/makeup.svg';
+import groomingIcon from '../../../assets/Logos/grooming.svg';
+import spaMassageIcon from '../../../assets/Logos/spa & massage.svg';
+import bridalPackagesIcon from '../../../assets/Logos/Hair Styling.svg';
+import hairTreatmentIcon from '../../../assets/Logos/Hair treatment.svg';
+
+
 const toastStyle = {
     style: {
         background: '#1a1a1a',
@@ -39,7 +51,7 @@ const toastStyle = {
 const PREDEFINED_CATEGORIES = {
     "Hair Services": [
         "Hair Cut", "Hair Styling", "Hair Wash", "Blow Dry", "Hair Coloring", 
-        "Highlights / Streaks", "Hair Spa", "Hair Treatment", "Keratin Treatment", 
+        "Highlights / Streaks", "Hair Spa", "Keratin Treatment", 
         "Hair Smoothening", "Hair Straightening", "Perming / Curling", "Hair Extensions"
     ],
     "Skin Care": [
@@ -48,8 +60,7 @@ const PREDEFINED_CATEGORIES = {
         "Skin Brightening Treatment", "Chemical Peel"
     ],
     "Hair Removal": [
-        "Waxing", "Threading", "Eyebrow Shaping", "Upper Lip", "Forehead", 
-        "Full Face Waxing", "Full Body Waxing"
+        "Waxing", "Full Body Waxing", "Eyebrow Shaping", "Eyebrow Styling", "Eyelash Services", "Upper Lip", "Forehead", "Full Face Waxing"
     ],
     "Nail Care": [
         "Manicure", "Pedicure", "Nail Cutting", "Nail Shaping", "Nail Art", 
@@ -60,21 +71,55 @@ const PREDEFINED_CATEGORIES = {
         "HD Makeup", "Basic Makeup"
     ],
     "Grooming": [
-        "Beard Trim", "Beard Styling", "Shaving", "Moustache Styling", 
-        "Eyebrow Styling", "Eyelash Services"
+        "Beard Trim", "Beard Styling", "Shaving", "Moustache Styling", "Basic Grooming"
     ],
     "Spa & Massage": [
-        "Head Massage", "Body Massage", "Relaxation Massage", "Aroma Therapy", 
-        "Body Scrub", "Body Wrap"
+        "Relaxation Massage", "Aroma Therapy", "Head Massage", "Body Massage", "Body Scrub", "Body Wrap"
     ],
     "Bridal Packages": [
         "Bridal Hair", "Bridal Makeup", "Bridal Facial", "Bridal Manicure/Pedicure", 
         "Pre-Bridal Package"
     ],
     "Hair Treatment": [
-        "Hair Fall Treatment", "Dandruff Treatment", "Scalp Treatment", 
-        "Damage Repair", "Protein Treatment"
+        "Hair Treatment"
     ]
+};
+
+const getNormalisedCategory = (cat) => {
+    if (!cat) return '';
+    const lower = cat.toLowerCase().trim();
+    if (lower === 'hair services' || lower === 'hair') return 'Hair Services';
+    if (lower === 'skin care' || lower === 'skin') return 'Skin Care';
+    if (lower === 'hair removal' || lower === 'waxing') return 'Hair Removal';
+    if (lower === 'nail care' || lower === 'nails') return 'Nail Care';
+    if (lower === 'makeup') return 'Makeup';
+    if (lower === 'grooming' || lower === 'unisex') return 'Grooming';
+    if (lower === 'spa & massage' || lower === 'spa' || lower === 'massage') return 'Spa & Massage';
+    if (lower === 'bridal packages' || lower === 'bridal') return 'Bridal Packages';
+    if (lower === 'hair treatment') return 'Hair Treatment';
+    if (lower === 'face') return 'Hair Removal';
+    if (lower === 'body') return 'Spa & Massage';
+    
+    const match = [
+        "Hair Services", "Skin Care", "Hair Removal", "Nail Care", 
+        "Makeup", "Grooming", "Spa & Massage", "Bridal Packages", "Hair Treatment"
+    ].find(c => c.toLowerCase() === lower || c.toLowerCase().includes(lower) || lower.includes(c.toLowerCase()));
+    
+    return match || cat;
+};
+
+const getCategoryIcon = (catName) => {
+    const norm = (catName || '').toLowerCase().trim();
+    if (norm.includes('hair services')) return hairIcon;
+    if (norm.includes('skin care')) return skinCareIcon;
+    if (norm.includes('hair removal')) return hairRemovalIcon;
+    if (norm.includes('nail care')) return nailCareIcon;
+    if (norm.includes('makeup')) return makeupIcon;
+    if (norm.includes('grooming')) return groomingIcon;
+    if (norm.includes('spa & massage')) return spaMassageIcon;
+    if (norm.includes('bridal')) return bridalPackagesIcon;
+    if (norm.includes('hair treatment')) return hairTreatmentIcon;
+    return categoryIcon; // Fallback
 };
 
 const Service = () => {
@@ -103,6 +148,7 @@ const Service = () => {
     const [price, setPrice] = useState('');
     const [duration, setDuration] = useState('');
     const [services, setServices] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [formErrors, setFormErrors] = useState({});
@@ -114,7 +160,275 @@ const Service = () => {
     const [hasSearched, setHasSearched] = useState(true);
     const [filteredServices, setFilteredServices] = useState([]);
 
+    // Drag and Drop reordering states
+    const [draggedCategory, setDraggedCategory] = useState(null);
+    const [dragOverCategory, setDragOverCategory] = useState(null);
+    const [catDndLoading, setCatDndLoading] = useState(false);
+    const [expandedCats, setExpandedCats] = useState({});
 
+    const [draggedServiceId, setDraggedServiceId] = useState(null);
+    const [dragOverServiceId, setDragOverServiceId] = useState(null);
+    const [svcDndLoading, setSvcDndLoading] = useState(false);
+    const [dndMode, setDndMode] = useState('shift'); // 'shift' or 'swap' for service reordering
+
+
+
+    const fetchCategories = async (currentServices = []) => {
+        const PREDEFINED = ["Hair Services", "Skin Care", "Hair Removal", "Nail Care", "Makeup", "Grooming", "Spa & Massage", "Bridal Packages", "Hair Treatment"];
+        let fetchedCats = [];
+        try {
+            const response = await axiosInstance.get('/services/categories');
+            fetchedCats = (response.data || []).map(c => typeof c === 'object' ? c.name : c);
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+        }
+
+        const serviceCats = currentServices.map(s => getNormalisedCategory(s.category)).filter(Boolean);
+
+        const combined = Array.from(new Set([
+            ...PREDEFINED,
+            ...fetchedCats,
+            ...serviceCats
+        ]));
+
+        setCategories(combined);
+    };
+
+    const handleSwapServices = async (serviceId1, serviceId2) => {
+        try {
+            await axiosInstance.put(`/services/swap-priority?serviceId1=${serviceId1}&serviceId2=${serviceId2}`);
+            toast.success('Service priorities updated successfully!', toastStyle);
+            fetchServices();
+        } catch (error) {
+            console.error('Failed to swap priorities:', error);
+            toast.error(error.response?.data?.message || 'Failed to update service priority.', toastStyle);
+        }
+    };
+
+    const handleSwapCategories = async (cat1, cat2) => {
+        const newCats = [...categories];
+        const idx1 = newCats.indexOf(cat1);
+        const idx2 = newCats.indexOf(cat2);
+        if (idx1 === -1 || idx2 === -1) return;
+        newCats[idx1] = cat2;
+        newCats[idx2] = cat1;
+        setCategories(newCats);
+        try {
+            await axiosInstance.put('/services/categories/reorder', newCats);
+            toast.success('Category priorities updated successfully!', toastStyle);
+        } catch (error) {
+            console.error('Failed to reorder categories:', error);
+            toast.error(error.response?.data?.message || 'Failed to update category priority.', toastStyle);
+            fetchCategories(); // revert
+        }
+    };
+
+    // ==================== DRAG & DROP CATEGORY REORDERING ====================
+    const handleCategoryDragStart = (e, catName) => {
+        if (catDndLoading) {
+            e.preventDefault();
+            return;
+        }
+        setDraggedCategory(catName);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleCategoryDragOver = (e, catName) => {
+        e.preventDefault();
+        if (draggedCategory !== null && draggedCategory !== catName) {
+            setDragOverCategory(catName);
+        }
+    };
+
+    const handleCategoryDragLeave = (e, catName) => {
+        if (dragOverCategory === catName) {
+            setDragOverCategory(null);
+        }
+    };
+
+    const handleCategoryDragEnd = () => {
+        setDraggedCategory(null);
+        setDragOverCategory(null);
+    };
+
+    const handleCategoryDrop = async (e, targetCatName) => {
+        e.preventDefault();
+        if (catDndLoading || draggedCategory === null || draggedCategory === targetCatName) {
+            setDraggedCategory(null);
+            setDragOverCategory(null);
+            return;
+        }
+
+        const idx1 = categories.indexOf(draggedCategory);
+        const idx2 = categories.indexOf(targetCatName);
+        if (idx1 === -1 || idx2 === -1) {
+            setDraggedCategory(null);
+            setDragOverCategory(null);
+            return;
+        }
+
+        setCatDndLoading(true);
+        const previousCats = [...categories];
+        const newCats = [...categories];
+
+        if (dndMode === 'shift') {
+            const [moved] = newCats.splice(idx1, 1);
+            newCats.splice(idx2, 0, moved);
+            setCategories(newCats);
+            setDraggedCategory(null);
+            setDragOverCategory(null);
+
+            try {
+                await axiosInstance.put('/services/categories/reorder', newCats);
+                toast.success('Category display order updated successfully!', toastStyle);
+            } catch (error) {
+                console.error('Failed to reorder categories:', error);
+                toast.error(error.response?.data?.message || 'Failed to reorder categories.', toastStyle);
+                setCategories(previousCats);
+            } finally {
+                setCatDndLoading(false);
+            }
+        } else {
+            newCats[idx1] = targetCatName;
+            newCats[idx2] = draggedCategory;
+            setCategories(newCats);
+            setDraggedCategory(null);
+            setDragOverCategory(null);
+
+            try {
+                await axiosInstance.put(`/services/categories/swap-priority?category1=${encodeURIComponent(draggedCategory)}&category2=${encodeURIComponent(targetCatName)}`);
+                toast.success('Category priorities swapped successfully!', toastStyle);
+            } catch (error) {
+                console.error('Failed to swap category priorities:', error);
+                toast.error(error.response?.data?.message || 'Failed to swap category priorities.', toastStyle);
+                setCategories(previousCats);
+            } finally {
+                setCatDndLoading(false);
+            }
+        }
+    };
+
+    // ==================== DRAG & DROP SERVICE REORDERING ====================
+    const handleServiceDragStart = (e, serviceId) => {
+        if (svcDndLoading) {
+            e.preventDefault();
+            return;
+        }
+        setDraggedServiceId(serviceId);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleServiceDragOver = (e, serviceId) => {
+        e.preventDefault();
+        if (draggedServiceId !== null && draggedServiceId !== serviceId) {
+            setDragOverServiceId(serviceId);
+        }
+    };
+
+    const handleServiceDragLeave = (e, serviceId) => {
+        if (dragOverServiceId === serviceId) {
+            setDragOverServiceId(null);
+        }
+    };
+
+    const handleServiceDragEnd = () => {
+        setDraggedServiceId(null);
+        setDragOverServiceId(null);
+    };
+
+    const handleServiceDrop = async (e, targetServiceId) => {
+        e.preventDefault();
+        if (svcDndLoading || draggedServiceId === null || draggedServiceId === targetServiceId) {
+            setDraggedServiceId(null);
+            setDragOverServiceId(null);
+            return;
+        }
+
+        const sourceService = services.find(s => s.id === draggedServiceId);
+        const targetService = services.find(s => s.id === targetServiceId);
+        if (!sourceService || !targetService) {
+            setDraggedServiceId(null);
+            setDragOverServiceId(null);
+            return;
+        }
+
+        if (sourceService.category !== targetService.category) {
+            toast.error("Cannot move services between different categories via drag-and-drop", toastStyle);
+            setDraggedServiceId(null);
+            setDragOverServiceId(null);
+            return;
+        }
+
+        const fullSourceIdx = services.findIndex(s => s.id === draggedServiceId);
+        const fullTargetIdx = services.findIndex(s => s.id === targetServiceId);
+        if (fullSourceIdx === -1 || fullTargetIdx === -1) {
+            setDraggedServiceId(null);
+            setDragOverServiceId(null);
+            return;
+        }
+
+        setSvcDndLoading(true);
+
+        const previousServices = [...services];
+        const previousFiltered = [...filteredServices];
+
+        const updatedFull = [...services];
+        const updatedFiltered = [...filteredServices];
+
+        if (dndMode === 'shift') {
+            const [movedItem] = updatedFull.splice(fullSourceIdx, 1);
+            updatedFull.splice(fullTargetIdx, 0, movedItem);
+
+            const fSourceIdx = filteredServices.findIndex(s => s.id === draggedServiceId);
+            const fTargetIdx = filteredServices.findIndex(s => s.id === targetServiceId);
+            if (fSourceIdx !== -1 && fTargetIdx !== -1) {
+                const [movedFiltered] = updatedFiltered.splice(fSourceIdx, 1);
+                updatedFiltered.splice(fTargetIdx, 0, movedFiltered);
+            }
+        } else {
+            updatedFull[fullSourceIdx] = services[fullTargetIdx];
+            updatedFull[fullTargetIdx] = services[fullSourceIdx];
+
+            const fSourceIdx = filteredServices.findIndex(s => s.id === draggedServiceId);
+            const fTargetIdx = filteredServices.findIndex(s => s.id === targetServiceId);
+            if (fSourceIdx !== -1 && fTargetIdx !== -1) {
+                updatedFiltered[fSourceIdx] = filteredServices[fTargetIdx];
+                updatedFiltered[fTargetIdx] = filteredServices[fSourceIdx];
+            }
+        }
+
+        setServices(updatedFull);
+        setFilteredServices(updatedFiltered);
+        setDraggedServiceId(null);
+        setDragOverServiceId(null);
+
+        if (dndMode === 'shift') {
+            try {
+                const orderedIds = updatedFull.map(s => s.id);
+                await axiosInstance.put('/services/reorder', orderedIds);
+                toast.success('Services reordered successfully!', toastStyle);
+            } catch (error) {
+                console.error('Failed to reorder services:', error);
+                toast.error(error.response?.data?.message || 'Failed to reorder services.', toastStyle);
+                setServices(previousServices);
+                setFilteredServices(previousFiltered);
+            } finally {
+                setSvcDndLoading(false);
+            }
+        } else {
+            try {
+                await axiosInstance.put(`/services/swap-priority?serviceId1=${draggedServiceId}&serviceId2=${targetServiceId}`);
+                toast.success('Service priorities swapped successfully!', toastStyle);
+            } catch (error) {
+                console.error('Failed to swap priorities:', error);
+                toast.error(error.response?.data?.message || 'Failed to swap service priorities.', toastStyle);
+                setServices(previousServices);
+                setFilteredServices(previousFiltered);
+            } finally {
+                setSvcDndLoading(false);
+            }
+        }
+    };
 
     const fetchServices = async () => {
         setLoading(true);
@@ -129,6 +443,7 @@ const Service = () => {
                 return matchesName && matchesCategory;
             });
             setFilteredServices(filtered);
+            await fetchCategories(allServices);
         } catch (error) {
             console.error('Failed to fetch services:', error);
         } finally {
@@ -151,6 +466,7 @@ const Service = () => {
                 return matchesName && matchesCategory;
             });
             setFilteredServices(filtered);
+            await fetchCategories(allServices);
         } catch (error) {
             console.error('Failed to search services:', error);
             toast.error('Failed to load services', toastStyle);
@@ -164,15 +480,38 @@ const Service = () => {
         fetchServices();
     }, []);
 
+    const toggleCategoryExpand = (catName) => {
+        setExpandedCats(prev => ({
+            ...prev,
+            [catName]: !prev[catName]
+        }));
+    };
+
+    useEffect(() => {
+        if (searchName.trim()) {
+            const autoExpand = {};
+            categories.forEach(cat => {
+                const matches = services.some(s => 
+                    getNormalisedCategory(s.category) === cat &&
+                    s.name?.toLowerCase().includes(searchName.trim().toLowerCase())
+                );
+                if (matches) {
+                    autoExpand[cat] = true;
+                }
+            });
+            setExpandedCats(autoExpand);
+        }
+    }, [searchName, categories, services]);
+
     // ==================== FORM VALIDATION ====================
     const validateServiceForm = () => {
         const errors = {};
 
-        const finalCategory = selectedCategory === 'Other' ? customCategory.trim() : selectedCategory;
+        const finalCategory = selectedCategory;
         const finalServiceName = (selectedCategory === 'Other' || selectedServiceName === 'Other') ? customServiceName.trim() : selectedServiceName;
 
         if (!finalCategory) {
-            errors.category = "Please select or type a category";
+            errors.category = "Please select a category";
         }
 
         if (!finalServiceName) {
@@ -211,7 +550,8 @@ const Service = () => {
     };
 
     const handleEditService = (service) => {
-        const cat = service.category || '';
+        const rawCat = service.category || '';
+        const cat = getNormalisedCategory(rawCat);
         const name = service.name || '';
 
         // Determine Category mapping
@@ -228,8 +568,10 @@ const Service = () => {
                 setCustomServiceName(name);
             }
         } else {
-            setSelectedCategory('Other');
-            setCustomCategory(cat);
+            // Unrecognized category fallback: try case-insensitive or default to Hair Services
+            const fallbackCat = Object.keys(PREDEFINED_CATEGORIES).find(c => c.toLowerCase() === cat.toLowerCase()) || 'Hair Services';
+            setSelectedCategory(fallbackCat);
+            setCustomCategory('');
             setSelectedServiceName('Other');
             setCustomServiceName(name);
         }
@@ -263,8 +605,8 @@ const Service = () => {
 
         setSubmitting(true);
 
-        const finalCategory = selectedCategory === 'Other' ? customCategory.trim() : selectedCategory;
-        const finalServiceName = (selectedCategory === 'Other' || selectedServiceName === 'Other') ? customServiceName.trim() : selectedServiceName;
+        const finalCategory = selectedCategory;
+        const finalServiceName = selectedServiceName === 'Other' ? customServiceName.trim() : selectedServiceName;
 
         try {
             const payload = {
@@ -365,32 +707,11 @@ const Service = () => {
                                                         {Object.keys(PREDEFINED_CATEGORIES).map((catName) => (
                                                             <option key={catName} value={catName}>{catName}</option>
                                                         ))}
-                                                        <option value="Other">Other (Type Custom Category)</option>
                                                     </select>
                                                     <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                                 </div>
                                                 {formErrors.category && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.category}</p>}
                                             </div>
- 
-                                            {/* Custom Category Input (Only if selectedCategory === 'Other') */}
-                                            {selectedCategory === 'Other' && (
-                                                <div className="relative">
-                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
-                                                        <img src={categoryIcon} alt="Custom Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Custom Category Name"
-                                                            value={customCategory}
-                                                            onChange={(e) => {
-                                                                setCustomCategory(e.target.value);
-                                                                if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
-                                                            }}
-                                                            className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
-                                                        />
-                                                    </div>
-                                                    {formErrors.category && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.category}</p>}
-                                                </div>
-                                            )}
  
                                             {/* Predefined Service Select (Only if selectedCategory is predefined and not 'Other') */}
                                             {selectedCategory && selectedCategory !== 'Other' && (
@@ -536,8 +857,8 @@ const Service = () => {
                                                  >
                                                      <option value="">All Categories</option>
                                                      {Array.from(new Set([
-                                                         ...Object.keys(PREDEFINED_CATEGORIES),
-                                                         ...services.map(s => s.category).filter(Boolean)
+                                                         ...categories,
+                                                         ...services.map(s => getNormalisedCategory(s.category)).filter(Boolean)
                                                      ])).map(catName => (
                                                          <option key={catName} value={catName}>{catName}</option>
                                                      ))}
@@ -566,7 +887,25 @@ const Service = () => {
                                          </div>
                                      </form>
 
-                                     <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">All Services</h3>
+                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 max-w-3xl">
+                                         <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">All Services</h3>
+                                         <div className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl p-1 shadow-sm text-xs font-bold uppercase select-none">
+                                             <button 
+                                                 type="button" 
+                                                 onClick={() => setDndMode('shift')}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'shift' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                             >
+                                                 Shift Mode
+                                             </button>
+                                             <button 
+                                                 type="button" 
+                                                 onClick={() => setDndMode('swap')}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'swap' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                             >
+                                                 Swap Mode
+                                             </button>
+                                         </div>
+                                     </div>
                                      
                                      {!hasSearched ? (
                                          <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 max-w-3xl">
@@ -576,159 +915,295 @@ const Service = () => {
                                              <h4 className="text-base font-bold text-gray-800">Search Services</h4>
                                              <p className="text-xs font-semibold text-gray-400 max-w-md mx-auto">Use the filters above and click Search to display the services list.</p>
                                          </div>
-                                     ) : loading ? (
+) : loading ? (
                                          <div className="py-10 flex flex-col items-center justify-center gap-2 max-w-3xl">
                                              <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                                              <span className="text-xs font-semibold text-gray-400">Loading services...</span>
                                          </div>
                                      ) : (
-                                         <div className={`grid gap-4 max-w-3xl ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                                             {filteredServices.length > 0 ? (
-                                                 filteredServices.map((service) => {
-                                                const getCategoryTheme = (cat) => {
-                                                     const norm = (cat || '').toLowerCase().trim();
-                                                     if (norm.includes('hair services') || norm.includes('hair treatment') || norm === 'hair cut' || norm === 'hair styling') {
-                                                         return {
-                                                             accent: 'bg-[#FF0B01]',
-                                                             bg: 'bg-red-50/70',
-                                                             text: 'text-[#FF0B01]',
-                                                             border: 'border-red-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('skin care')) {
-                                                         return {
-                                                             accent: 'bg-amber-500',
-                                                             bg: 'bg-amber-50/70',
-                                                             text: 'text-amber-700',
-                                                             border: 'border-amber-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('hair removal')) {
-                                                         return {
-                                                             accent: 'bg-purple-500',
-                                                             bg: 'bg-purple-50/70',
-                                                             text: 'text-purple-700',
-                                                             border: 'border-purple-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('nail care')) {
-                                                         return {
-                                                             accent: 'bg-teal-500',
-                                                             bg: 'bg-teal-50/70',
-                                                             text: 'text-teal-700',
-                                                             border: 'border-teal-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('makeup')) {
-                                                         return {
-                                                             accent: 'bg-rose-500',
-                                                             bg: 'bg-rose-50/70',
-                                                             text: 'text-rose-700',
-                                                             border: 'border-rose-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('grooming') || norm.includes('shaving')) {
-                                                         return {
-                                                             accent: 'bg-blue-500',
-                                                             bg: 'bg-blue-50/70',
-                                                             text: 'text-blue-700',
-                                                             border: 'border-blue-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('spa') || norm.includes('massage')) {
-                                                         return {
-                                                             accent: 'bg-emerald-500',
-                                                             bg: 'bg-emerald-50/70',
-                                                             text: 'text-emerald-700',
-                                                             border: 'border-emerald-100/50',
-                                                         };
-                                                     }
-                                                     if (norm.includes('bridal')) {
-                                                         return {
-                                                             accent: 'bg-pink-500',
-                                                             bg: 'bg-pink-50/70',
-                                                             text: 'text-pink-700',
-                                                             border: 'border-pink-100/50',
-                                                         };
-                                                     }
-                                                     return {
-                                                         accent: 'bg-gray-400',
-                                                         bg: 'bg-gray-50/70',
-                                                         text: 'text-gray-700',
-                                                         border: 'border-gray-100/50',
-                                                     };
-                                                 };
-                                                 const theme = getCategoryTheme(service.category);
+                                         <div className="space-y-4 max-w-3xl">
+                                             {categories.filter(cat => {
+                                                 if (searchCategory) {
+                                                     return cat.toLowerCase() === searchCategory.toLowerCase();
+                                                 }
+                                                 return true;
+                                             }).map((cat, catIdx) => {
+                                                 const catServices = filteredServices.filter(s => getNormalisedCategory(s.category) === cat);
+                                                 const isExpanded = !!expandedCats[cat];
+                                                 const isDragged = draggedCategory === cat;
+                                                 const isDragOver = dragOverCategory === cat;
 
-                                                return (
-                                                     <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:border-gray-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all duration-300 relative overflow-hidden group pl-7 gap-4">
-                                                         {/* Sleek Vertical Accent stripe */}
-                                                         <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${theme.accent} rounded-r-md`}></div>
-                                                         
-                                                         {/* Left section: Service Details */}
-                                                         <div className="flex items-center space-x-3.5 min-w-0 flex-1 w-full">
-                                                             {/* Category themed avatar box */}
-                                                             <div className={`w-11 h-11 rounded-2xl ${theme.bg} ${theme.border} border flex items-center justify-center ${theme.text} font-black text-sm uppercase flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105`}>
-                                                                 {service.name?.charAt(0) || 'S'}
-                                                             </div>
-                                                             <div className="min-w-0 flex-1">
-                                                                 <h4 className="text-sm font-semibold text-gray-900 tracking-tight truncate mb-1" title={service.name}>
-                                                                     {service.name}
-                                                                 </h4>
-                                                                 <div className="flex flex-wrap items-center gap-2">
-                                                                     {/* Category Tag */}
-                                                                     <span className="px-2 py-0.5 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-100">
-                                                                         {service.category}
-                                                                     </span>
-                                                                     {/* Duration Badge */}
-                                                                     <span className="flex items-center text-[10px] font-semibold text-gray-400 gap-1 flex-shrink-0">
-                                                                         <img src={durationIcon} alt="Duration" className="w-3.5 h-3.5 opacity-40 object-contain" />
-                                                                         {service.duration} mins
-                                                                     </span>
+                                                 return (
+                                                     <div 
+                                                         key={cat} 
+                                                         draggable
+                                                         onDragStart={(e) => handleCategoryDragStart(e, cat)}
+                                                         onDragOver={(e) => handleCategoryDragOver(e, cat)}
+                                                         onDragLeave={(e) => handleCategoryDragLeave(e, cat)}
+                                                         onDragEnd={handleCategoryDragEnd}
+                                                         onDrop={(e) => handleCategoryDrop(e, cat)}
+                                                         className={`bg-white border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100 hover:border-gray-200'}`}
+                                                     >
+                                                         {/* Category Header Row */}
+                                                         <div 
+                                                             onClick={() => toggleCategoryExpand(cat)}
+                                                             className="flex items-center justify-between p-5 cursor-pointer bg-gray-50/50 hover:bg-gray-55 select-none transition-colors"
+                                                         >
+                                                             <div className="flex items-center space-x-3.5 min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+                                                                 {/* Category Drag Handle */}
+                                                                 <div 
+                                                                     draggable
+                                                                     onDragStart={(e) => handleCategoryDragStart(e, cat)}
+                                                                     onDragEnd={handleCategoryDragEnd}
+                                                                     className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing select-none text-base p-1"
+                                                                     title="Drag to reorder category"
+                                                                 >
+                                                                     ☰
                                                                  </div>
+                                                                  <div 
+                                                                      className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center p-1.5 shadow-sm transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                                                                      onClick={() => toggleCategoryExpand(cat)}
+                                                                  >
+                                                                      <img 
+                                                                          src={getCategoryIcon(cat)} 
+                                                                          alt={cat} 
+                                                                          className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" 
+                                                                      />
+                                                                  </div>
+                                                                 <div className="min-w-0 flex-1 cursor-pointer" onClick={() => toggleCategoryExpand(cat)}>
+                                                                     <h4 className="text-sm font-extrabold text-gray-800 tracking-tight uppercase">
+                                                                         {cat}
+                                                                     </h4>
+                                                                     <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                                                                         {catServices.length} {catServices.length === 1 ? 'Service' : 'Services'}
+                                                                     </p>
+                                                                 </div>
+                                                             </div>
+
+                                                             <div className="flex items-center space-x-3" onClick={(e) => e.stopPropagation()}>
+                                                                 {/* Up / Down category arrows */}
+                                                                 <div className="flex items-center gap-1">
+                                                                     <button
+                                                                         onClick={() => catIdx > 0 && handleSwapCategories(cat, categories[catIdx - 1])}
+                                                                         disabled={catIdx === 0}
+                                                                         className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-50 rounded-lg border border-gray-250 hover:border-red-200 transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                         title="Move Category Up"
+                                                                     >▲</button>
+                                                                     <button
+                                                                         onClick={() => catIdx < categories.length - 1 && handleSwapCategories(cat, categories[catIdx + 1])}
+                                                                         disabled={catIdx === categories.length - 1}
+                                                                         className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-55 rounded-lg border border-gray-250 hover:border-red-200 transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                         title="Move Category Down"
+                                                                     >▼</button>
+                                                                 </div>
+                                                                 
+                                                                 {/* Expand / Collapse Indicator */}
+                                                                 <button 
+                                                                     onClick={() => toggleCategoryExpand(cat)}
+                                                                     className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-xs font-bold text-gray-600"
+                                                                 >
+                                                                     {isExpanded ? '▼' : '►'}
+                                                                 </button>
                                                              </div>
                                                          </div>
 
-                                                         {/* Right section: Price & Controls */}
-                                                         <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0">
-                                                             <div className="text-left sm:text-right pr-1 flex-shrink-0">
-                                                                 <p className="text-[16px] font-bold text-gray-900 tracking-tight">₹{service.price}</p>
+                                                         {/* Expanded Category Services List */}
+                                                         {isExpanded && (
+                                                             <div className="p-5 bg-white border-t border-gray-100 space-y-4">
+                                                                 {catServices.length > 0 ? (
+                                                                     catServices.map((service) => {
+                                                                         const getCategoryTheme = (cat) => {
+                                                                             const norm = (cat || '').toLowerCase().trim();
+                                                                             if (norm.includes('hair services')) {
+                                                                                 return {
+                                                                                     accent: 'bg-[#FF0B01]',
+                                                                                     bg: 'bg-red-50/70',
+                                                                                     text: 'text-[#FF0B01]',
+                                                                                     border: 'border-red-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('hair treatment')) {
+                                                                                 return {
+                                                                                     accent: 'bg-orange-500',
+                                                                                     bg: 'bg-orange-50/70',
+                                                                                     text: 'text-orange-700',
+                                                                                     border: 'border-orange-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('skin care')) {
+                                                                                 return {
+                                                                                     accent: 'bg-amber-500',
+                                                                                     bg: 'bg-amber-50/70',
+                                                                                     text: 'text-amber-700',
+                                                                                     border: 'border-amber-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('hair removal')) {
+                                                                                 return {
+                                                                                     accent: 'bg-purple-500',
+                                                                                     bg: 'bg-purple-50/70',
+                                                                                     text: 'text-purple-700',
+                                                                                     border: 'border-purple-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('nail care')) {
+                                                                                 return {
+                                                                                     accent: 'bg-teal-500',
+                                                                                     bg: 'bg-teal-50/70',
+                                                                                     text: 'text-teal-700',
+                                                                                     border: 'border-teal-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('makeup')) {
+                                                                                 return {
+                                                                                     accent: 'bg-rose-500',
+                                                                                     bg: 'bg-rose-50/70',
+                                                                                     text: 'text-rose-700',
+                                                                                     border: 'border-rose-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('grooming')) {
+                                                                                 return {
+                                                                                     accent: 'bg-blue-500',
+                                                                                     bg: 'bg-blue-50/70',
+                                                                                     text: 'text-blue-700',
+                                                                                     border: 'border-blue-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('spa & massage')) {
+                                                                                 return {
+                                                                                     accent: 'bg-emerald-500',
+                                                                                     bg: 'bg-emerald-50/70',
+                                                                                     text: 'text-emerald-700',
+                                                                                     border: 'border-emerald-100/50',
+                                                                                 };
+                                                                             }
+                                                                             if (norm.includes('bridal')) {
+                                                                                 return {
+                                                                                     accent: 'bg-pink-500',
+                                                                                     bg: 'bg-pink-50/70',
+                                                                                     text: 'text-pink-700',
+                                                                                     border: 'border-pink-100/50',
+                                                                                 };
+                                                                             }
+                                                                             return {
+                                                                                 accent: 'bg-gray-400',
+                                                                                 bg: 'bg-gray-50/70',
+                                                                                 text: 'text-gray-700',
+                                                                                 border: 'border-gray-100/50',
+                                                                             };
+                                                                         };
+                                                                         const theme = getCategoryTheme(service.category);
+                                                                         const isSvcDragged = draggedServiceId === service.id;
+                                                                         const isSvcDragOver = dragOverServiceId === service.id;
+
+                                                                         return (
+                                                                             <div 
+                                                                                 key={service.id} 
+                                                                                 draggable
+                                                                                 onDragStart={(e) => handleServiceDragStart(e, service.id)}
+                                                                                 onDragOver={(e) => handleServiceDragOver(e, service.id)}
+                                                                                 onDragLeave={(e) => handleServiceDragLeave(e, service.id)}
+                                                                                 onDragEnd={handleServiceDragEnd}
+                                                                                 onDrop={(e) => handleServiceDrop(e, service.id)}
+                                                                                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border rounded-3xl hover:border-gray-250 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all duration-300 relative overflow-hidden group pl-7 gap-4 cursor-grab active:cursor-grabbing ${isSvcDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isSvcDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100'}`}
+                                                                             >
+                                                                                 {/* Sleek Vertical Accent stripe */}
+                                                                                 <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${theme.accent} rounded-r-md`}></div>
+                                                                                 
+                                                                                 {/* Left section: Service Details */}
+                                                                                 <div className="flex items-center space-x-3.5 min-w-0 flex-1 w-full">
+                                                                                     {/* Drag Handle Icon */}
+                                                                                     <div className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing mr-1 select-none text-base">
+                                                                                         ☰
+                                                                                     </div>
+                                                                                     {/* Category themed avatar box */}
+                                                                                     <div className={`w-11 h-11 rounded-2xl ${theme.bg} ${theme.border} border flex items-center justify-center ${theme.text} font-black text-sm uppercase flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105`}>
+                                                                                         {service.name?.charAt(0) || 'S'}
+                                                                                     </div>
+                                                                                     <div className="min-w-0 flex-1">
+                                                                                         <h4 className="text-sm font-semibold text-gray-900 tracking-tight truncate mb-1" title={service.name}>
+                                                                                             {service.name}
+                                                                                         </h4>
+                                                                                         <div className="flex flex-wrap items-center gap-2">
+                                                                                             {/* Category Tag */}
+                                                                                             <span className="px-2 py-0.5 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-100">
+                                                                                                 {service.category}
+                                                                                             </span>
+                                                                                             {/* Duration Badge */}
+                                                                                             <span className="flex items-center text-[10px] font-semibold text-gray-400 gap-1 flex-shrink-0">
+                                                                                                 <img src={durationIcon} alt="Duration" className="w-3.5 h-3.5 opacity-40 object-contain" />
+                                                                                                 {service.duration} mins
+                                                                                             </span>
+                                                                                         </div>
+                                                                                     </div>
+                                                                                 </div>
+
+                                                                                 {/* Right section: Price & Controls */}
+                                                                                 <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0">
+                                                                                     <div className="text-left sm:text-right pr-1 flex-shrink-0">
+                                                                                         <p className="text-[16px] font-bold text-gray-900 tracking-tight">₹{service.price}</p>
+                                                                                     </div>
+
+                                                                                     <div className="flex items-center gap-2">
+                                                                                         {/* Priority swap: Move Up */}
+                                                                                         <button
+                                                                                             onClick={() => {
+                                                                                                 const idx = catServices.findIndex(s => s.id === service.id);
+                                                                                                 if (idx > 0) handleSwapServices(service.id, catServices[idx - 1].id);
+                                                                                             }}
+                                                                                             disabled={catServices.findIndex(s => s.id === service.id) === 0}
+                                                                                             className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 rounded-lg border border-gray-100 hover:border-blue-100 transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                                                                                             title="Move Up"
+                                                                                         >▲</button>
+                                                                                         {/* Priority swap: Move Down */}
+                                                                                         <button
+                                                                                             onClick={() => {
+                                                                                                 const idx = catServices.findIndex(s => s.id === service.id);
+                                                                                                 if (idx < catServices.length - 1) handleSwapServices(service.id, catServices[idx + 1].id);
+                                                                                             }}
+                                                                                             disabled={catServices.findIndex(s => s.id === service.id) === catServices.length - 1}
+                                                                                             className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 rounded-lg border border-gray-100 hover:border-blue-100 transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                                                                                             title="Move Down"
+                                                                                         >▼</button>
+                                                                                         {/* Circular icon button for edit */}
+                                                                                         <button
+                                                                                             onClick={() => handleEditService(service)}
+                                                                                             className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 rounded-full border border-gray-100 hover:border-red-100 transition-all duration-200 flex-shrink-0 cursor-pointer"
+                                                                                             title="Edit Service"
+                                                                                         >
+                                                                                             <img src={editIcon} alt="Edit" className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+                                                                                         </button>
+
+                                                                                         {/* Premium active/inactive switch */}
+                                                                                         <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 select-none">
+                                                                                             <input
+                                                                                                 type="checkbox"
+                                                                                                 checked={service.active !== false}
+                                                                                                 onChange={() => toggleServiceStatus(service.id, service.active)}
+                                                                                                 className="sr-only peer"
+                                                                                             />
+                                                                                             <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                                                         </label>
+                                                                                     </div>
+                                                                                 </div>
+                                                                             </div>
+                                                                         );
+                                                                     })
+                                                                 ) : (
+                                                                     <div className="py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50/30 rounded-2xl border border-gray-100">
+                                                                         No services in this category
+                                                                     </div>
+                                                                 )}
                                                              </div>
-
-                                                             <div className="flex items-center gap-3">
-                                                                 {/* Circular icon button for edit */}
-                                                                 <button
-                                                                     onClick={() => handleEditService(service)}
-                                                                     className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 rounded-full border border-gray-100 hover:border-red-100 transition-all duration-200 flex-shrink-0 cursor-pointer"
-                                                                     title="Edit Service"
-                                                                 >
-                                                                     <img src={editIcon} alt="Edit" className="w-4 h-4 opacity-70 group-hover:opacity-100" />
-                                                                 </button>
-
-                                                                 {/* Premium active/inactive switch */}
-                                                                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 select-none">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={service.active !== false}
-                                                                    onChange={() => toggleServiceStatus(service.id, service.active)}
-                                                                    className="sr-only peer"
-                                                                />
-                                                                <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                        ) : (
-                                            <div className="col-span-full py-10 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                                No services found
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                                         )}
+                                                      </div>
+                                              );
+                                          })}
+                                      </div>
+                                      )}
                                  </div>
-                            </>
+                                 </>
                     </div>
                 </main>
     );

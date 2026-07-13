@@ -331,8 +331,8 @@ const WalkInBooking = () => {
         const objs = allServices.length > 0
             ? allServices.filter(s => addedServices.includes(s.id))
             : [];
-        const total = objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
-        return total || 30;
+        if (objs.length === 0) return 0;
+        return objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
     }, [addedServices, allServices]);
 
     // --- FETCH SALON SLOTS on mount / date change ---
@@ -595,6 +595,10 @@ const WalkInBooking = () => {
             toast.error('Please select at least one service to proceed.');
             return;
         }
+        if (homeService && !customerAddress.trim()) {
+            toast.error('Please enter complete address for home service.');
+            return;
+        }
         if (!selectedSlot) {
             toast.error('Please select a date and time slot.');
             return;
@@ -656,10 +660,19 @@ const WalkInBooking = () => {
     // Derived staff list to display
     const displayedStaffList = useMemo(() => {
         if (firstSelected === 'slot') {
-            return availableStaffList.map(s => ({
-                ...s,
-                id: s.staffId || s.id
-            }));
+            return availableStaffList.map(s => {
+                const staffId = s.staffId || s.id;
+                const fullStaff = staffList.find(item => item.id === staffId);
+                return {
+                    ...s,
+                    ...fullStaff,
+                    id: staffId,
+                    name: s.name || s.staffName || fullStaff?.name || 'Stylist',
+                    speciality: s.speciality || fullStaff?.speciality,
+                    imagePath: s.imagePath || fullStaff?.imagePath,
+                    rating: s.rating !== undefined ? s.rating : fullStaff?.rating
+                };
+            });
         }
         return staffList;
     }, [firstSelected, availableStaffList, staffList]);
@@ -756,10 +769,10 @@ const WalkInBooking = () => {
                 totalPrice: serviceSubtotal,
                 discountAmount: discountAmount,
                 weekdayDiscountAmount: weekdayDiscountAmount,
-                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount),
-                homeCharge: 0.00,
-                homeService: false,
-                address: null,
+                finalAmount: Math.max(0, serviceSubtotal - discountAmount - weekdayDiscountAmount + (homeService ? homeServiceCharges : 0)),
+                homeCharge: homeService ? homeServiceCharges : 0.00,
+                homeService: homeService,
+                address: homeService ? customerAddress : null,
                 status: 'booked',
                 services: appointmentServices
             };
@@ -1175,7 +1188,7 @@ const WalkInBooking = () => {
                                                 }`}
                                             >
                                                 <span>{slot.displayTime}</span>
-                                                {slot.discountMessage && (
+                                                {slot.discountPercentage > 0 && slot.discountMessage && (
                                                     <span className={`text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full ${
                                                         isSelectedTime ? 'bg-white text-[#FF0B01]' : 'bg-green-100 text-green-700'
                                                     }`}>
@@ -1447,16 +1460,22 @@ const WalkInBooking = () => {
                                                     >
                                                         {/* Stylist Image left block */}
                                                         <div className="w-20 h-24 rounded-xl overflow-hidden bg-slate-50 relative shrink-0">
-                                                            {staff.imagePath ? (
-                                                                <AsyncImage 
-                                                                    imagePath={staff.imagePath} 
+                                                            {staff.imageUrl || staff.imagePath ? (
+                                                                <img 
+                                                                    src={staff.imageUrl || staff.imagePath} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
-                                                                    fallbackText={staff.name?.[0] || 'S'} 
+                                                                    onError={(e) => {
+                                                                        e.target.src = staff.gender === 'FEMALE' 
+                                                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                    }}
                                                                 />
                                                             ) : (
                                                                 <img 
-                                                                    src={getExpertImg(index)} 
+                                                                    src={staff.gender === 'FEMALE' 
+                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
                                                                     alt={staff.name} 
                                                                     className="w-full h-full object-cover" 
                                                                 />
@@ -1558,9 +1577,9 @@ const WalkInBooking = () => {
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
                 weekdayDiscountPercent={weekdayDiscountPercent}
-                homeService={false}
-                homeCharge={0}
-                address={''}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== APPOINTMENT BOOKED MODAL ==================== */}
@@ -1579,9 +1598,9 @@ const WalkInBooking = () => {
                 selectedOffer={selectedOffer}
                 discountAmount={discountAmount}
                 weekdayDiscountAmount={weekdayDiscountAmount}
-                homeService={false}
-                homeCharge={0}
-                address={''}
+                homeService={homeService}
+                homeCharge={homeService ? homeServiceCharges : 0}
+                address={homeService ? customerAddress : ''}
             />
 
             {/* ==================== WALK-IN DETAILS POPUP ==================== */}

@@ -256,21 +256,30 @@ const AddPackages = () => {
         }
     };
 
-    const handleEdit = (pkg) => {
-        setFormData({
-            name: pkg.name || '',
-            description: pkg.description || '',
-            packagePrice: pkg.packagePrice || '',
-            active: pkg.active !== false,
-            serviceIds: pkg.services?.map(s => s.id) || [],
-            usageLimitPerCustomer: pkg.usageLimitPerCustomer || '',
-            totalUsageLimit: pkg.totalUsageLimit || ''
-        });
-        setSelectedServices(pkg.services?.map(s => s.id) || []);
-        setIsEditing(true);
-        setEditingId(pkg.id);
-        setActiveTab('add');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const handleEdit = async (pkg) => {
+        const toastId = toast.loading('Loading package details...', toastStyle);
+        try {
+            const response = await axiosInstance.get(`/packages/${pkg.id}`);
+            const fullPkg = response.data;
+            setFormData({
+                name: fullPkg.name || '',
+                description: fullPkg.description || '',
+                packagePrice: fullPkg.packagePrice || '',
+                active: fullPkg.active !== false,
+                serviceIds: fullPkg.services?.map(s => s.id) || [],
+                usageLimitPerCustomer: fullPkg.usageLimitPerCustomer || '',
+                totalUsageLimit: fullPkg.totalUsageLimit || ''
+            });
+            setSelectedServices(fullPkg.services?.map(s => s.id) || []);
+            setIsEditing(true);
+            setEditingId(fullPkg.id);
+            setActiveTab('add');
+            toast.dismiss(toastId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error('Failed to fetch package details:', error);
+            toast.error('Failed to load package details', { id: toastId, ...toastStyle });
+        }
     };
 
     const handleDelete = async (id) => {
@@ -659,21 +668,15 @@ const AddPackages = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="mt-6 pt-4 border-t border-gray-100 flex gap-3">
-                                                    <button
-                                                        onClick={() => handleEdit(pkg)}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
-                                                    >
-                                                        <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(pkg.id)}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 text-red-650 hover:bg-red-100 text-xs font-bold transition-all border border-red-200 py-3 rounded-xl"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
+                                                <div className="mt-6 pt-4 border-t border-gray-100">
+                                                     <button
+                                                         onClick={() => handleEdit(pkg)}
+                                                         className="w-full flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
+                                                     >
+                                                         <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
+                                                         Edit
+                                                     </button>
+                                                 </div>
                                             </div>
                                         );
                                     })}

@@ -70,6 +70,179 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const renderSidebarContent = (isMobile = false) => {
+    const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    const isAdmin = user.role === 'ADMIN';
+
+    if (isAdmin) {
+      return (
+        <>
+          {/* Mobile Header with Close Button */}
+          {isMobile && (
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 lg:hidden flex-shrink-0">
+              <span className="text-gray-900 font-bold text-sm">Navigation</span>
+              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-900">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Top Admin Controls Group */}
+          <div className="pt-4 px-3 flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+            {/* Dashboard */}
+            <button
+              onClick={() => {
+                navigate('/owner/dashboard');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/dashboard'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/dashboard' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <img
+                src={homeIcon}
+                alt="Dashboard"
+                className={`w-[18px] h-[18px] sidebar-icon ${
+                  location.pathname === '/owner/dashboard' ? 'active-icon-glow' : 'opacity-60'
+                }`}
+              />
+              <span>Dashboard</span>
+            </button>
+
+            {/* Salons & KYC */}
+            <button
+              onClick={() => {
+                navigate('/owner/salons');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/salons'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/salons' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/salons' ? 'active-icon-glow text-red-600' : 'opacity-65'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span>Salons & KYC</span>
+            </button>
+
+            {/* Subscriptions */}
+            <button
+              onClick={() => {
+                navigate('/owner/subscriptions');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/subscriptions'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/subscriptions' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/subscriptions' ? 'active-icon-glow text-red-600' : 'opacity-65'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <span>Subscriptions</span>
+            </button>
+
+            {/* Server Health */}
+            <button
+              onClick={() => {
+                navigate('/owner/monitoring');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/monitoring'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/monitoring' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/monitoring' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+              </svg>
+              <span>Server Health</span>
+            </button>
+          </div>
+
+          {/* Bottom Admin Utility Actions Group */}
+          <div className="p-3 border-t border-gray-100 space-y-1 flex-shrink-0">
+            <button
+              onClick={() => {
+                navigate('/owner/settings');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/settings'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/settings' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <img
+                src={settingIcon}
+                alt="Settings"
+                className={`w-[18px] h-[18px] sidebar-icon ${
+                  location.pathname === '/owner/settings' ? 'active-icon-glow' : 'opacity-60'
+                }`}
+              />
+              <span>Settings</span>
+            </button>
+
+            <div className="pt-2 border-t border-gray-100 mt-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-red-600 text-[13px] font-bold transition-colors duration-150 cursor-pointer sidebar-btn"
+              >
+                <img src={logoutIcon} alt="Logout" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-60" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </>
+      );
+    }
+
     return (
       <>
         {/* Mobile Header with Close Button */}
@@ -161,7 +334,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Analytics */}
           <button
-            onClick={() => navigate('/owner/analytics')}
+            onClick={() => {
+              navigate('/owner/analytics');
+              if (isMobile && onClose) onClose();
+            }}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/analytics'
                 ? 'text-red-600 bg-red-50'
@@ -180,6 +356,36 @@ const Sidebar = ({ isOpen, onClose }) => {
               }`}
             />
             <span>Analytics</span>
+          </button>
+
+          {/* Server Health */}
+          <button
+            onClick={() => {
+              navigate('/owner/monitoring');
+              if (isMobile && onClose) onClose();
+            }}
+            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+              ${location.pathname === '/owner/monitoring'
+                ? 'text-red-600 bg-red-50'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            {location.pathname === '/owner/monitoring' && (
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+            )}
+
+            <svg
+              className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                location.pathname === '/owner/monitoring' ? 'active-icon-glow text-red-600' : 'opacity-60'
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+            </svg>
+            <span>Server Health</span>
           </button>
 
           {/* Customers */}

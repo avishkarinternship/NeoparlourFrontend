@@ -5,7 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
     searchSalonsByLocation,
     switchTenant,
-    fetchCustomerProfile
+    fetchCustomerProfile,
+    fetchDefaultSalon
 } from '../../redux/slices/customerSlice';
 import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
@@ -87,7 +88,7 @@ import subSixImg from '../../assets/Customer/HomeScreen/Review/sub_six_img.svg';
 import footerLogoIcon from '../../assets/Neoparlour_logo.png';
 
 import Marquee from 'react-fast-marquee';
-import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User } from 'lucide-react';
+import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEOFooter from '../common/SEOFooter';
 
@@ -114,7 +115,7 @@ const HomeScreen = () => {
     const dispatch = useDispatch();
     const isUserTypingCityRef = useRef(false);
     const isUserTypingAreaRef = useRef(false);
-    const { token, loading, salonResults, user, isAuthenticated, profile } = useSelector((state) => state.customer);
+    const { token, loading, salonResults, user, isAuthenticated, profile, defaultSalon } = useSelector((state) => state.customer);
 
     useEffect(() => {
         if (isAuthenticated && user && !profile) {
@@ -122,6 +123,9 @@ const HomeScreen = () => {
             if (customerId) {
                 dispatch(fetchCustomerProfile(customerId));
             }
+        }
+        if (isAuthenticated) {
+            dispatch(fetchDefaultSalon());
         }
     }, [isAuthenticated, user, profile, dispatch]);
 
@@ -840,6 +844,47 @@ const HomeScreen = () => {
                 </div>
             </section>
 
+            {/* QUICK BOOK CARD — Default Salon */}
+            {isAuthenticated && defaultSalon && (
+                <section className="px-6 pt-12 max-w-5xl mx-auto">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 p-6 md:p-8 shadow-xl border border-gray-700/30">
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[#ff0b01]/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/4" />
+                        
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/20 text-amber-400 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest mb-3">
+                                    <Zap className="w-3 h-3" />
+                                    Quick Book
+                                </div>
+                                <h3 className="text-lg md:text-xl font-black text-white tracking-tight leading-snug">
+                                    Ready for your next look?
+                                </h3>
+                                <p className="text-sm text-gray-400 font-medium mt-1.5 max-w-md">
+                                    Book your slot at <span className="text-amber-400 font-bold">{defaultSalon.salonName}</span> in just 2 clicks!
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const salonId = defaultSalon.salonId;
+                                    const salonName = defaultSalon.salonName || 'Default Salon';
+                                    localStorage.setItem('activeSalonId', salonId);
+                                    localStorage.setItem('activeSalonName', salonName);
+                                    dispatch(switchTenant({ token, salonId, salonName }))
+                                        .unwrap()
+                                        .then(() => navigate('/customer/salon'))
+                                        .catch(() => navigate('/customer/salon'));
+                                }}
+                                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff0b01] to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+                            >
+                                Book Now
+                                <Zap className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            )}
 
 
             {/* 3. FIXED STATS SECTION */}

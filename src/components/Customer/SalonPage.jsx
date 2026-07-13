@@ -202,9 +202,69 @@ const SalonPage = () => {
         return days;
     };
     const nextDays = getNextDays();
-    const [selectedDateObj, setSelectedDateObj] = useState(nextDays[0]);
-    const [selectedTime, setSelectedTime] = useState(null);
-    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [selectedDateObj, setSelectedDateObj] = useState(() => {
+        const stored = localStorage.getItem('bookingSelectedDateObj');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                const exists = nextDays.find(d => d.fullDate === parsed.fullDate);
+                if (exists) return exists;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return nextDays[0];
+    });
+    const [selectedTime, setSelectedTime] = useState(() => {
+        return localStorage.getItem('bookingSelectedTime') || null;
+    });
+    const [selectedSlot, setSelectedSlot] = useState(() => {
+        const stored = localStorage.getItem('bookingSelectedSlot');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        return null;
+    });
+    const [selectedExpert, setSelectedExpert] = useState(() => {
+        return localStorage.getItem('bookingSelectedExpert') || null;
+    });
+
+    useEffect(() => {
+        if (selectedDateObj) {
+            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+        } else {
+            localStorage.removeItem('bookingSelectedDateObj');
+        }
+    }, [selectedDateObj]);
+
+    useEffect(() => {
+        if (selectedTime) {
+            localStorage.setItem('bookingSelectedTime', selectedTime);
+        } else {
+            localStorage.removeItem('bookingSelectedTime');
+        }
+    }, [selectedTime]);
+
+    useEffect(() => {
+        if (selectedSlot) {
+            localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+        } else {
+            localStorage.removeItem('bookingSelectedSlot');
+        }
+    }, [selectedSlot]);
+
+    useEffect(() => {
+        if (selectedExpert) {
+            localStorage.setItem('bookingSelectedExpert', selectedExpert);
+        } else {
+            localStorage.removeItem('bookingSelectedExpert');
+        }
+    }, [selectedExpert]);
+
     const [salonSlots, setSalonSlots] = useState([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
     const [availableStaffForSlot, setAvailableStaffForSlot] = useState([]);
@@ -372,7 +432,7 @@ const SalonPage = () => {
                     params: {
                         salonId: activeSalonId,
                         selectedTime: selectedSlot.startTime,
-                        durationMinutes: 30 // default for salon page (no services selected yet)
+                        durationMinutes: 0 // default for salon page (no services selected yet)
                     }
                 });
                 setAvailableStaffForSlot(res.data || []);
@@ -965,16 +1025,26 @@ const SalonPage = () => {
                                         return (
                                             <div
                                                 key={staff.id}
-                                                onClick={() => navigate('/customer/book-service', {
-                                                    state: {
-                                                        selectedExpert: staff.id,
-                                                        selectedDateObj: selectedDateObj,
-                                                        selectedTime: selectedTime
-                                                    }
-                                                })}
-                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${isTopRated
-                                                    ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
-                                                    : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
+                                                onClick={() => {
+                                                    setSelectedExpert(staff.id);
+                                                    localStorage.setItem('bookingSelectedExpert', staff.id);
+                                                    localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+                                                    if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
+                                                    if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+                                                    navigate('/customer/book-service', {
+                                                        state: {
+                                                            selectedExpert: staff.id,
+                                                            selectedDateObj: selectedDateObj,
+                                                            selectedTime: selectedTime
+                                                        }
+                                                    });
+                                                }}
+                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
+                                                    selectedExpert === staff.id
+                                                        ? 'border-[#FF0B01] bg-red-50/20 shadow-md ring-2 ring-[#FF0B01]'
+                                                        : isTopRated
+                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
+                                                        : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
                                                     }`}
                                             >
                                                 {/* Top Rated Badge */}
@@ -990,18 +1060,24 @@ const SalonPage = () => {
                                                     {/* Avatar */}
                                                     <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
                                                         }`}>
-                                                        {staff.imagePath ? (
-                                                            <AsyncImage
-                                                                imagePath={staff.imagePath}
-                                                                alt={staff.name}
-                                                                className="w-full h-full object-cover"
-                                                                fallbackText={staff.name?.[0] || 'S'}
+                                                        {staff.imageUrl || staff.imagePath ? (
+                                                            <img 
+                                                                src={staff.imageUrl || staff.imagePath} 
+                                                                alt={staff.name} 
+                                                                className="w-full h-full object-cover" 
+                                                                onError={(e) => {
+                                                                    e.target.src = staff.gender === 'FEMALE' 
+                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                }}
                                                             />
                                                         ) : (
-                                                            <img
-                                                                src={getExpertImg(index)}
-                                                                alt={staff.name}
-                                                                className="w-full h-full object-cover"
+                                                            <img 
+                                                                src={staff.gender === 'FEMALE' 
+                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                                alt={staff.name} 
+                                                                className="w-full h-full object-cover" 
                                                             />
                                                         )}
                                                     </div>
@@ -1116,6 +1192,8 @@ const SalonPage = () => {
                                                 setSelectedTime(null);
                                                 setSelectedSlot(null);
                                                 setAvailableStaffForSlot([]);
+                                                localStorage.removeItem('bookingSelectedSlot');
+                                                localStorage.removeItem('bookingSelectedTime');
                                             }}
                                             className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
                                                 ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
@@ -1149,6 +1227,9 @@ const SalonPage = () => {
                                                 type="button"
                                                 key={slot.startTime || idx}
                                                 onClick={() => {
+                                                    localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+                                                    localStorage.setItem('bookingSelectedTime', slot.displayTime);
+                                                    localStorage.setItem('bookingSelectedSlot', JSON.stringify(slot));
                                                     navigate('/customer/book-service', {
                                                         state: {
                                                             selectedDateObj: selectedDateObj,
@@ -1174,12 +1255,17 @@ const SalonPage = () => {
                                 <div className="mt-6 pt-4 border-t border-slate-100">
                                     <button
                                         type="button"
-                                        onClick={() => navigate('/customer/book-service', {
-                                            state: {
-                                                selectedDateObj: selectedDateObj,
-                                                selectedTime: selectedTime
-                                            }
-                                        })}
+                                        onClick={() => {
+                                            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+                                            localStorage.setItem('bookingSelectedTime', selectedTime);
+                                            localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+                                            navigate('/customer/book-service', {
+                                                state: {
+                                                    selectedDateObj: selectedDateObj,
+                                                    selectedTime: selectedTime
+                                                }
+                                            });
+                                        }}
                                         className="w-full bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
                                     >
                                         Continue Booking for {selectedTime}

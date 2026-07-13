@@ -127,6 +127,49 @@ const getTodayDateString = () => {
 
 const OwnerDashboard = () => {
     const navigate = useNavigate();
+
+    const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    const isAdmin = user.role === 'ADMIN';
+
+    const [adminStats, setAdminStats] = useState({
+        totalSalons: 0,
+        totalActiveSubscriptions: 0,
+        serverStatus: 'checking'
+    });
+    const [loadingAdmin, setLoadingAdmin] = useState(false);
+
+    const fetchAdminStats = async () => {
+        setLoadingAdmin(true);
+        try {
+            const salonsRes = await axiosInstance.get('/salons/admin/all', { params: { size: 1 } });
+            const subsRes = await axiosInstance.get('/subscriptions/admin/all');
+            
+            let serverUp = 'down';
+            try {
+                const healthRes = await axiosInstance.get('/subscriptions/plans');
+                if (healthRes.status === 200) serverUp = 'up';
+            } catch {
+                serverUp = 'down';
+            }
+
+            setAdminStats({
+                totalSalons: salonsRes.data?.totalElements || 0,
+                totalActiveSubscriptions: subsRes.data?.filter(s => s.status?.toLowerCase() === 'active').length || 0,
+                serverStatus: serverUp
+            });
+        } catch (err) {
+            console.error("Failed to load admin stats:", err);
+        } finally {
+            setLoadingAdmin(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isAdmin) {
+            fetchAdminStats();
+        }
+    }, [isAdmin]);
+
     // API states
     const [viewType, setViewType] = useState('day');
     const [customStartDate, setCustomStartDate] = useState(getFirstDayOfMonth());
@@ -354,6 +397,7 @@ const OwnerDashboard = () => {
 
     // Trigger API fetches
     useEffect(() => {
+        if (isAdmin) return;
         const controller = new AbortController();
         
         let shouldCall = true;
@@ -377,9 +421,10 @@ const OwnerDashboard = () => {
         return () => {
             controller.abort();
         };
-    }, [viewType, customStartDate, customEndDate, fetchRevenueData]);
+    }, [isAdmin, viewType, customStartDate, customEndDate, fetchRevenueData]);
 
     useEffect(() => {
+        if (isAdmin) return;
         const controller = new AbortController();
         fetchUpcomingAppointments(controller.signal);
         fetchCompletedAppointments(controller.signal);
@@ -389,7 +434,7 @@ const OwnerDashboard = () => {
         return () => {
             controller.abort();
         };
-    }, [fetchUpcomingAppointments, fetchCompletedAppointments, fetchUnallocatedAppointments, fetchCancelledAppointments, fetchStaffAvailability]);
+    }, [isAdmin, fetchUpcomingAppointments, fetchCompletedAppointments, fetchUnallocatedAppointments, fetchCancelledAppointments, fetchStaffAvailability]);
 
     const handleViewTypeChange = (type) => {
         setViewType(type);
@@ -410,13 +455,159 @@ const OwnerDashboard = () => {
     };
     const todaysAppointments = upcomingAppointments.filter(appt => isTodayDate(appt.appointmentAt));
 
+    if (isAdmin) {
+        return (
+            <main className="flex-1 p-6 md:p-8 bg-[#FAFAFA] overflow-y-auto max-w-7xl mx-auto w-full font-sans">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div>
+                        <span className="text-[10px] font-black tracking-[0.2em] text-red-600 uppercase mb-2 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" /> System Controller
+                        </span>
+                        <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">Admin Control Panel</h1>
+                        <p className="text-xs text-gray-500 mt-1">Real-time system health metrics, customer subscription status, and active salons.</p>
+                    </div>
+                    <button
+                        onClick={fetchAdminStats}
+                        disabled={loadingAdmin}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-200 rounded-xl shadow-xs transition disabled:opacity-50 text-xs font-bold"
+                    >
+                        <svg className={`w-4 h-4 ${loadingAdmin ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
+                        </svg>
+                        <span>Sync System Data</span>
+                    </button>
+                </div>
+
+                {/* Dashboard Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                    {/* Salons Card */}
+                    <div 
+                        onClick={() => navigate('/owner/salons')}
+                        className="bg-white border border-gray-150 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Registered Salons</p>
+                                <p className="text-3xl font-black text-gray-900 mt-1.5 group-hover:text-red-600 transition-colors">
+                                    {loadingAdmin ? '...' : adminStats.totalSalons}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                            <span>Manage listings & verify documents</span>
+                            <span className="group-hover:translate-x-1.5 transition-transform">→</span>
+                        </p>
+                    </div>
+
+                    {/* Subscriptions Card */}
+                    <div 
+                        onClick={() => navigate('/owner/subscriptions')}
+                        className="bg-white border border-gray-155 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Active Subscriptions</p>
+                                <p className="text-3xl font-black text-gray-900 mt-1.5 group-hover:text-red-600 transition-colors">
+                                    {loadingAdmin ? '...' : adminStats.totalActiveSubscriptions}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                            <span>Check payment history & status</span>
+                            <span className="group-hover:translate-x-1.5 transition-transform">→</span>
+                        </p>
+                    </div>
+
+                    {/* Server Health Card */}
+                    <div 
+                        onClick={() => navigate('/owner/monitoring')}
+                        className="bg-white border border-gray-155 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Server Status</p>
+                                <div className="mt-2.5">
+                                    {adminStats.serverStatus === 'checking' ? (
+                                        <span className="inline-flex items-center text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                                            <span className="w-2 h-2 rounded-full bg-gray-300 animate-pulse mr-1.5" /> Synchronizing...
+                                        </span>
+                                    ) : adminStats.serverStatus === 'up' ? (
+                                        <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-150">
+                                            <span className="w-2 h-2 rounded-full bg-green-505 mr-1.5 animate-ping" /> ONLINE (UP)
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-150">
+                                            <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5" /> OFFLINE (DOWN)
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                            <span>Open Grafana dashboard portal</span>
+                            <span className="group-hover:translate-x-1.5 transition-transform">→</span>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Welcome Card & Info Banner */}
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg mb-8">
+                    {/* Background glows */}
+                    <div className="absolute right-0 top-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
+                    
+                    <div className="relative z-10 space-y-3.5 max-w-xl">
+                        <span className="text-[9px] font-black tracking-widest text-[#ff0b01]/95 bg-red-950/40 border border-red-900/50 px-2.5 py-1 rounded-lg uppercase">
+                            Admin Status Active
+                        </span>
+                        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight leading-tight">
+                            System Monitoring & Infrastructure Management
+                        </h2>
+                        <p className="text-gray-400 text-xs leading-relaxed font-medium">
+                            Use the sidebar navigation to view Grafana metrics graphs, check database scraping logs, approve or decline KYC documents, and monitor customer billing logs.
+                        </p>
+                        <div className="pt-3 flex gap-3 flex-wrap">
+                            <button 
+                                onClick={() => navigate('/owner/monitoring')}
+                                className="bg-[#ff0b01] hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-md shadow-red-900/30"
+                            >
+                                Open System Dashboard
+                            </button>
+                            <button 
+                                onClick={() => navigate('/owner/settings')}
+                                className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-white/10 transition"
+                            >
+                                Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
     return (
-                <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
                     {/* Workspace Header Title */}
                     <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
 
                     {/* Responsive Workspace Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         {/* 1. Revenue Graph Card (Upgraded UI) */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[350px]">
@@ -573,8 +764,12 @@ const OwnerDashboard = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-red-50 text-[#ff0b01] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize">
-                                                    {appt.status}
+                                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
+                                                    appt.status === 'in_progress' 
+                                                        ? 'bg-orange-50 text-orange-600' 
+                                                        : 'bg-red-50 text-[#ff0b01]'
+                                                }`}>
+                                                    {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                                                 </span>
                                             </div>
                                         </div>
@@ -735,10 +930,25 @@ const OwnerDashboard = () => {
                                         <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
-                                                    {staff.imageUrl ? (
-                                                        <img src={staff.imageUrl} alt={staff.name} className="w-full h-full object-cover" />
+                                                    {staff.imageUrl || staff.imagePath ? (
+                                                        <img 
+                                                            src={staff.imageUrl || staff.imagePath} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                            onError={(e) => {
+                                                                e.target.src = staff.gender === 'FEMALE' 
+                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                            }}
+                                                        />
                                                     ) : (
-                                                        staff.name ? staff.name.charAt(0) : 'S'
+                                                        <img 
+                                                            src={staff.gender === 'FEMALE' 
+                                                                ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                            alt={staff.name} 
+                                                            className="w-full h-full object-cover" 
+                                                        />
                                                     )}
                                                 </div>
                                                 <div>

@@ -30,15 +30,34 @@ const Settings = () => {
         weeklyOffDay: "",
         homeServiceCharges: "",
         weekdayDiscount: "",
+        morningDiscount: "",
+        afternoonDiscount: "",
+        eveningDiscount: "",
+        nightDiscount: "",
     });
 
+    const [discountMode, setDiscountMode] = useState("NONE"); // "NONE", "WEEKDAY", "CATEGORY"
+
     const [showPopup, setShowPopup] = useState(false);
-const [popupMessage, setPopupMessage] = useState("");
+    const [popupMessage, setPopupMessage] = useState("");
+
+    // Salon image upload states
+    const [logoBase64, setLogoBase64] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+
+    const [existingSalonImages, setExistingSalonImages] = useState([]);
+    const [newGalleryBase64s, setNewGalleryBase64s] = useState([]);
+    const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
 
     useEffect(() => {
         fetchOwnerProfile();
-        fetchSalonProfile();
     }, []);
+
+    useEffect(() => {
+        if (activeTab === 'salon') {
+            fetchSalonProfile();
+        }
+    }, [activeTab]);
 
     const fetchOwnerProfile = async () => {
         try {
@@ -60,11 +79,87 @@ const [popupMessage, setPopupMessage] = useState("");
     const fetchSalonProfile = async () => {
         try {
             const response = await axiosInstance.get("/salons/profile");
+            const data = response.data;
+            setSalonProfile({
+                ...data,
+                weekdayDiscount: data.weekdayDiscount !== null && data.weekdayDiscount !== undefined ? data.weekdayDiscount : "",
+                morningDiscount: data.morningDiscount !== null && data.morningDiscount !== undefined ? data.morningDiscount : "",
+                afternoonDiscount: data.afternoonDiscount !== null && data.afternoonDiscount !== undefined ? data.afternoonDiscount : "",
+                eveningDiscount: data.eveningDiscount !== null && data.eveningDiscount !== undefined ? data.eveningDiscount : "",
+                nightDiscount: data.nightDiscount !== null && data.nightDiscount !== undefined ? data.nightDiscount : "",
+            });
+            setExistingSalonImages(data.salonImages || []);
+            // reset new uploads
+            setLogoBase64(null);
+            setLogoPreview(null);
+            setNewGalleryBase64s([]);
+            setNewGalleryPreviews([]);
 
-            setSalonProfile(response.data);
+            // Determine active discount mode
+            if (data.weekdayDiscount > 0) {
+                setDiscountMode("WEEKDAY");
+            } else if (
+                data.morningDiscount > 0 ||
+                data.afternoonDiscount > 0 ||
+                data.eveningDiscount > 0 ||
+                data.nightDiscount > 0
+            ) {
+                setDiscountMode("CATEGORY");
+            } else {
+                setDiscountMode("NONE");
+            }
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Image size must be under 2MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setLogoBase64(reader.result);
+            setLogoPreview(URL.createObjectURL(file));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleGalleryUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const promises = files.map(file => {
+            return new Promise((resolve, reject) => {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert(`${file.name} is too large (max 2MB)`);
+                    resolve(null);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({ base64: reader.result, preview: URL.createObjectURL(file) });
+                reader.onerror = () => reject(null);
+                reader.readAsDataURL(file);
+            });
+        });
+
+        Promise.all(promises).then(results => {
+            const valid = results.filter(Boolean);
+            setNewGalleryBase64s(prev => [...prev, ...valid.map(v => v.base64)]);
+            setNewGalleryPreviews(prev => [...prev, ...valid.map(v => v.preview)]);
+        });
+    };
+
+    const removeExistingGalleryImage = (indexToRemove) => {
+        setExistingSalonImages(prev => prev.filter((_, i) => i !== indexToRemove));
+    };
+
+    const removeNewGalleryImage = (indexToRemove) => {
+        setNewGalleryBase64s(prev => prev.filter((_, i) => i !== indexToRemove));
+        setNewGalleryPreviews(prev => prev.filter((_, i) => i !== indexToRemove));
     };
 
     const handleOwnerChange = (e) => {
@@ -119,14 +214,61 @@ const [popupMessage, setPopupMessage] = useState("");
 
     const updateSalonProfile = async () => {
         try {
+            const payload = {
+                ...salonProfile,
+                salonImages: existingSalonImages,
+                imageBase64: logoBase64 || null,
+                salonImagesBase64: newGalleryBase64s.length > 0 ? newGalleryBase64s : null
+            };
+
+            // Map and parse fields according to the chosen discount mode
+            if (discountMode === "NONE") {
+                payload.weekdayDiscount = 0;
+                payload.morningDiscount = 0;
+                payload.afternoonDiscount = 0;
+                payload.eveningDiscount = 0;
+                payload.nightDiscount = 0;
+            } else if (discountMode === "WEEKDAY") {
+                const val = payload.weekdayDiscount === "" ? 0 : parseFloat(payload.weekdayDiscount);
+                if (isNaN(val) || val < 0 || val > 100) {
+                    alert("Weekday Discount must be a number between 0 and 100.");
+                    return;
+                }
+                payload.weekdayDiscount = val;
+                payload.morningDiscount = 0;
+                payload.afternoonDiscount = 0;
+                payload.eveningDiscount = 0;
+                payload.nightDiscount = 0;
+            } else if (discountMode === "CATEGORY") {
+                const m = payload.morningDiscount === "" ? 0 : parseFloat(payload.morningDiscount);
+                const a = payload.afternoonDiscount === "" ? 0 : parseFloat(payload.afternoonDiscount);
+                const e = payload.eveningDiscount === "" ? 0 : parseFloat(payload.eveningDiscount);
+                const n = payload.nightDiscount === "" ? 0 : parseFloat(payload.nightDiscount);
+                if (isNaN(m) || m < 0 || m > 100 ||
+                    isNaN(a) || a < 0 || a > 100 ||
+                    isNaN(e) || e < 0 || e > 100 ||
+                    isNaN(n) || n < 0 || n > 100) {
+                    alert("Time category discounts must be numbers between 0 and 100.");
+                    return;
+                }
+                payload.weekdayDiscount = 0;
+                payload.morningDiscount = m;
+                payload.afternoonDiscount = a;
+                payload.eveningDiscount = e;
+                payload.nightDiscount = n;
+            }
+
             await axiosInstance.put(
                 `/salons/profile`,
-                salonProfile
+                payload
             );
 
             setPopupMessage("Salon profile updated successfully");
             setShowPopup(true);
             setIsSalonEdit(false);
+
+            // Refresh to load newly saved URLs and clear upload states
+            fetchSalonProfile();
         } catch (error) {
             console.log(error);
         }
@@ -373,21 +515,134 @@ const [popupMessage, setPopupMessage] = useState("");
                                                 className="w-full border rounded-xl px-4 py-3 mt-1"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="text-sm text-gray-500">Weekday Discount (%)</label>
-                                            <input
-                                                type="number"
-                                                name="weekdayDiscount"
-                                                value={salonProfile.weekdayDiscount !== null && salonProfile.weekdayDiscount !== undefined ? salonProfile.weekdayDiscount : ''}
-                                                disabled={!isSalonEdit}
-                                                onChange={handleSalonChange}
-                                                min="0"
-                                                max="100"
-                                                step="0.1"
-                                                className="w-full border rounded-xl px-4 py-3 mt-1"
-                                            />
+                                    </div>
+                                </div>
+
+                                <div className="mb-6 border-t pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Discount Settings</h3>
+                                    
+                                    <div className="mb-6">
+                                        <label className="text-sm font-semibold text-gray-600 block mb-3">Active Discount Mode</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            {[
+                                                { mode: "NONE", label: "No Discount", desc: "Disable all slot discounts" },
+                                                { mode: "WEEKDAY", label: "Weekday Discount", desc: "Same discount for all Mon-Fri slots" },
+                                                { mode: "CATEGORY", label: "Time-Category Discounts", desc: "Different slot discounts throughout the day" }
+                                            ].map((opt) => (
+                                                <button
+                                                    key={opt.mode}
+                                                    type="button"
+                                                    disabled={!isSalonEdit}
+                                                    onClick={() => setDiscountMode(opt.mode)}
+                                                    className={`p-4 rounded-xl border-2 text-left transition-all flex flex-col justify-between ${
+                                                        !isSalonEdit ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                                                    } ${
+                                                        discountMode === opt.mode
+                                                            ? 'border-red-500 bg-red-50/20 text-red-950 shadow-sm'
+                                                            : 'border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300'
+                                                    }`}
+                                                >
+                                                    <span className="text-sm font-bold block">{opt.label}</span>
+                                                    <span className="text-xs text-gray-400 mt-1 font-medium leading-tight">{opt.desc}</span>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
+
+                                    {discountMode === "WEEKDAY" && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div>
+                                                <label className="text-sm text-gray-500">Weekday Discount (%)</label>
+                                                <input
+                                                    type="number"
+                                                    name="weekdayDiscount"
+                                                    value={salonProfile.weekdayDiscount !== null && salonProfile.weekdayDiscount !== undefined ? salonProfile.weekdayDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 10"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {discountMode === "CATEGORY" && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Morning Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">06:00 AM - 12:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="morningDiscount"
+                                                    value={salonProfile.morningDiscount !== null && salonProfile.morningDiscount !== undefined ? salonProfile.morningDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 15"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Afternoon Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">12:00 PM - 04:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="afternoonDiscount"
+                                                    value={salonProfile.afternoonDiscount !== null && salonProfile.afternoonDiscount !== undefined ? salonProfile.afternoonDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 10"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Evening Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">04:00 PM - 08:00 PM</span>
+                                                <input
+                                                    type="number"
+                                                    name="eveningDiscount"
+                                                    value={salonProfile.eveningDiscount !== null && salonProfile.eveningDiscount !== undefined ? salonProfile.eveningDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 5"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-500 block mb-1">Night Discount (%)</label>
+                                                <span className="text-[10px] text-gray-400 block mb-1">08:00 PM - 06:00 AM</span>
+                                                <input
+                                                    type="number"
+                                                    name="nightDiscount"
+                                                    value={salonProfile.nightDiscount !== null && salonProfile.nightDiscount !== undefined ? salonProfile.nightDiscount : ''}
+                                                    disabled={!isSalonEdit}
+                                                    onChange={handleSalonChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    className="w-full border rounded-xl px-4 py-3 mt-1 outline-none focus:border-red-500 bg-white"
+                                                    placeholder="e.g. 20"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {discountMode === "NONE" && (
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-dashed border-gray-200 text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider">
+                                            Discounts are currently disabled.
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mb-6">
@@ -429,6 +684,95 @@ const [popupMessage, setPopupMessage] = useState("");
                                     </div>
                                 </div>
 
+                                <div className="mb-6 border-t pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Salon Images</h3>
+                                    
+                                    {/* Salon Logo */}
+                                    <div className="mb-6">
+                                        <label className="text-sm font-semibold text-gray-600 block mb-2">Salon Logo (Main Image)</label>
+                                        <div className="flex items-center space-x-6">
+                                            <div className="w-24 h-24 rounded-xl border overflow-hidden bg-gray-50 flex items-center justify-center relative shadow-sm">
+                                                {logoPreview ? (
+                                                    <img src={logoPreview} alt="New Logo Preview" className="w-full h-full object-cover" />
+                                                ) : salonProfile.imageUrl ? (
+                                                    <img src={salonProfile.imageUrl} alt="Salon Logo" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">No Logo</span>
+                                                )}
+                                            </div>
+                                            {isSalonEdit && (
+                                                <div>
+                                                    <label className="cursor-pointer bg-gray-800 hover:bg-black text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow transition-colors inline-block">
+                                                        Change Logo
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            onChange={handleLogoUpload} 
+                                                            className="hidden" 
+                                                        />
+                                                    </label>
+                                                    <p className="text-[10px] text-gray-400 mt-2 font-medium">JPG, PNG, GIF up to 2MB</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Gallery Images */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-600 block mb-3">Salon Gallery Images</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {/* Existing Gallery Images */}
+                                            {existingSalonImages.map((imgUrl, idx) => (
+                                                <div key={`existing-${idx}`} className="aspect-square rounded-2xl border overflow-hidden bg-gray-50 relative group shadow-sm">
+                                                    <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                                                    {isSalonEdit && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeExistingGalleryImage(idx)}
+                                                            className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow transition-colors"
+                                                            title="Delete Image"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Newly Uploaded Gallery Images */}
+                                            {newGalleryPreviews.map((previewUrl, idx) => (
+                                                <div key={`new-${idx}`} className="aspect-square rounded-2xl border border-dashed border-red-200 overflow-hidden bg-red-50/20 relative group shadow-sm">
+                                                    <img src={previewUrl} alt={`New Gallery Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                                                    {isSalonEdit && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeNewGalleryImage(idx)}
+                                                            className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow transition-colors"
+                                                            title="Delete Image"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Add Gallery Image Card */}
+                                            {isSalonEdit && (
+                                                <label className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#FF0B01] hover:bg-red-50/5 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 group">
+                                                    <span className="text-2xl text-gray-400 group-hover:text-[#FF0B01] transition-colors">+</span>
+                                                    <span className="text-[10px] font-black text-gray-400 group-hover:text-[#FF0B01] uppercase tracking-wider transition-colors">Add Image</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        multiple 
+                                                        onChange={handleGalleryUpload} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                </div>
 
                                 <div className="mt-8">
                                     <button
