@@ -46,6 +46,7 @@ import productTwo from '../../assets/Customer/ProductSearch/product_two.jpg';
 import productThree from '../../assets/Customer/ProductSearch/product_three.jpg';
 import productFour from '../../assets/Customer/ProductSearch/product_four.jpg';
 import productFive from '../../assets/Customer/ProductSearch/product_five.jpg';
+import SEOFooter from '../common/SEOFooter';
 
 // --- LOCAL ASYNC IMAGE COMPONENT ---
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
@@ -1288,6 +1289,7 @@ const SalonPage = () => {
 
                 </div>
             </main>
+            {/* <SEOFooter /> */}
         </div>
     );
 };

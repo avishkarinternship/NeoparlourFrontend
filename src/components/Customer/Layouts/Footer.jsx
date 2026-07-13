@@ -5,12 +5,12 @@ import logoIcon from '../../../assets/Neoparlour_logo.png';
 const Footer = () => {
     const navigate = useNavigate();
     return (
-        <footer className="bg-[#EAEAEA] text-gray-900 pt-16 pb-8 px-6 md:px-12 font-sans w-full">
+        <footer className="bg-[#EAEAEA] text-gray-900 pt-8 pb-4 px-4 md:px-8 font-sans w-full">
             {/* Main Footer Container */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 items-start">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-5 items-start">
 
                 {/* Identity Column (Expanded span to prevent company text overlap) */}
-                <div className="md:col-span-4 flex items-center space-x-2.5">
+                <div className="md:col-span-3 flex items-center space-x-2.5">
                     <img
                         src={logoIcon}
                         alt="NeoParlour Logo"
@@ -22,35 +22,48 @@ const Footer = () => {
                 </div>
 
                 {/* Column 1: Company Info */}
-                <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Company</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li onClick={() => navigate('/customer/influencer-program')} className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Careers</li>
+                <div className="md:col-span-3">
+                    <h4 className="font-semibold text-sm mb-2  text-black">Our Company</h4>
+                    <ul className="space-y-1 text-xs font-medium text-gray-700">
                         <li onClick={() => navigate('/customer/about')} className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
-                        <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
+                        <li onClick={() => navigate('/customer/leadership')} className="cursor-pointer hover:text-gray-900 transition-colors">• Leadership</li>
+                        <li onClick={() => navigate('/customer/terms-and-conditions')} className="cursor-pointer hover:text-gray-900 transition-colors">• Terms & Condition</li>
+                        <li onClick={() => navigate('/customer/privacy-policy')} className="cursor-pointer hover:text-gray-900 transition-colors">• Privacy Policy</li>
+                        <li onClick={() => navigate('/customer/support')} className="cursor-pointer hover:text-gray-900 transition-colors">• Contact Us</li>
                         <li onClick={() => navigate('/customer/blogs')} className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
+                        <li onClick={() => navigate('/customer/sitemap')} className="cursor-pointer hover:text-gray-900 transition-colors">• Sitemap</li>
                     </ul>
                 </div>
 
-                {/* Column 2: Legal */}
-                <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Legal</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li onClick={() => navigate('/customer/privacy-policy')} className="cursor-pointer hover:text-gray-900 transition-colors">• Privacy Policy</li>
-                        <li onClick={() => navigate('/customer/terms-and-conditions')} className="cursor-pointer hover:text-gray-900 transition-colors">• Terms Of Service</li>
+                {/* Column 2: Services */}
+                <div className="md:col-span-3">
+                    <h4 className="font-semibold text-sm mb-2 text-black">Services</h4>
+                    <ul className="space-y-1 text-xs font-medium text-gray-700">
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Hair Services</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Skin Care</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Hair Removal</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Nail Care</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Makeup Artist</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Gromming</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Spa & Massage</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Bridal Packages</li>
+                        <li onClick={() => navigate('/customer/services')} className="cursor-pointer hover:text-gray-900 transition-colors">• Hair Treatment</li>
                     </ul>
                 </div>
 
                 {/* Column 3: Contact/Socials Links */}
-                <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Contact</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Whatsapp</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Emails</li>
+                <div className="md:col-span-3">
+                    <h4 className="font-semibold text-sm mb-2 text-black">Our Resources</h4>
+                    <ul className="space-y-1 text-xs font-medium text-gray-700">
+                        <li onClick={() => navigate('/customer/videos')} className="cursor-pointer hover:text-gray-900 transition-colors">• Videos</li>
+                        <li onClick={() => navigate('/customer/support')} className="cursor-pointer hover:text-gray-900 transition-colors">• Help Center</li>
+                        <li onClick={() => navigate('/customer/support')} className="cursor-pointer hover:text-gray-900 transition-colors">• Support</li>
+                        <li onClick={() => navigate('/customer/security')} className="cursor-pointer hover:text-gray-900 transition-colors">• Security</li>
+                        <li onClick={() => navigate('/customer/updates')} className="cursor-pointer hover:text-gray-900 transition-colors">• Updates</li>
+                        <li onClick={() => navigate('/customer/case-studies')} className="cursor-pointer hover:text-gray-900 transition-colors">• Case Studies</li>
+                        <li onClick={() => navigate('/customer/client-testimonials')} className="cursor-pointer hover:text-gray-900 transition-colors">• Client Testimonial</li>
                     </ul>
-                </div>
+                </div>         
 
                 {/* App Download Store Badges
                 <div className="md:col-span-2 flex flex-col gap-3 w-full sm:max-w-48 justify-self-start md:justify-self-end">
@@ -74,17 +87,16 @@ const Footer = () => {
                         </div>
                     </a>
                 </div>
-                */ }
-
+                */ }  
             </div>
 
             {/* Bottom Sub-Footer Separator */}
-            <hr className="border-gray-400/60 my-8 max-w-7xl mx-auto" />
+            <hr className="border-gray-400/60 my-4 max-w-7xl mx-auto" />
 
             {/* Copyright and Social Media Icons */}
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    copyright@neopaceinfotech.com
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1">
+                <span className="text-[10x] font-medium text-gray-500 tracking-wide">
+                    Copyright@Neopaceinfotech.com
                 </span>
 
                 <div className="flex items-center gap-4">
@@ -96,10 +108,11 @@ const Footer = () => {
                             <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
                         </svg>
                     </a>
+
                     {/* Facebook */}
                     <a href="#" className="text-[#1877F2] hover:opacity-80 transition">
                         <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z" />
+                            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48  2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.8z" />
                         </svg>
                     </a>
                 </div>

@@ -16,6 +16,7 @@ import salonOneIcon from '../../assets/Customer/HomeScreen/Recommended/salon_one
 import salonTwoIcon from '../../assets/Customer/HomeScreen/Recommended/salon_two.jpg';
 import salonThreeIcon from '../../assets/Customer/HomeScreen/Recommended/salon_three.jpg';
 import salonFourIcon from '../../assets/Customer/HomeScreen/Recommended/salon_four.jpg';
+import SEOFooter from '../common/SEOFooter';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -927,6 +928,7 @@ const SalonsListing = () => {
                     </div>
                 )}
             </section>
+            <SEOFooter  />
         </div>
     );
 };

@@ -59,6 +59,14 @@ import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
 import OwnerLayout from '../components/Owner/Layouts/OwnerLayout'
 import OwnerManageLayout from '../components/Owner/Layouts/OwnerManageLayout'
 import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
+import Leadership from '../components/Customer/Leadership'
+import Videos from '../components/Customer/Videos'
+import SecurityPage from '../components/Customer/Security'
+import ServicesGrid from '../components/Customer/Services'
+import ClientTestimonial from '../components/Customer/ClientTestimonial'
+import Sitemap from '../components/Customer/SiteMap'
+import Updates from '../components/Customer/updates'
+import CaseStudies from '../components/Customer/CaseStudies'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -181,12 +189,44 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/influencer-program',
+                        path: '/customer/influencer-program', 
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
                     },
                     {
                         path: '/customer/blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/leadership',
+                        element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/videos',
+                        element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/security',
+                        element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/services',
+                        element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/client-testimonials',
+                        element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/sitemap',
+                        element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/updates',
+                        element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
+                    },
+                     {
+                        path: '/customer/case-studies',
+                        element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {
                         path: '/customer/my-salons',

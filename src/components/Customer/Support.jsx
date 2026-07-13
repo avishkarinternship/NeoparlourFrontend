@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, Clock, MapPin, Send, Sparkles, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 const Support = () => {
     const [formData, setFormData] = useState({
@@ -179,6 +180,7 @@ const Support = () => {
                     </div>
                 </div>
             </main>
+            <SEOFooter />
         </div>
     );
 };

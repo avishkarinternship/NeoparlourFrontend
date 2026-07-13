@@ -17,6 +17,7 @@ import {
     Store,
     ArrowRight
 } from 'lucide-react';
+import SEOFooter from '../common/SEOFooter';
 
 const PartnerWithUs = () => {
     const navigate = useNavigate();
@@ -425,7 +426,9 @@ const PartnerWithUs = () => {
                     </div>
                 </section>
             </main>
+            <SEOFooter />
         </div>
+        
     );
 };
 

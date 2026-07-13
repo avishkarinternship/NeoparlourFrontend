@@ -9,6 +9,7 @@ import schedulingMadeSimple from '../../assets/Customer/FeaturesScreen/schedulin
 import easyInvoices from '../../assets/Customer/FeaturesScreen/easy_invoice.jpg';
 
 import { useNavigate } from 'react-router-dom';
+import SEOFooter from '../common/SEOFooter';
 
 const Features = () => {
   const navigate = useNavigate();
@@ -185,6 +186,7 @@ const Features = () => {
           </div>
         </div>
       </section>
+      <SEOFooter />
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast';
 import logoIcon from '../../assets/Neoparlour_logo.png';
 import mobileIcon from '../../assets/CustomerRegister/mobile_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
+import SEOFooter from '../common/SEOFooter';
 
 const SalonSelection = () => {
   const dispatch = useDispatch();
@@ -658,7 +659,10 @@ const SalonSelection = () => {
           </div>
         </div>
       )}
-
+      <div>
+         
+      </div>
+      <SEOFooter />
     </div>
   );
 };

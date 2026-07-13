@@ -89,6 +89,7 @@ import footerLogoIcon from '../../assets/Neoparlour_logo.png';
 import Marquee from 'react-fast-marquee';
 import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 
 
@@ -1561,6 +1562,7 @@ const HomeScreen = () => {
                     </div>
                 </div>
             )}
+            <SEOFooter />
         </div>
     );
 };

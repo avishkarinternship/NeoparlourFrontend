@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Calendar, BookOpen, Clock, Heart, Share2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 const Blogs = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -174,6 +175,8 @@ const Blogs = () => {
                 )}
 
             </main>
+            <SEOFooter />
+
         </div>
     );
 };
