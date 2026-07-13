@@ -1,66 +1,142 @@
 import React, { useState } from 'react';
 
 export default function SEOFooter() {
-  // Available cities for the tab selection
   const cities = ['Pune', 'Mumbai', 'Bangalore', 'Chennai', 'Delhi'];
-  
-  // Track the currently selected city (Defaults to Pune)
   const [selectedCity, setSelectedCity] = useState('Pune');
 
-  // Generate an 8-column layout structure filled with 8 links per column
-  // total 64 links dynamically populated based on the selected city state
-  const totalColumns = 8;
-  const linksPerColumn = 8;
-  
-  const linkText = `Best Salons In ${selectedCity}`;
+  // Neighborhood mapping
+  const cityAreas = {
+    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park'],
+    mumbai: ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Thane', 'Navi Mumbai'],
+    bangalore: ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar'],
+    chennai: ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram'],
+    delhi: ['Connaught Place', 'Saket', 'Karol Bagh', 'Vasant Kunj', 'Rajouri Garden', 'Dwarka', 'Greater Kailash', 'Lajpat Nagar']
+  };
+
+  const services = [
+    { name: 'Hair Spa', slug: 'hair-spa' },
+    { name: 'Hair Cut', slug: 'hair-cut' },
+    { name: 'Facial', slug: 'facial' },
+    { name: 'Bridal Makeup', slug: 'bridal-makeup' },
+    { name: 'Hair Styling', slug: 'hair-styling' },
+    { name: 'Hair Coloring', slug: 'hair-coloring' },
+    { name: 'Shaving & Grooming', slug: 'shaving' },
+    { name: 'Massage Therapies', slug: 'massage' }
+  ];
+
+  const categories = [
+    { name: 'Luxury Salons', slug: 'luxury' },
+    { name: 'Top Rated Salons', slug: 'top-rated' },
+    { name: 'Unisex Salons', slug: 'unisex' },
+    { name: 'Hair Salons', slug: 'hair' },
+    { name: 'Beauty Parlours', slug: 'beauty-parlour' },
+    { name: 'Bridal Studios', slug: 'bridal' },
+    { name: 'Massage Centers', slug: 'massage' },
+    { name: 'Nails Salons', slug: 'nails' }
+  ];
+
+  const currentAreas = cityAreas[selectedCity.toLowerCase()] || [];
 
   return (
-    <div className="w-full bg-[#eeeeee] py-12 px-6 md:px-12 font-sans selection:bg-gray-300 border-t border-gray-200">
-      <div className="max-w-[1440px] mx-auto space-y-10">
+    <div className="w-full bg-[#111] text-gray-400 py-16 px-6 md:px-12 font-sans border-t border-zinc-800">
+      <div className="max-w-[1440px] mx-auto space-y-12">
         
+        {/* === TITLE & DESCRIPTION === */}
+        <div className="space-y-2">
+          <h2 className="text-xl font-extrabold text-white tracking-wider uppercase">Local Beauty Salons Directories</h2>
+          <p className="text-xs text-zinc-500 max-w-2xl">
+            NeoParlour helps you find the best salons, hair spas, makeup studios and wellness centres in your city. Select your city to explore locations, services, and rates.
+          </p>
+        </div>
+
         {/* === CITY SELECTOR TABS === */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-b border-gray-300 pb-4">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-b border-zinc-800 pb-4">
           {cities.map((city) => {
             const isActive = selectedCity === city;
             return (
               <button
                 key={city}
                 onClick={() => setSelectedCity(city)}
-                className={`text-sm font-bold tracking-wide transition-all relative pb-2 ${
+                className={`text-sm font-extrabold tracking-widest uppercase transition-all relative pb-2 ${
                   isActive 
-                    ? 'text-red-600' 
-                    : 'text-gray-900 hover:text-red-500'
+                    ? 'text-red-500' 
+                    : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {city}
-                {/* Active Underline Indicator */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-red-600 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-red-500 rounded-full" />
                 )}
               </button>
             );
           })}
         </div>
 
-        {/* === LINK FARM GRID === */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-x-6 gap-y-8">
-          {Array.from({ length: totalColumns }).map((_, colIdx) => (
-            <div key={colIdx} className="flex flex-col space-y-2.5">
-              <ul className="space-y-2.5">
-                {Array.from({ length: linksPerColumn }).map((_, linkIdx) => (
-                  <li key={linkIdx}>
-                    <a
-                      href={`#${linkText.toLowerCase().replace(/\s+/g, '-')}-${colIdx}-${linkIdx}`}
-                      className="text-xs font-normal text-gray-500 hover:text-red-600 hover:underline transition-colors duration-150 block truncate"
-                      title={linkText}
-                    >
-                      {linkText}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        {/* === LINK FARMS === */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-4">
+          
+          {/* Column 1: Areas */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+              Popular Areas in {selectedCity}
+            </h4>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {currentAreas.map((area) => (
+                <li key={area}>
+                  <a
+                    href={`/salons/${selectedCity.toLowerCase()}/${area.toLowerCase()}`}
+                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
+                  >
+                    Best Salons in {area}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 2: Services */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+              Services in {selectedCity}
+            </h4>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {services.map((srv) => (
+                <li key={srv.slug}>
+                  <a
+                    href={`/salons/${selectedCity.toLowerCase()}?service=${srv.slug}`}
+                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
+                  >
+                    {srv.name} in {selectedCity}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Salon Types */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+              Salon Types in {selectedCity}
+            </h4>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {categories.map((cat) => (
+                <li key={cat.slug}>
+                  <a
+                    href={`/salons/${selectedCity.toLowerCase()}?type=${cat.slug}`}
+                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
+                  >
+                    {cat.name} in {selectedCity}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Copyright */}
+        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900">
+          © {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.
         </div>
 
       </div>

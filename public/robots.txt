@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /owner/
+Disallow: /customer/select-salon
+Disallow: /customer/appointments
+Disallow: /customer/my-orders
+Disallow: /customer/cart
+
+Sitemap: https://neoparlour.com/sitemap.xml

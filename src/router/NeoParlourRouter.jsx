@@ -71,6 +71,8 @@ import ClientTestimonial from '../components/Customer/ClientTestimonial'
 import Sitemap from '../components/Customer/SiteMap'
 import Updates from '../components/Customer/updates'
 import CaseStudies from '../components/Customer/CaseStudies'
+import SalonsSEO from '../components/Customer/SalonsSEO'
+import SitemapXML from '../components/Customer/SitemapXML'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -110,6 +112,10 @@ export let routes = createBrowserRouter([
         path: '/',
         element: <App />,
         children: [
+            {
+                path: '/sitemap.xml',
+                element: <SitemapXML />
+            },
             // Standalone customer auth / select salon routes (no layouts)
             {
                 path: '/customer/login',
@@ -254,6 +260,18 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: 'customer/salon',
+                        element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'salons/:city',
+                        element: <CustomerRouteGuard isPublic={true}><SalonsSEO /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'salons/:city/:area',
+                        element: <CustomerRouteGuard isPublic={true}><SalonsSEO /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'salon/:salonSlug',
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },
                     {
