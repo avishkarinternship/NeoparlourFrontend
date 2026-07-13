@@ -60,6 +60,41 @@ export default function SitemapXML() {
           xml += `  <url>\n    <loc>https://neoparlour.com/salon/${slug}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
         }
 
+        // Active SEO Directory Pretty URLs (only for city/area combinations with registered salons)
+        const cleanParam = (p) => encodeURIComponent(p || '').replace(/&/g, '&amp;');
+        const activePairs = new Set();
+        allSalons.forEach(s => {
+          if (s.cityName && s.areaName) {
+            const key = `${s.cityName.trim()}__${s.areaName.trim()}`;
+            activePairs.add(key);
+          }
+        });
+
+        const seoServices = [
+          'Hair Cut', 'Hair Styling', 'Hair Wash', 'Blow Dry', 'Hair Coloring',
+          'Highlights / Streaks', 'Hair Spa', 'Hair Treatment', 'Keratin Treatment',
+          'Hair Smoothening', 'Hair Straightening', 'Perming / Curling', 'Hair Extensions',
+          'Facial', 'Cleanup', 'Skin Polishing', 'Bleaching', 'De-Tan Treatment',
+          'Face Treatment', 'Anti-Aging Treatment', 'Acne Treatment', 'Skin Brightening Treatment',
+          'Chemical Peel', 'Waxing', 'Threading', 'Eyebrow Shaping', 'Upper Lip',
+          'Forehead', 'Full Face Waxing', 'Full Body Waxing', 'Manicure', 'Pedicure',
+          'Nail Cutting', 'Nail Shaping', 'Nail Art', 'Nail Extensions', 'Gel Polish',
+          'Party Makeup', 'Bridal Makeup', 'Engagement Makeup', 'Reception Makeup',
+          'HD Makeup', 'Basic Makeup', 'Beard Trim', 'Beard Styling', 'Shaving',
+          'Moustache Styling', 'Eyebrow Styling', 'Eyelash Services', 'Head Massage',
+          'Body Massage', 'Relaxation Massage', 'Aroma Therapy', 'Body Scrub', 'Body Wrap',
+          'Bridal Hair', 'Bridal Facial', 'Bridal Manicure/Pedicure', 'Pre-Bridal Package',
+          'Hair Fall Treatment', 'Dandruff Treatment', 'Scalp Treatment', 'Damage Repair',
+          'Protein Treatment'
+        ];
+
+        activePairs.forEach(pair => {
+          const [city, area] = pair.split('__');
+          seoServices.forEach(service => {
+            xml += `  <url>\n    <loc>https://neoparlour.com/seo-salons/${cleanParam(city)}/${cleanParam(area)}/${cleanParam(service)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+          });
+        });
+
         xml += `</urlset>`;
 
         // Output raw XML and replace the document structure

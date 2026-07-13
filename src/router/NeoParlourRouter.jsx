@@ -73,6 +73,7 @@ import Updates from '../components/Customer/updates'
 import CaseStudies from '../components/Customer/CaseStudies'
 import SalonsSEO from '../components/Customer/SalonsSEO'
 import SitemapXML from '../components/Customer/SitemapXML'
+import SEOSalons from '../components/Customer/SEOSalons'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -266,9 +267,17 @@ export let routes = createBrowserRouter([
                         path: 'salons/:city',
                         element: <CustomerRouteGuard isPublic={true}><SalonsSEO /></CustomerRouteGuard>
                     },
-                    {
+                     {
                         path: 'salons/:city/:area',
                         element: <CustomerRouteGuard isPublic={true}><SalonsSEO /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'seo-salons',
+                        element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'seo-salons/:cityName/:areaName/:serviceName',
+                        element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
                     },
                     {
                         path: 'salon/:salonSlug',

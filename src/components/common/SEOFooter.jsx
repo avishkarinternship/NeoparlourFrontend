@@ -1,144 +1,450 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { MapPin, ChevronRight, Loader2 } from 'lucide-react';
+import searchService from '../../services/searchService';
 
 export default function SEOFooter() {
-  const cities = ['Pune', 'Mumbai', 'Bangalore', 'Chennai', 'Delhi'];
-  const [selectedCity, setSelectedCity] = useState('Pune');
+  const navigate = useNavigate();
 
-  // Neighborhood mapping
+  // 1. Major metropolitan and important Indian cities
+  const cities = [
+    'Pune', 'Mumbai', 'Bangalore', 'Chennai', 'Delhi', 'Hyderabad', 
+    'Kolkata', 'Ahmedabad', 'Surat', 'Jaipur', 'Lucknow', 'Nagpur', 
+    'Indore', 'Bhopal', 'Patna', 'Vadodara', 'Ludhiana', 'Agra'
+  ];
+
+  const [selectedCity, setSelectedCity] = useState('Pune');
+  const [areas, setAreas] = useState([]);
+  const [selectedArea, setSelectedArea] = useState('Kothrud');
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [clickingLink, setClickingLink] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Curated list of high-traffic, SEO-optimized main areas for all metropolitan cities (as fallbacks)
   const cityAreas = {
-    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park'],
-    mumbai: ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Thane', 'Navi Mumbai'],
-    bangalore: ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar'],
-    chennai: ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram'],
-    delhi: ['Connaught Place', 'Saket', 'Karol Bagh', 'Vasant Kunj', 'Rajouri Garden', 'Dwarka', 'Greater Kailash', 'Lajpat Nagar']
+    'pune': ['Kothrud', 'Baner', 'Wakad', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 'Hadapsar', 'Kalyani Nagar', 'Katraj', 'Bibwewadi', 'Swargate', 'Chinchwad', 'Pimple Saudagar', 'Senapati Bapat Road'],
+    'mumbai': ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Powai', 'Ghatkopar', 'Chembur', 'Mulund', 'Malad', 'Kandivali', 'Vashi', 'Thane', 'Dadar East', 'Dadar West'],
+    'bangalore': ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar', 'Malleshwaram', 'Rajajinagar', 'Hebbal', 'Electronic City', 'BTM Layout', 'Sadashivanagar'],
+    'chennai': ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram', 'Besant Nagar', 'Guindy', 'Chromepet', 'Royapettah', 'Egmore', 'Alwarpet'],
+    'delhi': ['Connaught Place', 'Saket', 'Karol Bagh', 'Vasant Kunj', 'Rajouri Garden', 'Dwarka', 'Greater Kailash', 'Lajpat Nagar', 'South Extension', 'Hauz Khas', 'Green Park', 'Defence Colony', 'Rohini', 'Pitampura', 'Mayur Vihar'],
+    'hyderabad': ['Gachibowli', 'Jubilee Hills', 'Banjara Hills', 'Madhapur', 'Kondapur', 'Begumpet', 'Secunderabad', 'Ameerpet', 'Kukatpally', 'Hitech City', 'Somajiguda', 'Miyapur', 'Dilshukhnagar', 'Manikonda'],
+    'kolkata': ['Salt Lake', 'Park Street', 'New Town', 'Gariahat', 'Ballygunge', 'Tollygunge', 'Howrah', 'Dum Dum', 'Behala', 'Lake Town', 'Shyambazar', 'Alipore', 'Jadavpur', 'Elgin Road'],
+    'ahmedabad': ['Satellite', 'C G Road', 'Bodakdev', 'Prahlad Nagar', 'Vastrapur', 'Naranpura', 'Ghatlodia', 'Maninagar', 'Navrangpura', 'Ellisbridge', 'Bopal', 'Gurukul', 'Thaltej', 'Drive In Road'],
+    'surat': ['Adajan', 'Varachha', 'Vesu', 'Piplod', 'Katargam', 'Ghod Dod Road', 'Rander', 'Udhna', 'New City Light', 'Athwa Lines', 'Dumbhal', 'Sarthana', 'Pal'],
+    'jaipur': ['Malviya Nagar', 'Vaishali Nagar', 'Mansarovar', 'C Scheme', 'Raja Park', 'Tonk Road', 'Jagatpura', 'Bani Park', 'Lalkothi', 'Civil Lines', 'Sodala', 'Shastri Nagar', 'Adarsh Nagar'],
+    'lucknow': ['Gomti Nagar', 'Hazratganj', 'Aliganj', 'Indira Nagar', 'Aminabad', 'Charbagh', 'Jankipuram', 'Mahanagar', 'Ashiyana', 'Vikas Nagar', 'Chowk', 'Naka Hindola'],
+    'nagpur': ['Dharampeth', 'Sadar', 'Ramdaspeth', 'Pratap Nagar', 'Manish Nagar', 'Civil Lines', 'Wardha Road', 'Narendra Nagar', 'Sitabuldi', 'Trimurti Nagar', 'Khamla'],
+    'indore': ['Vijay Nagar', 'Palasia', 'Rajendra Nagar', 'LIG Colony', 'Khajrana', 'Sudama Nagar', 'Annapurna Road', 'Sapna Sangeeta', 'Bhavarkua', 'MG Road', 'New Palasia'],
+    'bhopal': ['Arera Colony', 'MP Nagar', 'TT Nagar', 'Kolar Road', 'Indrapuri', 'Saket Nagar', 'Gulmohar', 'Govindpura', 'Bairagarh', 'Ayodhya Bypass'],
+    'patna': ['Boring Road', 'Kankarbagh', 'Bailey Road', 'Patliputra Colony', 'Rajendra Nagar', 'Dak Bungalow Road', 'Anisabad', 'Fraser Road', 'Mahendru', 'Danapur'],
+    'vadodara': ['Alkapuri', 'Gotri', 'Vasna Road', 'Manjalpur', 'Sayajigunj', 'Akota', 'Karelibaug', 'Fatehgunj', 'Subhanpura', 'Waghodia Road'],
+    'ludhiana': ['Sarabha Nagar', 'Model Town', 'Ferozepur Road', 'BRS Nagar', 'Civil Lines', 'Pakhowal Road', 'Gill Road', 'Sundar Nagar', 'Samrala Road'],
+    'agra': ['Sanjay Place', 'Tajganj', 'Dayalbagh', 'Kamla Nagar', 'Fatehabad Road', 'Shastri Puram', 'Sikandra', 'Sadat Bazar', 'MG Road']
   };
 
-  const services = [
-    { name: 'Hair Spa', slug: 'hair-spa' },
-    { name: 'Hair Cut', slug: 'hair-cut' },
-    { name: 'Facial', slug: 'facial' },
-    { name: 'Bridal Makeup', slug: 'bridal-makeup' },
-    { name: 'Hair Styling', slug: 'hair-styling' },
-    { name: 'Hair Coloring', slug: 'hair-coloring' },
-    { name: 'Shaving & Grooming', slug: 'shaving' },
-    { name: 'Massage Therapies', slug: 'massage' }
+  // Helper to resolve different Nominatim queries per page click to bypass cache/offset limits
+  const getQueryForPage = (city, pageNum) => {
+    const queries = {
+      'pune': [
+        'suburbs in Pune, India',
+        'localities in Pune, India',
+        'suburbs in Pimpri-Chinchwad, India',
+        'places in Pune, India'
+      ],
+      'mumbai': [
+        'suburbs in Mumbai, India',
+        'localities in Mumbai, India',
+        'neighbourhoods in Mumbai, India',
+        'places in Mumbai, India'
+      ],
+      'bangalore': [
+        'suburbs in Bangalore, India',
+        'localities in Bangalore, India',
+        'neighbourhoods in Bangalore, India',
+        'places in Bangalore, India'
+      ],
+      'chennai': [
+        'suburbs in Chennai, India',
+        'localities in Chennai, India',
+        'neighbourhoods in Chennai, India',
+        'places in Chennai, India'
+      ],
+      'delhi': [
+        'suburbs in Delhi, India',
+        'localities in Delhi, India',
+        'neighbourhoods in Delhi, India',
+        'places in Delhi, India'
+      ],
+      'hyderabad': [
+        'suburbs in Hyderabad, India',
+        'localities in Hyderabad, India',
+        'neighbourhoods in Hyderabad, India',
+        'places in Hyderabad, India'
+      ]
+    };
+
+    const cityKey = city.toLowerCase();
+    const cityQueries = queries[cityKey] || [
+      `suburbs in ${city}, India`,
+      `localities in ${city}, India`,
+      `neighbourhoods in ${city}, India`,
+      `places in ${city}, India`
+    ];
+
+    return {
+      queryString: cityQueries[pageNum % cityQueries.length],
+      isLast: pageNum >= cityQueries.length - 1
+    };
+  };
+
+  // Fetch areas of the selected city dynamically from Nominatim with a static fallback
+  const fetchCityAreas = async (city, pageNum, append = false) => {
+    if (pageNum === 0) {
+      setLoadingAreas(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const { queryString, isLast } = getQueryForPage(city, pageNum);
+      const limit = 50;
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryString)}&format=json&limit=${limit}`,
+        {
+          headers: {
+            'User-Agent': 'NeoParlourApp/2.0 (support@neoparlour.com)'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          let parsedAreas = data
+            .filter(item => item.class === 'place' && (item.type === 'suburb' || item.type === 'neighbourhood' || item.type === 'quarter' || item.type === 'village' || item.type === 'locality'))
+            .map(item => item.display_name.split(',')[0].trim());
+
+          const subpartKeywords = [
+            'depo', 'deppo', 'stand', 'stop', 'hospital', 'station', 'shop', 'salon', 'road', 'street', 
+            'lane', 'society', 'apartment', 'complex', 'mall', 'plaza', 'garden', 'hotel', 'restaurant', 
+            'cafe', 'school', 'college', 'temple', 'church', 'mosque', 'metro', 'library', 'bank', 'atm', 
+            'clinic', 'market', 'park', 'bus', 'junction', 'railway', 'airport', 'police', 'post', 'office', 
+            'court', 'academy', 'institute', 'university', 'bridge', 'flyover', 'chowk', 'lake', 'fort', 
+            'palace', 'museum', 'zoo', 'stadium', 'industrial', 'service', 'center', 'centre', 'showroom', 
+            'gym', 'club', 'fitness', 'theatre', 'cinema', 'multiplex', 'building', 'tower', 'villa', 
+            'residency', 'house', 'home', 'hill', 'gate', 'justbooks', 'tcs', 'infosys', 'wipro', 'cognizant'
+          ];
+
+          parsedAreas = parsedAreas.filter(name => {
+            if (!name) return false;
+            if (name.toLowerCase() === city.toLowerCase()) return false;
+            
+            const lowerName = name.toLowerCase();
+            const hasPoi = subpartKeywords.some(keyword => lowerName.includes(keyword));
+            if (hasPoi) return false;
+
+            // Keep names clean and short (max 2 words)
+            if (name.split(/\s+/).length > 2) return false;
+
+            return true;
+          });
+
+          parsedAreas = Array.from(new Set(parsedAreas));
+
+          if (parsedAreas.length > 0) {
+            setAreas(prev => {
+              const combined = append ? [...prev, ...parsedAreas] : parsedAreas;
+              const uniqueCombined = Array.from(new Set(combined));
+              if (pageNum === 0 && uniqueCombined.length > 0) {
+                setSelectedArea(uniqueCombined[0]);
+              }
+              return uniqueCombined;
+            });
+            setHasMore(!isLast && data.length >= 10);
+            return;
+          }
+        }
+      }
+      
+      // Fallback if Nominatim failed or returned no results on page 0
+      if (pageNum === 0) {
+        const fallback = cityAreas[city.toLowerCase()] || [];
+        setAreas(fallback);
+        setSelectedArea(fallback[0]);
+        setHasMore(false);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error fetching city areas via Nominatim:', error);
+      if (pageNum === 0) {
+        const fallback = cityAreas[city.toLowerCase()] || [];
+        setAreas(fallback);
+        setSelectedArea(fallback[0]);
+        setHasMore(false);
+      } else {
+        setHasMore(false);
+      }
+    } finally {
+      setLoadingAreas(false);
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    setPage(0);
+    setHasMore(true);
+    fetchCityAreas(selectedCity, 0, false);
+  }, [selectedCity]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchCityAreas(selectedCity, nextPage, true);
+  };
+
+  // 9 categories and their services
+  const serviceCategories = [
+    {
+      categoryName: 'Hair Services',
+      services: [
+        'Hair Cut', 'Hair Styling', 'Hair Wash', 'Blow Dry', 'Hair Coloring',
+        'Highlights / Streaks', 'Hair Spa', 'Hair Treatment', 'Keratin Treatment',
+        'Hair Smoothening', 'Hair Straightening', 'Perming / Curling', 'Hair Extensions'
+      ]
+    },
+    {
+      categoryName: 'Skin Care',
+      services: [
+        'Facial', 'Cleanup', 'Skin Polishing', 'Bleaching', 'De-Tan Treatment',
+        'Face Treatment', 'Anti-Aging Treatment', 'Acne Treatment', 'Skin Brightening Treatment', 'Chemical Peel'
+      ]
+    },
+    {
+      categoryName: 'Hair Removal',
+      services: [
+        'Waxing', 'Threading', 'Eyebrow Shaping', 'Upper Lip', 'Forehead', 'Full Face Waxing', 'Full Body Waxing'
+      ]
+    },
+    {
+      categoryName: 'Nail Care',
+      services: [
+        'Manicure', 'Pedicure', 'Nail Cutting', 'Nail Shaping', 'Nail Art', 'Nail Extensions', 'Gel Polish'
+      ]
+    },
+    {
+      categoryName: 'Makeup',
+      services: [
+        'Party Makeup', 'Bridal Makeup', 'Engagement Makeup', 'Reception Makeup', 'HD Makeup', 'Basic Makeup'
+      ]
+    },
+    {
+      categoryName: 'Grooming',
+      services: [
+        'Beard Trim', 'Beard Styling', 'Shaving', 'Moustache Styling', 'Eyebrow Styling', 'Eyelash Services'
+      ]
+    },
+    {
+      categoryName: 'Spa & Massage',
+      services: [
+        'Head Massage', 'Body Massage', 'Relaxation Massage', 'Aroma Therapy', 'Body Scrub', 'Body Wrap'
+      ]
+    },
+    {
+      categoryName: 'Bridal Packages',
+      services: [
+        'Bridal Hair', 'Bridal Makeup', 'Bridal Facial', 'Bridal Manicure/Pedicure', 'Pre-Bridal Package'
+      ]
+    },
+    {
+      categoryName: 'Hair Treatment',
+      services: [
+        'Hair Fall Treatment', 'Dandruff Treatment', 'Scalp Treatment', 'Damage Repair', 'Protein Treatment'
+      ]
+    }
   ];
 
-  const categories = [
-    { name: 'Luxury Salons', slug: 'luxury' },
-    { name: 'Top Rated Salons', slug: 'top-rated' },
-    { name: 'Unisex Salons', slug: 'unisex' },
-    { name: 'Hair Salons', slug: 'hair' },
-    { name: 'Beauty Parlours', slug: 'beauty-parlour' },
-    { name: 'Bridal Studios', slug: 'bridal' },
-    { name: 'Massage Centers', slug: 'massage' },
-    { name: 'Nails Salons', slug: 'nails' }
-  ];
+  // Call location search API and redirect on link click
+  const handleLinkClick = async (e, cityName, areaName, serviceName) => {
+    e.preventDefault();
+    if (clickingLink) return;
 
-  const currentAreas = cityAreas[selectedCity.toLowerCase()] || [];
+    setClickingLink(true);
+    const resolveToast = toast.loading(`Searching salons for ${serviceName} in ${areaName}...`);
+
+    try {
+      const response = await fetch(
+        `https://sb.neoparlour.com/api/salons/location-search?cityName=${encodeURIComponent(
+          cityName
+        )}&areaName=${encodeURIComponent(areaName)}&serviceName=${encodeURIComponent(
+          serviceName
+        )}&category=${encodeURIComponent(serviceName)}`
+      );
+
+      if (response.ok) {
+        const salonsList = await response.json();
+        toast.success(`Found ${salonsList.length} salons!`, { id: resolveToast });
+        
+        // Redirect to SEOSalons route, passing results in navigation state
+        navigate(`/seo-salons/${encodeURIComponent(cityName)}/${encodeURIComponent(areaName)}/${encodeURIComponent(serviceName)}`, {
+          state: {
+            salons: salonsList,
+            cityName,
+            areaName,
+            serviceName
+          }
+        });
+      } else {
+        toast.error('Could not fetch salons for this location.', { id: resolveToast });
+      }
+    } catch (error) {
+      console.error('Error fetching salons on SEO link click', error);
+      toast.error('Network error. Please try again.', { id: resolveToast });
+    } finally {
+      setClickingLink(false);
+    }
+  };
 
   return (
-    <div className="w-full bg-[#111] text-gray-400 py-16 px-6 md:px-12 font-sans border-t border-zinc-800">
+    <div className="w-full bg-[#0a0a0c] text-gray-400 py-16 px-6 md:px-12 font-sans border-t border-zinc-900 relative">
+      {clickingLink && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50">
+          <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center gap-3 text-white shadow-2xl">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-widest">Searching Best Salons...</span>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1440px] mx-auto space-y-12">
-        
-        {/* === TITLE & DESCRIPTION === */}
+        {/* Title */}
         <div className="space-y-2">
-          <h2 className="text-xl font-extrabold text-white tracking-wider uppercase">Local Beauty Salons Directories</h2>
+          <h2 className="text-xl font-black text-white tracking-wider uppercase flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+            Local Beauty Salons & Spas Directory
+          </h2>
           <p className="text-xs text-zinc-500 max-w-2xl">
-            NeoParlour helps you find the best salons, hair spas, makeup studios and wellness centres in your city. Select your city to explore locations, services, and rates.
+            Browse static localized directories to discover premium salons, haircut experts, skin treatment clinics, bridal makeovers, and massage therapists near you. Select your city and area to start exploring.
           </p>
         </div>
 
-        {/* === CITY SELECTOR TABS === */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-b border-zinc-800 pb-4">
-          {cities.map((city) => {
-            const isActive = selectedCity === city;
-            return (
-              <button
-                key={city}
-                onClick={() => setSelectedCity(city)}
-                className={`text-sm font-extrabold tracking-widest uppercase transition-all relative pb-2 ${
-                  isActive 
-                    ? 'text-red-500' 
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {city}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-red-500 rounded-full" />
-                )}
-              </button>
-            );
-          })}
+        {/* City Selector */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Select City</h3>
+          <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-zinc-900">
+            {cities.map((city) => {
+              const isActive = selectedCity === city;
+              return (
+                <button
+                  key={city}
+                  onClick={() => setSelectedCity(city)}
+                  className={`text-xs font-extrabold tracking-wider uppercase px-4 py-2 rounded-xl transition-all duration-200 border ${
+                    isActive
+                      ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/10'
+                      : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                  }`}
+                >
+                  {city}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* === LINK FARMS === */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-4">
+        {/* Area Selector */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-red-500" />
+            Select Area in {selectedCity}
+          </h3>
+          {loadingAreas ? (
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <Loader2 className="w-4 h-4 animate-spin text-red-500" /> Loading available areas...
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {areas.map((area) => {
+                  const isActive = selectedArea === area;
+                  return (
+                    <button
+                      key={area}
+                      onClick={() => setSelectedArea(area)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? 'bg-zinc-800 text-red-400 border border-red-500/20'
+                          : 'bg-zinc-900/20 border border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                      }`}
+                    >
+                      {area}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {hasMore && (
+                <div className="pt-2 flex justify-start">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={loadingMore}
+                    className="text-xs font-extrabold uppercase tracking-wider text-red-500 hover:text-red-400 disabled:text-zinc-600 transition-all duration-200 flex items-center gap-1.5 py-1.5 px-4 bg-zinc-900/60 rounded-xl border border-zinc-800 hover:border-zinc-700 disabled:bg-zinc-900/20 shadow-md shadow-black/10"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-red-500" /> Loading more suburbs...
+                      </>
+                    ) : (
+                      <>Load More Suburbs of {selectedCity}</>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Categories & Service Links Farm */}
+        <div className="pt-6 border-t border-zinc-900">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-6">
+            Popular Services in {selectedArea}, {selectedCity}
+          </h3>
           
-          {/* Column 1: Areas */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-              Popular Areas in {selectedCity}
-            </h4>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {currentAreas.map((area) => (
-                <li key={area}>
-                  <a
-                    href={`/salons/${selectedCity.toLowerCase()}/${area.toLowerCase()}`}
-                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
-                  >
-                    Best Salons in {area}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {serviceCategories.map((cat, index) => (
+              <div key={index} className="space-y-4">
+                <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+                  {cat.categoryName}
+                </h4>
+                <ul className="space-y-2">
+                  {cat.services.map((service, sIdx) => (
+                    <li key={sIdx}>
+                      <a
+                        href={`/seo-salons/${encodeURIComponent(
+                          selectedCity
+                        )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
+                          service
+                        )}`}
+                        onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
+                        className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
+                      >
+                        <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
+                        {service} in {selectedArea}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-
-          {/* Column 2: Services */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-              Services in {selectedCity}
-            </h4>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {services.map((srv) => (
-                <li key={srv.slug}>
-                  <a
-                    href={`/salons/${selectedCity.toLowerCase()}?service=${srv.slug}`}
-                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
-                  >
-                    {srv.name} in {selectedCity}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Salon Types */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-              Salon Types in {selectedCity}
-            </h4>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {categories.map((cat) => (
-                <li key={cat.slug}>
-                  <a
-                    href={`/salons/${selectedCity.toLowerCase()}?type=${cat.slug}`}
-                    className="text-zinc-400 text-xs font-semibold hover:text-red-500 hover:underline transition-colors block py-0.5"
-                  >
-                    {cat.name} in {selectedCity}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
         </div>
 
         {/* Copyright */}
-        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900">
+        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900/60">
           © {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.
         </div>
-
       </div>
     </div>
   );

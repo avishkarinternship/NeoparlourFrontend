@@ -62,7 +62,7 @@ const searchService = {
    * @param {string} [cityName] - Optional city name to restrict area matches
    * @returns {Promise<Array>} List of locality results
    */
-  searchExternalLocations: async (query, featureClass = '', cityName = '') => {
+  searchExternalLocations: async (query, featureClass = '', cityName = '', limit = 15) => {
     if (!query || query.trim().length < 2) return [];
     
     // Normalizes common city name variants (e.g. Bangalore vs Bengaluru)
@@ -86,7 +86,7 @@ const searchService = {
         params: {
           q: searchQuery,
           countrycode: 'in', // Target India strictly
-          limit: 15
+          limit: limit
         }
       });
       
@@ -131,24 +131,56 @@ const searchService = {
             rawName
           ].some(val => val && normalizeCity(val).includes(normSelectedCity));
           
-          // Skip if suggestions are exactly duplicate of the city name
-          if (cleanName.toLowerCase() === cityName.toLowerCase()) {
-            continue;
-          }
+          if (matchesCity) {
+            // Gather all candidate area names from the feature properties
+            const candidates = [];
+            if (props.district) candidates.push(props.district);
+            if (props.locality) candidates.push(props.locality);
+            if (props.suburb) candidates.push(props.suburb);
+            if (props.street) candidates.push(props.street);
+            
+            // Add name if it's not a POI and not equivalent to the city name itself
+            if (cleanName && cleanName.toLowerCase() !== cityName.toLowerCase()) {
+              const lowerClean = cleanName.toLowerCase();
+              const isPoi = [
+                'airport', 'station', 'bus', 'stand', 'stop', 'hospital', 'university', 'college',
+                'school', 'junction', 'metro', 'railway', 'temple', 'church', 'mosque', 'mall', 'plaza'
+              ].some(k => lowerClean.includes(k));
+              if (!isPoi) {
+                candidates.push(cleanName);
+              }
+            }
 
-          if (cleanName && matchesCity) {
-            const subLocality = props.district || props.locality || props.suburb || '';
-            const parentCity = city && normalizeCity(city) !== normSelectedCity ? `${city}, ${cityName}` : (city || cityName);
-            const displayCity = subLocality ? `${subLocality}, ${parentCity}` : parentCity;
+            for (let cand of candidates) {
+              cand = cand.trim();
+              if (!cand || cand.length < 3) continue;
 
-            const uniqueKey = `${cleanName.toLowerCase()}_${displayCity.toLowerCase()}`;
-            if (!seen.has(uniqueKey)) {
-              seen.add(uniqueKey);
-              results.push({ 
-                name: cleanName, 
-                city: displayCity, 
-                type: 'area' 
-              });
+              // Skip if suggestion matches the city name itself
+              if (cand.toLowerCase() === cityName.toLowerCase()) continue;
+
+              // Filter out common metadata / POI words from candidates
+              const lowerCand = cand.toLowerCase();
+              const isExcluded = [
+                'district', 'subdistrict', 'state', 'country', 'postcode', 'pin code', 'subdivision', 'division',
+                'station', 'junction', 'airport', 'railway', 'bus stop', 'bus stand', 'metro line', 'metro station',
+                'university', 'college', 'school', 'hospital', 'clinic', 'library', 'garden', 'park', 'zoo',
+                'museum', 'police station', 'temple', 'church', 'mosque', 'terminal', 'depot', 'deppo'
+              ].some(k => lowerCand.includes(k));
+              if (isExcluded) continue;
+
+              const subLocality = props.district || props.locality || props.suburb || '';
+              const parentCity = city && normalizeCity(city) !== normSelectedCity ? `${city}, ${cityName}` : (city || cityName);
+              const displayCity = subLocality && subLocality !== cand ? `${subLocality}, ${parentCity}` : parentCity;
+
+              const uniqueKey = `${cand.toLowerCase()}_${displayCity.toLowerCase()}`;
+              if (!seen.has(uniqueKey)) {
+                seen.add(uniqueKey);
+                results.push({ 
+                  name: cand, 
+                  city: displayCity, 
+                  type: 'area' 
+                });
+              }
             }
           }
         } else {
