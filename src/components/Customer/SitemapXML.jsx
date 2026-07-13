@@ -60,16 +60,39 @@ export default function SitemapXML() {
           xml += `  <url>\n    <loc>https://neoparlour.com/salon/${slug}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
         }
 
-        // Active SEO Directory Pretty URLs (only for city/area combinations with registered salons)
-        const cleanParam = (p) => encodeURIComponent(p || '').replace(/&/g, '&amp;');
-        const activePairs = new Set();
-        allSalons.forEach(s => {
-          if (s.cityName && s.areaName) {
-            const key = `${s.cityName.trim()}__${s.areaName.trim()}`;
-            activePairs.add(key);
-          }
-        });
+        // 3. Fetch active services for each salon to find exactly which services are offered in each area
+        const activeAreaServices = {}; // key: "cityName__areaName", value: Set of lowercased service names
+        await Promise.all(allSalons.map(async (salon) => {
+          const salonId = salon.salonId || salon.id;
+          const cityKey = (salon.cityName || '').trim();
+          const areaKey = (salon.areaName || '').trim();
+          if (!cityKey || !areaKey) return;
+          const mapKey = `${cityKey}__${areaKey}`;
 
+          try {
+            const res = await axiosInstance.get('/services/public/active', {
+              params: { salonId }
+            });
+            const serviceList = res.data || [];
+            if (serviceList.length > 0) {
+              if (!activeAreaServices[mapKey]) {
+                activeAreaServices[mapKey] = new Set();
+              }
+              serviceList.forEach(s => {
+                const sName = s.name || s.serviceName;
+                if (sName) {
+                  activeAreaServices[mapKey].add(sName.trim().toLowerCase());
+                }
+              });
+            }
+          } catch (e) {
+            console.error(`Failed to fetch services for salon ${salonId}:`, e);
+          }
+        }));
+
+        // Active SEO Directory Pretty URLs (only for city/area/service combinations that are actually active in the database)
+        const cleanParam = (p) => encodeURIComponent(p || '').replace(/&/g, '&amp;');
+        
         const seoServices = [
           'Hair Cut', 'Hair Styling', 'Hair Wash', 'Blow Dry', 'Hair Coloring',
           'Highlights / Streaks', 'Hair Spa', 'Hair Treatment', 'Keratin Treatment',
@@ -88,10 +111,14 @@ export default function SitemapXML() {
           'Protein Treatment'
         ];
 
-        activePairs.forEach(pair => {
+        Object.keys(activeAreaServices).forEach(pair => {
           const [city, area] = pair.split('__');
+          const lowerActiveServices = activeAreaServices[pair];
+          
           seoServices.forEach(service => {
-            xml += `  <url>\n    <loc>https://neoparlour.com/seo-salons/${cleanParam(city)}/${cleanParam(area)}/${cleanParam(service)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+            if (lowerActiveServices.has(service.toLowerCase())) {
+              xml += `  <url>\n    <loc>https://neoparlour.com/seo-salons/${cleanParam(city)}/${cleanParam(area)}/${cleanParam(service)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+            }
           });
         });
 
