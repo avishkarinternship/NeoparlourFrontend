@@ -988,7 +988,7 @@ const OwnerRegister = () => {
                                 <img src={interiorImage2.preview} alt="Interior View 2" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
-                                  onClick={() => setinteriorImage2({ base64: '', preview: '', fileName: '' })}
+                                  onClick={() => setInteriorImage2({ base64: '', preview: '', fileName: '' })}
                                   className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
                                 >
                                   Remove

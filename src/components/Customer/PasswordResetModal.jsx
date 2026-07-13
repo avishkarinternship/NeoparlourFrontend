@@ -20,6 +20,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
         loading: false,
         resendTimer: 0
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     const { mobile, otp, newPassword, confirmPassword, loading, resendTimer } = resetFlow;
 

@@ -307,7 +307,7 @@ const ProductDetails = () => {
                 {allImages.map((imgUrl, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(imgUrl)}
+                    onClick={() => setProductData(prev => ({ ...prev, activeImage: imgUrl }))}
                     className={`w-20 h-20 border-2 rounded-2xl overflow-hidden bg-white p-1 transition-all ${
                       (activeImage === imgUrl || (!activeImage && idx === 0))
                         ? 'border-[#FF0B01] ring-4 ring-[#FF0B01]/5'
