@@ -17,7 +17,21 @@ const axiosInstance = axios.create({
 // Request Interceptor to attach tokens automatically
 axiosInstance.interceptors.request.use(
   (config) => {
-    // For subscription endpoints, always use the owner token. Otherwise check customer token first.
+    const customerToken = localStorage.getItem('customerToken');
+    let ownerToken = localStorage.getItem('ownerStaffToken');
+
+    // Robust fallback: if owner token isn't in localStorage yet (e.g. on first page load/mount race condition),
+    // extract it directly from the URL search parameters.
+    if (!ownerToken && typeof window !== 'undefined' && window.location?.search) {
+      const queryParams = new URLSearchParams(window.location.search);
+      const urlToken = queryParams.get('token');
+      if (urlToken) {
+        ownerToken = urlToken;
+      }
+    }
+
+    // 2. Prioritization: For subscription endpoints, always use the owner token first.
+    // Otherwise, check customer token first.
     const isSubscriptionRequest = config.url && config.url.includes('/subscriptions');
     const token = isSubscriptionRequest 
       ? (ownerToken || customerToken) 
