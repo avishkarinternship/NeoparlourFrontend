@@ -165,13 +165,23 @@ const PublicSubscriptionPlans = () => {
             toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
             console.log("Razorpay payment complete. Payment ID: ", transaction.razorpay_payment_id);
             
+            // 3. Verify on backend synchronously to activate the salon immediately
+            const verifyRes = await axiosInstance.post(
+              `/subscriptions/verify-autopay?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpaySubscriptionId=${transaction.razorpay_subscription_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
+            );
+
             toast.dismiss('payment-verifying');
-            setSuccessPlanName(plan.planName);
-            setShowSuccessDialog(true);
+            if (verifyRes.data.success) {
+              setSuccessPlanName(plan.planName);
+              setShowSuccessDialog(true);
+            } else {
+              toast.error('Payment verification failed.');
+            }
           } catch (err) {
             toast.dismiss('payment-verifying');
             console.error('Subscription verification failed', err);
-            toast.error('Could not verify subscription setup. Please contact support.');
+            const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not verify subscription setup. Please contact support.';
+            toast.error(errMsg);
           } finally {
             setPayingPlanCode(null);
           }
