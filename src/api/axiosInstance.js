@@ -17,11 +17,11 @@ const axiosInstance = axios.create({
 // Request Interceptor to attach tokens automatically
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Check for customer token first, then owner token
-    const customerToken = localStorage.getItem('customerToken');
-    const ownerToken = localStorage.getItem('ownerStaffToken');
-
-    const token = customerToken || ownerToken;
+    // For subscription endpoints, always use the owner token. Otherwise check customer token first.
+    const isSubscriptionRequest = config.url && config.url.includes('/subscriptions');
+    const token = isSubscriptionRequest 
+      ? (ownerToken || customerToken) 
+      : (customerToken || ownerToken);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
