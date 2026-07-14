@@ -17,19 +17,62 @@ import {
   Database
 } from 'lucide-react';
 
+const decodeJwt = (token) => {
+  try {
+    if (!token) return null;
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Failed to decode JWT token:", e);
+    return null;
+  }
+};
+
 const PublicSubscriptionPlans = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
-  // Retrieve user session from Redux or LocalStorage fallback
-  const reduxUser = useSelector((state) => state.ownerStaff?.user);
-  const localStorageUser = JSON.parse(localStorage.getItem('ownerStaffUser'));
-  const ownerUser = reduxUser || localStorageUser;
+  const getActiveUser = () => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const token = queryParams.get('token') || localStorage.getItem('ownerStaffToken');
+    
+    let userId = queryParams.get('userId');
+    let email = queryParams.get('email');
+    let name = queryParams.get('name');
+    let phone = queryParams.get('phone');
 
-  const reduxToken = useSelector((state) => state.ownerStaff?.token);
-  const localStorageToken = localStorage.getItem('ownerStaffToken');
-  const ownerToken = reduxToken || localStorageToken;
+    if (token) {
+      const decoded = decodeJwt(token);
+      if (decoded) {
+        if (!userId) userId = decoded.userId || decoded.id;
+        if (!email) email = decoded.email;
+        if (!name) name = decoded.name;
+        if (!phone) phone = decoded.phone || decoded.sub;
+      }
+    }
+
+    return {
+      token,
+      id: userId || '',
+      email: email || '',
+      name: name || '',
+      phone: phone || ''
+    };
+  };
+
+  const activeUserObj = getActiveUser();
+  const ownerUser = activeUserObj;
+  const ownerToken = activeUserObj.token;
 
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,27 +83,17 @@ const PublicSubscriptionPlans = () => {
 
   // Parse URL query parameters to auto-login if redirected from the mobile app
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
+    const queryParams = new URLSearchParams(window.location.search);
     const urlToken = queryParams.get('token');
-    const urlUserId = queryParams.get('userId');
-    const urlEmail = queryParams.get('email');
-    const urlName = queryParams.get('name');
-    const urlPhone = queryParams.get('phone');
 
     if (urlToken) {
+      const userObj = getActiveUser();
       localStorage.setItem('ownerStaffToken', urlToken);
-      const userObj = {
-        token: urlToken,
-        id: urlUserId || '',
-        email: urlEmail || '',
-        name: urlName || '',
-        phone: urlPhone || ''
-      };
       localStorage.setItem('ownerStaffUser', JSON.stringify(userObj));
       dispatch(updateOwnerSession({ token: urlToken, salonId: '' }));
-      console.log("[PublicSubscriptionPlans] Auto-login from query params completed.");
+      console.log("[PublicSubscriptionPlans] Auto-login from query params completed:", userObj);
     }
-  }, [location.search, dispatch]);
+  }, [dispatch]);
 
   // Dynamically load Razorpay SDK on mount
   useEffect(() => {
@@ -92,12 +125,8 @@ const PublicSubscriptionPlans = () => {
   }, []);
 
   const handleSubscribe = async (plan) => {
-    // Read directly from query parameters or localStorage inside the handler to bypass React state syncing delay
-    const queryParams = new URLSearchParams(location.search);
-    const activeToken = queryParams.get('token') || localStorage.getItem('ownerStaffToken');
-    const activeUserObj = localStorage.getItem('ownerStaffUser') 
-      ? JSON.parse(localStorage.getItem('ownerStaffUser')) 
-      : ownerUser;
+    const activeUserObj = getActiveUser();
+    const activeToken = activeUserObj.token;
 
     if (!activeToken) {
       toast.error('Session details not found. Please log in first or open this link from the app.');
