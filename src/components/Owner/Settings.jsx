@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
+import toast from "react-hot-toast";
 
 const Settings = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("owner");
 
     const [isOwnerEdit, setIsOwnerEdit] = useState(false);
     const [isSalonEdit, setIsSalonEdit] = useState(false);
+
+    // Delete account modal states
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [consequence1, setConsequence1] = useState(false);
+    const [consequence2, setConsequence2] = useState(false);
+    const [consequence3, setConsequence3] = useState(false);
+    const [consequence4, setConsequence4] = useState(false);
+    const [confirmText, setConfirmText] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [ownerProfile, setOwnerProfile] = useState({
         salonName: "",
@@ -285,6 +297,49 @@ const Settings = () => {
         document.body.removeChild(link);
     };
 
+    const handleOpenDeleteModal = () => {
+        setConsequence1(false);
+        setConsequence2(false);
+        setConsequence3(false);
+        setConsequence4(false);
+        setConfirmText("");
+        setShowDeleteModal(true);
+    };
+
+    const handleFinalDelete = async () => {
+        let userId = ownerProfile.id;
+        if (!userId) {
+            const storedUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+            userId = storedUser.id;
+        }
+
+        if (!userId) {
+            toast.error("User ID not found. Please log in again.");
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const response = await axiosInstance.delete(`/auth/users/${userId}`);
+            toast.success(response.data || "Account and salon deactivated successfully. 30 days recovery grace period active.", {
+                duration: 6000
+            });
+            
+            // Clear owner details
+            localStorage.removeItem("ownerStaffToken");
+            localStorage.removeItem("ownerStaffUser");
+            localStorage.removeItem("activeSalonId");
+
+            // Redirect
+            navigate("/owner/login");
+        } catch (error) {
+            console.error("Failed to delete user account:", error);
+            toast.error(error.response?.data?.message || "Failed to process account deletion request. Please try again.");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
+        }
+    };
 
     return (
                 <main className="flex-1 p-8 overflow-y-auto">
@@ -386,6 +441,29 @@ const Settings = () => {
                                     >
                                         Update Owner Profile
                                     </button>
+                                </div>
+
+                                {/* Danger Zone */}
+                                <div className="mt-12 pt-8 border-t border-red-100">
+                                    <h3 className="text-lg font-bold text-red-600 mb-2 uppercase tracking-wide">Danger Zone</h3>
+                                    <p className="text-xs text-gray-500 mb-4">Permanently delete your account and deactivate your salon listings.</p>
+                                    <div className="bg-red-50/20 border border-red-100 rounded-2xl p-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div className="max-w-xl">
+                                                <h4 className="text-sm font-bold text-gray-900">Delete Account & Salon</h4>
+                                                <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                                                    Once deleted, your salon will be removed from location search immediately. All bookings, staff profiles, and client history will be suspended.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleOpenDeleteModal}
+                                                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition shadow-sm shadow-red-200 shrink-0"
+                                            >
+                                                Delete Account
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -810,25 +888,152 @@ const Settings = () => {
                     </div>
 
                     {showPopup && (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl shadow-lg p-6 w-96">
-            <h2 className="text-xl font-semibold text-green-600 mb-4">
-                Success
-            </h2>
+                        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-2xl shadow-lg p-6 w-96">
+                                <h2 className="text-xl font-semibold text-green-600 mb-4">
+                                    Success
+                                </h2>
 
-            <p className="text-gray-700 mb-6">
-                {popupMessage}
-            </p>
+                                <p className="text-gray-700 mb-6">
+                                    {popupMessage}
+                                </p>
 
-            <button
-                onClick={() => setShowPopup(false)}
-                className="w-full bg-red-500 text-white py-3 rounded-xl hover:bg-red-600"
-            >
-                OK
-            </button>
-        </div>
-    </div>
-)}
+                                <button
+                                    onClick={() => setShowPopup(false)}
+                                    className="w-full bg-red-500 text-white py-3 rounded-xl hover:bg-red-600"
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Salon Deactivation Warning Confirmation Modal */}
+                    {showDeleteModal && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                            <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl p-8 max-w-xl w-full relative overflow-hidden transition-all duration-300 transform scale-100 max-h-[90vh] overflow-y-auto">
+                                {/* Header */}
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="p-3 bg-red-50 text-red-500 rounded-2xl">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">Delete Account & Deactivate Salon?</h2>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">consequences acknowledgment required</p>
+                                    </div>
+                                </div>
+
+                                {/* Consequences Acknowledgment checkboxes */}
+                                <div className="space-y-4 mb-6">
+                                    <p className="text-xs text-gray-500 font-medium">To proceed, please acknowledge the following consequences of this action:</p>
+                                    
+                                    <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={consequence1}
+                                            onChange={(e) => setConsequence1(e.target.checked)}
+                                            className="mt-1 w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 accent-red-600 cursor-pointer"
+                                        />
+                                        <span className="text-xs text-gray-600 leading-normal font-medium">
+                                            <strong className="text-gray-900 block font-bold mb-0.5">Salon Disappeared from Search</strong>
+                                            I understand my salon ({salonProfile.salonName || ownerProfile.salonName || "your salon"}) will be made inactive immediately. Customers will no longer see it in location search results or browse its services.
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={consequence2}
+                                            onChange={(e) => setConsequence2(e.target.checked)}
+                                            className="mt-1 w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 accent-red-600 cursor-pointer"
+                                        />
+                                        <span className="text-xs text-gray-600 leading-normal font-medium">
+                                            <strong className="text-gray-900 block font-bold mb-0.5">Customer Bookings Suspended</strong>
+                                            I understand customers will be blocked from viewing my salon profile or booking any new appointments.
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={consequence3}
+                                            onChange={(e) => setConsequence3(e.target.checked)}
+                                            className="mt-1 w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 accent-red-600 cursor-pointer"
+                                        />
+                                        <span className="text-xs text-gray-600 leading-normal font-medium">
+                                            <strong className="text-gray-900 block font-bold mb-0.5">Staff Members Suspended</strong>
+                                            I understand all my staff members will be logged out immediately. They will be blocked from logging in or calling any salon APIs.
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={consequence4}
+                                            onChange={(e) => setConsequence4(e.target.checked)}
+                                            className="mt-1 w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 accent-red-600 cursor-pointer"
+                                        />
+                                        <span className="text-xs text-gray-600 leading-normal font-medium">
+                                            <strong className="text-gray-900 block font-bold mb-0.5">Subscription Status</strong>
+                                            I understand my active subscription will remain inactive but will not be automatically refunded.
+                                        </span>
+                                    </label>
+                                </div>
+
+                                {/* Grace Period Info Box */}
+                                <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4 mb-6">
+                                    <div className="flex gap-2.5">
+                                        <span className="text-amber-600 mt-0.5">
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <h4 className="text-xs font-black text-amber-900 uppercase tracking-wide">30-Day Recovery Grace Period</h4>
+                                            <p className="text-[11px] text-amber-800 leading-relaxed font-medium mt-1">
+                                                Your data is not permanently deleted immediately. You have a 30-day grace period to restore your account. If you log back into this owner account within 30 days, your owner profile will be restored, and your salon (along with active subscriptions) will be reactivated. After 30 days, all data is permanently wiped.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Double Confirmation Text Input */}
+                                <div className="mb-6">
+                                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-2">
+                                        Type <span className="text-red-600 font-black">DELETE</span> to confirm:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={confirmText}
+                                        onChange={(e) => setConfirmText(e.target.value)}
+                                        placeholder="Type DELETE"
+                                        className="w-full px-4 py-3 bg-[#fafafa] border border-gray-150 rounded-xl text-sm focus:outline-none focus:border-red-500 focus:bg-white transition placeholder-gray-300 font-bold"
+                                    />
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-widest rounded-xl transition border border-slate-150"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={!consequence1 || !consequence2 || !consequence3 || !consequence4 || confirmText !== "DELETE" || isDeleting}
+                                        onClick={handleFinalDelete}
+                                        className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition disabled:opacity-40 disabled:hover:bg-red-600 disabled:cursor-not-allowed shadow-md shadow-red-200"
+                                    >
+                                        {isDeleting ? "Deleting..." : "Confirm Delete"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
     );
 };

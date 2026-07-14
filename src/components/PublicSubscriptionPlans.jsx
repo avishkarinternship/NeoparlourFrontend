@@ -92,7 +92,14 @@ const PublicSubscriptionPlans = () => {
   }, []);
 
   const handleSubscribe = async (plan) => {
-    if (!ownerToken || !ownerUser) {
+    // Read directly from query parameters or localStorage inside the handler to bypass React state syncing delay
+    const queryParams = new URLSearchParams(location.search);
+    const activeToken = queryParams.get('token') || localStorage.getItem('ownerStaffToken');
+    const activeUserObj = localStorage.getItem('ownerStaffUser') 
+      ? JSON.parse(localStorage.getItem('ownerStaffUser')) 
+      : ownerUser;
+
+    if (!activeToken) {
       toast.error('Session details not found. Please log in first or open this link from the app.');
       navigate('/owner/login');
       return;
@@ -108,7 +115,7 @@ const PublicSubscriptionPlans = () => {
       
       // 1. Create AutoPay subscription on backend
       const response = await axiosInstance.post(
-        `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${ownerUser?.id || ''}`
+        `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
       );
       
       const data = response.data;
@@ -141,9 +148,9 @@ const PublicSubscriptionPlans = () => {
           }
         },
         prefill: {
-          name: ownerUser?.name || '',
-          email: ownerUser?.email || '',
-          contact: ownerUser?.phone || ''
+          name: activeUserObj?.name || '',
+          email: activeUserObj?.email || '',
+          contact: activeUserObj?.phone || ''
         },
         theme: {
           color: "#ff0b01"
