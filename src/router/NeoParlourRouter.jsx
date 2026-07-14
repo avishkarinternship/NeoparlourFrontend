@@ -10,6 +10,7 @@ import OwnerRegister from '../components/Owner/OwnerRegister'
 import SalonSelection from '../components/Customer/SalonSelection'
 import Appointments from '../components/Customer/Appointments'
 import SubscriptionPlans from '../components/Owner/SubscriptionPlans'
+import PublicSubscriptionPlans from '../components/PublicSubscriptionPlans'
 import OwnerDashboard from '../components/Owner/OwnerDashboard'
 import ManageSideBar from '../components/Owner/Layouts/ManageSideBar'
 import Analytics from '../components/Owner/Analytics'
@@ -165,6 +166,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/customer/select-salon',
                 element: <CustomerRouteGuard><SalonSelection /></CustomerRouteGuard>
+            },
+            {
+                path: '/buy-subscription',
+                element: <PublicSubscriptionPlans />
             },
 
             // Customer Layout wrapper routes

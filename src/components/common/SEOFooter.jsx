@@ -25,9 +25,39 @@ export default function SEOFooter() {
 
   // Curated list of high-traffic, SEO-optimized main areas for all metropolitan cities (as fallbacks)
   const cityAreas = {
-    'pune': ['Kothrud', 'Baner', 'Wakad', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 'Hadapsar', 'Kalyani Nagar', 'Katraj', 'Bibwewadi', 'Swargate', 'Chinchwad', 'Pimple Saudagar', 'Senapati Bapat Road'],
-    'mumbai': ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Powai', 'Ghatkopar', 'Chembur', 'Mulund', 'Malad', 'Kandivali', 'Vashi', 'Thane', 'Dadar East', 'Dadar West'],
-    'bangalore': ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar', 'Malleshwaram', 'Rajajinagar', 'Hebbal', 'Electronic City', 'BTM Layout', 'Sadashivanagar'],
+    'pune': [
+      'Kothrud', 'Baner', 'Wakad', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 
+      'Hadapsar', 'Kalyani Nagar', 'Katraj', 'Bibwewadi', 'Swargate', 'Chinchwad', 
+      'Pimple Saudagar', 'Senapati Bapat Road', 'Magarpatta City', 'Bavdhan', 'Warje', 
+      'Karvenagar', 'Paud Road', 'NIBM Road', 'Kondhwa', 'Undri', 'Pisoli', 'Mohammadwadi', 
+      'Salunke Vihar', 'Wagholi', 'Talegaon Dabhade', 'Ravet', 'Punawale', 'Tathawade', 
+      'Bhosari', 'Dhankawadi', 'Sahakar Nagar', 'Mukund Nagar', 'Deccan Gymkhana', 
+      'FC Road', 'JM Road', 'Bhugaon', 'Pirangut', 'Balewadi'
+    ],
+    'mumbai': [
+      'Bandra West', 'Andheri West', 'Juhu', 'Colaba', 'Worli', 'Lower Parel', 'Powai', 
+      'Mulund', 'Ghatkopar West', 'Nariman Point', 'Marine Lines', 'Churchgate', 
+      'Versova', 'Bandra East', 'Andheri East', 'Khar West', 'Santacruz West', 
+      'Vile Parle West', 'Goregaon West', 'Malad West', 'Kandivali West', 'Borivali West', 
+      'Chembur', 'Thane West', 'Vashi', 'Nerul', 'Dadar East', 'Dadar West',
+      'Cuffe Parade', 'Malabar Hill', 'Breach Candy', 'Kemps Corner', 'Pedder Road',
+      'Altamount Road', 'Nepean Sea Road', 'Mahalaxmi', 'Byculla', 'Prabhadevi',
+      'Parel', 'Charni Road', 'Girgaon', 'Walkeshwar', 'Lokhandwala', 'Seven Bungalows',
+      'Four Bungalows', 'Yari Road', 'Vile Parle East', 'Khar East', 'Santacruz East',
+      'Goregaon East', 'Malad East', 'Kandivali East', 'Borivali East', 'Dahisar',
+      'Kurla', 'Ghatkopar East', 'Mulund East', 'Bhandup', 'Kanjurmarg', 'Vikhroli',
+      'Sion', 'Matunga', 'Wadala', 'Mazgaon', 'Fort', 'Kalbadevi', 'Grant Road',
+      'Tardeo', 'Mumbai Central'
+    ],
+    'bangalore': [
+      'Koramangala', 'Indiranagar', 'Whitefield', 'Marathahalli', 'Bellandur', 'Sarjapur Road', 
+      'Electronic City', 'HSR Layout', 'JP Nagar', 'Jayanagar', 'MG Road', 'Brigade Road', 
+      'Lavelle Road', 'Residency Road', 'Ulsoor', 'Domlur', 'Old Airport Road', 'Kadugodi', 
+      'Hoodi', 'KR Puram', 'Mahadevapura', 'CV Raman Nagar', 'Banaswadi', 'Ramamurthy Nagar', 
+      'Yelahanka', 'Hebbal', 'Jakkur', 'Thanisandra', 'Nagawara', 'Manyata Tech Park', 
+      'Bannerghatta Road', 'Arekere', 'Gottigere', 'Kanakapura Road', 'Basavanagudi', 
+      'Banashankari', 'Malleshwaram', 'Rajajinagar', 'BTM Layout', 'Sadashivanagar'
+    ],
     'chennai': ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram', 'Besant Nagar', 'Guindy', 'Chromepet', 'Royapettah', 'Egmore', 'Alwarpet'],
     'delhi': ['Connaught Place', 'Saket', 'Karol Bagh', 'Vasant Kunj', 'Rajouri Garden', 'Dwarka', 'Greater Kailash', 'Lajpat Nagar', 'South Extension', 'Hauz Khas', 'Green Park', 'Defence Colony', 'Rohini', 'Pitampura', 'Mayur Vihar'],
     'hyderabad': ['Gachibowli', 'Jubilee Hills', 'Banjara Hills', 'Madhapur', 'Kondapur', 'Begumpet', 'Secunderabad', 'Ameerpet', 'Kukatpally', 'Hitech City', 'Somajiguda', 'Miyapur', 'Dilshukhnagar', 'Manikonda'],
@@ -108,6 +138,8 @@ export default function SEOFooter() {
       setLoadingMore(true);
     }
 
+    const fallback = cityAreas[city.toLowerCase()] || [];
+
     try {
       const { queryString, isLast } = getQueryForPage(city, pageNum);
       const limit = 50;
@@ -128,10 +160,10 @@ export default function SEOFooter() {
             .map(item => item.display_name.split(',')[0].trim());
 
           const subpartKeywords = [
-            'depo', 'deppo', 'stand', 'stop', 'hospital', 'station', 'shop', 'salon', 'road', 'street', 
+            'depo', 'deppo', 'stand', 'stop', 'hospital', 'station', 'shop', 'salon', 
             'lane', 'society', 'apartment', 'complex', 'mall', 'plaza', 'garden', 'hotel', 'restaurant', 
             'cafe', 'school', 'college', 'temple', 'church', 'mosque', 'metro', 'library', 'bank', 'atm', 
-            'clinic', 'market', 'park', 'bus', 'junction', 'railway', 'airport', 'police', 'post', 'office', 
+            'clinic', 'market', 'bus', 'junction', 'railway', 'airport', 'police', 'post', 'office', 
             'court', 'academy', 'institute', 'university', 'bridge', 'flyover', 'chowk', 'lake', 'fort', 
             'palace', 'museum', 'zoo', 'stadium', 'industrial', 'service', 'center', 'centre', 'showroom', 
             'gym', 'club', 'fitness', 'theatre', 'cinema', 'multiplex', 'building', 'tower', 'villa', 
@@ -146,32 +178,31 @@ export default function SEOFooter() {
             const hasPoi = subpartKeywords.some(keyword => lowerName.includes(keyword));
             if (hasPoi) return false;
 
-            // Keep names clean and short (max 2 words)
-            if (name.split(/\s+/).length > 2) return false;
+            // Keep names clean and short (allow up to 3 words for names like "Manyata Tech Park" or "Senapati Bapat Road")
+            if (name.split(/\s+/).length > 3) return false;
 
             return true;
           });
 
           parsedAreas = Array.from(new Set(parsedAreas));
 
-          if (parsedAreas.length > 0) {
-            setAreas(prev => {
-              const combined = append ? [...prev, ...parsedAreas] : parsedAreas;
-              const uniqueCombined = Array.from(new Set(combined));
-              if (pageNum === 0 && uniqueCombined.length > 0) {
-                setSelectedArea(uniqueCombined[0]);
-              }
-              return uniqueCombined;
-            });
-            setHasMore(!isLast && data.length >= 10);
-            return;
-          }
+          setAreas(prev => {
+            const combined = append 
+              ? [...prev, ...parsedAreas] 
+              : (pageNum === 0 ? [...fallback, ...parsedAreas] : parsedAreas);
+            const uniqueCombined = Array.from(new Set(combined));
+            if (pageNum === 0 && uniqueCombined.length > 0) {
+              setSelectedArea(uniqueCombined[0]);
+            }
+            return uniqueCombined;
+          });
+          setHasMore(!isLast && data.length >= 10);
+          return;
         }
       }
       
-      // Fallback if Nominatim failed or returned no results on page 0
+      // Fallback if Nominatim failed or returned no results
       if (pageNum === 0) {
-        const fallback = cityAreas[city.toLowerCase()] || [];
         setAreas(fallback);
         setSelectedArea(fallback[0]);
         setHasMore(false);
@@ -181,7 +212,6 @@ export default function SEOFooter() {
     } catch (error) {
       console.error('Error fetching city areas via Nominatim:', error);
       if (pageNum === 0) {
-        const fallback = cityAreas[city.toLowerCase()] || [];
         setAreas(fallback);
         setSelectedArea(fallback[0]);
         setHasMore(false);
