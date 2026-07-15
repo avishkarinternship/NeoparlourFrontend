@@ -80,6 +80,7 @@ const PublicSubscriptionPlans = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successPlanName, setSuccessPlanName] = useState('');
   const [billingPeriod, setBillingPeriod] = useState('yearly'); // 'monthly' or 'yearly'
+  const [isAutoPay, setIsAutoPay] = useState(true); // true => Auto-Pay, false => Pay Once (One-Time)
 
   // Parse URL query parameters to auto-login if redirected from the mobile app
   useEffect(() => {
@@ -142,50 +143,36 @@ const PublicSubscriptionPlans = () => {
     try {
       setPayingPlanCode(plan.planCode);
       
-      // 1. Create AutoPay subscription on backend
-      const response = await axiosInstance.post(
-        `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
-      );
+      let response;
+      if (isAutoPay) {
+        // 1. Create AutoPay subscription on backend
+        response = await axiosInstance.post(
+          `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
+        );
+      } else {
+        // 1. Create one-time Order on backend
+        response = await axiosInstance.post(
+          `/subscriptions/create-order?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
+        );
+      }
       
       const data = response.data;
-      if (!data.ok) {
-        toast.error("Failed to initiate subscription: " + (data.error || "Unknown error"));
+      if (isAutoPay && !data.ok) {
+        toast.error("Failed to initiate Auto-Pay subscription: " + (data.error || "Unknown error"));
+        setPayingPlanCode(null);
+        return;
+      }
+      if (!isAutoPay && !data.id) {
+        toast.error("Failed to initiate one-time payment: " + (data.error || "Unknown error"));
         setPayingPlanCode(null);
         return;
       }
 
-      // 2. Open Razorpay Checkout Payment Sheet in Subscription (AutoPay) mode
+      // 2. Open Razorpay Checkout Payment Sheet
       const options = {
         key: data.key,
-        subscription_id: data.subscriptionId,
         name: "NeoParlour Salon Subscription",
-        description: data.planName,
-        handler: async function (transaction) {
-          try {
-            toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
-            console.log("Razorpay payment complete. Payment ID: ", transaction.razorpay_payment_id);
-            
-            // 3. Verify on backend synchronously to activate the salon immediately
-            const verifyRes = await axiosInstance.post(
-              `/subscriptions/verify-autopay?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpaySubscriptionId=${transaction.razorpay_subscription_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
-            );
-
-            toast.dismiss('payment-verifying');
-            if (verifyRes.data.success) {
-              setSuccessPlanName(plan.planName);
-              setShowSuccessDialog(true);
-            } else {
-              toast.error('Payment verification failed.');
-            }
-          } catch (err) {
-            toast.dismiss('payment-verifying');
-            console.error('Subscription verification failed', err);
-            const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not verify subscription setup. Please contact support.';
-            toast.error(errMsg);
-          } finally {
-            setPayingPlanCode(null);
-          }
-        },
+        description: plan.planName,
         prefill: {
           name: activeUserObj?.name || '',
           email: activeUserObj?.email || '',
@@ -202,11 +189,71 @@ const PublicSubscriptionPlans = () => {
         }
       };
 
+      if (isAutoPay) {
+        options.subscription_id = data.subscriptionId;
+        options.handler = async function (transaction) {
+          try {
+            toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
+            console.log("Razorpay subscription complete. Payment ID: ", transaction.razorpay_payment_id);
+            
+            // 3. Verify AutoPay on backend synchronously
+            const verifyRes = await axiosInstance.post(
+              `/subscriptions/verify-autopay?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpaySubscriptionId=${transaction.razorpay_subscription_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
+            );
+
+            toast.dismiss('payment-verifying');
+            if (verifyRes.data.success) {
+              setSuccessPlanName(plan.planName);
+              setShowSuccessDialog(true);
+            } else {
+              toast.error('Subscription verification failed.');
+            }
+          } catch (err) {
+            toast.dismiss('payment-verifying');
+            console.error('Subscription verification failed', err);
+            const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not verify subscription setup. Please contact support.';
+            toast.error(errMsg);
+          } finally {
+            setPayingPlanCode(null);
+          }
+        };
+      } else {
+        options.order_id = data.id;
+        options.amount = data.amount;
+        options.currency = data.currency;
+        options.handler = async function (transaction) {
+          try {
+            toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
+            console.log("Razorpay one-time order complete. Payment ID: ", transaction.razorpay_payment_id);
+            
+            // 3. Verify one-time Order on backend synchronously
+            const verifyRes = await axiosInstance.post(
+              `/subscriptions/verify-payment?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpayOrderId=${transaction.razorpay_order_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
+            );
+
+            toast.dismiss('payment-verifying');
+            if (verifyRes.data.success) {
+              setSuccessPlanName(plan.planName);
+              setShowSuccessDialog(true);
+            } else {
+              toast.error('Payment verification failed.');
+            }
+          } catch (err) {
+            toast.dismiss('payment-verifying');
+            console.error('Payment verification failed', err);
+            const errMsg = err.response?.data?.error || err.response?.data?.message || 'Could not verify payment setup. Please contact support.';
+            toast.error(errMsg);
+          } finally {
+            setPayingPlanCode(null);
+          }
+        };
+      }
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
-      console.error('AutoPay subscription initiation failed', error);
-      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Could not generate Razorpay subscription. Please try again.';
+      console.error('Subscription initiation failed', error);
+      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Could not generate Razorpay transaction. Please try again.';
       toast.error(errMsg);
       setPayingPlanCode(null);
     }
@@ -329,6 +376,35 @@ const PublicSubscriptionPlans = () => {
             </button>
           </div>
         )}
+
+        {/* Payment Mode Selection Toggle (Hybrid Support) */}
+        <div className="flex flex-col items-center gap-2 mb-16">
+          <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">
+            Payment Renewal Mode
+          </span>
+          <div className="flex items-center gap-4 bg-neutral-900/60 backdrop-blur-md p-1.5 rounded-2xl border border-white/5">
+            <button
+              onClick={() => setIsAutoPay(false)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
+                !isAutoPay
+                  ? 'bg-neutral-800 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Pay Once (One-Time)
+            </button>
+            <button
+              onClick={() => setIsAutoPay(true)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative flex items-center gap-1.5 ${
+                isAutoPay
+                  ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-500/20'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Auto-Pay (Auto-Renew)
+            </button>
+          </div>
+        </div>
 
         {/* Pricing Cards Grid */}
         <div className="w-full max-w-[1200px] flex-1 flex items-center justify-center">
