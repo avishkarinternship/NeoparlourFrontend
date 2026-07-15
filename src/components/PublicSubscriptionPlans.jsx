@@ -79,8 +79,7 @@ const PublicSubscriptionPlans = () => {
   const [payingPlanCode, setPayingPlanCode] = useState(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successPlanName, setSuccessPlanName] = useState('');
-  const [billingPeriod, setBillingPeriod] = useState('yearly'); // 'monthly' or 'yearly'
-  const [isAutoPay, setIsAutoPay] = useState(true); // true => Auto-Pay, false => Pay Once (One-Time)
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState(null);
 
   // Parse URL query parameters to auto-login if redirected from the mobile app
   useEffect(() => {
@@ -125,7 +124,7 @@ const PublicSubscriptionPlans = () => {
     fetchPlans();
   }, []);
 
-  const handleSubscribe = async (plan) => {
+  const handleSubscribe = async (plan, isAutoPayMode) => {
     const activeUserObj = getActiveUser();
     const activeToken = activeUserObj.token;
 
@@ -144,7 +143,7 @@ const PublicSubscriptionPlans = () => {
       setPayingPlanCode(plan.planCode);
       
       let response;
-      if (isAutoPay) {
+      if (isAutoPayMode) {
         // 1. Create AutoPay subscription on backend
         response = await axiosInstance.post(
           `/subscriptions/create-autopay?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
@@ -157,12 +156,12 @@ const PublicSubscriptionPlans = () => {
       }
       
       const data = response.data;
-      if (isAutoPay && !data.ok) {
+      if (isAutoPayMode && !data.ok) {
         toast.error("Failed to initiate Auto-Pay subscription: " + (data.error || "Unknown error"));
         setPayingPlanCode(null);
         return;
       }
-      if (!isAutoPay && !data.id) {
+      if (!isAutoPayMode && !data.id) {
         toast.error("Failed to initiate one-time payment: " + (data.error || "Unknown error"));
         setPayingPlanCode(null);
         return;
@@ -189,7 +188,7 @@ const PublicSubscriptionPlans = () => {
         }
       };
 
-      if (isAutoPay) {
+      if (isAutoPayMode) {
         options.subscription_id = data.subscriptionId;
         options.handler = async function (transaction) {
           try {
@@ -268,11 +267,8 @@ const PublicSubscriptionPlans = () => {
   const hasMonthlyPlans = plans.some(p => p.durationMonths < 12);
   const hasYearlyPlans = plans.some(p => p.durationMonths >= 12);
 
-  // Filter plans based on duration months
-  const filteredPlans = plans.filter(p => {
-    if (!hasMonthlyPlans || !hasYearlyPlans) return true; // Show all if we only have one category
-    return billingPeriod === 'yearly' ? p.durationMonths >= 12 : p.durationMonths < 12;
-  });
+  // Filter plans based on duration months (Show all plans directly in grid)
+  const filteredPlans = plans;
 
   // Dynamic icon and feature mapping helpers based on index/planCode
   const getPlanIcon = (index) => {
@@ -344,67 +340,12 @@ const PublicSubscriptionPlans = () => {
             Choose Your <span className="bg-gradient-to-r from-red-500 to-[#ff0b01] bg-clip-text text-transparent">Power Plan</span>
           </h1>
           <p className="text-sm text-gray-400 font-medium">
-            Avoid play store commissions and buy directly online. Select your plan below to continue securely to Razorpay checkout.
+            Select a subscription plan below to unlock your salon's management suite. Tap any option to continue securely to payment checkout.
           </p>
         </div>
 
-        {/* Conditionally Render Billing Period Toggle */}
-        {hasMonthlyPlans && hasYearlyPlans && (
-          <div className="flex items-center gap-4 mb-16 bg-neutral-900/60 backdrop-blur-md p-1.5 rounded-2xl border border-white/5">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
-                billingPeriod === 'monthly'
-                  ? 'bg-neutral-800 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('yearly')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative flex items-center gap-1.5 ${
-                billingPeriod === 'yearly'
-                  ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-500/20'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Yearly
-              <span className="absolute -top-3 -right-3 px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-wider scale-95 shadow-md">
-                Save 33%
-              </span>
-            </button>
-          </div>
-        )}
-
-        {/* Payment Mode Selection Toggle (Hybrid Support) */}
-        <div className="flex flex-col items-center gap-2 mb-16">
-          <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">
-            Payment Renewal Mode
-          </span>
-          <div className="flex items-center gap-4 bg-neutral-900/60 backdrop-blur-md p-1.5 rounded-2xl border border-white/5">
-            <button
-              onClick={() => setIsAutoPay(false)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
-                !isAutoPay
-                  ? 'bg-neutral-800 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Pay Once (One-Time)
-            </button>
-            <button
-              onClick={() => setIsAutoPay(true)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative flex items-center gap-1.5 ${
-                isAutoPay
-                  ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-500/20'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Auto-Pay (Auto-Renew)
-            </button>
-          </div>
-        </div>
+        {/* Spacing spacer instead of toggles */}
+        <div className="h-10" />
 
         {/* Pricing Cards Grid */}
         <div className="w-full max-w-[1200px] flex-1 flex items-center justify-center">
@@ -498,7 +439,7 @@ const PublicSubscriptionPlans = () => {
                     {/* CTA Button */}
                     <div className="mt-10">
                       <button
-                        onClick={() => handleSubscribe(plan)}
+                        onClick={() => setSelectedPlanForCheckout(plan)}
                         disabled={payingPlanCode !== null}
                         className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-[0.98] ${
                           isFeatured 
@@ -549,6 +490,101 @@ const PublicSubscriptionPlans = () => {
         </div>
 
       </main>
+
+      {/* Checkout Mode Consent Dialog Overlay */}
+      {selectedPlanForCheckout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-[#121215] border border-neutral-850 rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.4)] max-w-xl w-[90%] p-8 flex flex-col relative"
+            style={{ animation: 'scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedPlanForCheckout(null)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-neutral-800 text-gray-400 hover:text-white transition cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="p-3 bg-[#ff0b01]/10 text-[#ff0b01] rounded-2xl border border-[#ff0b01]/25">
+                <Crown className="w-6 h-6" />
+              </span>
+              <div>
+                <h2 className="text-lg font-black text-white tracking-tight uppercase">Select Renewal Mode</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Choose how you want to buy your subscription</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 mb-6 font-medium leading-relaxed">
+              You are subscribing to <strong className="text-white font-bold">{selectedPlanForCheckout.planName}</strong> for a duration of <strong className="text-white font-bold">{selectedPlanForCheckout.durationMonths} {selectedPlanForCheckout.durationMonths === 1 ? 'Month' : 'Months'}</strong>. Please select your preferred payment mode:
+            </p>
+
+            {/* Options Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {/* Option 1: Pay Once */}
+              <div 
+                onClick={() => {
+                  const plan = selectedPlanForCheckout;
+                  setSelectedPlanForCheckout(null);
+                  handleSubscribe(plan, false);
+                }}
+                className="p-5 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-850 rounded-2xl transition cursor-pointer group flex flex-col justify-between h-40"
+              >
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2 group-hover:text-emerald-400 transition-colors">
+                    Pay Once
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                    Set up a single, non-recurring payment. Your active subscription access will end naturally after {selectedPlanForCheckout.durationMonths} months.
+                  </p>
+                </div>
+                <div className="flex items-center justify-end text-xs font-bold text-gray-400 group-hover:text-white transition-colors">
+                  One-Time Pay &rarr;
+                </div>
+              </div>
+
+              {/* Option 2: Auto-Pay */}
+              <div 
+                onClick={() => {
+                  const plan = selectedPlanForCheckout;
+                  setSelectedPlanForCheckout(null);
+                  handleSubscribe(plan, true);
+                }}
+                className="p-5 bg-[#ff0b01]/5 border border-[#ff0b01]/25 hover:border-[#ff0b01]/60 hover:bg-[#ff0b01]/10 rounded-2xl transition cursor-pointer group flex flex-col justify-between h-40"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-sm font-black text-white uppercase tracking-wider group-hover:text-[#ff0b01] transition-colors">
+                      Auto-Pay
+                    </h3>
+                    <span className="text-[8px] bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                      Seamless
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                    Automate your renewals. Your payment method will be auto-debited at the end of each cycle. Cancel this mandate anytime from your settings.
+                  </p>
+                </div>
+                <div className="flex items-center justify-end text-xs font-bold text-gray-300 group-hover:text-white transition-colors">
+                  Set Up Mandate &rarr;
+                </div>
+              </div>
+            </div>
+
+            {/* Cancel link */}
+            <div className="text-center">
+              <button 
+                onClick={() => setSelectedPlanForCheckout(null)}
+                className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-400 transition-colors"
+              >
+                Cancel & Go Back
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Success Dialog Overlay */}
       {showSuccessDialog && (
