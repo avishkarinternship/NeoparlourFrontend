@@ -506,14 +506,13 @@ const SelectService = () => {
         fetchSalonSlots();
     }, [activeSalonId, selectedDateObj, dateTimeLoaded]);
 
-    // --- FETCH STAFF-SPECIFIC SLOTS when expert selected ---
+    // --- FETCH STAFF-SPECIFIC SLOTS ---
+    // Runs whenever: staff changes, date changes, durationMinutes changes (service added/removed).
+    // Always re-fetches regardless of which was selected first so slot availability
+    // reflects the correct service duration at all times.
     useEffect(() => {
         if (!activeSalonId || !selectedExpert || selectedExpert === 'any' || !dateTimeLoaded) {
             setStaffSlots([]);
-            return;
-        }
-        if (firstSelected === 'slot') {
-            // Do not fetch staff-specific slots if timeslot was selected first
             return;
         }
         const fetchStaffSlots = async () => {
@@ -535,16 +534,15 @@ const SelectService = () => {
             }
         };
         fetchStaffSlots();
-    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes, firstSelected, dateTimeLoaded]);
+    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes, dateTimeLoaded]);
 
     // --- FETCH AVAILABLE STAFF when time slot selected ---
+    // Runs whenever: slot changes, date changes, durationMinutes changes (service added/removed).
+    // Always re-fetches regardless of which was selected first so staff availability
+    // reflects the correct service duration at all times.
     useEffect(() => {
         if (!activeSalonId || !selectedSlot?.startTime || !dateTimeLoaded) {
             setAvailableStaffList([]);
-            return;
-        }
-        if (firstSelected === 'staff') {
-            // Do not fetch available staff if staff was selected first
             return;
         }
         const fetchAvailableStaff = async () => {
@@ -566,7 +564,7 @@ const SelectService = () => {
             }
         };
         fetchAvailableStaff();
-    }, [activeSalonId, selectedSlot, durationMinutes, firstSelected, dateTimeLoaded]);
+    }, [activeSalonId, selectedSlot, durationMinutes, dateTimeLoaded]);
 
     const fetchServices = async () => {
         if (servicesLoaded) return;
@@ -740,9 +738,91 @@ const SelectService = () => {
         }
     };
 
+    // --- CONFLICT & OVERLAP VALIDATION ---
+    const checkConflict = (slot, duration) => {
+        if (!slot || !slot.startTime || duration <= 0) return false;
+        const startMins = parseSlotToMinutes(slot.startTime);
+        if (startMins === null) return false;
+        const endMins = startMins + duration;
+
+        return displayedSlots.some(s => {
+            const sMins = parseSlotToMinutes(s.startTime);
+            if (sMins === null) return false;
+            // A slot is conflicting if it is busy and:
+            // - it is the selected slot itself, or
+            // - its start time falls within the appointment window (startMins, endMins)
+            if (s.busy) {
+                if (s.startTime === slot.startTime) return true;
+                if (sMins > startMins && sMins < endMins) return true;
+            }
+            return false;
+        });
+    };
+
+    // --- SLOT SELECTION WITH CLOSING TIME VALIDATION ---
+    const handleSlotSelect = (slot) => {
+        if (checkConflict(slot, durationMinutes)) {
+            toast.error("Overlapping error: This time slot conflicts with an existing appointment.", {
+                style: { background: '#7f1d1d', color: '#fecaca', borderRadius: '16px', padding: '16px 24px' }
+            });
+            return;
+        }
+
+        setSelectedTime(slot.displayTime);
+        setSelectedSlot(slot);
+
+        // Check if appointment end time overflows salon closing time
+        if (salon?.closingTime && durationMinutes > 0 && slot.startTime) {
+            const slotStartMins = parseSlotToMinutes(slot.startTime);
+            if (slotStartMins !== null) {
+                const appointmentEndMins = slotStartMins + durationMinutes;
+
+                const [closeH, closeM] = salon.closingTime.split(':').map(Number);
+                const closingMins = closeH * 60 + closeM;
+
+                if (appointmentEndMins > closingMins) {
+                    const overflowMins = appointmentEndMins - closingMins;
+                    const endH = Math.floor(appointmentEndMins / 60) % 24;
+                    const endM = String(appointmentEndMins % 60).padStart(2, '0');
+                    const ampm = endH >= 12 ? 'PM' : 'AM';
+                    const displayEnd = `${endH % 12 || 12}:${endM} ${ampm}`;
+
+                    toast(
+                        `⚠️ This appointment ends at ${displayEnd}, which is ${overflowMins} min past the salon's closing time (${formatTimeStr(salon.closingTime)}). The salon may not be able to complete all services.`,
+                        {
+                            duration: 6000,
+                            style: {
+                                background: '#7c2d12',
+                                color: '#fed7aa',
+                                borderRadius: '16px',
+                                padding: '16px 20px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+                                border: '1px solid rgba(251,146,60,0.3)',
+                                maxWidth: '420px',
+                            },
+                            icon: '🕐',
+                        }
+                    );
+                }
+            }
+        }
+    };
+
     const handleBookClick = () => {
         if (addedServices.length === 0) {
             toast.error('Please select at least one service to proceed.');
+            return;
+        }
+        if (!selectedSlot) {
+            toast.error('Please select a time slot first.');
+            return;
+        }
+        if (checkConflict(selectedSlot, durationMinutes)) {
+            toast.error("Overlapping error: Selected services and slot conflict with an existing appointment. Please choose a different time slot.", {
+                style: { background: '#7f1d1d', color: '#fecaca', borderRadius: '16px', padding: '16px 24px' }
+            });
             return;
         }
         if (homeService && !customerAddress.trim()) {
@@ -1389,10 +1469,7 @@ const SelectService = () => {
                                                 type="button"
                                                 key={slot.startTime || idx}
                                                 disabled={slot.busy || isInWindow}
-                                                onClick={() => {
-                                                    setSelectedTime(slot.displayTime);
-                                                    setSelectedSlot(slot);
-                                                }}
+                                                onClick={() => handleSlotSelect(slot)}
                                                 className={`py-3 px-2 rounded-xl border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center min-h-[4rem] ${slotClass}`}
                                                 title={isConflict ? 'Conflict: This slot overlaps with an existing appointment' : isInWindow ? `Occupied by your ${durationMinutes}-min appointment` : ''}
                                             >
