@@ -4,13 +4,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import axiosInstance from '../api/axiosInstance';
 import { updateOwnerSession, logoutOwnerStaff } from '../redux/slices/ownerStaffSlice';
 import toast from 'react-hot-toast';
-import { 
-  Check, 
-  Sparkles, 
-  Zap, 
-  Crown, 
-  ArrowRight, 
-  ShieldCheck, 
+import {
+  Check,
+  Sparkles,
+  Zap,
+  Crown,
+  ArrowRight,
+  ShieldCheck,
   MessageSquare,
   Sliders,
   Users,
@@ -45,7 +45,7 @@ const PublicSubscriptionPlans = () => {
   const getActiveUser = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get('token') || localStorage.getItem('ownerStaffToken');
-    
+
     let userId = queryParams.get('userId');
     let email = queryParams.get('email');
     let name = queryParams.get('name');
@@ -141,7 +141,7 @@ const PublicSubscriptionPlans = () => {
 
     try {
       setPayingPlanCode(plan.planCode);
-      
+
       let response;
       if (isAutoPayMode) {
         // 1. Create AutoPay subscription on backend
@@ -154,7 +154,7 @@ const PublicSubscriptionPlans = () => {
           `/subscriptions/create-order?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
         );
       }
-      
+
       const data = response.data;
       if (isAutoPayMode && !data.ok) {
         toast.error("Failed to initiate Auto-Pay subscription: " + (data.error || "Unknown error"));
@@ -194,7 +194,7 @@ const PublicSubscriptionPlans = () => {
           try {
             toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
             console.log("Razorpay subscription complete. Payment ID: ", transaction.razorpay_payment_id);
-            
+
             // 3. Verify AutoPay on backend synchronously
             const verifyRes = await axiosInstance.post(
               `/subscriptions/verify-autopay?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpaySubscriptionId=${transaction.razorpay_subscription_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
@@ -224,7 +224,7 @@ const PublicSubscriptionPlans = () => {
           try {
             toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
             console.log("Razorpay one-time order complete. Payment ID: ", transaction.razorpay_payment_id);
-            
+
             // 3. Verify one-time Order on backend synchronously
             const verifyRes = await axiosInstance.post(
               `/subscriptions/verify-payment?razorpayPaymentId=${transaction.razorpay_payment_id}&razorpayOrderId=${transaction.razorpay_order_id}&razorpaySignature=${transaction.razorpay_signature}&userId=${activeUserObj?.id || ''}`
@@ -260,10 +260,10 @@ const PublicSubscriptionPlans = () => {
 
   const handleSuccessClose = () => {
     setShowSuccessDialog(false);
-    
+
     // Log out the user from the browser session so they are not kept logged in on web
     dispatch(logoutOwnerStaff());
-    
+
     // Clear storage keys explicitly as well
     localStorage.removeItem('ownerStaffToken');
     localStorage.removeItem('ownerStaffUser');
@@ -311,7 +311,7 @@ const PublicSubscriptionPlans = () => {
 
   return (
     <div className="min-h-screen bg-[#09090b] text-gray-100 font-sans selection:bg-[#ff0b01]/30 selection:text-white flex flex-col relative overflow-hidden">
-      
+
       {/* Dynamic Background Blur Accents */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#ff0b01]/5 blur-[150px] pointer-events-none" />
@@ -329,7 +329,7 @@ const PublicSubscriptionPlans = () => {
             Active User: <span className="text-white font-black">{ownerUser.name || ownerUser.phone}</span>
           </div>
         ) : (
-          <button 
+          <button
             onClick={() => navigate('/owner/login')}
             className="text-xs font-black tracking-widest uppercase text-gray-400 hover:text-white transition-colors"
           >
@@ -340,7 +340,7 @@ const PublicSubscriptionPlans = () => {
 
       {/* Main Pricing Layout */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-12 z-10 w-full max-w-7xl mx-auto">
-        
+
         {/* Title & Badge */}
         <div className="text-center max-w-2xl mb-12 space-y-4">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ff0b01]/10 border border-[#ff0b01]/25 text-[#ff0b01] text-[10px] font-black uppercase tracking-wider">
@@ -375,13 +375,12 @@ const PublicSubscriptionPlans = () => {
                 const isFeatured = index === 0 || plan.planCode.includes('12month');
 
                 return (
-                  <div 
+                  <div
                     key={plan.id}
-                    className={`relative flex flex-col justify-between rounded-[36px] p-8 md:p-10 border transition-all duration-500 group overflow-hidden ${
-                      isFeatured 
-                        ? 'bg-[#121215] border-[#ff0b01]/40 shadow-[0_20px_50px_rgba(255,11,1,0.08)]' 
+                    className={`relative flex flex-col justify-between rounded-[36px] p-8 md:p-10 border transition-all duration-500 group overflow-hidden ${isFeatured
+                        ? 'bg-[#121215] border-[#ff0b01]/40 shadow-[0_20px_50px_rgba(255,11,1,0.08)]'
                         : 'bg-[#121215]/60 border-neutral-850 hover:border-neutral-700 shadow-[0_20px_50px_rgba(0,0,0,0.3)]'
-                    } hover:-translate-y-2`}
+                      } hover:-translate-y-2`}
                   >
                     {/* Visual Accent top border for Featured Plan */}
                     {isFeatured && (
@@ -392,16 +391,14 @@ const PublicSubscriptionPlans = () => {
                     <div className="space-y-6">
                       <div className="flex justify-between items-start">
                         <div>
-                          <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 ${
-                            isFeatured ? 'bg-[#ff0b01]/20 text-[#ff0b01]' : 'bg-neutral-850 text-gray-400'
-                          }`}>
+                          <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 ${isFeatured ? 'bg-[#ff0b01]/20 text-[#ff0b01]' : 'bg-neutral-850 text-gray-400'
+                            }`}>
                             {planBadge}
                           </span>
                           <h3 className="text-2xl font-extrabold text-white">{plan.planName}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl ${
-                          isFeatured ? 'bg-[#ff0b01]/10 text-[#ff0b01]' : 'bg-neutral-800 text-gray-300'
-                        }`}>
+                        <div className={`p-3 rounded-2xl ${isFeatured ? 'bg-[#ff0b01]/10 text-[#ff0b01]' : 'bg-neutral-800 text-gray-300'
+                          }`}>
                           <PlanIcon className="w-6 h-6" />
                         </div>
                       </div>
@@ -436,9 +433,8 @@ const PublicSubscriptionPlans = () => {
                         <ul className="space-y-3">
                           {features.map((feature, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
-                              <Check className={`w-4 h-4 shrink-0 mt-0.5 ${
-                                isFeatured ? 'text-[#ff0b01]' : 'text-emerald-500'
-                              }`} />
+                              <Check className={`w-4 h-4 shrink-0 mt-0.5 ${isFeatured ? 'text-[#ff0b01]' : 'text-emerald-500'
+                                }`} />
                               <span>{feature}</span>
                             </li>
                           ))}
@@ -451,11 +447,10 @@ const PublicSubscriptionPlans = () => {
                       <button
                         onClick={() => setSelectedPlanForCheckout(plan)}
                         disabled={payingPlanCode !== null}
-                        className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-[0.98] ${
-                          isFeatured 
-                            ? 'bg-[#ff0b01] text-white hover:bg-red-600 shadow-lg shadow-red-500/20' 
+                        className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-[0.98] ${isFeatured
+                            ? 'bg-[#ff0b01] text-white hover:bg-red-600 shadow-lg shadow-red-500/20'
                             : 'bg-neutral-800 text-white hover:bg-neutral-700'
-                        }`}
+                          }`}
                       >
                         {payingPlanCode === plan.planCode ? (
                           <div className="flex items-center justify-center gap-2">
@@ -491,7 +486,7 @@ const PublicSubscriptionPlans = () => {
               <p className="text-xs text-gray-400 font-medium">Subscription setup and auto-renewal mandates are safely processed via Razorpay 256-bit SSL gateway.</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => window.open('https://wa.me/919999999999', '_blank')}
             className="flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl transition-colors shrink-0"
           >
@@ -506,9 +501,9 @@ const PublicSubscriptionPlans = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-[#121215] border border-neutral-850 rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.4)] max-w-xl w-[90%] p-8 flex flex-col relative"
             style={{ animation: 'scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
-            
+
             {/* Close Button */}
-            <button 
+            <button
               onClick={() => setSelectedPlanForCheckout(null)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-neutral-800 text-gray-400 hover:text-white transition cursor-pointer"
             >
@@ -533,7 +528,7 @@ const PublicSubscriptionPlans = () => {
             {/* Options Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {/* Option 1: Pay Once */}
-              <div 
+              <div
                 onClick={() => {
                   const plan = selectedPlanForCheckout;
                   setSelectedPlanForCheckout(null);
@@ -555,7 +550,7 @@ const PublicSubscriptionPlans = () => {
               </div>
 
               {/* Option 2: Auto-Pay */}
-              <div 
+              <div
                 onClick={() => {
                   const plan = selectedPlanForCheckout;
                   setSelectedPlanForCheckout(null);
@@ -584,7 +579,7 @@ const PublicSubscriptionPlans = () => {
 
             {/* Cancel link */}
             <div className="text-center">
-              <button 
+              <button
                 onClick={() => setSelectedPlanForCheckout(null)}
                 className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-400 transition-colors"
               >
@@ -602,7 +597,7 @@ const PublicSubscriptionPlans = () => {
           style={{ animation: 'fadeIn 0.3s ease-out' }}>
           <div className="bg-white rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.15)] max-w-md w-[90%] p-10 flex flex-col items-center text-center"
             style={{ animation: 'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1)' }}>
-            
+
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ff0b01] to-[#d80800] flex items-center justify-center mb-8 shadow-[0_10px_30px_rgba(255,11,1,0.3)]"
               style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both' }}>
               <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -627,7 +622,7 @@ const PublicSubscriptionPlans = () => {
               onClick={handleSuccessClose}
               className="w-full py-4 bg-[#ff0b01] hover:bg-[#d80800] text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_10px_25px_rgba(255,11,1,0.2)] hover:shadow-[0_15px_35px_rgba(255,11,1,0.3)] active:scale-95 cursor-pointer"
             >
-              Return to App
+              Return to
             </button>
           </div>
         </div>
