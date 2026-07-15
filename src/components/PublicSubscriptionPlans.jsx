@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axiosInstance from '../api/axiosInstance';
-import { updateOwnerSession } from '../redux/slices/ownerStaffSlice';
+import { updateOwnerSession, logoutOwnerStaff } from '../redux/slices/ownerStaffSlice';
 import toast from 'react-hot-toast';
 import { 
   Check, 
@@ -260,7 +260,17 @@ const PublicSubscriptionPlans = () => {
 
   const handleSuccessClose = () => {
     setShowSuccessDialog(false);
-    navigate('/owner/dashboard');
+    
+    // Log out the user from the browser session so they are not kept logged in on web
+    dispatch(logoutOwnerStaff());
+    
+    // Clear storage keys explicitly as well
+    localStorage.removeItem('ownerStaffToken');
+    localStorage.removeItem('ownerStaffUser');
+    localStorage.removeItem('activeSalonId');
+
+    // Launch the deep link protocol back to the mobile app
+    window.location.href = "neoparlour://g98us9GoAaG";
   };
 
   // Determine if both monthly and yearly plans exist in response to show/hide the billing toggle
@@ -608,7 +618,7 @@ const PublicSubscriptionPlans = () => {
               Your <span className="font-bold text-[#ff0b01]">{successPlanName}</span> is now active.
             </p>
             <p className="text-xs text-gray-400 mb-8">
-              Thank you for subscribing. Your salon portal status is active and verified.
+              Thank you for subscribing. Your salon subscription is now active. Please return to the mobile app to continue.
             </p>
 
             <div className="w-16 h-[3px] bg-gradient-to-r from-transparent via-[#ff0b01]/30 to-transparent rounded-full mb-8" />
@@ -617,7 +627,7 @@ const PublicSubscriptionPlans = () => {
               onClick={handleSuccessClose}
               className="w-full py-4 bg-[#ff0b01] hover:bg-[#d80800] text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_10px_25px_rgba(255,11,1,0.2)] hover:shadow-[0_15px_35px_rgba(255,11,1,0.3)] active:scale-95 cursor-pointer"
             >
-              Go to Dashboard
+              Return to App
             </button>
           </div>
         </div>
