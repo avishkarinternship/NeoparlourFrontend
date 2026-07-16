@@ -75,14 +75,16 @@ const Appointments = () => {
           params: {
             salonId,
             durationMinutes: duration,
-            selectedDate: dateInstant
+            selectedDate: dateInstant,
+            excludeAppointmentId: appointment.id
           }
         });
       } else {
         res = await axiosInstance.get('/appointments/public/salon-slots', {
           params: {
             salonId,
-            selectedDate: dateInstant
+            selectedDate: dateInstant,
+            excludeAppointmentId: appointment.id
           }
         });
       }

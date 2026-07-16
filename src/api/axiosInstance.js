@@ -85,6 +85,33 @@ axiosInstance.interceptors.response.use(
       }
     }
 
+    // Handle 403 Forbidden CUD subscription blocking
+    if (error.response?.status === 403) {
+      const isCUD = ['post', 'put', 'delete', 'patch'].includes(error.config?.method?.toLowerCase());
+      
+      let errorData = error.response?.data;
+      if (errorData instanceof Blob) {
+        try {
+          const text = await errorData.text();
+          errorData = JSON.parse(text);
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+      
+      const errorMessage = errorData?.message || error.message || '';
+      const lowerMessage = errorMessage.toLowerCase();
+      const isSubscriptionMessage = 
+        lowerMessage.includes("buy the subscription") || 
+        lowerMessage.includes("subscription has expired") || 
+        lowerMessage.includes("explore the services");
+
+      if (isCUD && isSubscriptionMessage) {
+        showGlobalSubscriptionModal();
+        return Promise.reject(error);
+      }
+    }
+
     // Bypass global toast notifications if custom config skipGlobalToast is set
     if (error.config?.skipGlobalToast) {
       return Promise.reject(error);
@@ -155,5 +182,61 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Global Vanilla JS/Tailwind Modal for Subscription Redirect
+function showGlobalSubscriptionModal() {
+  if (document.getElementById('global-subscription-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'global-subscription-modal';
+  modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-opacity duration-300';
+  modal.style.opacity = '0';
+
+  const content = document.createElement('div');
+  content.className = 'bg-white rounded-[28px] max-w-md w-full p-8 shadow-2xl border border-gray-100 flex flex-col items-center text-center transform scale-95 transition-all duration-300';
+  
+  content.innerHTML = `
+    <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-3xl mb-5 animate-bounce">
+      💳
+    </div>
+    <h3 class="text-xl font-black text-gray-900 tracking-tight mb-2 uppercase">Subscription Required</h3>
+    <p class="text-sm text-gray-500 font-medium leading-relaxed mb-8">
+      Please buy a subscription to explore and use these premium features.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 w-full">
+      <button id="sub-modal-close" class="flex-1 py-3.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-2xl font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+        Cancel
+      </button>
+      <button id="sub-modal-subscribe" class="flex-1 py-3.5 bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition shadow-md shadow-red-500/10 cursor-pointer">
+        Subscribe Now
+      </button>
+    </div>
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  // Trigger animations
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    content.style.transform = 'scale(1)';
+  }, 10);
+
+  const closeModal = () => {
+    modal.style.opacity = '0';
+    content.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
+    }, 300);
+  };
+
+  document.getElementById('sub-modal-close').onclick = closeModal;
+  document.getElementById('sub-modal-subscribe').onclick = () => {
+    closeModal();
+    window.location.href = '/buy-subscription';
+  };
+}
 
 export default axiosInstance;

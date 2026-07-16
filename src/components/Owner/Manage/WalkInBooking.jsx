@@ -326,7 +326,6 @@ const WalkInBooking = () => {
         fetchSalonDetails();
     }, [activeSalonId, navigate]);
 
-    // --- Compute durationMinutes from selected services ---
     const durationMinutes = useMemo(() => {
         const objs = allServices.length > 0
             ? allServices.filter(s => addedServices.includes(s.id))
@@ -334,6 +333,39 @@ const WalkInBooking = () => {
         if (objs.length === 0) return 0;
         return objs.reduce((sum, s) => sum + (s.duration || s.durationMinutes || 30), 0);
     }, [addedServices, allServices]);
+
+    // --- SLOT RANGE HIGHLIGHTING ---
+    // Parse a slot's startTime (ISO string or HH:mm) to minutes since midnight
+    const parseSlotToMinutes = (startTime) => {
+        if (!startTime) return null;
+        try {
+            const date = new Date(startTime);
+            if (!isNaN(date.getTime())) {
+                const istDate = new Date(date.getTime() + 330 * 60000);
+                return istDate.getUTCHours() * 60 + istDate.getUTCMinutes();
+            }
+            const parts = startTime.split(':');
+            if (parts.length >= 2) return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        } catch (e) { /* ignore */ }
+        return null;
+    };
+
+    // Build a Set of slot startTimes that fall inside the selected appointment window
+    const occupiedSlotTimes = useMemo(() => {
+        if (!selectedSlot?.startTime || durationMinutes <= 0) return new Set();
+        const startMins = parseSlotToMinutes(selectedSlot.startTime);
+        if (startMins === null) return new Set();
+        const endMins = startMins + durationMinutes;
+        const occupied = new Set();
+        displayedSlots.forEach(slot => {
+            const slotMins = parseSlotToMinutes(slot.startTime);
+            if (slotMins === null) return;
+            if (slotMins > startMins && slotMins < endMins) {
+                occupied.add(slot.startTime);
+            }
+        });
+        return occupied;
+    }, [selectedSlot, durationMinutes, displayedSlots]);
 
     // --- FETCH SALON SLOTS on mount / date change ---
     useEffect(() => {
@@ -362,10 +394,6 @@ const WalkInBooking = () => {
             setStaffSlots([]);
             return;
         }
-        if (firstSelected === 'slot') {
-            // Do not fetch staff-specific slots if timeslot was selected first
-            return;
-        }
         const fetchStaffSlots = async () => {
             setSlotsLoading(true);
             try {
@@ -385,16 +413,12 @@ const WalkInBooking = () => {
             }
         };
         fetchStaffSlots();
-    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes, firstSelected, dateTimeLoaded]);
+    }, [activeSalonId, selectedExpert, selectedDateObj, durationMinutes, dateTimeLoaded]);
 
     // --- FETCH AVAILABLE STAFF when time slot selected ---
     useEffect(() => {
         if (!activeSalonId || !selectedSlot?.startTime || !dateTimeLoaded) {
             setAvailableStaffList([]);
-            return;
-        }
-        if (firstSelected === 'staff') {
-            // Do not fetch available staff if staff was selected first
             return;
         }
         const fetchAvailableStaff = async () => {
@@ -416,7 +440,7 @@ const WalkInBooking = () => {
             }
         };
         fetchAvailableStaff();
-    }, [activeSalonId, selectedSlot, durationMinutes, firstSelected, dateTimeLoaded]);
+    }, [activeSalonId, selectedSlot, durationMinutes, dateTimeLoaded]);
 
     const fetchServices = async () => {
         if (servicesLoaded) return;
@@ -590,6 +614,75 @@ const WalkInBooking = () => {
         }
     };
 
+    // --- CONFLICT & OVERLAP VALIDATION ---
+    const checkConflict = (slot, duration) => {
+        if (!slot || !slot.startTime || duration <= 0) return false;
+        const startMins = parseSlotToMinutes(slot.startTime);
+        if (startMins === null) return false;
+        const endMins = startMins + duration;
+
+        return displayedSlots.some(s => {
+            const sMins = parseSlotToMinutes(s.startTime);
+            if (sMins === null) return false;
+            if (s.busy) {
+                if (s.startTime === slot.startTime) return true;
+                if (sMins > startMins && sMins < endMins) return true;
+            }
+            return false;
+        });
+    };
+
+    // --- SLOT SELECTION WITH CLOSING TIME VALIDATION ---
+    const handleSlotSelect = (slot) => {
+        if (checkConflict(slot, durationMinutes)) {
+            toast.error("Overlapping error: This time slot conflicts with an existing appointment.", {
+                style: { background: '#7f1d1d', color: '#fecaca', borderRadius: '16px', padding: '16px 24px' }
+            });
+            return;
+        }
+
+        setSelectedTime(slot.displayTime);
+        setSelectedSlot(slot);
+
+        // Check if appointment end time overflows salon closing time
+        if (salon?.closingTime && durationMinutes > 0 && slot.startTime) {
+            const slotStartMins = parseSlotToMinutes(slot.startTime);
+            if (slotStartMins !== null) {
+                const appointmentEndMins = slotStartMins + durationMinutes;
+
+                const [closeH, closeM] = salon.closingTime.split(':').map(Number);
+                const closingMins = closeH * 60 + closeM;
+
+                if (appointmentEndMins > closingMins) {
+                    const overflowMins = appointmentEndMins - closingMins;
+                    const endH = Math.floor(appointmentEndMins / 60) % 24;
+                    const endM = String(appointmentEndMins % 60).padStart(2, '0');
+                    const ampm = endH >= 12 ? 'PM' : 'AM';
+                    const displayEnd = `${endH % 12 || 12}:${endM} ${ampm}`;
+
+                    toast(
+                        `⚠️ This appointment ends at ${displayEnd}, which is ${overflowMins} min past the salon's closing time (${formatTimeStr(salon.closingTime)}). The salon may not be able to complete all services.`,
+                        {
+                            duration: 6000,
+                            style: {
+                                background: '#7c2d12',
+                                color: '#fed7aa',
+                                borderRadius: '16px',
+                                padding: '16px 20px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+                                border: '1px solid rgba(251,146,60,0.3)',
+                                maxWidth: '420px',
+                            },
+                            icon: '🕐',
+                        }
+                    );
+                }
+            }
+        }
+    };
+
     const handleBookClick = () => {
         if (addedServices.length === 0) {
             toast.error('Please select at least one service to proceed.');
@@ -601,6 +694,12 @@ const WalkInBooking = () => {
         }
         if (!selectedSlot) {
             toast.error('Please select a date and time slot.');
+            return;
+        }
+        if (checkConflict(selectedSlot, durationMinutes)) {
+            toast.error("Overlapping error: Selected services and slot conflict with an existing appointment. Please choose a different time slot.", {
+                style: { background: '#7f1d1d', color: '#fecaca', borderRadius: '16px', padding: '16px 24px' }
+            });
             return;
         }
         if (!ownerStaffToken) {
@@ -1168,27 +1267,65 @@ const WalkInBooking = () => {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
+                                    {/* Conflict legend — shown only when a slot is selected and services have duration */}
+                                    {selectedSlot && durationMinutes > 0 && occupiedSlotTimes.size > 0 && (
+                                        <div className="col-span-full mb-1 flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block border border-amber-500"></span>
+                                                <span className="text-slate-500">Appointment window</span>
+                                            </span>
+                                            {displayedSlots.some(s => occupiedSlotTimes.has(s.startTime) && s.busy) && (
+                                                <span className="flex items-center gap-1.5">
+                                                    <span className="w-3 h-3 rounded-sm bg-red-400 inline-block border border-red-500"></span>
+                                                    <span className="text-red-500">Conflict — slot already booked</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                     {displayedSlots.map((slot, idx) => {
                                         const isSelectedTime = selectedSlot?.startTime === slot.startTime;
+                                        const isInWindow = occupiedSlotTimes.has(slot.startTime);
+                                        const isConflict = isInWindow && slot.busy;
+
+                                        let slotClass = '';
+                                        if (slot.busy && !isInWindow) {
+                                            // Normal booked slot (outside our window)
+                                            slotClass = 'bg-slate-100 border-slate-200 text-slate-400 line-through cursor-not-allowed opacity-60';
+                                        } else if (isConflict) {
+                                            // Slot inside our window that is already booked — hard conflict
+                                            slotClass = 'bg-red-100 border-red-400 text-red-600 cursor-not-allowed ring-2 ring-red-300 ring-offset-1 animate-pulse';
+                                        } else if (isSelectedTime) {
+                                            // The slot the user clicked
+                                            slotClass = 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10 hover:scale-105 active:scale-95';
+                                        } else if (isInWindow) {
+                                            // Slots inside appointment window but not yet booked
+                                            slotClass = 'bg-amber-50 border-amber-400 text-amber-700 cursor-not-allowed ring-1 ring-amber-300';
+                                        } else {
+                                            // Normal available slot
+                                            slotClass = 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300 hover:scale-105 active:scale-95';
+                                        }
+
                                         return (
                                             <button
                                                 type="button"
                                                 key={slot.startTime || idx}
-                                                disabled={slot.busy}
-                                                onClick={() => {
-                                                    setSelectedTime(slot.displayTime);
-                                                    setSelectedSlot(slot);
-                                                }}
-                                                className={`py-3 px-2 rounded-xl border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center min-h-[4rem] ${
-                                                    slot.busy
-                                                        ? 'bg-slate-100 border-slate-200 text-slate-400 line-through cursor-not-allowed opacity-60'
-                                                        : isSelectedTime
-                                                        ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10 hover:scale-105 active:scale-95'
-                                                        : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300 hover:scale-105 active:scale-95'
-                                                }`}
+                                                disabled={slot.busy || isInWindow}
+                                                onClick={() => handleSlotSelect(slot)}
+                                                className={`py-3 px-2 rounded-xl border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center min-h-[4rem] ${slotClass}`}
+                                                title={isConflict ? 'Conflict: This slot overlaps with an existing appointment' : isInWindow ? `Occupied by your ${durationMinutes}-min appointment` : ''}
                                             >
                                                 <span>{slot.displayTime}</span>
-                                                {slot.discountPercentage > 0 && slot.discountMessage && (
+                                                {isConflict && (
+                                                    <span className="text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full bg-red-200 text-red-700">
+                                                        Conflict
+                                                    </span>
+                                                )}
+                                                {isInWindow && !isConflict && (
+                                                    <span className="text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                                        In use
+                                                    </span>
+                                                )}
+                                                {!isInWindow && !isConflict && slot.discountPercentage > 0 && slot.discountMessage && (
                                                     <span className={`text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full ${
                                                         isSelectedTime ? 'bg-white text-[#FF0B01]' : 'bg-green-100 text-green-700'
                                                     }`}>

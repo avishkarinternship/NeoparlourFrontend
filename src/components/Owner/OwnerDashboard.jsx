@@ -321,7 +321,7 @@ const OwnerDashboard = () => {
             const response = await axiosInstance.get('/appointments/available-staff', {
                 params: {
                     selectedTime: appointmentAt,
-                    durationMinutes: durationMinutes || 30
+                    durationMinutes: durationMinutes
                 }
             });
             setAvailableStaffMap(prev => ({ ...prev, [apptId]: response.data || [] }));

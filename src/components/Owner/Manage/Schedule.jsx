@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
-import { CalendarClock, CheckCircle, XCircle, Eye, X } from 'lucide-react';
+import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle } from 'lucide-react';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -24,6 +24,36 @@ const toastStyle = {
     border: '1px solid rgba(255, 255, 255, 0.1)',
   },
   iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+};
+
+const parseConflictsFromMessage = (msg) => {
+  if (!msg) return [];
+  const lines = msg.split('\n');
+  const conflicts = [];
+  lines.forEach(line => {
+    if (line.toLowerCase().includes('appointment id')) {
+      const idMatch = line.match(/Appointment ID:?\s*(\d+)/i) || line.match(/Appointment\s*#?\s*(\d+)/i) || line.match(/ID:?\s*(\d+)/i);
+      const apptId = idMatch ? parseInt(idMatch[1], 10) : null;
+      if (apptId) {
+        const customerMatch = line.match(/for\s+([A-Za-z\s]+?)\s+at/i) || line.match(/for\s+([A-Za-z\s]+?)\s+collides/i);
+        const timeMatch = line.match(/at\s+([0-9:a-zA-Z\s-]+?)(?:\.|$)/i);
+        
+        let cleanedLine = line.replace(/^\s*-\s*/, '').trim();
+        const cleanIdx = cleanedLine.indexOf('. No other');
+        if (cleanIdx !== -1) {
+          cleanedLine = cleanedLine.substring(0, cleanIdx).trim();
+        }
+        
+        conflicts.push({
+          id: apptId,
+          lineText: cleanedLine,
+          customer: customerMatch ? customerMatch[1].trim() : 'Customer',
+          time: timeMatch ? timeMatch[1].trim() : ''
+        });
+      }
+    }
+  });
+  return conflicts;
 };
 
 const Schedule = () => {
@@ -61,6 +91,10 @@ const Schedule = () => {
   const [newDateTime, setNewDateTime] = useState('');
   const [rescheduleReason, setRescheduleReason] = useState('');
   const [rescheduleReasonType, setRescheduleReasonType] = useState('');
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleSlots, setRescheduleSlots] = useState([]);
+  const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
+  const [selectedRescheduleSlot, setSelectedRescheduleSlot] = useState(null);
 
   // Staff Modal
   const [newStaffId, setNewStaffId] = useState('');
@@ -76,6 +110,7 @@ const Schedule = () => {
   const [extendServices, setExtendServices] = useState([]);
   const [extendLoading, setExtendLoading] = useState(false);
   const [extendConflict, setExtendConflict] = useState(null);
+  const [extraSlotParams, setExtraSlotParams] = useState({});
   const [availableServices, setAvailableServices] = useState([]);
   const [serviceSearchQuery, setServiceSearchQuery] = useState('');
 
@@ -171,6 +206,12 @@ const Schedule = () => {
     }
   }, [location.state?.appointmentId]);
 
+  useEffect(() => {
+    if (rescheduleDate && selectedAppointment && actionType === 'reschedule') {
+      fetchRescheduleSlots(rescheduleDate, selectedAppointment);
+    }
+  }, [rescheduleDate, selectedAppointment, actionType]);
+
   const handleSearch = () => fetchAppointments(0);
   const resetFilters = () => setFilters({ mobile: '', staffId: '', fromDate: '', toDate: '', minAmount: '', maxAmount: '' });
 
@@ -222,6 +263,56 @@ const Schedule = () => {
     return diffMinutes >= 45;
   };
 
+  const getTodayDateString = () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(now);
+  };
+
+  const fetchRescheduleSlots = async (dateStr, appointment) => {
+    if (!dateStr || !appointment) return;
+    setRescheduleSlotsLoading(true);
+    try {
+      const dateInstant = `${dateStr}T00:00:00.000+05:30`;
+      const staffId = appointment.staffId;
+      const salonId = appointment.salonId || localStorage.getItem('activeSalonId');
+      const duration = appointment.serviceDuration || appointment.durationMinutes || 30;
+
+      let res;
+      if (staffId) {
+        res = await axiosInstance.get(`/appointments/public/staff/${staffId}/available-slots`, {
+          params: {
+            salonId,
+            durationMinutes: duration,
+            selectedDate: dateInstant,
+            excludeAppointmentId: appointment.id,
+            ...extraSlotParams
+          }
+        });
+      } else {
+        res = await axiosInstance.get('/appointments/public/salon-slots', {
+          params: {
+            salonId,
+            selectedDate: dateInstant,
+            excludeAppointmentId: appointment.id,
+            ...extraSlotParams
+          }
+        });
+      }
+      setRescheduleSlots(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch slots for rescheduling:', error);
+      setRescheduleSlots([]);
+    } finally {
+      setRescheduleSlotsLoading(false);
+    }
+  };
+
   const handleAction = async () => {
     const now = Date.now();
     if (!selectedAppointment || actionLoading || (now - lastActionTime < 800)) return;
@@ -229,12 +320,8 @@ const Schedule = () => {
     let selectedReason = '';
 
     if (actionType === 'reschedule') {
-      if (!newDateTime) {
-        toast.error("Please select new date & time", toastStyle);
-        return;
-      }
-      if (!isValidRescheduleTime(newDateTime)) {
-        toast.error("Appointment must be rescheduled at least 45 minutes in advance", toastStyle);
+      if (!selectedRescheduleSlot) {
+        toast.error("Please select an available time slot", toastStyle);
         return;
       }
 
@@ -256,13 +343,14 @@ const Schedule = () => {
         await axiosInstance.put(`/appointments/${selectedAppointment.id}/complete`, {});
         toast.success('Appointment marked as completed', toastStyle);
       } else {
-        const zonedTime = convertToISTZoned(newDateTime);
+        const zonedTime = selectedRescheduleSlot.startTime;
         console.log("🚀 Sending to backend (IST):", zonedTime);   // Debug log
 
         const params = new URLSearchParams({ newTime: zonedTime });
         await axiosInstance.put(
-          `/appointments/${selectedAppointment.id}/reschedule?${params.toString()}`,
-          selectedReason
+          `/appointments/${selectedAppointment.id}/owner-reschedule?${params.toString()}`,
+          selectedReason,
+          { headers: { 'Content-Type': 'text/plain' } }
         );
         toast.success('Appointment rescheduled successfully', toastStyle);
       }
@@ -272,9 +360,7 @@ const Schedule = () => {
       fetchAppointments(currentPage);
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'Action failed';
-      if (!errorMsg.toLowerCase().includes('45 minutes')) {
-        toast.error(errorMsg, toastStyle);
-      }
+      toast.error(errorMsg, toastStyle);
     } finally {
       setActionLoading(false);
     }
@@ -284,12 +370,22 @@ const Schedule = () => {
     setNewDateTime('');
     setRescheduleReason('');
     setRescheduleReasonType('');
+    setRescheduleDate('');
+    setRescheduleSlots([]);
+    setSelectedRescheduleSlot(null);
   };
 
-  const openActionModal = (appt, type = 'reschedule') => {
+  const openActionModal = (appt, type = 'reschedule', slotParams = {}) => {
     setSelectedAppointment(appt);
     setActionType(type);
+    setExtraSlotParams(slotParams);
     resetActionForm();
+    if (type === 'reschedule') {
+      const today = getTodayDateString();
+      setRescheduleDate(today);
+      setSelectedRescheduleSlot(null);
+      setRescheduleSlots([]);
+    }
     setShowActionModal(true);
   };
 
@@ -438,6 +534,36 @@ const Schedule = () => {
       }
     } finally {
       setExtendLoading(false);
+    }
+  };
+
+  const handleRescheduleConflicting = async (apptId) => {
+    setShowExtendModal(false);
+    try {
+      const res = await axiosInstance.get(`/appointments/${apptId}`);
+      // Build override params: tell the API that appointment A (being extended)
+      // now occupies its original duration + all newly added extension services.
+      const existingDuration = extendAppointment?.durationMinutes || extendAppointment?.serviceDuration || 0;
+      const addedDuration = extendServices.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const newTotalDuration = existingDuration + addedDuration;
+      const slotParams = {};
+      if (extendAppointment?.id) {
+        slotParams.overrideAppointmentId = extendAppointment.id;
+        slotParams.overrideDuration = newTotalDuration;
+      }
+      openActionModal(res.data, 'reschedule', slotParams);
+    } catch (error) {
+      toast.error("Failed to load conflicting appointment details for rescheduling", toastStyle);
+    }
+  };
+
+  const handleReassignConflicting = async (apptId) => {
+    setShowExtendModal(false);
+    try {
+      const res = await axiosInstance.get(`/appointments/${apptId}`);
+      openStaffModal(res.data);
+    } catch (error) {
+      toast.error("Failed to load conflicting appointment details for staff re-assignment", toastStyle);
     }
   };
 
@@ -603,9 +729,19 @@ const Schedule = () => {
                           <button 
                             onClick={() => openActionModal(appt, 'reschedule')} 
                             className="w-9 h-9 flex items-center justify-center bg-[#FF0B01] text-white rounded-xl hover:bg-red-700 transition shadow-sm cursor-pointer"
+                            title="Reschedule Appointment"
                           >
                             <CalendarClock className="w-4.5 h-4.5" />
                           </button>
+                          {currentSubTab === 'Scheduled' && (
+                            <button 
+                              onClick={() => openExtendModal(appt)} 
+                              className="w-9 h-9 flex items-center justify-center bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-sm cursor-pointer"
+                              title="Extend Appointment"
+                            >
+                              <PlusCircle className="w-4.5 h-4.5" />
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleComplete(appt)} 
                             className="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-sm cursor-pointer"
@@ -689,15 +825,58 @@ const Schedule = () => {
               </div>
 
               {actionType === 'reschedule' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">New Date & Time (IST)</label>
-                  <input
-                    type="datetime-local"
-                    value={newDateTime}
-                    min={getTodayDateTime()}
-                    onChange={(e) => setNewDateTime(e.target.value)}
-                    className="w-full border border-gray-300 rounded-xl p-3 text-sm"
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">New Date (IST)</label>
+                    <input
+                      type="date"
+                      value={rescheduleDate}
+                      min={getTodayDateString()}
+                      onChange={(e) => setRescheduleDate(e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Available Slots</label>
+                    {rescheduleSlotsLoading ? (
+                      <div className="text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider animate-pulse">
+                        Loading slots...
+                      </div>
+                    ) : rescheduleSlots.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-gray-400 font-bold uppercase tracking-wider border border-dashed border-gray-200 rounded-xl bg-gray-50/30">
+                        No slots available for this date
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                        {rescheduleSlots.map((slot, idx) => {
+                          const isSelected = selectedRescheduleSlot?.startTime === slot.startTime;
+                          return (
+                            <button
+                              type="button"
+                              key={slot.startTime || idx}
+                              disabled={slot.busy}
+                              onClick={() => setSelectedRescheduleSlot(slot)}
+                              className={`py-2 px-1 rounded-xl border text-center text-xs font-bold transition-all duration-200 ${
+                                slot.busy
+                                  ? 'bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed opacity-60'
+                                  : isSelected
+                                  ? 'bg-red-600 border-red-600 text-white shadow-md shadow-red-500/10'
+                                  : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                              }`}
+                            >
+                              <span>{slot.displayTime}</span>
+                              {slot.discountPercentage > 0 && (
+                                <span className={`block text-[8px] font-extrabold ${isSelected ? 'text-white' : 'text-green-600'}`}>
+                                  {slot.discountPercentage}% Off
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -745,7 +924,7 @@ const Schedule = () => {
 
             <div className="flex gap-3 mt-8">
               <button type="button" onClick={() => setShowActionModal(false)} disabled={actionLoading} className="flex-1 py-3 border border-gray-300 rounded-xl font-medium">Cancel</button>
-              <button type="button" onClick={handleAction} disabled={actionLoading || (actionType === 'reschedule' && !newDateTime)} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-medium disabled:opacity-60">
+              <button type="button" onClick={handleAction} disabled={actionLoading || (actionType === 'reschedule' && !selectedRescheduleSlot)} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-medium disabled:opacity-60">
                 {actionLoading ? 'Processing...' : actionType === 'complete' ? 'Mark as Complete' : 'Reschedule Now'}
               </button>
             </div>
@@ -1126,31 +1305,87 @@ const Schedule = () => {
               )}
 
               {/* Conflict Warning */}
-              {extendConflict && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-                  <p className="text-xs font-extrabold uppercase tracking-widest text-red-600 mb-2">⚠️ Scheduling Conflict</p>
-                  <p className="text-sm text-red-700 font-medium mb-3">{extendConflict.message || "This extension conflicts with the staff member's next appointment."}</p>
-                  {extendConflict.suggestedStaff && extendConflict.suggestedStaff.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-500 mb-2">Available Alternative Staff</p>
-                      <div className="space-y-1.5">
-                        {extendConflict.suggestedStaff.map(staff => (
-                          <div key={staff.id} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-gray-100">
-                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                              {staff.name?.charAt(0) || '?'}
+              {/* Conflict Warning - Interactive Resolution Dialog */}
+              {extendConflict && (() => {
+                const msg = extendConflict.message || (typeof extendConflict === 'string' ? extendConflict : '');
+                const parsedConflicts = parseConflictsFromMessage(msg);
+
+                return (
+                  <div className="bg-amber-50/80 border-2 border-amber-300 rounded-3xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 text-amber-800 font-black text-sm uppercase tracking-wide">
+                      <span>⚠️ Staff Conflict Detected</span>
+                    </div>
+
+                    <p className="text-xs text-amber-900 font-semibold mb-1">
+                      Extending this appointment collides with subsequent appointments:
+                    </p>
+
+                    {parsedConflicts.length > 0 ? (
+                      <div className="space-y-3.5">
+                        {parsedConflicts.map((conflict, idx) => (
+                          <div key={conflict.id || idx} className="bg-white/90 border border-amber-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                            <div className="text-[11px] font-bold text-gray-800 flex items-start gap-1 leading-relaxed">
+                              <span>•</span>
+                              <span>{conflict.lineText}</span>
                             </div>
-                            <div>
-                              <p className="text-xs font-semibold text-gray-800">{staff.name}</p>
-                              {staff.specialization && <p className="text-[10px] text-gray-400">{staff.specialization}</p>}
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleRescheduleConflicting(conflict.id)}
+                                className="flex-1 py-2 px-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all shadow-xs cursor-pointer"
+                              >
+                                🔄 Reschedule Appt #{conflict.id}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleReassignConflicting(conflict.id)}
+                                className="flex-1 py-2 px-2.5 border border-amber-400 bg-white hover:bg-amber-50 text-amber-800 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                👤 Reassign Staff
+                              </button>
                             </div>
-                            <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg">Available</span>
                           </div>
                         ))}
                       </div>
+                    ) : (
+                      <p className="text-xs text-amber-950 font-medium leading-relaxed">
+                        {msg}
+                      </p>
+                    )}
+
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setExtendConflict(null)}
+                        className="w-full py-3 border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                      >
+                        Cancel Extension
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    {/* Show suggested alternative staff as a list if provided */}
+                    {extendConflict.suggestedStaff && extendConflict.suggestedStaff.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-amber-200">
+                        <p className="text-[9px] font-extrabold uppercase tracking-widest text-gray-500 mb-2">Available Alternative Staff</p>
+                        <div className="space-y-1.5">
+                          {extendConflict.suggestedStaff.map(staff => (
+                            <div key={staff.id} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2 border border-gray-100">
+                              <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                                {staff.name?.charAt(0) || '?'}
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-800">{staff.name}</p>
+                                {staff.specialization && <p className="text-[10px] text-gray-400">{staff.specialization}</p>}
+                              </div>
+                              <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg">Available</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer */}
