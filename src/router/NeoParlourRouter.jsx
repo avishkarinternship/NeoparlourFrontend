@@ -171,6 +171,22 @@ export let routes = createBrowserRouter([
                 path: '/buy-subscription',
                 element: <PublicSubscriptionPlans />
             },
+            {
+                path: '/customer/terms-and-conditions',
+                element: <CustomerTermsAndConditions />
+            },
+            {
+                path: '/customer/privacy-policy',
+                element: <PrivacyPolicy />
+            },
+            {
+                path: '/owner/terms-and-conditions',
+                element: <OwnerTermsAndConditions />
+            },
+            {
+                path: '/owner/privacy-policy',
+                element: <PrivacyPolicyScreen />
+            },
 
             // Customer Layout wrapper routes
             {
@@ -203,14 +219,6 @@ export let routes = createBrowserRouter([
                     {
                         path: '/customer/salons',
                         element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
-                    },
-                    {
-                        path: '/customer/privacy-policy',
-                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
-                    },
-                    {
-                        path: '/customer/terms-and-conditions',
-                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
                         path: '/customer/influencer-program', 
@@ -382,14 +390,6 @@ export let routes = createBrowserRouter([
                     {
                         path: '/subscription-plans',
                         element: <OwnerRouteGuard><SubscriptionPlans /></OwnerRouteGuard>
-                    },
-                    {
-                        path: '/owner/privacy-policy',
-                        element: <OwnerRouteGuard><PrivacyPolicyScreen /></OwnerRouteGuard>
-                    },
-                    {
-                        path: '/owner/terms-and-conditions',
-                        element: <OwnerRouteGuard><OwnerTermsAndConditions /></OwnerRouteGuard>
                     },
 
                     // Nested Owner Manage Layout wrapper routes
