@@ -179,6 +179,15 @@ const PublicSubscriptionPlans = () => {
         setPayingPlanCode(null);
         return;
       }
+
+      // If a 100% discount coupon is applied, backend directly activates subscription without creating a Razorpay order
+      if (!isAutoPayMode && data.success && data.amount === 0) {
+        setSuccessPlanName(plan.planName);
+        setShowSuccessDialog(true);
+        setPayingPlanCode(null);
+        return;
+      }
+
       if (!isAutoPayMode && !data.id) {
         toast.error("Failed to initiate one-time payment: " + (data.error || "Unknown error"));
         setPayingPlanCode(null);
