@@ -1,14 +1,15 @@
 import React from 'react';
+import Marquee from 'react-fast-marquee';
 import SEOFooter from '../common/SEOFooter';
 
-// Mock Data for the 8 Testimonials with corresponding card branding colors
+// Mock Data for the 14 Testimonials with corresponding card branding colors
 const testimonials = [
   {
     id: 1,
     bgType: 'light-gold',
     logoText: 'BEAUTY SALON',
     logoSub: 'PROFESSIONAL HAIR SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -17,7 +18,7 @@ const testimonials = [
     bgType: 'gray',
     logoText: 'BEFORE & AFTER',
     logoSub: 'HAIR AND BODY CARE',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -26,7 +27,7 @@ const testimonials = [
     bgType: 'white-gold',
     logoText: 'TOP PRIORITY',
     logoSub: 'SPA SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. The customer service is great, and the software is easy to use.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -35,7 +36,7 @@ const testimonials = [
     bgType: 'black',
     logoText: 'TOP QUALITY',
     logoSub: 'BARBER & SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "Great software and amazing customer support. Our booking process has never been smoother, and client management is completely automated. Extremely satisfied!",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -44,7 +45,7 @@ const testimonials = [
     bgType: 'gray',
     logoText: 'BEFORE & AFTER',
     logoSub: 'HAIR AND BODY CARE',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "The interface is very intuitive and my staff got hang of it in just one day. Payroll computation, which used to take hours, is now done in minutes.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -53,7 +54,7 @@ const testimonials = [
     bgType: 'black',
     logoText: 'TOP QUALITY',
     logoSub: 'BARBER & SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "Neoparlour is highly affordable and packed with premium features. It fits our barbershop needs perfectly. We especially love the automatic reminders feature.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -62,7 +63,7 @@ const testimonials = [
     bgType: 'light-gold',
     logoText: 'BEAUTY SALON',
     logoSub: 'PROFESSIONAL HAIR SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "An all-in-one package for modern salons. From inventory management to client billing, everything works seamlessly. The mobile app dashboard is a life saver.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
   },
@@ -71,9 +72,63 @@ const testimonials = [
     bgType: 'white-gold',
     logoText: 'TOP PRIORITY',
     logoSub: 'SPA SALON',
-    quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
+    quote: "Our appointments have doubled since implementing NeoParlour's booking system. It's clean, fast, and does exactly what it promises.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+  },
+  {
+    id: 9,
+    bgType: 'light-gold',
+    logoText: 'GLAMOUR STUDIOS',
+    logoSub: 'HAIR AND NAIL LOUNGE',
+    quote: "The walk-in booking and WhatsApp notifications are phenomenal! Our clients always get their reminders, which has reduced our no-show rate by almost 80%. Highly recommended!",
+    author: 'Aishwarya Patil',
+    role: 'Salon Owner',
+  },
+  {
+    id: 10,
+    bgType: 'black',
+    logoText: 'THE GENTLEMEN CO',
+    logoSub: 'PREMIUM BARBER SHOP',
+    quote: "Staff management and scheduling was a major headache before we found NeoParlour. Now my team can see their schedules in real-time and client feedback has been positive.",
+    author: 'Rahul Deshmukh',
+    role: 'Founder',
+  },
+  {
+    id: 11,
+    bgType: 'white-gold',
+    logoText: 'AURA THERAPY',
+    logoSub: 'WELLNESS & MASSAGE SPA',
+    quote: "Excellent software! The POS billing system is extremely fast and integrates flawlessly with our inventory. We save hours of work every week.",
+    author: 'Meera Sen',
+    role: 'Spa Director',
+  },
+  {
+    id: 12,
+    bgType: 'gray',
+    logoText: 'CUTS & BEYOND',
+    logoSub: 'UNISEX FAMILY SALON',
+    quote: "We've been using NeoParlour for 6 months and our revenue increased by 20% due to the easy appointment links and smart booking. Highly recommend!",
+    author: 'Aditya Ranade',
+    role: 'Operations Manager',
+  },
+  {
+    id: 13,
+    bgType: 'light-gold',
+    logoText: 'ROYAL TOUCH',
+    logoSub: 'BRIDAL & MAKEUP STUDIO',
+    quote: "NeoParlour's customer support is top-notch! The package deals feature makes it incredibly easy to sell our seasonal bridal and pre-bridal packages.",
+    author: 'Priyanka Shinde',
+    role: 'Lead Stylist',
+  },
+  {
+    id: 14,
+    bgType: 'black',
+    logoText: 'CROWN & MANE',
+    logoSub: 'HAIR CLINIC & SALON',
+    quote: "Clean interface, very intuitive dashboard, and powerful analytics. It gives us precise daily and monthly breakdown reports that help us plan our inventory.",
+    author: 'Vikram Mehta',
+    role: 'Managing Partner',
   },
 ];
 
@@ -109,41 +164,48 @@ export default function ClientTestimonial() {
           TRUSTED BY OVER 12000+ USERS
         </h2>
 
-        {/* 4-Column Card Grid Container */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {testimonials.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between text-left h-full"
-            >
-              {/* Dynamic Bra`    nding Card Header */}
-              <div className={`h-24 flex flex-col items-center justify-center text-center p-4 ${getHeaderStyle(item.bgType)}`}>
-                <div className="font-serif font-bold text-sm tracking-widest leading-none">
-                  {item.logoText}
+        {/* Endless Marquee Layout Wrapper */}
+        <div className="w-full overflow-hidden">
+          <Marquee
+            gradient={false}
+            speed={45}
+            pauseOnHover={true}
+            className="py-12 flex items-center"
+          >
+            {testimonials.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between text-left h-[26rem] w-[20rem] mx-4 shrink-0 cursor-pointer"
+              >
+                {/* Dynamic Branding Card Header */}
+                <div className={`h-28 flex flex-col items-center justify-center text-center p-6 ${getHeaderStyle(item.bgType)}`}>
+                  <div className="font-serif font-bold text-sm tracking-widest leading-none">
+                    {item.logoText}
+                  </div>
+                  <div className="text-[8px] uppercase tracking-[0.2em] mt-1.5 opacity-80">
+                    {item.logoSub}
+                  </div>
                 </div>
-                <div className="text-[8px] uppercase tracking-[0.2em] mt-1 opacity-80">
-                  {item.logoSub}
-                </div>
-              </div>
 
-              {/* Card Body and Text */}
-              <div className="p-4 flex-grow flex flex-col justify-between">
-                <p className="text-[11px] md:text-xs text-gray-600 leading-relaxed font-normal mb-6">
-                  {item.quote}
-                </p>
-
-                {/* Author Info block right aligned */}
-                <div className="text-right mt-auto">
-                  <h4 className="font-bold text-xs text-gray-900 tracking-wide">
-                    {item.author}
-                  </h4>
-                  <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">
-                    {item.role}
+                {/* Card Body and Text */}
+                <div className="p-5 flex-grow flex flex-col justify-between">
+                  <p className="text-[11px] md:text-xs text-gray-600 leading-relaxed font-normal mb-6">
+                    {item.quote}
                   </p>
+
+                  {/* Author Info block right aligned */}
+                  <div className="text-right mt-auto">
+                    <h4 className="font-bold text-xs text-gray-900 tracking-wide">
+                      {item.author}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">
+                      {item.role}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </Marquee>
         </div>
       </section>
 

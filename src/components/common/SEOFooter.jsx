@@ -583,7 +583,7 @@ export default function SEOFooter() {
           {/* Responsive Horizontal Slider Container */}
           <div 
             ref={sliderRef} 
-            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full"
+            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none no-scrollbar gap-6 pb-6 w-full"
           >
             {serviceCategories.map((cat, index) => (
               <div 
@@ -621,6 +621,16 @@ export default function SEOFooter() {
           © {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.
         </div>
       </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }

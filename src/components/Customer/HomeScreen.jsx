@@ -580,6 +580,89 @@ const HomeScreen = () => {
         { name: 'Hair Treatment', img: salonImg },
     ];
 
+    const homeTestimonials = [
+        {
+            id: 1,
+            stars: 5,
+            title: "The Best Booking System",
+            quote: "Great Experience, Easy To Book, Paying For Treatments Is So Convenient - No Cash Or Cards Needed!",
+            author: "Avishkar",
+            location: "Pune, Maharashtra"
+        },
+        {
+            id: 2,
+            stars: 5,
+            title: "Highly Recommend",
+            quote: "Very fast and seamless booking. I found a top-rated salon in my locality and booked my slot in less than a minute!",
+            author: "Rohit Sharma",
+            location: "Mumbai, Maharashtra"
+        },
+        {
+            id: 3,
+            stars: 5,
+            title: "Extremely Convenient",
+            quote: "The real-time availability feature is amazing. No phone calls or waiting times. I just walk in at my booked time.",
+            author: "Neha Kulkarni",
+            location: "Pune, Maharashtra"
+        },
+        {
+            id: 4,
+            stars: 5,
+            title: "Brilliant App",
+            quote: "I love the digital invoices and transparent pricing. There are no hidden charges. Payments are safe and secure.",
+            author: "Sneha Patil",
+            location: "Bangalore, Karnataka"
+        },
+        {
+            id: 5,
+            stars: 5,
+            title: "A Lifesaver!",
+            quote: "I always get instant WhatsApp reminders and notifications about my bookings, so I never miss an appointment.",
+            author: "Pooja Deshmukh",
+            location: "Nagpur, Maharashtra"
+        },
+        {
+            id: 6,
+            stars: 5,
+            title: "Awesome Services",
+            quote: "Found the best hair stylist in my area. The review system is authentic, helping me choose the right salon.",
+            author: "Amit Verma",
+            location: "Delhi, NCR"
+        },
+        {
+            id: 7,
+            stars: 5,
+            title: "Super Fast Booking",
+            quote: "The layout is extremely clean and simple. Easiest way to find premium salons nearby and secure an appointment.",
+            author: "Priya Ranade",
+            location: "Mumbai, Maharashtra"
+        },
+        {
+            id: 8,
+            stars: 5,
+            title: "Perfect Experience",
+            quote: "Excellent customer service and zero hassle. Love the option to pay online or at the salon directly.",
+            author: "Karan Johar",
+            location: "Pune, Maharashtra"
+        },
+        {
+            id: 9,
+            stars: 5,
+            title: "Very Reliable",
+            quote: "Highly secure transaction options and prompt booking confirmation. NeoParlour has completely upgraded my grooming routine.",
+            author: "Vikram Malhotra",
+            location: "Hyderabad, Telangana"
+        },
+        {
+            id: 10,
+            stars: 5,
+            title: "Simply Amazing",
+            quote: "The salon recommendations are spot on. I've tried three different salons through the platform and all were outstanding.",
+            author: "Anjali Gupta",
+            location: "Kolkata, West Bengal"
+        }
+    ];
+
     const faqData = [
         {
             q: "What is NeoParlour?",
@@ -1529,23 +1612,42 @@ const HomeScreen = () => {
             {/* 10. TESTIMONIALS */}
             <section className="py-16 px-6 bg-white overflow-hidden">
                 <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">Testimonials</h2>
-                <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar">
-                    {[1, 2, 3, 4].map((item) => (
-                        <div key={item} className="min-w-[300px] bg-gray-50 p-8 rounded-2xl snap-start">
-                            <div className="text-yellow-400 mb-4">⭐⭐⭐⭐⭐</div>
-                            <h4 className="font-black text-lg mb-4 italic">The Best Booking System</h4>
-                            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                                Great Experience, Easy To Book, Paying For Treatments Is So Convenient - No Cash Or Cards Needed!
-                            </p>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-300"></div>
+                <div className="w-full overflow-hidden">
+                    <Marquee
+                        gradient={false}
+                        speed={45}
+                        pauseOnHover={true}
+                        className="py-10 flex items-center"
+                    >
+                        {homeTestimonials.map((item) => (
+                            <div
+                                key={item.id}
+                                className="bg-gray-50 border border-gray-100 hover:border-gray-200/80 rounded-[24px] p-8 flex flex-col justify-between text-left h-[22rem] w-[20rem] mx-4 shrink-0 shadow-sm hover:shadow-lg hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
+                            >
                                 <div>
-                                    <div className="font-bold">Avishkar</div>
-                                    <div className="text-[10px] text-gray-400">Pune, Maharashtra</div>
+                                    {/* Stars */}
+                                    <div className="text-yellow-500 mb-4 flex gap-0.5">
+                                        {"★".repeat(item.stars).split("").map((star, i) => (
+                                            <span key={i} className="text-sm">{star}</span>
+                                        ))}
+                                    </div>
+                                    <h4 className="font-black text-base text-gray-900 mb-3 italic">
+                                        {item.title}
+                                    </h4>
+                                    <p className="text-gray-500 text-xs leading-relaxed font-medium mb-6">
+                                        {item.quote}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-4 mt-auto">
+                                    <div className="w-10 h-10 rounded-full bg-gray-300/80 shrink-0"></div>
+                                    <div>
+                                        <div className="font-bold text-gray-800 text-xs">{item.author}</div>
+                                        <div className="text-[10px] text-gray-400 font-semibold">{item.location}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </Marquee>
                 </div>
             </section>
 
