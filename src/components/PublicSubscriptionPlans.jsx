@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Sliders,
   Users,
-  Database
+  Database,
+  Tag
 } from 'lucide-react';
 
 const decodeJwt = (token) => {
@@ -80,6 +81,21 @@ const PublicSubscriptionPlans = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successPlanName, setSuccessPlanName] = useState('');
   const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState(null);
+  const [paymentMode, setPaymentMode] = useState('once'); // 'once' or 'autopay'
+  const [couponCode, setCouponCode] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
+
+  // Reset payment mode and coupon code states when checkout plan changes
+  useEffect(() => {
+    if (selectedPlanForCheckout) {
+      setPaymentMode('once');
+      setCouponCode('');
+    }
+  }, [selectedPlanForCheckout]);
 
   // Parse URL query parameters to auto-login if redirected from the mobile app
   useEffect(() => {
@@ -124,7 +140,7 @@ const PublicSubscriptionPlans = () => {
     fetchPlans();
   }, []);
 
-  const handleSubscribe = async (plan, isAutoPayMode) => {
+  const handleSubscribe = async (plan, isAutoPayMode, couponCode = '') => {
     const activeUserObj = getActiveUser();
     const activeToken = activeUserObj.token;
 
@@ -150,9 +166,11 @@ const PublicSubscriptionPlans = () => {
         );
       } else {
         // 1. Create one-time Order on backend
-        response = await axiosInstance.post(
-          `/subscriptions/create-order?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`
-        );
+        let url = `/subscriptions/create-order?planCode=${plan.planCode}&userId=${activeUserObj?.id || ''}`;
+        if (couponCode) {
+          url += `&couponCode=${encodeURIComponent(couponCode.trim())}`;
+        }
+        response = await axiosInstance.post(url);
       }
 
       const data = response.data;
@@ -261,16 +279,20 @@ const PublicSubscriptionPlans = () => {
   const handleSuccessClose = () => {
     setShowSuccessDialog(false);
 
-    // Log out the user from the browser session so they are not kept logged in on web
-    dispatch(logoutOwnerStaff());
+    if (isMobile) {
+      // Log out the user from the browser session so they are not kept logged in on web
+      dispatch(logoutOwnerStaff());
 
-    // Clear storage keys explicitly as well
-    localStorage.removeItem('ownerStaffToken');
-    localStorage.removeItem('ownerStaffUser');
-    localStorage.removeItem('activeSalonId');
+      // Clear storage keys explicitly as well
+      localStorage.removeItem('ownerStaffToken');
+      localStorage.removeItem('ownerStaffUser');
+      localStorage.removeItem('activeSalonId');
 
-    // Launch the deep link protocol back to the mobile app
-    window.location.href = "neoparlour://g98us9GoAaG";
+      // Launch the deep link protocol back to the mobile app
+      window.location.href = "neoparlour://g98us9GoAaG";
+    } else {
+      navigate('/owner/dashboard');
+    }
   };
 
   // Determine if both monthly and yearly plans exist in response to show/hide the billing toggle
@@ -526,55 +548,121 @@ const PublicSubscriptionPlans = () => {
             </p>
 
             {/* Options Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {/* Option 1: Pay Once */}
               <div
-                onClick={() => {
-                  const plan = selectedPlanForCheckout;
-                  setSelectedPlanForCheckout(null);
-                  handleSubscribe(plan, false);
-                }}
-                className="p-5 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-850 rounded-2xl transition cursor-pointer group flex flex-col justify-between h-40"
+                onClick={() => setPaymentMode('once')}
+                className={`p-5 rounded-2xl border transition cursor-pointer flex flex-col justify-between h-40 relative overflow-hidden ${
+                  paymentMode === 'once'
+                    ? 'border-[#ff0b01] bg-[#ff0b01]/10 shadow-[0_0_15px_rgba(255,11,1,0.05)]'
+                    : 'border-neutral-850 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-800/80'
+                }`}
               >
                 <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2 group-hover:text-emerald-400 transition-colors">
-                    Pay Once
-                  </h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className={`text-sm font-black uppercase tracking-wider transition-colors ${
+                      paymentMode === 'once' ? 'text-white' : 'text-gray-300'
+                    }`}>
+                      Pay Once
+                    </h3>
+                    {paymentMode === 'once' && (
+                      <span className="w-5 h-5 rounded-full bg-[#ff0b01] flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
                     Set up a single, non-recurring payment. Your active subscription access will end naturally after {selectedPlanForCheckout.durationMonths} months.
                   </p>
                 </div>
-                <div className="flex items-center justify-end text-xs font-bold text-gray-400 group-hover:text-white transition-colors">
-                  One-Time Pay &rarr;
+                <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+                  paymentMode === 'once' ? 'text-[#ff0b01]' : 'text-gray-500'
+                }`}>
+                  One-Time Payment
                 </div>
               </div>
 
               {/* Option 2: Auto-Pay */}
               <div
-                onClick={() => {
-                  const plan = selectedPlanForCheckout;
-                  setSelectedPlanForCheckout(null);
-                  handleSubscribe(plan, true);
-                }}
-                className="p-5 bg-[#ff0b01]/5 border border-[#ff0b01]/25 hover:border-[#ff0b01]/60 hover:bg-[#ff0b01]/10 rounded-2xl transition cursor-pointer group flex flex-col justify-between h-40"
+                onClick={() => setPaymentMode('autopay')}
+                className={`p-5 rounded-2xl border transition cursor-pointer flex flex-col justify-between h-40 relative overflow-hidden ${
+                  paymentMode === 'autopay'
+                    ? 'border-[#ff0b01] bg-[#ff0b01]/10 shadow-[0_0_15px_rgba(255,11,1,0.05)]'
+                    : 'border-neutral-850 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-800/80'
+                }`}
               >
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-black text-white uppercase tracking-wider group-hover:text-[#ff0b01] transition-colors">
-                      Auto-Pay
-                    </h3>
-                    <span className="text-[8px] bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                      Seamless
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-sm font-black uppercase tracking-wider transition-colors ${
+                        paymentMode === 'autopay' ? 'text-white' : 'text-gray-300'
+                      }`}>
+                        Auto-Pay
+                      </h3>
+                      <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                        Seamless
+                      </span>
+                    </div>
+                    {paymentMode === 'autopay' && (
+                      <span className="w-5 h-5 rounded-full bg-[#ff0b01] flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </span>
+                    )}
                   </div>
                   <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
                     Automate your renewals. Your payment method will be auto-debited at the end of each cycle. Cancel this mandate anytime from your settings.
                   </p>
                 </div>
-                <div className="flex items-center justify-end text-xs font-bold text-gray-300 group-hover:text-white transition-colors">
-                  Set Up Mandate &rarr;
+                <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+                  paymentMode === 'autopay' ? 'text-[#ff0b01]' : 'text-gray-500'
+                }`}>
+                  Recurring Mandate
                 </div>
               </div>
+            </div>
+
+            {/* Coupon Code Input (Only visible for Pay Once) */}
+            {paymentMode === 'once' && (
+              <div className="mb-6 space-y-2 animate-[fadeIn_0.2s_ease-out]">
+                <label className="text-[10px] text-gray-400 font-black uppercase tracking-wider block">
+                  Have a Coupon Code?
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                    <Tag className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="ENTER COUPON CODE"
+                    className="w-full pl-11 pr-4 py-3 bg-neutral-950/60 border border-neutral-800 focus:border-[#ff0b01] focus:ring-1 focus:ring-[#ff0b01]/30 rounded-2xl text-sm font-bold uppercase tracking-wider text-white placeholder-gray-600 outline-none transition"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-4 mb-6">
+              <button
+                onClick={() => {
+                  const plan = selectedPlanForCheckout;
+                  setSelectedPlanForCheckout(null);
+                  handleSubscribe(plan, paymentMode === 'autopay', couponCode);
+                }}
+                disabled={payingPlanCode !== null}
+                className="w-full py-4 bg-[#ff0b01] hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-[0.98]"
+              >
+                {paymentMode === 'autopay' ? (
+                  <>
+                    Set Up Auto-Pay Mandate <Zap className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    Proceed to Payment <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Cancel link */}
@@ -622,7 +710,7 @@ const PublicSubscriptionPlans = () => {
               onClick={handleSuccessClose}
               className="w-full py-4 bg-[#ff0b01] hover:bg-[#d80800] text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_10px_25px_rgba(255,11,1,0.2)] hover:shadow-[0_15px_35px_rgba(255,11,1,0.3)] active:scale-95 cursor-pointer"
             >
-              Return to
+              {isMobile ? 'Return to App' : 'Go to Dashboard'}
             </button>
           </div>
         </div>

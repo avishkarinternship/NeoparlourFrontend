@@ -52,6 +52,8 @@ const Appointments = () => {
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonType, setCancelReasonType] = useState('');
+  const [customCancelReason, setCustomCancelReason] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedStaffId, setSelectedStaffId] = useState(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
@@ -268,13 +270,18 @@ const Appointments = () => {
 
   const handleCancelClick = (appointment) => {
     setSelectedAppointment(appointment);
-    setCancelReason('');
+    setCancelReasonType('');
+    setCustomCancelReason('');
     setShowCancelModal(true);
   };
 
   const confirmCancel = async () => {
-    if (!cancelReason.trim()) {
-      toast.error('Please provide a cancellation reason.', {
+    const selectedReason = cancelReasonType === 'Other'
+      ? customCancelReason.trim()
+      : cancelReasonType;
+
+    if (!selectedReason) {
+      toast.error('Please select or specify a reason for cancellation.', {
         style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
       });
       return;
@@ -282,7 +289,7 @@ const Appointments = () => {
     try {
       await axiosInstance.put(
         `/appointments/${selectedAppointment.id}/cancel`,
-        cancelReason.trim(),
+        selectedReason,
         { headers: { 'Content-Type': 'text/plain' } }
       );
       setAppointments(prev => prev.filter(app => app.id !== selectedAppointment.id));
@@ -290,7 +297,8 @@ const Appointments = () => {
         style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
       });
       setShowCancelModal(false);
-      setCancelReason('');
+      setCancelReasonType('');
+      setCustomCancelReason('');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to cancel appointment', {
         style: { background: '#1a1a1a', color: '#fff', borderRadius: '14px' }
@@ -731,10 +739,11 @@ const Appointments = () => {
                     className="w-full px-6 py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all font-bold text-gray-800"
                   >
                     <option value="" disabled>Select a reason...</option>
-                    <option value="Rescheduled due to personal reason">Rescheduled due to personal reason</option>
-                    <option value="Change of plans">Change of plans</option>
-                    <option value="Work conflict / Late meeting">Work conflict / Late meeting</option>
-                    <option value="Health issues / Sick">Health issues / Sick</option>
+                    <option value="Running late / Stuck in traffic">Running late / Stuck in traffic</option>
+                    <option value="Work or school emergency">Work or school emergency</option>
+                    <option value="Personal / Family conflict">Personal / Family conflict</option>
+                    <option value="Weather / Commute issues">Weather / Commute issues</option>
+                    <option value="Found a more convenient time slot">Found a more convenient time slot</option>
                     <option value="Other">Other (Type custom reason)</option>
                   </select>
                 </div>
@@ -754,12 +763,14 @@ const Appointments = () => {
 
               <div className="mt-8 flex gap-4">
                 <button 
+                  type="button"
                   onClick={() => setShowRescheduleModal(false)}
                   className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
                 >
                   Cancel
                 </button>
                 <button 
+                  type="button"
                   onClick={confirmReschedule}
                   className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
                 >
@@ -781,22 +792,51 @@ const Appointments = () => {
               </div>
               
               <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Appointment</h3>
-              <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">Please provide a reason for cancelling this appointment. This action cannot be undone.</p>
-              <textarea 
-                value={cancelReason} 
-                onChange={(e) => setCancelReason(e.target.value)} 
-                placeholder="Reason for cancellation..." 
-                className="w-full border border-gray-200 rounded-xl p-3 h-24 resize-y text-xs mb-6 outline-none focus:border-[#ff0b01] transition-all font-medium" 
-              />
+              <p className="text-xs text-gray-400 font-medium leading-relaxed mb-4">Please select a reason for cancelling this appointment.</p>
+              
+              <div className="space-y-4 text-left">
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Cancellation Reason</label>
+                  <select
+                    value={cancelReasonType}
+                    onChange={(e) => setCancelReasonType(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#fafafa] border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#ff0b01] transition-all font-bold text-gray-800"
+                  >
+                    <option value="" disabled>Select a reason...</option>
+                    <option value="Change of plans / Schedule conflict">Change of plans / Schedule conflict</option>
+                    <option value="Booked by mistake / Duplicate booking">Booked by mistake / Duplicate booking</option>
+                    <option value="Unexpected personal emergency / Illness">Unexpected personal emergency / Illness</option>
+                    <option value="Running late / Traffic issues">Running late / Traffic issues</option>
+                    <option value="Wanted to change salon or service">Wanted to change salon or service</option>
+                    <option value="Preferred stylist is not available">Preferred stylist is not available</option>
+                    <option value="No longer needed / Change of mind">No longer needed / Change of mind</option>
+                    <option value="Other">Other (Type custom reason)</option>
+                  </select>
+                </div>
 
-              <div className="flex gap-4">
+                {cancelReasonType === 'Other' && (
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Custom Reason</label>
+                    <textarea 
+                      value={customCancelReason} 
+                      onChange={(e) => setCustomCancelReason(e.target.value)} 
+                      placeholder="Enter custom reason for cancellation..." 
+                      className="w-full border border-gray-200 rounded-xl p-3 h-24 resize-y text-xs mb-2 outline-none focus:border-[#ff0b01] transition-all font-medium bg-[#fafafa]" 
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4 mt-6">
                 <button 
+                  type="button"
                   onClick={() => setShowCancelModal(false)}
                   className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black tracking-widest uppercase rounded-xl transition-all"
                 >
                   No, Keep
                 </button>
                 <button 
+                  type="button"
                   onClick={confirmCancel}
                   className="flex-1 py-4 bg-[#ff0b01] hover:bg-red-700 text-white text-xs font-black tracking-widest uppercase rounded-xl transition-all shadow-lg shadow-[#ff0b01]/10"
                 >

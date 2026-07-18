@@ -228,7 +228,7 @@ export default function SalonsSEO() {
   ];
 
   const nearbyAreas = {
-    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park'],
+    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park', 'Bavdhan'],
     mumbai: ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Thane', 'Navi Mumbai'],
     bangalore: ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar'],
     chennai: ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram'],
@@ -279,11 +279,13 @@ export default function SalonsSEO() {
             
             {/* Nearby Areas */}
             {cityAreas.length > 0 && (
-              <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs space-y-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-red-500" /> Popular Areas
                 </h3>
-                <div className="flex flex-wrap lg:flex-col gap-2">
+                
+                {/* Scrollable Container */}
+                <div className="max-h-36 md:max-h-56 overflow-y-auto pr-1 flex flex-wrap lg:flex-col gap-2 content-start">
                   {cityAreas.map((a) => {
                     const isActive = area?.toLowerCase() === a.toLowerCase();
                     return (

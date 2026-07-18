@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MapPin, ChevronRight, Loader2 } from 'lucide-react';
@@ -23,6 +23,19 @@ export default function SEOFooter() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const sliderRef = useRef(null);
+
+  const handleSlide = (direction) => {
+    if (sliderRef.current) {
+      const scrollAmount = window.innerWidth * 0.8;
+      sliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Curated list of high-traffic, SEO-optimized main areas for all metropolitan cities (as fallbacks)
   const cityAreas = {
@@ -319,6 +332,15 @@ export default function SEOFooter() {
     fetchCityAreas(selectedCity, 0, false);
   }, [selectedCity]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -479,29 +501,35 @@ export default function SEOFooter() {
             <MapPin className="w-3.5 h-3.5 text-red-500" />
             Select Area in {selectedCity}
           </h3>
+
           {loadingAreas ? (
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <Loader2 className="w-4 h-4 animate-spin text-red-500" /> Loading available areas...
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {areas.map((area) => {
-                  const isActive = selectedArea === area;
-                  return (
-                    <button
-                      key={area}
-                      onClick={() => setSelectedArea(area)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200 ${
-                        isActive
-                          ? 'bg-zinc-800 text-red-400 border border-red-500/20'
-                          : 'bg-zinc-900/20 border border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
-                      }`}
-                    >
-                      {area}
-                    </button>
-                  );
-                })}
+              {/* Compact scrollable container to keep layout size small */}
+              <div className="max-h-36 md:max-h-48 overflow-y-auto pr-1 flex flex-wrap items-center gap-2 content-start border border-zinc-900/60 bg-zinc-950/20 p-3 rounded-2xl">
+                {areas.length === 0 ? (
+                  <span className="text-xs text-zinc-500 italic p-1">No areas available.</span>
+                ) : (
+                  areas.map((area) => {
+                    const isActive = selectedArea === area;
+                    return (
+                      <button
+                        key={area}
+                        onClick={() => setSelectedArea(area)}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                          isActive
+                            ? 'bg-zinc-800 text-red-400 border border-red-500/20 shadow-sm'
+                            : 'bg-zinc-900/20 border border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                        }`}
+                      >
+                        {area}
+                      </button>
+                    );
+                  })
+                )}
               </div>
 
               {hasMore && (
@@ -527,37 +555,96 @@ export default function SEOFooter() {
 
         {/* Categories & Service Links Farm */}
         <div className="pt-6 border-t border-zinc-900">
-          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-6">
-            Popular Services in {selectedArea}, {selectedCity}
-          </h3>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {serviceCategories.map((cat, index) => (
-              <div key={index} className="space-y-4">
-                <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-                  {cat.categoryName}
-                </h4>
-                <ul className="space-y-2">
-                  {cat.services.map((service, sIdx) => (
-                    <li key={sIdx}>
-                      <a
-                        href={`/seo-salons/${encodeURIComponent(
-                          selectedCity
-                        )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
-                          service
-                        )}`}
-                        onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
-                        className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
-                      >
-                        <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
-                        {service} in {selectedArea}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xs font-black text-white uppercase tracking-widest">
+              Popular Services in {selectedArea}, {selectedCity}
+            </h3>
+            {/* Sliding Arrows for Mobile Screens */}
+            {isMobile && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleSlide('left')}
+                  className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                  aria-label="Slide Left"
+                >
+                  <ChevronRight className="w-4 h-4 transform rotate-180" />
+                </button>
+                <button
+                  onClick={() => handleSlide('right')}
+                  className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                  aria-label="Slide Right"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-            ))}
+            )}
           </div>
+          
+          {isMobile ? (
+            /* Mobile Horizontal Slider Row */
+            <div 
+              ref={sliderRef} 
+              className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none gap-5 pb-4 w-full"
+            >
+              {serviceCategories.map((cat, index) => (
+                <div 
+                  key={index} 
+                  className="w-[78vw] shrink-0 snap-start bg-zinc-900/20 border border-zinc-900/65 p-6 rounded-3xl space-y-4"
+                >
+                  <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+                    {cat.categoryName}
+                  </h4>
+                  <ul className="space-y-2">
+                    {cat.services.map((service, sIdx) => (
+                      <li key={sIdx}>
+                        <a
+                          href={`/seo-salons/${encodeURIComponent(
+                            selectedCity
+                          )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
+                            service
+                          )}`}
+                          onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
+                          className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
+                        >
+                          <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
+                          {service} in {selectedArea}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Desktop / Tablet Grid View */
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {serviceCategories.map((cat, index) => (
+                <div key={index} className="space-y-4">
+                  <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
+                    {cat.categoryName}
+                  </h4>
+                  <ul className="space-y-2">
+                    {cat.services.map((service, sIdx) => (
+                      <li key={sIdx}>
+                        <a
+                          href={`/seo-salons/${encodeURIComponent(
+                            selectedCity
+                          )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
+                            service
+                          )}`}
+                          onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
+                          className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
+                        >
+                          <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
+                          {service} in {selectedArea}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Copyright */}
