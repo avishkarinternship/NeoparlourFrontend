@@ -29,9 +29,10 @@ export default function SEOFooter() {
 
   const handleSlide = (direction) => {
     if (sliderRef.current) {
-      const scrollAmount = window.innerWidth * 0.8;
+      const clientWidth = sliderRef.current.clientWidth;
+      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85;
       sliderRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        left: scrollAmount,
         behavior: 'smooth'
       });
     }
@@ -555,96 +556,64 @@ export default function SEOFooter() {
 
         {/* Categories & Service Links Farm */}
         <div className="pt-6 border-t border-zinc-900">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xs font-black text-white uppercase tracking-widest">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-900/60">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
               Popular Services in {selectedArea}, {selectedCity}
             </h3>
-            {/* Sliding Arrows for Mobile Screens */}
-            {isMobile && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleSlide('left')}
-                  className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl active:scale-95 transition-all cursor-pointer flex items-center justify-center"
-                  aria-label="Slide Left"
-                >
-                  <ChevronRight className="w-4 h-4 transform rotate-180" />
-                </button>
-                <button
-                  onClick={() => handleSlide('right')}
-                  className="p-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl active:scale-95 transition-all cursor-pointer flex items-center justify-center"
-                  aria-label="Slide Right"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            {/* Sliding Navigation Buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => handleSlide('left')}
+                className="p-3 bg-zinc-950/80 border border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg"
+                aria-label="Slide Left"
+              >
+                <ChevronRight className="w-4 h-4 transform rotate-180" />
+              </button>
+              <button
+                onClick={() => handleSlide('right')}
+                className="p-3 bg-zinc-950/80 border border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg"
+                aria-label="Slide Right"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           
-          {isMobile ? (
-            /* Mobile Horizontal Slider Row */
-            <div 
-              ref={sliderRef} 
-              className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none gap-5 pb-4 w-full"
-            >
-              {serviceCategories.map((cat, index) => (
-                <div 
-                  key={index} 
-                  className="w-[78vw] shrink-0 snap-start bg-zinc-900/20 border border-zinc-900/65 p-6 rounded-3xl space-y-4"
-                >
-                  <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-                    {cat.categoryName}
-                  </h4>
-                  <ul className="space-y-2">
-                    {cat.services.map((service, sIdx) => (
-                      <li key={sIdx}>
-                        <a
-                          href={`/seo-salons/${encodeURIComponent(
-                            selectedCity
-                          )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
-                            service
-                          )}`}
-                          onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
-                          className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
-                        >
-                          <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
-                          {service} in {selectedArea}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Desktop / Tablet Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {serviceCategories.map((cat, index) => (
-                <div key={index} className="space-y-4">
-                  <h4 className="text-xs font-black text-white uppercase tracking-widest border-l-2 border-red-500 pl-2">
-                    {cat.categoryName}
-                  </h4>
-                  <ul className="space-y-2">
-                    {cat.services.map((service, sIdx) => (
-                      <li key={sIdx}>
-                        <a
-                          href={`/seo-salons/${encodeURIComponent(
-                            selectedCity
-                          )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
-                            service
-                          )}`}
-                          onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
-                          className="text-zinc-500 hover:text-red-500 transition-colors text-xs font-semibold flex items-center group"
-                        >
-                          <ChevronRight className="w-3 h-3 text-red-500/0 group-hover:text-red-500/100 transition-all duration-200 -ml-1 group-hover:ml-0 mr-1" />
-                          {service} in {selectedArea}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Responsive Horizontal Slider Container */}
+          <div 
+            ref={sliderRef} 
+            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none gap-6 pb-6 w-full"
+          >
+            {serviceCategories.map((cat, index) => (
+              <div 
+                key={index} 
+                className="w-[78vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] shrink-0 snap-start bg-zinc-900/10 border border-zinc-900/60 hover:border-zinc-800 p-8 rounded-[28px] space-y-5 transition-all duration-300 hover:bg-zinc-900/25"
+              >
+                <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] border-l-[3px] border-red-600 pl-3">
+                  {cat.categoryName}
+                </h4>
+                <ul className="space-y-3">
+                  {cat.services.map((service, sIdx) => (
+                    <li key={sIdx}>
+                      <a
+                        href={`/seo-salons/${encodeURIComponent(
+                          selectedCity
+                        )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
+                          service
+                        )}`}
+                        onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors duration-200 text-xs font-semibold flex items-center group py-0.5"
+                      >
+                        <ChevronRight className="w-3 h-3 text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 -ml-2 group-hover:ml-0 mr-1.5 shrink-0" />
+                        {service} in {selectedArea}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Copyright */}
