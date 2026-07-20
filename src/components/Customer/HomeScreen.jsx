@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useDarkMode } from '../../context/DarkModeContext';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -38,8 +39,10 @@ import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_i
 import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
 
 // Newly Added Main Screen Background & Graphic Assets
-import blowDryerComb from '../../assets/Customer/HomeScreen/MainScreen/blow_dryer_comb.png';
-import sprayScissors from '../../assets/Customer/HomeScreen/MainScreen/spray_scissors.png';
+import blowDryer from '../../assets/Customer/HomeScreen/MainScreen/blow_dryer.png';
+import combImg from '../../assets/Customer/HomeScreen/MainScreen/comb.png';
+import sprayImg from '../../assets/Customer/HomeScreen/MainScreen/spray.png';
+import scissorsImg from '../../assets/Customer/HomeScreen/MainScreen/scissors.png';
 import exploreMoreIcon from '../../assets/Customer/HomeScreen/MainScreen/explore_more.svg';
 
 // 3. New Services Images Imports
@@ -113,6 +116,7 @@ const recommendedSalons = [
 ];
 
 const HomeScreen = () => {
+    const { isDark } = useDarkMode();
     const dispatch = useDispatch();
     const isUserTypingCityRef = useRef(false);
     const isUserTypingAreaRef = useRef(false);
@@ -250,7 +254,7 @@ const HomeScreen = () => {
                         localStorage.setItem('customerCity', result.city);
                         localStorage.setItem('customerArea', result.area || '');
                         setIsLocationChanged(false);
-                        
+
                         // Immediately dispatch salon search
                         dispatch(
                             searchSalonsByLocation({
@@ -433,13 +437,13 @@ const HomeScreen = () => {
             ...prev,
             category: service.name
         }));
-        
+
         const city = searchData.cityName || localStorage.getItem('customerCity');
         if (!city) {
             toast.error("Please select a city first to explore salons!");
             return;
         }
-        
+
         handleLocationSearch(service.name);
     };
 
@@ -504,7 +508,7 @@ const HomeScreen = () => {
         const salonName = salon.salonName || salon.name || 'Selected Salon';
         localStorage.setItem('activeSalonId', salonId);
         localStorage.setItem('activeSalonName', salonName);
-        
+
         const hasCategory = !!searchData.category;
         const targetPath = hasCategory ? '/customer/book-service' : '/customer/salon';
         const navState = hasCategory ? { state: { selectedCategory: searchData.category } } : undefined;
@@ -694,36 +698,58 @@ const HomeScreen = () => {
     // Drawer and profile view states removed since shared Navbar handles them internally.
 
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden">
+        <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
 
             {/* 2. HERO SECTION - WITH DECORATIVE CORNER IMAGES AND GREY BACKGROUND */}
             <section className="relative min-h-[540px] w-full flex flex-col items-center justify-center py-20 px-6 text-center overflow-visible bg-[#f4f4f4]">
                 {/* Absolute Wrapper to clip the decorative corner images to the grey region */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
-                    {/* Left side decorative image container - slides left to right */}
-                    <div className="absolute left-0 top-[45%] -translate-y-1/2 h-[60%] sm:h-[70%] md:h-[75%] pointer-events-none hidden md:block">
+                    {/* Left side: Blow Dryer (Top Left) */}
+                    <div className="absolute left-0 top-[8%] h-[32%] sm:h-[36%] md:h-[40%] pointer-events-none hidden md:block">
                         <img
-                            src={blowDryerComb}
-                            alt="Blow dryer and comb"
+                            src={blowDryer}
+                            alt="Blow dryer"
                             data-aos="fade-right"
                             data-aos-duration="1200"
                             className="h-full w-auto object-contain pointer-events-none"
                         />
                     </div>
 
-                    {/* Right side decorative image container - slides right to left */}
-                    <div className="absolute right-0 top-[45%] -translate-y-1/2 h-[60%] sm:h-[70%] md:h-[75%] pointer-events-none hidden md:block">
+                    {/* Left side: Comb (Bottom Left) */}
+                    <div className="absolute left-0 bottom-[8%] h-[24%] sm:h-[28%] md:h-[32%] pointer-events-none hidden md:block">
                         <img
-                            src={sprayScissors}
-                            alt="Spray and scissors"
+                            src={combImg}
+                            alt="Comb"
+                            data-aos="fade-right"
+                            data-aos-duration="1500"
+                            className="h-full w-auto object-contain pointer-events-none"
+                        />
+                    </div>
+
+                    {/* Right side: Spray (Top Right) */}
+                    <div className="absolute right-0 top-[8%] h-[32%] sm:h-[36%] md:h-[40%] pointer-events-none hidden md:block">
+                        <img
+                            src={sprayImg}
+                            alt="Spray"
                             data-aos="fade-left"
                             data-aos-duration="1200"
                             className="h-full w-auto object-contain pointer-events-none"
                         />
                     </div>
+
+                    {/* Right side: Scissors (Bottom Right) */}
+                    <div className="absolute right-0 bottom-[8%] h-[24%] sm:h-[28%] md:h-[32%] pointer-events-none hidden md:block">
+                        <img
+                            src={scissorsImg}
+                            alt="Scissors"
+                            data-aos="fade-left"
+                            data-aos-duration="1500"
+                            className="h-full w-auto object-contain pointer-events-none"
+                        />
+                    </div>
                 </div>
 
-                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6" data-aos="fade-up">
+                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
                     <div className="text-gray-900 text-sm md:text-base font-black uppercase tracking-wider mb-4">
                         List your salon free
                     </div>
@@ -761,9 +787,8 @@ const HomeScreen = () => {
                                     type="button"
                                     onClick={handleDetectLocation}
                                     disabled={isDetectingLocation}
-                                    className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${
-                                        isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
-                                    }`}
+                                    className={`p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex-shrink-0 relative ${isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
+                                        }`}
                                     title="Detect Current Location"
                                 >
                                     {isDetectingLocation ? (
@@ -938,7 +963,7 @@ const HomeScreen = () => {
                     </div>
                 </div>
 
-                <div 
+                <div
                     onClick={handleExploreMore}
                     className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-20 cursor-pointer hover:scale-105 transition-transform duration-200 select-none"
                 >
@@ -953,7 +978,7 @@ const HomeScreen = () => {
                         {/* Decorative elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
                         <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[#ff0b01]/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/4" />
-                        
+
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
                             <div className="flex-1 text-center md:text-left">
                                 <div className="inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/20 text-amber-400 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest mb-3">
@@ -1016,13 +1041,13 @@ const HomeScreen = () => {
                         <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Premium Salons Nearby</h3>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
-                            {isLocationChanged 
-                                ? "Showing salons according to your typed city and area name" 
+                            {isLocationChanged
+                                ? "Showing salons according to your typed city and area name"
                                 : "Showing salons of your current location"
                             }
                         </p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => navigate('/customer/salons')}
                         className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
                     >
@@ -1045,8 +1070,8 @@ const HomeScreen = () => {
                         ))
                     ) : (
                         recommendedList.slice(0, 8).map((salon, idx) => (
-                            <div 
-                                key={idx} 
+                            <div
+                                key={idx}
                                 onClick={() => handleRecommendedCardClick(salon)}
                                 className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
                             >
@@ -1063,7 +1088,7 @@ const HomeScreen = () => {
                                         {salon.rating != null ? `⭐ ${parseFloat(salon.rating).toFixed(1)}` : '⭐ NEW'}
                                     </div>
                                 </div>
-                                <div className="p-4 bg-white">
+                                <div className={`p-4 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
                                     <h4 className="font-bold text-gray-800 uppercase tracking-tight">{salon.name}</h4>
                                     <p className="text-xs text-gray-500">{salon.location}</p>
                                 </div>
@@ -1083,8 +1108,8 @@ const HomeScreen = () => {
                 <h3 className="text-2xl font-bold mb-4">Services</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {servicesData.map((service) => (
-                        <div 
-                            key={service.name} 
+                        <div
+                            key={service.name}
                             onClick={() => handleServiceCardClick(service)}
                             className="relative h-64 rounded-2xl overflow-hidden group bg-gray-100 cursor-pointer"
                         >
@@ -1097,13 +1122,13 @@ const HomeScreen = () => {
             </section>
 
             {/* 6. GROWTH SECTIONS */}
-            <section className="py-20 bg-[#F9FAFB]">
+            <section className={`py-20 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-[#F9FAFB]'}`}>
                 <div className="max-w-7xl mx-auto px-6 space-y-28">
                     {/* Feature 1 - Manage Inventory & Staff */}
                     <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Left Container for Staff & Dashboard Composite Image */}
                         <div className="flex-1 w-full" data-aos="fade-right">
-                            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+                            <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={manageInventoryImg}
                                     alt="Manage Inventory & Staff"
@@ -1166,7 +1191,7 @@ const HomeScreen = () => {
                     <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Right Container for Image */}
                         <div className="flex-1 w-full" data-aos="fade-left">
-                            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+                            <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={easyAppointmentImg}
                                     alt="Easy Appointments"
@@ -1228,7 +1253,7 @@ const HomeScreen = () => {
                     <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Left Container for Product Dashboard Image */}
                         <div className="flex-1 w-full" data-aos="fade-right">
-                            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+                            <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={leadMagnetImg}
                                     alt="NeoParlour Lead Magnet"
@@ -1292,7 +1317,7 @@ const HomeScreen = () => {
                         <div className="flex-1 w-full" data-aos="fade-left">
                             <div className="relative">
                                 {/* Compare Slider */}
-                                <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white h-[320px] md:h-[420px]">
+                                <div className={`rounded-2xl overflow-hidden shadow-lg border h-[320px] md:h-[420px] ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                     <ReactCompareSlider
                                         itemOne={
                                             <ReactCompareSliderImage

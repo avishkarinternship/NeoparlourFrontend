@@ -28,3 +28,144 @@ body {
   filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%) drop-shadow(0 0 3px rgba(255, 11, 1, 0.3));
   opacity: 0.9;
 }
+
+/* ─── Global Dark Mode Overrides ─────────────────────────────────────────── */
+/* Applied when the root layout wrapper has bg-black (dark mode active).      */
+/* Red brand colours (#FF0B01, #EF3E23, red-*) are intentionally kept as-is.  */
+
+.dark-mode,
+.dark-mode * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Force all non-branded text that was black/dark to become white */
+.dark-mode p,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+.dark-mode span:not([class*="bg-red"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-transparent"]),
+.dark-mode label,
+.dark-mode li,
+.dark-mode td,
+.dark-mode th,
+.dark-mode a:not([class*="text-red"]):not([class*="text-orange"]) {
+  color: inherit;
+}
+
+/* Card / surface backgrounds */
+.dark-mode .bg-white {
+  background-color: #111111 !important;
+}
+
+.dark-mode .bg-gray-50 {
+  background-color: #1a1a1a !important;
+}
+
+.dark-mode .bg-gray-100 {
+  background-color: #222222 !important;
+}
+
+.dark-mode .bg-gray-200 {
+  background-color: #2a2a2a !important;
+}
+
+/* Text colour overrides for Tailwind grey classes */
+.dark-mode .text-gray-900,
+.dark-mode .text-gray-800,
+.dark-mode .text-gray-700 {
+  color: #f3f4f6 !important;
+}
+
+.dark-mode .text-gray-600,
+.dark-mode .text-gray-500 {
+  color: #d1d5db !important;
+}
+
+.dark-mode .text-gray-400,
+.dark-mode .text-gray-300 {
+  color: #9ca3af !important;
+}
+
+/* Black explicit text */
+.dark-mode .text-black {
+  color: #ffffff !important;
+}
+
+/* Border colours */
+.dark-mode .border-gray-200,
+.dark-mode .border-gray-300 {
+  border-color: #374151 !important;
+}
+
+.dark-mode .border-gray-100 {
+  border-color: #1f2937 !important;
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  color: #f3f4f6 !important;
+  border-color: #374151 !important;
+}
+
+.dark-mode input:not([class*="bg-transparent"]),
+.dark-mode textarea:not([class*="bg-transparent"]),
+.dark-mode select:not([class*="bg-transparent"]) {
+  background-color: #1a1a1a !important;
+}
+
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Dividers */
+.dark-mode hr {
+  border-color: #374151 !important;
+}
+
+/* Slate colours used in cards */
+.dark-mode .bg-slate-50 {
+  background-color: #1e1e1e !important;
+}
+
+.dark-mode .bg-slate-100 {
+  background-color: #272727 !important;
+}
+
+.dark-mode .text-slate-900,
+.dark-mode .text-slate-800,
+.dark-mode .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark-mode .text-slate-600,
+.dark-mode .text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+/* Custom hex backgrounds used in HomeScreen sections */
+.dark-mode [class*="bg-[#F9FAFB]"],
+.dark-mode [class*="bg-[#f4f4f4]"],
+.dark-mode [class*="bg-[#EAEAEA]"] {
+  background-color: #0d0d0d !important;
+}
+
+/* Floating AI chip labels use bg-white/95 — override in dark mode */
+.dark-mode [class*="bg-white/"] {
+  background-color: rgba(30, 30, 30, 0.95) !important;
+}
+
+/* bg-gray-950 explicit declaration for browsers that don't resolve it */
+.dark-mode .bg-gray-950 {
+  background-color: #030712 !important;
+}
+
+/* Salon cards info bar (hardcoded bg-white inside card) */
+.dark-mode .dark-mode-card-bar {
+  background-color: #1a1a1a !important;
+}

@@ -8,9 +8,9 @@ import PasswordResetModal from '../PasswordResetModal';
 import logoIcon from '../../../assets/Neoparlour_logo.png'; 
 import signupIcon from '../../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../../assets/Customer/Navbar/login_icon.svg';
-import offersIcon from '../../../assets/Customer/Navbar/offers_icon.svg';
-import { Sparkles, MousePointerClick, User, ShoppingCart } from 'lucide-react';
+import { Sparkles, MousePointerClick, User, ShoppingCart, Sun, Moon } from 'lucide-react';
 import { fetchCart } from '../../../redux/slices/cartSlice';
+import { useDarkMode } from '../../../context/DarkModeContext';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -21,6 +21,7 @@ const Navbar = () => {
     const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
     const dispatch = useDispatch();
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
+    const { isDark, toggleDark } = useDarkMode();
 
     const isIncomplete = (name) => {
         const t = (name || '').trim();
@@ -91,24 +92,24 @@ const Navbar = () => {
         return `pb-1 transition-colors ${
             isActive
                 ? 'text-orange-500 border-b-2 border-orange-500'
-                : 'hover:text-gray-900'
+                : isDark ? 'text-gray-300 hover:text-white' : 'hover:text-gray-900'
         }`;
     };
 
     return (
         <>
-            <nav className={`flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans transition-all duration-500 ease-out transform ${
+            <nav className={`flex items-center justify-between px-6 md:px-12 py-4 border-b sticky top-0 z-50 font-sans transition-all duration-500 ease-out transform ${
                 mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
-            }`}>
+            } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'}`}>
                 
                 {/* Logo Section */}
                 <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
                     <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
-                    <span className="text-base sm:text-xl font-black tracking-tight text-gray-900 max-[360px]:hidden">NeoParlour</span>
+                    <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
                 </div>
 
                 {/* Desktop Navigation Links */}
-                <div className="hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider text-gray-600">
+                <div className={`hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
@@ -119,6 +120,28 @@ const Navbar = () => {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+
+                    {/* Dark Mode Toggle */}
+                    <button
+                        onClick={toggleDark}
+                        title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        className={`relative w-14 h-7 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
+                            isDark ? 'bg-gray-700' : 'bg-gray-200'
+                        }`}
+                        aria-label="Toggle dark mode"
+                    >
+                        <span className={`absolute left-1 transition-all duration-300 flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
+                            isDark
+                                ? 'translate-x-7 bg-yellow-400'
+                                : 'translate-x-0 bg-white'
+                        }`}>
+                            {isDark
+                                ? <Sun className="w-3 h-3 text-yellow-800" />
+                                : <Moon className="w-3 h-3 text-gray-500" />
+                            }
+                        </span>
+                    </button>
+
                     {isAuthenticated && (user || profile) ? (
                         <div className="flex items-center gap-2 sm:gap-3">
                             {!isCompleted ? (
@@ -155,7 +178,7 @@ const Navbar = () => {
                                         </svg>
 
                                         {/* Avatar inside */}
-                                        <div className="w-8 h-8 rounded-full bg-slate-100 text-[#FF0B01] flex items-center justify-center shadow-sm relative z-10">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm relative z-10 ${isDark ? 'bg-gray-700' : 'bg-slate-100'} text-[#FF0B01]`}>
                                             <User className="w-4.5 h-4.5 text-[#FF0B01]" />
                                         </div>
                                     </button>
@@ -177,14 +200,14 @@ const Navbar = () => {
                             ) : (
                                 <button 
                                     onClick={() => setIsProfileOpen(true)} 
-                                    className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 bg-red-50/50 hover:bg-red-50 text-gray-900 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans"
+                                    className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 hover:bg-red-50 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans ${isDark ? 'bg-gray-800 text-white' : 'bg-red-50/50 text-gray-900'}`}
                                 >
                                     {/* Circular Logo/Avatar */}
                                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
                                         <User className="w-4 h-4 text-white" />
                                     </div>
                                     {/* User Name */}
-                                    <span className="text-xs font-black text-gray-800 tracking-tight hidden sm:inline">
+                                    <span className={`text-xs font-black tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-gray-800'}`}>
                                         {displayName}
                                     </span>
                                 </button>
@@ -193,7 +216,7 @@ const Navbar = () => {
                     ) : (
                         <>
                             {/* Signup Button */}
-                            <button onClick={() => navigate('/register')} className="px-1.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold border border-gray-300 rounded-lg flex items-center gap-1 hover:bg-gray-50 transition text-gray-500">
+                            <button onClick={() => navigate('/register')} className={`px-1.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold border rounded-lg flex items-center gap-1 transition ${isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
                                 <img src={signupIcon} alt="Signup" className="w-4.5 h-4.5 sm:w-5 sm:h-5 object-contain" />
                                 <span className="hidden sm:inline">SIGNUP</span>
                             </button>
@@ -210,7 +233,7 @@ const Navbar = () => {
                     {isAuthenticated && (
                         <button
                             onClick={() => navigate('/customer/cart')}
-                            className="p-1.5 sm:p-2 text-gray-500 hover:text-[#FF0B01] hover:bg-gray-100 rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0"
+                            className={`p-1.5 sm:p-2 hover:text-[#FF0B01] rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}
                             title="Shopping Cart"
                         >
                             <ShoppingCart className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
@@ -225,7 +248,7 @@ const Navbar = () => {
                     {/* Hamburger Menu Icon - Opens the slider directly on screen */}
                     <button 
                         onClick={() => setIsDrawerOpen(true)} 
-                        className="p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition ml-0.5 sm:ml-1" 
+                        className={`p-1.5 sm:p-2 rounded-lg transition ml-0.5 sm:ml-1 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-400 hover:bg-gray-100'}`}
                         title="Menu"
                     >
                         <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
