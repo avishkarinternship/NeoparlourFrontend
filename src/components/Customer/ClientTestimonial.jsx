@@ -156,7 +156,7 @@ export default function ClientTestimonial() {
       {/* ========================================================
           1. CLIENT TESTIMONIALS SECTION
          ======================================================== */}
-      <section className="max-w-7xl mx-auto px-4 py-16 text-center">
+      <section className="max-w-7xl mx-auto px-4 py-16 text-center" data-aos="fade-up">
         <span className="text-xs font-bold tracking-widest text-red-500 uppercase block mb-2">
           - Client Testimonials -
         </span>
@@ -175,30 +175,30 @@ export default function ClientTestimonial() {
             {testimonials.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between text-left h-[26rem] w-[20rem] mx-4 shrink-0 cursor-pointer"
+                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between text-left h-[16rem] sm:h-[26rem] w-[42vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 cursor-pointer"
               >
                 {/* Dynamic Branding Card Header */}
-                <div className={`h-28 flex flex-col items-center justify-center text-center p-6 ${getHeaderStyle(item.bgType)}`}>
-                  <div className="font-serif font-bold text-sm tracking-widest leading-none">
+                <div className={`h-16 sm:h-28 flex flex-col items-center justify-center text-center p-3 sm:p-6 ${getHeaderStyle(item.bgType)}`}>
+                  <div className="font-serif font-bold text-[10px] sm:text-sm tracking-widest leading-none">
                     {item.logoText}
                   </div>
-                  <div className="text-[8px] uppercase tracking-[0.2em] mt-1.5 opacity-80">
+                  <div className="text-[6px] sm:text-[8px] uppercase tracking-[0.2em] mt-1 sm:mt-1.5 opacity-80">
                     {item.logoSub}
                   </div>
                 </div>
 
                 {/* Card Body and Text */}
-                <div className="p-5 flex-grow flex flex-col justify-between">
-                  <p className="text-[11px] md:text-xs text-gray-600 leading-relaxed font-normal mb-6">
+                <div className="p-3 sm:p-5 flex-grow flex flex-col justify-between min-h-0">
+                  <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-600 leading-normal sm:leading-relaxed font-normal mb-2 sm:mb-6 line-clamp-4 sm:line-clamp-none overflow-hidden">
                     {item.quote}
                   </p>
 
                   {/* Author Info block right aligned */}
                   <div className="text-right mt-auto">
-                    <h4 className="font-bold text-xs text-gray-900 tracking-wide">
+                    <h4 className="font-bold text-[9px] sm:text-xs text-gray-900 tracking-wide">
                       {item.author}
                     </h4>
-                    <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">
+                    <p className="text-[7px] sm:text-[10px] text-gray-400 font-medium tracking-wider uppercase">
                       {item.role}
                     </p>
                   </div>
@@ -212,7 +212,7 @@ export default function ClientTestimonial() {
       {/* ========================================================
           2. DOWNLOAD MOBILE APP CTA SECTION
          ======================================================== */}
-      <section className="w-full bg-gradient-to-b from-[#fff5f5] to-[#fcf1f1] pt-16 lg:pt-24 border-t border-red-50/50 relative overflow-hidden">
+      <section className="w-full bg-gradient-to-b from-[#fff5f5] to-[#fcf1f1] pt-16 lg:pt-24 border-t border-red-50/50 relative overflow-hidden" data-aos="fade-up">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* Action Links & Texts */}

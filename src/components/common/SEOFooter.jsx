@@ -24,6 +24,7 @@ export default function SEOFooter() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showAllCitiesMobile, setShowAllCitiesMobile] = useState(false);
 
   const sliderRef = useRef(null);
 
@@ -477,7 +478,7 @@ export default function SEOFooter() {
         <div className="space-y-4">
           <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Select City</h3>
           <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-zinc-900">
-            {cities.map((city) => {
+            {(isMobile && !showAllCitiesMobile ? cities.slice(0, 8) : cities).map((city) => {
               const isActive = selectedCity === city;
               return (
                 <button
@@ -493,6 +494,15 @@ export default function SEOFooter() {
                 </button>
               );
             })}
+            {isMobile && cities.length > 8 && (
+              <button
+                type="button"
+                onClick={() => setShowAllCitiesMobile(!showAllCitiesMobile)}
+                className="text-xs font-black uppercase text-red-500 hover:text-red-400 tracking-widest px-4 py-2 border border-dashed border-red-500/30 rounded-xl bg-red-500/5 hover:bg-red-500/10 transition-all duration-200"
+              >
+                {showAllCitiesMobile ? 'Show Less' : 'Load More'}
+              </button>
+            )}
           </div>
         </div>
 

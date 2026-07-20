@@ -72,6 +72,11 @@ const Navbar = () => {
         }
     }, [isAuthenticated, user, profile, dispatch]);
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const { cart } = useSelector((state) => state.cart);
     const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
@@ -92,7 +97,9 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className="flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans">
+            <nav className={`flex items-center justify-between px-6 md:px-12 py-4 bg-white border-b sticky top-0 z-50 font-sans transition-all duration-500 ease-out transform ${
+                mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+            }`}>
                 
                 {/* Logo Section */}
                 <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">

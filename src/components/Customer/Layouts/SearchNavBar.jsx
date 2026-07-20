@@ -9,6 +9,10 @@ import ProfilePopup from '../ProfilePopup';
 import PasswordResetModal from '../PasswordResetModal';
 
 const SearchNavBar = () => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+      setMounted(true);
+  }, []);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
@@ -76,7 +80,9 @@ const SearchNavBar = () => {
   }, [isAuthenticated, dispatch]);
 
   return (
-    <header className="w-full border-b border-[#E8E8E8] px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between bg-white sticky top-0 z-50 shadow-sm font-sans">
+    <header className={`w-full border-b border-[#E8E8E8] px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between bg-white sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
+        mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+    }`}>
       {/* Brand Vector Identity Block */}
       <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/customer/home')}>
         <div className="text-[#EF3E23] flex items-center justify-center flex-shrink-0">

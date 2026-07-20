@@ -180,6 +180,9 @@ const SalonPage = () => {
     const [offers, setOffers] = useState([]);
     const [offersLoading, setOffersLoading] = useState(false);
     const [homeServiceCharges, setHomeServiceCharges] = useState(0);
+    const [packages, setPackages] = useState([]);
+    const [packagesLoaded, setPackagesLoaded] = useState(false);
+    const [packagesLoading, setPackagesLoading] = useState(false);
 
     // Refs for scrolling lazy-load
     const servicesSectionRef = useRef(null);
@@ -469,10 +472,60 @@ const SalonPage = () => {
             }
         };
 
+        const fetchServices = async () => {
+            try {
+                const categoriesRes = await axiosInstance.get('/services/public/categories', {
+                    params: { salonId: resolvedSalonId }
+                });
+                setCategories(categoriesRes.data || []);
+                setServicesLoaded(true);
+            } catch (error) {
+                console.error("Error fetching services categories dynamically:", error);
+            }
+        };
+
+        const fetchProducts = async () => {
+            try {
+                const productsRes = await axiosInstance.get('/products/public/filter', {
+                    params: { active: true, size: 4, salonId: resolvedSalonId }
+                });
+                const productData = productsRes.data?.content || productsRes.data || [];
+                setProducts(productData.slice(0, 4));
+                setProductsLoaded(true);
+            } catch (error) {
+                console.error("Error fetching products dynamically:", error);
+            }
+        };
+
+        const fetchPackages = async () => {
+            setPackagesLoading(true);
+            try {
+                const res = await axiosInstance.get('/packages/search', {
+                    params: {
+                        active: true,
+                        salonId: resolvedSalonId,
+                        page: 0,
+                        size: 10
+                    }
+                });
+                setPackages(res.data?.content || []);
+                setPackagesLoaded(true);
+            } catch (error) {
+                console.error("Error fetching packages dynamically:", error);
+            } finally {
+                setPackagesLoading(false);
+            }
+        };
+
         fetchSalonDetails();
         fetchActiveOffers();
         checkFavStatus();
         fetchHomeServiceCharges();
+        fetchServices();
+        fetchProducts();
+        if (isAuthenticated) {
+            fetchPackages();
+        }
     }, [resolvedSalonId, navigate, isAuthenticated]);
 
 
@@ -576,21 +629,6 @@ const SalonPage = () => {
         });
     };
 
-    // Lazy load Services Categories
-    const fetchServices = async () => {
-        if (servicesLoaded) return;
-        try {
-            console.log("[SalonPage] Scroll down triggered: Fetching categories from API...");
-            const categoriesRes = await axiosInstance.get('/services/public/categories', {
-                params: { salonId: resolvedSalonId }
-            });
-            setCategories(categoriesRes.data || []);
-            setServicesLoaded(true);
-        } catch (error) {
-            console.error("Error fetching services categories dynamically:", error);
-        }
-    };
-
     // Lazy load Staff — fetch top 3 by rating via /staff/public/search
     const fetchStaff = async () => {
         if (staffLoaded) return;
@@ -607,22 +645,6 @@ const SalonPage = () => {
         }
     };
 
-    // Lazy load Products
-    const fetchProducts = async () => {
-        if (productsLoaded) return;
-        try {
-            console.log("[SalonPage] Scroll down triggered: Fetching products list from API...");
-            const productsRes = await axiosInstance.get('/products/public/filter', {
-                params: { active: true, size: 4, salonId: resolvedSalonId }
-            });
-            const productData = productsRes.data?.content || productsRes.data || [];
-            setProducts(productData.slice(0, 4));
-            setProductsLoaded(true);
-        } catch (error) {
-            console.error("Error fetching products dynamically:", error);
-        }
-    };
-
     // Setup IntersectionObservers for lazy loading
     useEffect(() => {
         if (loading) return; // Wait until initial salon details are ready
@@ -633,13 +655,6 @@ const SalonPage = () => {
             threshold: 0.05
         };
 
-        const servicesObserver = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                fetchServices();
-                servicesObserver.disconnect();
-            }
-        }, observerOptions);
-
         const staffObserver = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
                 fetchStaff();
@@ -647,23 +662,12 @@ const SalonPage = () => {
             }
         }, observerOptions);
 
-        const productsObserver = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                fetchProducts();
-                productsObserver.disconnect();
-            }
-        }, observerOptions);
-
-        if (servicesSectionRef.current && !servicesLoaded) servicesObserver.observe(servicesSectionRef.current);
         if (staffSectionRef.current && !staffLoaded) staffObserver.observe(staffSectionRef.current);
-        if (productsSectionRef.current && !productsLoaded) productsObserver.observe(productsSectionRef.current);
 
         return () => {
-            servicesObserver.disconnect();
             staffObserver.disconnect();
-            productsObserver.disconnect();
         };
-    }, [loading, servicesLoaded, staffLoaded, productsLoaded]);
+    }, [loading, staffLoaded]);
 
     // Timings Formatting Utility
     const formatTimeStr = (timeStr) => {
@@ -777,7 +781,7 @@ const SalonPage = () => {
             <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
 
                 {/* Salon Headline Block */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                     <div className="min-w-0 flex-1 space-y-2.5">
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 tracking-tight uppercase truncate">
                             {salon?.name || salon?.salonName || 'Salon Details'}
@@ -847,7 +851,7 @@ const SalonPage = () => {
                     <div className="lg:col-span-4 space-y-8">
 
                         {/* Salon Images Grid Layout */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4" data-aos="fade-up">
                             {/* Large Image (Left) */}
                             <div className="md:col-span-2 h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white">
                                 {mainImageToShow ? (
@@ -905,7 +909,7 @@ const SalonPage = () => {
                             </div>
                         </div>                        {/* Photos Gallery Section (placed directly below header images) */}
                         {galleryImages.filter(Boolean).length > 0 && (
-                            <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                            <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
                                         <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Photos Gallery
@@ -951,125 +955,184 @@ const SalonPage = () => {
                         )}
 
                         {/* Offers Available For You (Redesigned with attractive, premium styling) */}
-                        <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-visible relative">
-                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Exclusive Offers for You
-                            </h3>
-                            {offersLoading ? (
-                                <div className="flex flex-col items-center justify-center py-6">
-                                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full mb-2"></div>
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Syncing Exclusive Deals...</p>
-                                </div>
-                            ) : offers.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    {offers.map((offer) => {
-                                        const isPercentage = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
-                                        const value = offer.discountValue ?? offer.percentage ?? 0;
-                                        const discountText = isPercentage ? `${value}%` : `₹${value}`;
-                                        const offText = "OFF";
-                                        
-                                        return (
-                                            <div
-                                                key={offer.id}
-                                                className="flex flex-row relative bg-white border border-red-100 hover:border-red-300 hover:shadow-[0_15px_30px_-10px_rgba(255,11,1,0.14)] hover:-translate-y-0.5 rounded-2xl transition-all duration-300 group"
-                                            >
-                                                {/* Left Side (Voucher Value Card) */}
-                                                <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 bg-gradient-to-br from-red-50/70 via-red-50/30 to-white flex flex-col items-center justify-center p-3 rounded-l-2xl relative border-r border-dashed border-red-100/60 overflow-hidden">
-                                                    {formatDiscountText(discountText)}
-                                                    <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">{offText}</span>
-                                                    <span className="text-red-500/5 select-none font-black text-5xl absolute -left-1 -bottom-2 pointer-events-none group-hover:scale-110 transition-transform duration-500">%</span>
-                                                </div>
-
-                                                {/* Tear Notch Cutouts */}
-                                                <div className="absolute -top-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.02)]"></div>
-                                                <div className="absolute -bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"></div>
-                                                
-                                                {/* Dashed Separator Line */}
-                                                <div className="absolute top-2.5 bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] border-l border-dashed border-red-150 -translate-x-[0.5px] pointer-events-none z-10"></div>
-
-                                                {/* Right Side (Voucher Details) */}
-                                                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0 bg-white rounded-r-2xl">
-                                                    <div>
-                                                        <h4 className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-tight truncate group-hover:text-[#ff0b01] transition-colors">{offer.name}</h4>
-                                                        <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 font-semibold leading-relaxed line-clamp-2">
-                                                            {offer.description || `Get ${discountText} off on ${offer.services?.map(s => s.name).join(', ') || 'selected services'}.`}
-                                                        </p>
+                        {offers.length > 0 && (
+                            <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-visible relative" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Exclusive Offers for You
+                                </h3>
+                                {offersLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-6">
+                                        <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full mb-2"></div>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Syncing Exclusive Deals...</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        {offers.map((offer) => {
+                                            const isPercentage = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
+                                            const value = offer.discountValue ?? offer.percentage ?? 0;
+                                            const discountText = isPercentage ? `${value}%` : `₹${value}`;
+                                            const offText = "OFF";
+                                            
+                                            return (
+                                                <div
+                                                    key={offer.id}
+                                                    className="flex flex-row relative bg-white border border-red-100 hover:border-red-300 hover:shadow-[0_15px_30px_-10px_rgba(255,11,1,0.14)] hover:-translate-y-0.5 rounded-2xl transition-all duration-300 group"
+                                                >
+                                                    {/* Left Side (Voucher Value Card) */}
+                                                    <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 bg-gradient-to-br from-red-50/70 via-red-50/30 to-white flex flex-col items-center justify-center p-3 rounded-l-2xl relative border-r border-dashed border-red-100/60 overflow-hidden">
+                                                        {formatDiscountText(discountText)}
+                                                        <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">{offText}</span>
+                                                        <span className="text-red-500/5 select-none font-black text-5xl absolute -left-1 -bottom-2 pointer-events-none group-hover:scale-110 transition-transform duration-500">%</span>
                                                     </div>
-
-                                                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50 mt-4">
-                                                        <div className="min-w-0">
-                                                            {offer.validTo ? (
-                                                                <>
-                                                                    <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Expires on</span>
-                                                                    <span className="text-[10px] text-slate-650 font-bold block mt-1 truncate">
-                                                                        {new Date(offer.validTo).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                <span className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wider block">Limited Time</span>
-                                                            )}
+     
+                                                    {/* Tear Notch Cutouts */}
+                                                    <div className="absolute -top-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.02)]"></div>
+                                                    <div className="absolute -bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"></div>
+                                                    
+                                                    {/* Dashed Separator Line */}
+                                                    <div className="absolute top-2.5 bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] border-l border-dashed border-red-150 -translate-x-[0.5px] pointer-events-none z-10"></div>
+     
+                                                    {/* Right Side (Voucher Details) */}
+                                                    <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0 bg-white rounded-r-2xl">
+                                                        <div>
+                                                            <h4 className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-tight truncate group-hover:text-[#ff0b01] transition-colors">{offer.name}</h4>
+                                                            <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 font-semibold leading-relaxed line-clamp-2">
+                                                                {offer.description || `Get ${discountText} off on ${offer.services?.map(s => s.name).join(', ') || 'selected services'}.`}
+                                                            </p>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                                            className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
-                                                        >
-                                                            Claim Deal
-                                                        </button>
+     
+                                                        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50 mt-4">
+                                                            <div className="min-w-0">
+                                                                {offer.validTo ? (
+                                                                    <>
+                                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Expires on</span>
+                                                                        <span className="text-[10px] text-slate-650 font-bold block mt-1 truncate">
+                                                                            {new Date(offer.validTo).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wider block">Limited Time</span>
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
+                                                                className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
+                                                            >
+                                                                Claim Deal
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="border border-slate-100 border-dashed rounded-2xl p-6 text-center shadow-xs">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">No active offers available today.</p>
-                                </div>
-                            )}
-                        </section>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                         {/* Services Categories icons list */}
-                        <section ref={servicesSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
-                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> SERVICES CATEGORIES
-                            </h3>
-                            {!servicesLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-6">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading Categories...</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-3 sm:gap-4">
-                                    {categories.map((catName) => {
-                                        const catLower = catName.toLowerCase();
-                                        const catIcon = categoryIcons[catLower] || hairCutIcon;
+                        {categories.length > 0 && (
+                            <section ref={servicesSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                                    <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> SERVICES CATEGORIES
+                                </h3>
+                                {!servicesLoaded ? (
+                                    <div className="flex flex-col items-center justify-center py-6">
+                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading Categories...</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-3 sm:gap-4">
+                                        {categories.map((catName) => {
+                                            const catLower = catName.toLowerCase();
+                                            const catIcon = categoryIcons[catLower] || hairCutIcon;
+                                            return (
+                                                <div
+                                                    key={catName}
+                                                    onClick={() => navigate('/customer/book-service', { state: { selectedCategory: catName } })}
+                                                    className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all transform hover:scale-105 active:scale-95"
+                                                >
+                                                    <img
+                                                        src={catIcon}
+                                                        alt={catName}
+                                                        className="w-7 h-7 object-contain mb-1.5"
+                                                    />
+                                                    <span className="text-[10px] font-black tracking-tight uppercase text-slate-700">{catName}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        {/* Packages Section (Redesigned with attractive, premium styling) */}
+                        {isAuthenticated && packages.length > 0 && (
+                            <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm relative" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Special Packages
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {packages.map((pkg) => {
+                                        const savings = pkg.discountValue || 0;
                                         return (
                                             <div
-                                                key={catName}
-                                                onClick={() => navigate('/customer/book-service', { state: { selectedCategory: catName } })}
-                                                className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all transform hover:scale-105 active:scale-95"
+                                                key={pkg.id}
+                                                className="bg-white border border-slate-200 border-l-4 border-l-[#ff0b01] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
                                             >
-                                                <img
-                                                    src={catIcon}
-                                                    alt={catName}
-                                                    className="w-7 h-7 object-contain mb-1.5"
-                                                />
-                                                <span className="text-[10px] font-black tracking-tight uppercase text-slate-700">{catName}</span>
+                                                <div>
+                                                    <div className="flex justify-between items-start gap-3">
+                                                        <h4 className="font-extrabold text-sm text-slate-950 uppercase tracking-tight line-clamp-1">{pkg.name}</h4>
+                                                        {savings > 0 && (
+                                                            <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
+                                                                Save ₹{savings}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] sm:text-xs text-slate-500 mt-2 font-semibold leading-relaxed line-clamp-2">
+                                                        {pkg.description || "No description provided."}
+                                                    </p>
+                                                    
+                                                    {/* Services included list */}
+                                                    {pkg.services && pkg.services.length > 0 && (
+                                                        <div className="mt-4">
+                                                            <span className="text-[8px] font-bold text-slate-400 tracking-wider uppercase block mb-1.5">Services Included:</span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {pkg.services.map(service => (
+                                                                    <span key={service.id} className="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-50 text-slate-650 border border-slate-100">
+                                                                        {service.name}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50 mt-4">
+                                                    <div>
+                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Price</span>
+                                                        <span className="text-sm font-black text-[#ff0b01] mt-1.5 block">₹{pkg.packagePrice}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => navigate('/customer/book-service', { state: { selectedPackage: pkg } })}
+                                                        className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
+                                                    >
+                                                        Book Package
+                                                    </button>
+                                                </div>
                                             </div>
                                         );
                                     })}
-                                    {categories.length === 0 && (
-                                        <div className="text-xs text-slate-400 font-bold uppercase py-2">No Services Configured.</div>
-                                    )}
                                 </div>
-                            )}
-                        </section>
+                            </section>
+                        )}
 
 
 
                         {/* Opening Times */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
                                 <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Opening Times
                             </h3>
@@ -1104,7 +1167,7 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Top Experts (Staff) ── */}
-                        <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                        <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden" data-aos="fade-up">
                             {/* Section Header */}
                             <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
@@ -1279,7 +1342,7 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Quick Book — Date & Time Slots ── */}
-                        <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                        <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
                                 <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Available Slots
                             </h3>
@@ -1387,68 +1450,64 @@ const SalonPage = () => {
                         </section>
 
                         {/* Products Grid */}
-                        <section ref={productsSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
-                            <div className="flex justify-between items-center mb-5">
-                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                    <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Products
-                                </h3>
-                                <span
-                                    onClick={() => navigate('/customer/product-search', { state: { salonId: resolvedSalonId } })}
-                                    className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
-                                >
-                                    See More
-                                </span>
-                            </div>
-                            {!productsLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-6">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading catalog...</p>
+                        {products.length > 0 && (
+                            <section ref={productsSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                                <div className="flex justify-between items-center mb-5">
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                        <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Products
+                                    </h3>
+                                    <span
+                                        onClick={() => navigate('/customer/product-search', { state: { salonId: resolvedSalonId } })}
+                                        className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
+                                    >
+                                        See More
+                                    </span>
                                 </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {products.map((product, index) => (
-                                        <div key={product.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-                                            <div>
-                                                <div className="aspect-video bg-slate-50 rounded-xl overflow-hidden mb-3.5 relative">
-                                                    <img
-                                                        src={getProductImg(product, index)}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
-                                                    />
-                                                </div>
-                                                <span className="text-[9px] font-black text-[#FF0B01] uppercase tracking-wider bg-red-50 px-2 py-1 rounded-md">
-                                                    {product.category || 'Shampoo'}
-                                                </span>
-                                                <h4 className="text-xs sm:text-sm font-bold text-slate-900 mt-2.5 line-clamp-1 uppercase">{product.name}</h4>
-                                                <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{product.description || 'Premium salon-grade styling product for daily use.'}</p>
-                                            </div>
-                                            <div className="mt-4 pt-3.5 border-t border-slate-55 flex items-center justify-between">
+                                {!productsLoaded ? (
+                                    <div className="flex flex-col items-center justify-center py-6">
+                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading catalog...</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {products.map((product, index) => (
+                                            <div key={product.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                                                 <div>
-                                                    <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">Price</span>
-                                                    <span className="text-sm font-extrabold text-slate-900 mt-1.5 block">₹{product.price}</span>
+                                                    <div className="aspect-video bg-slate-50 rounded-xl overflow-hidden mb-3.5 relative">
+                                                        <img
+                                                            src={getProductImg(product, index)}
+                                                            alt={product.name}
+                                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
+                                                        />
+                                                    </div>
+                                                    <span className="text-[9px] font-black text-[#FF0B01] uppercase tracking-wider bg-red-50 px-2 py-1 rounded-md">
+                                                        {product.category || 'Shampoo'}
+                                                    </span>
+                                                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 mt-2.5 line-clamp-1 uppercase">{product.name}</h4>
+                                                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{product.description || 'Premium salon-grade styling product for daily use.'}</p>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate('/customer/product-details', { state: { product } })}
-                                                    className="bg-slate-950 hover:bg-black text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-sm"
-                                                >
-                                                    Buy Now
-                                                </button>
+                                                <div className="mt-4 pt-3.5 border-t border-slate-55 flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">Price</span>
+                                                        <span className="text-sm font-extrabold text-slate-900 mt-1.5 block">₹{product.price}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => navigate('/customer/product-details', { state: { product } })}
+                                                        className="bg-slate-950 hover:bg-black text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-sm"
+                                                    >
+                                                        Buy Now
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-
-                                    {products.length === 0 && (
-                                        <div className="col-span-2 text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                            No active catalog items.
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </section>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                         {/* Customer Reviews */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm">
+                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
                                 <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> Customer Reviews
                             </h3>

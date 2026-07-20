@@ -38,7 +38,8 @@ import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_i
 import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
 
 // Newly Added Main Screen Background & Graphic Assets
-import backgroundImg from '../../assets/Customer/HomeScreen/MainScreen/background_img.png';
+import blowDryerComb from '../../assets/Customer/HomeScreen/MainScreen/blow_dryer_comb.png';
+import sprayScissors from '../../assets/Customer/HomeScreen/MainScreen/spray_scissors.png';
 import exploreMoreIcon from '../../assets/Customer/HomeScreen/MainScreen/explore_more.svg';
 
 // 3. New Services Images Imports
@@ -695,16 +696,34 @@ const HomeScreen = () => {
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden">
 
-            {/* 2. HERO SECTION - WITH ONE BACKGROUND IMAGE */}
-            <section className="relative min-h-[540px] w-full flex flex-col items-center justify-center py-20 px-6 text-center overflow-visible bg-[#F3F4F6]">
-                <img
-                    src={backgroundImg}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0"
-                />
-                <div className="absolute inset-0 bg-white/5 pointer-events-none z-10"></div>
+            {/* 2. HERO SECTION - WITH DECORATIVE CORNER IMAGES AND GREY BACKGROUND */}
+            <section className="relative min-h-[540px] w-full flex flex-col items-center justify-center py-20 px-6 text-center overflow-visible bg-[#f4f4f4]">
+                {/* Absolute Wrapper to clip the decorative corner images to the grey region */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
+                    {/* Left side decorative image container - slides left to right */}
+                    <div className="absolute left-0 top-[45%] -translate-y-1/2 h-[60%] sm:h-[70%] md:h-[75%] pointer-events-none hidden md:block">
+                        <img
+                            src={blowDryerComb}
+                            alt="Blow dryer and comb"
+                            data-aos="fade-right"
+                            data-aos-duration="1200"
+                            className="h-full w-auto object-contain pointer-events-none"
+                        />
+                    </div>
 
-                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
+                    {/* Right side decorative image container - slides right to left */}
+                    <div className="absolute right-0 top-[45%] -translate-y-1/2 h-[60%] sm:h-[70%] md:h-[75%] pointer-events-none hidden md:block">
+                        <img
+                            src={sprayScissors}
+                            alt="Spray and scissors"
+                            data-aos="fade-left"
+                            data-aos-duration="1200"
+                            className="h-full w-auto object-contain pointer-events-none"
+                        />
+                    </div>
+                </div>
+
+                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6" data-aos="fade-up">
                     <div className="text-gray-900 text-sm md:text-base font-black uppercase tracking-wider mb-4">
                         List your salon free
                     </div>
@@ -718,7 +737,7 @@ const HomeScreen = () => {
                     </p>
 
 
-                    <div className="relative w-full max-w-4xl z-50 animate-fade-in" ref={searchDropdownRef}>
+                    <div className="relative w-full max-w-4xl z-50 animate-fade-in" ref={searchDropdownRef} data-aos="fade-up" data-aos-delay="200">
                         <div className="bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
                             <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
@@ -971,7 +990,7 @@ const HomeScreen = () => {
 
 
             {/* 3. FIXED STATS SECTION */}
-            <section id="stats-section" className="pt-16 pb-12 border-b">
+            <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-4 px-6">
                     {[
                         { label: "REVIEWS", value: "1.14k", img: reviewIcon },
@@ -991,7 +1010,7 @@ const HomeScreen = () => {
             </section>
 
             {/* 4. PREMIUM SALONS NEARBY SECTION */}
-            <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
+            <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto" data-aos="fade-up">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
                     <div>
                         <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Premium Salons Nearby</h3>
@@ -1060,7 +1079,7 @@ const HomeScreen = () => {
             </section>
 
             {/* 5. SERVICES GRID */}
-            <section className="pt-6 pb-12 px-6 max-w-7xl mx-auto">
+            <section className="pt-6 pb-12 px-6 max-w-7xl mx-auto" data-aos="fade-up">
                 <h3 className="text-2xl font-bold mb-4">Services</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {servicesData.map((service) => (
@@ -1083,7 +1102,7 @@ const HomeScreen = () => {
                     {/* Feature 1 - Manage Inventory & Staff */}
                     <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Left Container for Staff & Dashboard Composite Image */}
-                        <div className="flex-1 w-full">
+                        <div className="flex-1 w-full" data-aos="fade-right">
                             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
                                 <img
                                     src={manageInventoryImg}
@@ -1094,7 +1113,7 @@ const HomeScreen = () => {
                         </div>
 
                         {/* Right Content Container matching layout and typography hierarchy */}
-                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full">
+                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
                                 MANAGE INVENTORY & STAFF
@@ -1146,7 +1165,7 @@ const HomeScreen = () => {
                     {/* Feature 2 - Easy Appointments */}
                     <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Right Container for Image */}
-                        <div className="flex-1 w-full">
+                        <div className="flex-1 w-full" data-aos="fade-left">
                             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
                                 <img
                                     src={easyAppointmentImg}
@@ -1157,7 +1176,7 @@ const HomeScreen = () => {
                         </div>
 
                         {/* Left Content Container styled exactly to the right-aligned design layout */}
-                        <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full">
+                        <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
                                 EASY APPOINTMENTS
@@ -1208,7 +1227,7 @@ const HomeScreen = () => {
                     {/* Feature 3 - NeoParlour Lead Magnet */}
                     <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Left Container for Product Dashboard Image */}
-                        <div className="flex-1 w-full">
+                        <div className="flex-1 w-full" data-aos="fade-right">
                             <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white">
                                 <img
                                     src={leadMagnetImg}
@@ -1219,7 +1238,7 @@ const HomeScreen = () => {
                         </div>
 
                         {/* Right Content Container matching layout and typography hierarchy */}
-                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full">
+                        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
                                 NEOPARLOUR LEAD MAGNET
@@ -1270,7 +1289,7 @@ const HomeScreen = () => {
                     {/* Feature 4 - AI Powered Features */}
                     <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
                         {/* Right Container - Compare Slider with Floating Labels */}
-                        <div className="flex-1 w-full">
+                        <div className="flex-1 w-full" data-aos="fade-left">
                             <div className="relative">
                                 {/* Compare Slider */}
                                 <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white h-[320px] md:h-[420px]">
@@ -1431,7 +1450,7 @@ const HomeScreen = () => {
                         </div>
 
                         {/* Content Container styled exactly to the design layout */}
-                        <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full">
+                        <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
                                 AI POWERED FEATURES
@@ -1622,27 +1641,27 @@ const HomeScreen = () => {
                         {homeTestimonials.map((item) => (
                             <div
                                 key={item.id}
-                                className="bg-gray-50 border border-gray-100 hover:border-gray-200/80 rounded-[24px] p-8 flex flex-col justify-between text-left h-[22rem] w-[20rem] mx-4 shrink-0 shadow-sm hover:shadow-lg hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
+                                className="bg-gray-50 border border-gray-100 hover:border-gray-200/80 rounded-[16px] sm:rounded-[24px] p-4 sm:p-8 flex flex-col justify-between text-left h-[15rem] sm:h-[22rem] w-[42vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 shadow-sm hover:shadow-lg hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
                             >
-                                <div>
+                                <div className="min-h-0">
                                     {/* Stars */}
-                                    <div className="text-yellow-500 mb-4 flex gap-0.5">
+                                    <div className="text-yellow-500 mb-2 sm:mb-4 flex gap-0.5">
                                         {"★".repeat(item.stars).split("").map((star, i) => (
-                                            <span key={i} className="text-sm">{star}</span>
+                                            <span key={i} className="text-[10px] sm:text-sm">{star}</span>
                                         ))}
                                     </div>
-                                    <h4 className="font-black text-base text-gray-900 mb-3 italic">
+                                    <h4 className="font-black text-xs sm:text-base text-gray-900 mb-1.5 sm:mb-3 italic line-clamp-1">
                                         {item.title}
                                     </h4>
-                                    <p className="text-gray-500 text-xs leading-relaxed font-medium mb-6">
+                                    <p className="text-gray-500 text-[9px] sm:text-xs leading-normal sm:leading-relaxed font-medium line-clamp-4 overflow-hidden">
                                         {item.quote}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-4 mt-auto">
-                                    <div className="w-10 h-10 rounded-full bg-gray-300/80 shrink-0"></div>
+                                <div className="flex items-center gap-2 sm:gap-4 mt-auto">
+                                    <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-300/80 shrink-0"></div>
                                     <div>
-                                        <div className="font-bold text-gray-800 text-xs">{item.author}</div>
-                                        <div className="text-[10px] text-gray-400 font-semibold">{item.location}</div>
+                                        <div className="font-bold text-gray-800 text-[10px] sm:text-xs">{item.author}</div>
+                                        <div className="text-[8px] sm:text-[10px] text-gray-400 font-semibold">{item.location}</div>
                                     </div>
                                 </div>
                             </div>
