@@ -132,7 +132,7 @@ const SearchNavBar = () => {
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleDark}
-          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          data-tooltip={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           className={`relative w-14 h-7 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
             isDark ? 'bg-gray-700' : 'bg-gray-200'
           }`}

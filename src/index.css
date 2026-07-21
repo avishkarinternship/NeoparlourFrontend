@@ -39,19 +39,19 @@ body {
 }
 
 /* Force all non-branded text that was black/dark to become white */
-.dark-mode p,
-.dark-mode h1,
-.dark-mode h2,
-.dark-mode h3,
-.dark-mode h4,
-.dark-mode h5,
-.dark-mode h6,
-.dark-mode span:not([class*="bg-red"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-transparent"]),
-.dark-mode label,
-.dark-mode li,
-.dark-mode td,
-.dark-mode th,
-.dark-mode a:not([class*="text-red"]):not([class*="text-orange"]) {
+.dark-mode p:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h1:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h2:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h3:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h4:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h5:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode h6:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode span:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode label:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode li:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode td:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode th:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]),
+.dark-mode a:not([class*="text-[#"]):not([class*="text-red"]):not([class*="text-orange"]):not([class*="text-yellow"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-green"]):not([class*="text-transparent"]) {
   color: inherit;
 }
 
@@ -168,4 +168,79 @@ body {
 /* Salon cards info bar (hardcoded bg-white inside card) */
 .dark-mode .dark-mode-card-bar {
   background-color: #1a1a1a !important;
+}
+
+/* ─── Smooth Hover animations for custom tooltips, dropdowns, and components ─── */
+
+/* Smooth Custom Tooltips */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translate(-50%, 8px) scale(0.95);
+  background-color: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translate(-50%, 8px) scale(0.95);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+/* Smooth fade-in slide-down for dropdown popups (autocomplete city/area suggestions, search dropdowns) when mounted */
+.absolute.left-0.top-full,
+.absolute.left-0.right-0.top-full {
+  animation: slideDownFade 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: top center;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+/* Optimizing all hover interactive elements in the customer layout for smooth, premium animations */
+.hover\:scale-102,
+.hover\:scale-105,
+.hover\:scale-110,
+.hover\:-translate-y-1,
+.hover\:-translate-y-1\.5,
+.group-hover\:scale-102,
+.group-hover\:scale-105,
+.group-hover\:scale-110 {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
