@@ -237,7 +237,12 @@ const OwnerRegister = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'phone') {
+      const val = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, phone: val }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Autocomplete city search
@@ -289,6 +294,10 @@ const OwnerRegister = () => {
   const handleSendOtp = () => {
     if (!formData.phone) {
       toast.error('Please enter a mobile number first.');
+      return;
+    }
+    if (formData.phone.length !== 10 || !/^[0-9]{10}$/.test(formData.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number.');
       return;
     }
     dispatch(sendRegisterOtp({ mobile: formData.phone, type: 'OWNER' })).unwrap().then(() => {

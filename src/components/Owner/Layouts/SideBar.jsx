@@ -201,6 +201,35 @@ const Sidebar = ({ isOpen, onClose }) => {
               </svg>
               <span>Server Health</span>
             </button>
+
+            {/* Support Requests */}
+            <button
+              onClick={() => {
+                navigate('/owner/support-requests');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/support-requests'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {location.pathname === '/owner/support-requests' && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg 
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/support-requests' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                }`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span>Support Requests</span>
+            </button>
           </div>
 
           {/* Bottom Admin Utility Actions Group */}
@@ -468,10 +497,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         <div className="p-3 border-t border-gray-100 space-y-1 flex-shrink-0">
 
           {/* Help Link Option */}
-          <a href="#" className="flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-gray-900 text-[13px] font-bold transition-colors duration-150 sidebar-btn">
+          <button
+            onClick={() => navigate('/customer/support')}
+            className="w-full flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-gray-900 text-[13px] font-bold transition-colors duration-150 sidebar-btn text-left"
+          >
             <img src={helpIcon} alt="Help" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-60" />
             <span>Help</span>
-          </a>
+          </button>
 
           {/* Settings Link Option */}
           <button

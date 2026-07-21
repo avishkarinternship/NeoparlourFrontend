@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 import logoIcon from '../assets/Neoparlour_logo.png';
 import usernameIcon from '../assets/CustomerRegister/username_icon.svg';
@@ -11,6 +12,28 @@ import rightBackground from '../assets/StaffRegister/right_background.jpg';
 
 const StaffRegister = () => {
   const [activeTab, setActiveTab] = useState('REGISTER');
+  const [mobile, setMobile] = useState('');
+
+  const handleVerify = () => {
+    if (!mobile) {
+      toast.error('Please enter a mobile number first.');
+      return;
+    }
+    if (mobile.length !== 10 || !/^[0-9]{10}$/.test(mobile)) {
+      toast.error('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    toast.success('Verification OTP code sent!');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!mobile || mobile.length !== 10 || !/^[0-9]{10}$/.test(mobile)) {
+      toast.error('Mobile number must be exactly 10 digits.');
+      return;
+    }
+    toast.success('Registration details submitted!');
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-8 px-6 pb-6 font-sans">
@@ -53,7 +76,7 @@ const StaffRegister = () => {
             </div>
 
             {/* Registration Form */}
-            <form className="space-y-3">
+            <form className="space-y-3" onSubmit={handleSubmit}>
               {/* User Name */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -86,9 +109,15 @@ const StaffRegister = () => {
                 <input 
                   type="tel" 
                   placeholder="Mobile Number" 
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   className="w-full pl-12 pr-16 py-3 bg-[#fafafa] border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-colors placeholder-gray-400" 
                 />
-                <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#ff0b01] hover:underline">
+                <button 
+                  type="button" 
+                  onClick={handleVerify}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#ff0b01] hover:underline"
+                >
                   Verify
                 </button>
               </div>

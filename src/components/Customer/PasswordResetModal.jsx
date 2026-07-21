@@ -164,7 +164,10 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                 <input
                                     type="tel"
                                     value={mobile}
-                                    onChange={(e) => setResetFlow(prev => ({ ...prev, mobile: e.target.value }))}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        setResetFlow(prev => ({ ...prev, mobile: val }));
+                                    }}
                                     placeholder="Registered 10 digit number"
                                     required
                                     disabled={!!user} // Block editing if already logged in

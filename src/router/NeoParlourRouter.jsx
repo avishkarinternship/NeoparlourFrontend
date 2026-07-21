@@ -46,12 +46,14 @@ import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndC
 import PrivacyPolicy from '../components/Customer/PrivacyPolicy'
 import PrivacyPolicyScreen from '../components/Owner/PrivacyPolicy'
 import Support from '../components/Customer/Support'
+import DeleteAccount from '../components/Customer/DeleteAccount'
 import PartnerWithUs from '../components/Customer/PartnerWithUs'
 import SalonsListing from '../components/Customer/SalonsListing'
 import Customers from '../components/Owner/Customers'
 import Favourites from '../components/Customer/Favourites'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
+import AdminSupportRequests from '../components/Owner/AdminSupportRequests'
 
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
@@ -211,6 +213,10 @@ export let routes = createBrowserRouter([
                     {
                         path: '/customer/support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/delete-account',
+                        element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
                     },
                     {
                         path: '/customer/partner-with-us',
@@ -386,6 +392,10 @@ export let routes = createBrowserRouter([
                     {
                         path: '/owner/attendance',
                         element: <OwnerRouteGuard><StaffAttendance /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/support-requests',
+                        element: <OwnerRouteGuard><AdminSupportRequests /></OwnerRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

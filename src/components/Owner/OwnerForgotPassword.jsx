@@ -149,7 +149,10 @@ const OwnerForgotPassword = () => {
                                 <input
                                     type="tel"
                                     value={mobile}
-                                    onChange={(e) => setResetFlow(prev => ({ ...prev, mobile: e.target.value }))}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        setResetFlow(prev => ({ ...prev, mobile: val }));
+                                    }}
                                     placeholder="Registered 10 digit number"
                                     required
                                     className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold"

@@ -627,8 +627,10 @@ export default function SEOFooter() {
         </div>
 
         {/* Copyright */}
-        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900/60">
-          © {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.
+        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <span>© {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.</span>
+          <span className="hidden sm:inline text-zinc-800">|</span>
+          <a href="/delete-account" className="text-zinc-500 hover:text-red-500 transition-colors">Delete Account</a>
         </div>
       </div>
 

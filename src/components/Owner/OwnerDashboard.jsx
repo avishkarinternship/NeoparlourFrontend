@@ -153,7 +153,7 @@ const OwnerDashboard = () => {
             }
 
             setAdminStats({
-                totalSalons: salonsRes.data?.totalElements || 0,
+                totalSalons: salonsRes.data?.page?.totalElements ?? salonsRes.data?.totalElements ?? 0,
                 totalActiveSubscriptions: subsRes.data?.filter(s => s.status?.toLowerCase() === 'active').length || 0,
                 serverStatus: serverUp
             });

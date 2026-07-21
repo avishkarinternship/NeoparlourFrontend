@@ -14,6 +14,10 @@ import {
   Download,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   FileText,
   RefreshCw,
   SlidersHorizontal,
@@ -37,7 +41,7 @@ export default function AdminSalons() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
 
   // Search Parameters
   const [filters, setFilters] = useState({
@@ -57,12 +61,12 @@ export default function AdminSalons() {
   const [expandedKycData, setExpandedKycData] = useState(null);
   const [loadingKycId, setLoadingKycId] = useState(null);
 
-  const fetchSalons = async (page = 0) => {
+  const fetchSalons = async (page = 0, size = pageSize) => {
     setLoading(true);
     try {
       const params = {
         page,
-        size: pageSize,
+        size,
       };
 
       // Only append filters that have values
@@ -75,9 +79,10 @@ export default function AdminSalons() {
       const response = await axiosInstance.get('/salons/admin/all', { params });
       if (response.data) {
         setSalons(response.data.content || []);
-        setTotalPages(response.data.totalPages || 0);
-        setTotalElements(response.data.totalElements || 0);
-        setCurrentPage(response.data.number || 0);
+        const pageInfo = response.data.page || {};
+        setTotalPages(pageInfo.totalPages ?? response.data.totalPages ?? 0);
+        setTotalElements(pageInfo.totalElements ?? response.data.totalElements ?? 0);
+        setCurrentPage(pageInfo.number ?? response.data.number ?? 0);
       }
     } catch (err) {
       console.error("Failed to fetch salons:", err);
@@ -87,9 +92,10 @@ export default function AdminSalons() {
     }
   };
 
+  // Re-fetch whenever currentPage or pageSize changes
   useEffect(() => {
-    fetchSalons(0);
-  }, []);
+    fetchSalons(currentPage, pageSize);
+  }, [currentPage, pageSize]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -98,7 +104,8 @@ export default function AdminSalons() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchSalons(0);
+    setCurrentPage(0);
+    fetchSalons(0, pageSize);
   };
 
   const handleResetFilters = () => {
@@ -111,9 +118,23 @@ export default function AdminSalons() {
       active: '',
       banned: ''
     });
-    // Triggers fetch immediately on next tick after setting state
-    setTimeout(() => fetchSalons(0), 0);
+    setCurrentPage(0);
+    setTimeout(() => fetchSalons(0, pageSize), 0);
   };
+
+  // Generate visible page numbers (up to 5 at a time)
+  const getPageNumbers = () => {
+    const maxVisible = 5;
+    let start = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages - 1, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) start = Math.max(0, end - maxVisible + 1);
+    const pages = [];
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
+
+  const startEntry = totalElements === 0 ? 0 : currentPage * pageSize + 1;
+  const endEntry = Math.min((currentPage + 1) * pageSize, totalElements);
 
   const toggleBanSalon = async (salonId, isBanned) => {
     const action = isBanned ? 'unban' : 'ban';
@@ -560,24 +581,89 @@ export default function AdminSalons() {
           </table>
         </div>
 
-        {/* Pagination bar */}
-        {!loading && totalPages > 1 && (
-          <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex items-center justify-between text-xs text-gray-500">
-            <span>Showing page <b>{currentPage + 1}</b> of <b>{totalPages}</b> (Total elements: {totalElements})</span>
-            <div className="flex gap-2">
+        {/* Pagination footer */}
+        {!loading && totalPages > 0 && (
+          <div className="bg-gray-50 border-t border-gray-100 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Counter & Size Selector */}
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <span className="font-semibold">
+                Showing{' '}
+                <strong className="text-gray-900">{startEntry}</strong>
+                {' – '}
+                <strong className="text-gray-900">{endEntry}</strong>
+                {' of '}
+                <strong className="text-gray-900">{totalElements}</strong>
+                {' entries'}
+              </span>
+              <span className="text-gray-200">|</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-400">Size:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(0);
+                  }}
+                  className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-700 outline-none focus:border-red-500 cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Page Navigation */}
+            <div className="flex items-center gap-1">
+              {/* First */}
               <button
+                onClick={() => setCurrentPage(0)}
                 disabled={currentPage === 0}
-                onClick={() => fetchSalons(currentPage - 1)}
-                className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition"
+                className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition"
+                title="First Page"
               >
-                Previous
+                <ChevronsLeft className="w-4 h-4 text-gray-600" />
               </button>
+              {/* Prev */}
               <button
-                disabled={currentPage === totalPages - 1}
-                onClick={() => fetchSalons(currentPage + 1)}
-                className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition"
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+                className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition"
+                title="Previous Page"
               >
-                Next
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
+              </button>
+              {/* Page Numbers */}
+              {getPageNumbers().map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-9 h-9 rounded-xl text-xs font-bold transition ${
+                    currentPage === pageNum
+                      ? 'bg-red-600 text-white shadow-sm shadow-red-500/20'
+                      : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum + 1}
+                </button>
+              ))}
+              {/* Next */}
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage === totalPages - 1}
+                className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </button>
+              {/* Last */}
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage === totalPages - 1}
+                className="p-2 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-4 h-4 text-gray-600" />
               </button>
             </div>
           </div>

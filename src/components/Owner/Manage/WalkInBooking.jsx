@@ -829,6 +829,10 @@ const WalkInBooking = () => {
             toast.error('Please enter customer mobile number.');
             return;
         }
+        if (walkInPhone.length !== 10 || !/^[0-9]{10}$/.test(walkInPhone)) {
+            toast.error('Mobile number must be exactly 10 digits.');
+            return;
+        }
         setBookingLoading(true);
         try {
             let appointmentAtStr = selectedSlot?.startTime || null;
@@ -1776,7 +1780,7 @@ const WalkInBooking = () => {
                                             type="tel"
                                             placeholder="Enter Mobile Number"
                                             value={walkInPhone}
-                                            onChange={(e) => setWalkInPhone(e.target.value)}
+                                            onChange={(e) => setWalkInPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-[#FF0B01] focus:ring-1 focus:ring-[#FF0B01]/30 outline-none transition-all"
                                         />
                                     </div>
@@ -1794,6 +1798,10 @@ const WalkInBooking = () => {
                                         }
                                         if (!walkInPhone.trim()) {
                                             toast.error('Please enter customer mobile number.');
+                                            return;
+                                        }
+                                        if (walkInPhone.length !== 10 || !/^[0-9]{10}$/.test(walkInPhone)) {
+                                            toast.error('Mobile number must be exactly 10 digits.');
                                             return;
                                         }
                                         setIsWalkInPopupOpen(false);

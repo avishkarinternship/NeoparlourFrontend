@@ -88,7 +88,12 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'mobile') {
+            const val = value.replace(/\D/g, '').slice(0, 10);
+            setFormData(prev => ({ ...prev, mobile: val }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSave = (e) => {

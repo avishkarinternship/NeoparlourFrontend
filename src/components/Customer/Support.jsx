@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, Phone, Clock, MapPin, Send, Sparkles, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Mail, Phone, Clock, MapPin, Send, Sparkles, MessageSquare, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEOFooter from '../common/SEOFooter';
+import axiosInstance from '../../api/axiosInstance';
 
 const Support = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -17,7 +20,7 @@ const Support = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         if (!formData.name.trim() || !formData.message.trim()) {
@@ -31,12 +34,23 @@ const Support = () => {
         }
 
         setSubmitting(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const payload = {
+                name: formData.name,
+                email: formData.email,
+                mobile: formData.mobile,
+                description: formData.message // maps 'message' from form to 'description' in backend
+            };
+            await axiosInstance.post('/public/support-requests', payload);
             toast.success("Support ticket created successfully! We will contact you soon.");
             setFormData({ name: '', email: '', mobile: '', message: '' });
+        } catch (error) {
+            console.error("Support request submission failed:", error);
+            const errMsg = error.response?.data?.error || error.response?.data?.message || "Failed to submit support request. Please try again.";
+            toast.error(errMsg);
+        } finally {
             setSubmitting(false);
-        }, 1200);
+        }
     };
 
     return (
@@ -98,6 +112,23 @@ const Support = () => {
                                 <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Operational Hours</h4>
                                 <p className="text-sm font-semibold text-gray-600">Monday - Sunday</p>
                                 <p className="text-xs text-gray-400 mt-1">Our support staff is active 7 days a week.</p>
+                            </div>
+                        </div>
+
+                        {/* Account Deletion Info/Action Card */}
+                        <div className="flex gap-4 p-5 rounded-2xl bg-red-50/30 border border-red-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
+                            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Delete Account</h4>
+                                <p className="text-xs font-semibold text-gray-600 mb-3 leading-relaxed">Want to permanently delete your customer or partner/staff account? You can do this securely via OTP verification.</p>
+                                <button
+                                    onClick={() => navigate('/delete-account')}
+                                    className="px-4 py-2 bg-[#FF2A14] hover:bg-[#E01E0A] text-white font-bold text-xs rounded-xl uppercase tracking-wider transition cursor-pointer"
+                                >
+                                    Delete Account
+                                </button>
                             </div>
                         </div>
                     </div>

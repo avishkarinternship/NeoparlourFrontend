@@ -126,7 +126,12 @@ const Staff = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'phone') {
+            const val = value.replace(/\D/g, '').slice(0, 10);
+            setFormData(prev => ({ ...prev, phone: val }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const resetForm = () => {
@@ -142,6 +147,10 @@ const Staff = () => {
         e.preventDefault();
         if (!formData.name || !formData.phone || !formData.email || !formData.password) {
             toast.error("Name, Phone, Email & Password are required", toastStyle);
+            return;
+        }
+        if (formData.phone.length !== 10 || !/^[0-9]{10}$/.test(formData.phone)) {
+            toast.error("Phone number must be exactly 10 digits", toastStyle);
             return;
         }
 
@@ -196,6 +205,10 @@ const Staff = () => {
         e.preventDefault();
         if (!editFormData.name || !editFormData.phone || !editFormData.email) {
             toast.error("Name, Phone & Email are required", toastStyle);
+            return;
+        }
+        if (editFormData.phone.length !== 10 || !/^[0-9]{10}$/.test(editFormData.phone)) {
+            toast.error("Phone number must be exactly 10 digits", toastStyle);
             return;
         }
 
@@ -497,7 +510,10 @@ const Staff = () => {
                                                     type="tel" 
                                                     name="phone" 
                                                     value={editFormData.phone} 
-                                                    onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                        setEditFormData(prev => ({ ...prev, phone: val }));
+                                                    }} 
                                                     placeholder="Phone Number" 
                                                     className="w-full text-sm outline-none bg-transparent" 
                                                     required 

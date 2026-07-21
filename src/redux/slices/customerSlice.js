@@ -165,6 +165,32 @@ export const setDefaultSalon = createAsyncThunk(
   }
 );
 
+// Async thunk to send delete customer OTP
+export const sendDeleteCustomerOtp = createAsyncThunk(
+  'customer/sendDeleteOtp',
+  async (mobile, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/customer/delete/send-otp?mobile=${mobile}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send OTP.');
+    }
+  }
+);
+
+// Async thunk to verify and delete customer
+export const verifyDeleteCustomerOtp = createAsyncThunk(
+  'customer/verifyDeleteOtp',
+  async ({ mobile, otp }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/customer/delete/verify-otp?mobile=${mobile}&otp=${otp}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify OTP and delete account.');
+    }
+  }
+);
+
 const initialState = {
   user: JSON.parse(localStorage.getItem('customerUser')) || null,
   profile: JSON.parse(localStorage.getItem('customerProfile')) || null,

@@ -95,6 +95,32 @@ export const registerWithOtp = createAsyncThunk(
   }
 );
 
+// Async thunk to send delete owner/staff user OTP
+export const sendDeleteUserOtp = createAsyncThunk(
+  'ownerStaff/sendDeleteUserOtp',
+  async (phone, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/auth/users/delete/send-otp?phone=${phone}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send OTP.');
+    }
+  }
+);
+
+// Async thunk to verify and delete owner/staff user
+export const verifyDeleteUserOtp = createAsyncThunk(
+  'ownerStaff/verifyDeleteUserOtp',
+  async ({ phone, otp }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/auth/users/delete/verify-otp?phone=${phone}&otp=${otp}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify OTP and delete account.');
+    }
+  }
+);
+
 const initialState = {
   user: JSON.parse(localStorage.getItem('ownerStaffUser')) || null,
   token: localStorage.getItem('ownerStaffToken') || null,
