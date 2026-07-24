@@ -1,42 +1,45 @@
 import React from 'react';
 import SEOFooter from '../common/SEOFooter';
+import caseStudyOne from '../../assets/CaseStudies/caseStudyOne.jpg';
+import caseStudyTwo from '../../assets/CaseStudies/caseStudyTwo.jpg';
+import caseStudyThree from '../../assets/CaseStudies/caseStudyThree.jpg';
 
 const caseStudiesData = [
   {
     id: 1,
     title: 'Apple Unisex Salon Success Story With Neoparlour',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyOne,
   },
   {
     id: 2,
     title: 'Growth Journey of The Beauty Hub Aesthetic Clinic with Neoparlour?',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyTwo,
   },
   {
     id: 3,
     title: 'How Posh Beauty Take Care of their Clients and Staff, with Help from a Neoparlour?',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyThree,
   },
   {
     id: 4,
     title: 'How Posh Beauty Take Care of their Clients and Staff, with Help from a Neoparlour?',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyThree,
   },
   {
     id: 5,
     title: 'Growth Journey of The Beauty Hub Aesthetic Clinic with Neoparlour?',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyTwo,
   },
   {
     id: 6,
     title: 'Apple Unisex Salon Success Story With Neoparlour',
     description: 'Apple Unisex Salon exclusively offers non-surgical clinic beauty services. Their commitment to quality is evident through the use of the best products and personalized customer treatment.',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600',
+    image: caseStudyOne,
   },
 ];
 

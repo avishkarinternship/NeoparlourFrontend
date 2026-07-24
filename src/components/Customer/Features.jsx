@@ -9,7 +9,7 @@ import schedulingMadeSimple from '../../assets/Customer/FeaturesScreen/schedulin
 import easyInvoices from '../../assets/Customer/FeaturesScreen/easy_invoice.jpg';
 
 import { useNavigate } from 'react-router-dom';
-import SEOFooter from '../common/SEOFooter';
+import SEOFooter from '../common/SEOFooter';  
 
 const Features = () => {
   const navigate = useNavigate();
@@ -155,7 +155,7 @@ const Features = () => {
       </section>
 
       {/* ================= EASY INVOICES SECTION ================= */}
-      <section className="w-full bg-[#F5F6F8] py-20 lg:py-28">
+      <section className="w-full bg-[#F5F6F8] dark:bg-black py-20 lg:py-28">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
@@ -175,10 +175,10 @@ const Features = () => {
               <span className="text-base font-extrabold text-[#FF1100] tracking-wide uppercase">
                 Easy Invoices
               </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-gray-900 tracking-tight leading-tight uppercase">
+              <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-black text-gray-900 dark:text-white tracking-tight leading-tight uppercase">
                 Effortless Invoicing For Salons & Spas
               </h2>
-              <p className="text-sm sm:text-base text-gray-500 font-medium leading-relaxed max-w-xl pt-2">
+              <p className="text-sm sm:text-base text-gray-500 dark:text-white font-medium leading-relaxed max-w-xl pt-2">
                 Handling Invoices Should Be Simple, But Many Salons And Spas Still Struggle With Manual Bills, Wrong Totals, And Messy Payment Tracking. Neoparlour's Software Is Built To Remove That Stress And Make Billing Feel Almost Automatic.
               </p>
             </div>

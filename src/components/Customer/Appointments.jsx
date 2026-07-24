@@ -369,7 +369,7 @@ const Appointments = () => {
           {/* Text info */}
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <h3 className="text-base font-black text-gray-900 tracking-tight">{app.customerName}</h3>
+              <h3 className="text-base font-black text-gray-900 dark:text-white tracking-tight">{app.customerName}</h3>
               {isRescheduled && (
                 <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
                   Rescheduled
@@ -402,7 +402,7 @@ const Appointments = () => {
               </div>
               
               {app.staffName && (
-                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-2.5 py-0.5 rounded-full border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-2.5 py-0.5 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                   <span>Stylist: {app.staffName}</span>
                 </div>
@@ -440,7 +440,7 @@ const Appointments = () => {
               {!isCustomer && (
                 <button
                   onClick={() => handleAssignStaff(app)}
-                  className="flex-1 sm:flex-none px-5 py-3.5 bg-white text-gray-700 font-black tracking-widest text-[9px] rounded-xl border border-gray-200 hover:border-gray-300 hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 uppercase"
+                  className="flex-1 sm:flex-none px-5 py-3.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-black tracking-widest text-[9px] rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 uppercase"
                 >
                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -486,7 +486,7 @@ const Appointments = () => {
           <div className="flex items-center gap-6">
             <button 
               onClick={handleBackNavigation}
-              className="w-12 h-12 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all"
+              className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all"
               title="Go Back"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,7 +495,7 @@ const Appointments = () => {
             </button>
             
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-gray-900 uppercase">
+              <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">
                 {isCustomer ? 'My Bookings' : 'Bookings'}
               </h1>
               <p className="text-gray-400 font-medium text-sm mt-0.5">
@@ -516,14 +516,14 @@ const Appointments = () => {
               placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Main Tabs Container */}
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="border-b border-gray-100 flex gap-8 md:gap-12 bg-white px-6 rounded-2xl shadow-sm border border-gray-50/50 mb-8 overflow-x-auto whitespace-nowrap">
+          <div className="border-b border-gray-100 dark:border-gray-800 flex gap-8 md:gap-12 bg-white dark:bg-gray-900 px-6 rounded-2xl shadow-sm border border-gray-50/50 dark:border-gray-800 mb-8 overflow-x-auto whitespace-nowrap">
             {['TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'].map((tab) => (
               <button
                 key={tab}
@@ -532,7 +532,7 @@ const Appointments = () => {
                   setPage(0);
                 }}
                 className={`py-5 text-xs font-black tracking-[0.25em] transition-all relative ${
-                  activeTab === tab ? 'text-gray-900 font-black' : 'text-gray-300 hover:text-gray-500'
+                  activeTab === tab ? 'text-gray-900 dark:text-white font-black' : 'text-gray-300 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300'
                 }`}
               >
                 {tab}
@@ -546,7 +546,7 @@ const Appointments = () => {
 
         {/* List Container */}
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
+          <div className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
             
             {loading ? (
               <div className="flex flex-col items-center py-24 gap-4">
@@ -554,12 +554,12 @@ const Appointments = () => {
                 <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Retrieving Bookings</p>
               </div>
             ) : filteredAppointments.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {filteredAppointments.map((app, index) => renderAppointmentCard(app, index))}
               </div>
             ) : (
               <div className="text-center py-24">
-                <div className="w-20 h-20 bg-gray-50 border border-gray-100 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-sm">
                   <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
@@ -570,9 +570,9 @@ const Appointments = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-xs font-bold text-gray-400">
-                  Showing Page <span className="text-gray-900 font-extrabold">{page + 1}</span> of <span className="text-gray-900 font-extrabold">{totalPages}</span> ({totalElements} bookings)
+                  Showing Page <span className="text-gray-900 dark:text-white font-extrabold">{page + 1}</span> of <span className="text-gray-900 dark:text-white font-extrabold">{totalPages}</span> ({totalElements} bookings)
                 </p>
                 <div className="flex items-center gap-3">
                   <button
@@ -580,8 +580,8 @@ const Appointments = () => {
                     disabled={page === 0}
                     className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
                       page === 0
-                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
+                        ? 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed' 
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
                     }`}
                   >
                     Previous
@@ -591,8 +591,8 @@ const Appointments = () => {
                     disabled={page === totalPages - 1}
                     className={`px-4 py-2 text-xs font-black tracking-widest uppercase rounded-lg border transition-all ${
                       page === totalPages - 1
-                        ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
+                        ? 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed' 
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#ff0b01] hover:text-[#ff0b01] hover:bg-red-50/10 shadow-sm active:scale-95'
                     }`}
                   >
                     Next
@@ -852,14 +852,14 @@ const Appointments = () => {
 
   if (isCustomer) {
     return (
-      <div className="bg-[#fcfcfd] text-gray-900 font-sans pb-16">
+      <div className="bg-[#fcfcfd] dark:bg-black text-gray-900 dark:text-white font-sans pb-16">
         {renderMainContent()}
       </div>
     );
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 bg-white border-l border-gray-200 overflow-auto pb-16">
+    <main className="flex-1 p-6 md:p-8 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 overflow-auto pb-16">
       {renderMainContent()}
     </main>
   );

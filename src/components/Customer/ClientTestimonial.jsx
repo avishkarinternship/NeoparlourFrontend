@@ -2,6 +2,12 @@ import React from 'react';
 import Marquee from 'react-fast-marquee';
 import SEOFooter from '../common/SEOFooter';
 
+import downloadImg from '../../assets/ClientTestimonial/download.jpg';
+import img1 from '../../assets/ClientTestimonial/img1.jpg';
+import img2 from '../../assets/ClientTestimonial/img2.jpg';
+import img3 from '../../assets/ClientTestimonial/img3.jpg';
+import img4 from '../../assets/ClientTestimonial/img4.jpg';
+
 // Mock Data for the 14 Testimonials with corresponding card branding colors
 const testimonials = [
   {
@@ -12,6 +18,7 @@ const testimonials = [
     quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. It's affordable compared to other expensive software options.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img1,
   },
   {
     id: 2,
@@ -21,6 +28,7 @@ const testimonials = [
     quote: "It's affordable compared to other expensive software options that didn't fit our needs. The customer service is great, and the software is easy to use. There's nothing I don't like about Neoparlour-it's just great!",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img2,
   },
   {
     id: 3,
@@ -30,6 +38,7 @@ const testimonials = [
     quote: "Neoparlour has changed the way we run our salon! It handles everything from booking appointments to payroll and other tasks easily. The customer service is great, and the software is easy to use.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img3,
   },
   {
     id: 4,
@@ -39,6 +48,7 @@ const testimonials = [
     quote: "Great software and amazing customer support. Our booking process has never been smoother, and client management is completely automated. Extremely satisfied!",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img4,
   },
   {
     id: 5,
@@ -48,6 +58,7 @@ const testimonials = [
     quote: "The interface is very intuitive and my staff got hang of it in just one day. Payroll computation, which used to take hours, is now done in minutes.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img1,
   },
   {
     id: 6,
@@ -57,6 +68,7 @@ const testimonials = [
     quote: "Neoparlour is highly affordable and packed with premium features. It fits our barbershop needs perfectly. We especially love the automatic reminders feature.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img2,
   },
   {
     id: 7,
@@ -66,6 +78,7 @@ const testimonials = [
     quote: "An all-in-one package for modern salons. From inventory management to client billing, everything works seamlessly. The mobile app dashboard is a life saver.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img3,
   },
   {
     id: 8,
@@ -75,6 +88,7 @@ const testimonials = [
     quote: "Our appointments have doubled since implementing NeoParlour's booking system. It's clean, fast, and does exactly what it promises.",
     author: 'Gururatna Sadavarte',
     role: 'CEO',
+    image: img4,
   },
   {
     id: 9,
@@ -84,6 +98,7 @@ const testimonials = [
     quote: "The walk-in booking and WhatsApp notifications are phenomenal! Our clients always get their reminders, which has reduced our no-show rate by almost 80%. Highly recommended!",
     author: 'Aishwarya Patil',
     role: 'Salon Owner',
+    image: img1,
   },
   {
     id: 10,
@@ -93,6 +108,7 @@ const testimonials = [
     quote: "Staff management and scheduling was a major headache before we found NeoParlour. Now my team can see their schedules in real-time and client feedback has been positive.",
     author: 'Rahul Deshmukh',
     role: 'Founder',
+    image: img2,
   },
   {
     id: 11,
@@ -102,6 +118,7 @@ const testimonials = [
     quote: "Excellent software! The POS billing system is extremely fast and integrates flawlessly with our inventory. We save hours of work every week.",
     author: 'Meera Sen',
     role: 'Spa Director',
+    image: img3,
   },
   {
     id: 12,
@@ -111,6 +128,7 @@ const testimonials = [
     quote: "We've been using NeoParlour for 6 months and our revenue increased by 20% due to the easy appointment links and smart booking. Highly recommend!",
     author: 'Aditya Ranade',
     role: 'Operations Manager',
+    image: img4,
   },
   {
     id: 13,
@@ -120,6 +138,7 @@ const testimonials = [
     quote: "NeoParlour's customer support is top-notch! The package deals feature makes it incredibly easy to sell our seasonal bridal and pre-bridal packages.",
     author: 'Priyanka Shinde',
     role: 'Lead Stylist',
+    image: img1,
   },
   {
     id: 14,
@@ -129,29 +148,16 @@ const testimonials = [
     quote: "Clean interface, very intuitive dashboard, and powerful analytics. It gives us precise daily and monthly breakdown reports that help us plan our inventory.",
     author: 'Vikram Mehta',
     role: 'Managing Partner',
+    image: img2,
   },
 ];
 
 export default function ClientTestimonial() {
 
-  // Helper to get card header styles dynamically based on layout color type
-  const getHeaderStyle = (type) => {
-    switch (type) {
-      case 'black':
-        return 'bg-black text-[#cbb281]';
-      case 'gray':
-        return 'bg-[#f4f4f4] text-[#4d4d4d] border-b border-gray-100';
-      case 'light-gold':
-        return 'bg-white text-[#c9a054] border-b border-gray-100';
-      case 'white-gold':
-        return 'bg-white text-[#94743c] border-b border-gray-100';
-      default:
-        return 'bg-white text-gray-800';
-    }
-  };
+
 
   return (
-    <div className="w-full bg-white text-gray-900 font-sans antialiased overflow-x-hidden">
+    <div className="w-full bg-white dark:bg-[#111111] text-gray-900 dark:text-white font-sans antialiased overflow-x-hidden transition-colors duration-300">
 
       {/* ========================================================
           1. CLIENT TESTIMONIALS SECTION
@@ -160,7 +166,7 @@ export default function ClientTestimonial() {
         <span className="text-xs font-bold tracking-widest text-red-500 uppercase block mb-2">
           - Client Testimonials -
         </span>
-        <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-12 text-gray-900">
+        <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-12 text-gray-900 dark:text-white">
           TRUSTED BY OVER 12000+ USERS
         </h2>
 
@@ -175,27 +181,22 @@ export default function ClientTestimonial() {
             {testimonials.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between text-left h-[16rem] sm:h-[26rem] w-[42vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 cursor-pointer"
+                className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200/80 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 flex flex-col justify-between text-left h-[16rem] sm:h-[26rem] w-[42vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 cursor-pointer"
               >
-                {/* Dynamic Branding Card Header */}
-                <div className={`h-16 sm:h-28 flex flex-col items-center justify-center text-center p-3 sm:p-6 ${getHeaderStyle(item.bgType)}`}>
-                  <div className="font-serif font-bold text-[10px] sm:text-sm tracking-widest leading-none">
-                    {item.logoText}
-                  </div>
-                  <div className="text-[6px] sm:text-[8px] uppercase tracking-[0.2em] mt-1 sm:mt-1.5 opacity-80">
-                    {item.logoSub}
-                  </div>
+                {/* Image Header */}
+                <div className="h-32 sm:h-44 w-full overflow-hidden shrink-0 border-b border-gray-100 dark:border-gray-800">
+                  <img src={item.image} alt={item.logoText} className="w-full h-full object-cover" />
                 </div>
 
                 {/* Card Body and Text */}
                 <div className="p-3 sm:p-5 flex-grow flex flex-col justify-between min-h-0">
-                  <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-600 leading-normal sm:leading-relaxed font-normal mb-2 sm:mb-6 line-clamp-4 sm:line-clamp-none overflow-hidden">
+                  <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-600 dark:text-gray-300 leading-normal sm:leading-relaxed font-normal mb-2 sm:mb-6 line-clamp-4 sm:line-clamp-none overflow-hidden">
                     {item.quote}
                   </p>
 
                   {/* Author Info block right aligned */}
                   <div className="text-right mt-auto">
-                    <h4 className="font-bold text-[9px] sm:text-xs text-gray-900 tracking-wide">
+                    <h4 className="font-bold text-[9px] sm:text-xs text-gray-900 dark:text-white tracking-wide">
                       {item.author}
                     </h4>
                     <p className="text-[7px] sm:text-[10px] text-gray-400 font-medium tracking-wider uppercase">
@@ -212,16 +213,16 @@ export default function ClientTestimonial() {
       {/* ========================================================
           2. DOWNLOAD MOBILE APP CTA SECTION
          ======================================================== */}
-      <section className="w-full bg-gradient-to-b from-[#fff5f5] to-[#fcf1f1] pt-16 lg:pt-24 border-t border-red-50/50 relative overflow-hidden" data-aos="fade-up">
+      <section className="w-full bg-gradient-to-b from-[#fff5f5] to-[#fcf1f1] dark:from-[#1A1A1A] dark:to-[#111111] pt-16 lg:pt-24 border-t border-red-50/50 dark:border-gray-800 relative overflow-hidden transition-colors duration-300" data-aos="fade-up">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* Action Links & Texts */}
           <div className="lg:col-span-6 space-y-6 text-left pb-12 lg:pb-24">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-tight">
               Download NeoParlour <br />
               Mobile App
             </h2>
-            <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-lg font-medium">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg font-medium">
               The NeoParlour app is the Quickest, Easiest way to book and keep track of your appointments.
             </p>
 
@@ -259,42 +260,22 @@ export default function ClientTestimonial() {
 
           {/* Device Previews & Layout Alignment */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end items-end w-full">
-            <div className="flex items-end space-x-[-20px] sm:space-x-[-40px] translate-y-[20px] md:translate-y-[40px]">
-
-              {/* Leftmost Phone (Offset) */}
-              <div className="w-[140px] sm:w-[200px] md:w-[220px] rounded-t-[32px] overflow-hidden shadow-[0_-10px_35px_rgba(0,0,0,0.12)] border-x-[4px] border-t-[4px] border-gray-900 bg-white">
+            <div className="flex items-end">
+              {/* Single Main Phone */}
+              <div className="w-[180px] sm:w-[240px] md:w-[280px] rounded-t-[36px] overflow-hidden shadow-[0_-15px_45px_rgba(0,0,0,0.18)] border-x-[6px] border-t-[6px] border-gray-900 dark:border-black bg-white">
                 <img
-                  src= "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=400" 
-                  alt="NeoParlour app screen layout 1"
+                  src={downloadImg}
+                  alt="NeoParlour Mobile App"
                   className="w-full h-auto object-cover"
                 />
               </div>
-
-              {/* Center Main Focal Phone */}
-              <div className="w-[160px] sm:w-[220px] md:w-[250px] rounded-t-[36px] overflow-hidden shadow-[0_-15px_45px_rgba(0,0,0,0.18)] border-x-[6px] border-t-[6px] border-gray-900 bg-white z-10 relative transform translate-y-[-15px]">
-                <img
-                  src="https://images.unsplash.com/photo-1596558450268-9c2a420622a5?auto=format&fit=crop&q=80&w=400"
-                  alt="NeoParlour dashboard control view main"
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-
-              {/* Rightmost Phone */}
-              <div className="w-[140px] sm:w-[200px] md:w-[220px] rounded-t-[32px] overflow-hidden shadow-[0_-10px_35px_rgba(0,0,0,0.12)] border-x-[4px] border-t-[4px] border-gray-900 bg-white">
-                <img
-                  src="https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&q=80&w=400"
-                  alt="NeoParlour appointment tracking screen"
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-
             </div>
           </div>
 
         </div>
       </section>
       {/* --- GLOBAL SEO FOOTER CONTAINER --- */}
-      <div className="w-full bg-white border-t border-gray-200 mt-16">
+      <div className="w-full bg-white dark:bg-[#111111] border-t border-gray-200 dark:border-gray-800 mt-16 transition-colors duration-300">
         <SEOFooter />
       </div>
     </div>

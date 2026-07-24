@@ -355,8 +355,8 @@ export default function SEOFooter() {
       categoryName: 'Hair Services',
       services: [
         'Hair Cut', 'Hair Styling', 'Hair Wash', 'Blow Dry', 'Hair Coloring',
-        'Highlights / Streaks', 'Hair Spa', 'Hair Treatment', 'Keratin Treatment',
-        'Hair Smoothening', 'Hair Straightening', 'Perming / Curling', 'Hair Extensions'
+        'Highlights', 'Hair Spa', 'Hair Treatment', 'Keratin Treatment',
+        'Hair Smoothening', 'Hair Straightening', 'Curling', 'Hair Extensions'
       ]
     },
     {
@@ -431,8 +431,10 @@ export default function SEOFooter() {
         const salonsList = await response.json();
         toast.success(`Found ${salonsList.length} salons!`, { id: resolveToast });
         
+        const createSlug = (str) => encodeURIComponent(str.trim().replace(/\s+/g, '-'));
+
         // Redirect to SEOSalons route, passing results in navigation state
-        navigate(`/seo-salons/${encodeURIComponent(cityName)}/${encodeURIComponent(areaName)}/${encodeURIComponent(serviceName)}`, {
+        navigate(`/seo-salons/${createSlug(cityName)}/${createSlug(areaName)}/${createSlug(serviceName)}`, {
           state: {
             salons: salonsList,
             cityName,
@@ -452,7 +454,7 @@ export default function SEOFooter() {
   };
 
   return (
-    <div className="w-full bg-[#0a0a0c] text-gray-400 py-16 px-6 md:px-12 font-sans border-t border-zinc-900 relative">
+    <div className="w-full bg-[#0a0a0c] text-gray-400 py-6 px-6 md:px-12 font-sans border-t border-zinc-900 relative">
       {clickingLink && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50">
           <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center gap-3 text-white shadow-2xl">
@@ -462,7 +464,7 @@ export default function SEOFooter() {
         </div>
       )}
 
-      <div className="max-w-[1440px] mx-auto space-y-12">
+      <div className="max-w-[1440px] mx-auto space-y-6">
         {/* Title */}
         <div className="space-y-2">
           <h2 className="text-xl font-black text-white tracking-wider uppercase flex items-center gap-2">
@@ -566,7 +568,7 @@ export default function SEOFooter() {
 
         {/* Categories & Service Links Farm */}
         <div className="pt-6 border-t border-zinc-900">
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-900/60">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-zinc-900/60">
             <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
               Popular Services in {selectedArea}, {selectedCity}
@@ -598,19 +600,19 @@ export default function SEOFooter() {
             {serviceCategories.map((cat, index) => (
               <div 
                 key={index} 
-                className="w-[78vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] shrink-0 snap-start bg-zinc-900/10 border border-zinc-900/60 hover:border-zinc-800 p-8 rounded-[28px] space-y-5 transition-all duration-300 hover:bg-zinc-900/25"
+                className="w-[78vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] shrink-0 snap-start bg-zinc-900/10 border border-zinc-900/60 hover:border-zinc-800 p-5 rounded-[28px] space-y-3 transition-all duration-300 hover:bg-zinc-900/25"
               >
                 <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] border-l-[3px] border-red-600 pl-3">
                   {cat.categoryName}
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-1">
                   {cat.services.map((service, sIdx) => (
                     <li key={sIdx}>
                       <a
                         href={`/seo-salons/${encodeURIComponent(
-                          selectedCity
-                        )}/${encodeURIComponent(selectedArea)}/${encodeURIComponent(
-                          service
+                          selectedCity.trim().replace(/\s+/g, '-')
+                        )}/${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}/${encodeURIComponent(
+                          service.trim().replace(/\s+/g, '-')
                         )}`}
                         onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
                         className="text-zinc-400 hover:text-red-500 transition-colors duration-200 text-xs font-semibold flex items-center group py-0.5"
@@ -626,12 +628,7 @@ export default function SEOFooter() {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="text-[10px] text-zinc-600 font-medium text-center pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <span>© {new Date().getFullYear()} NeoParlour Technologies Private Limited. All Rights Reserved.</span>
-          <span className="hidden sm:inline text-zinc-800">|</span>
-          <a href="/delete-account" className="text-zinc-500 hover:text-red-500 transition-colors">Delete Account</a>
-        </div>
+
       </div>
 
       <style>{`

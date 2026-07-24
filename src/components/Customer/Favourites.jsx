@@ -138,13 +138,13 @@ const Favourites = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fcfcfd] text-gray-900 font-sans flex flex-col">
+        <div className="min-h-screen bg-[#fcfcfd] dark:bg-black text-gray-900 dark:text-gray-300 font-sans flex flex-col">
             {/* Header section */}
             <div className="max-w-[1200px] w-full mx-auto px-6 pt-10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/customer/home')}
-                        className="w-11 h-11 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all flex-shrink-0"
+                        className="w-11 h-11 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all flex-shrink-0"
                         title="Go Back"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ const Favourites = () => {
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-gray-900 uppercase">Favourite Salons</h1>
+                        <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">Favourite Salons</h1>
                         <p className="text-gray-400 font-medium text-sm mt-0.5">Your quick access list of saved salons</p>
                     </div>
                 </div>
@@ -177,7 +177,7 @@ const Favourites = () => {
                     </div>
                 ) : favourites.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 text-center">
-                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-[#ff0b01]">
+                        <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4 text-[#ff0b01]">
                             <Heart className="w-8 h-8 fill-current" />
                         </div>
                         <h3 className="text-sm font-black text-gray-400 uppercase tracking-wider">No favourite salons yet</h3>
@@ -200,19 +200,19 @@ const Favourites = () => {
                                 <div
                                     key={fav.favouriteId || fav.salonId}
                                     onClick={() => !isSwitching && handleSalonClick(fav)}
-                                    className={`bg-white border border-gray-100 rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-gray-200 transition-all duration-200 flex flex-col relative cursor-pointer group ${
+                                    className={`bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-gray-200 transition-all duration-200 flex flex-col relative cursor-pointer group ${
                                         isSwitching ? 'opacity-70 pointer-events-none' : ''
                                     }`}
                                 >
                                     {/* Switching Loader Overlay */}
                                     {isSwitching && (
-                                        <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-10 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-xs z-10 flex items-center justify-center">
                                             <div className="w-6 h-6 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     )}
 
                                     {/* Image Section */}
-                                    <div className="h-40 relative bg-gray-50 overflow-hidden flex-shrink-0">
+                                    <div className="h-40 relative bg-gray-50 dark:bg-gray-800 overflow-hidden flex-shrink-0">
                                         {coverImg ? (
                                             <img
                                                 src={coverImg}
@@ -220,7 +220,7 @@ const Favourites = () => {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center bg-red-50/20 text-[#ff0b01]">
+                                            <div className="w-full h-full flex flex-col items-center justify-center bg-red-50/20 dark:bg-red-900/10 text-[#ff0b01]">
                                                 <svg className="w-12 h-12 stroke-current opacity-30" viewBox="0 0 24 24" fill="none" strokeWidth="1.5">
                                                     <circle cx="9" cy="17" r="3.5" />
                                                     <circle cx="15" cy="17" r="3.5" />
@@ -234,14 +234,14 @@ const Favourites = () => {
                                         {/* Floating Heart Button */}
                                         <button
                                             onClick={(e) => handleRemoveFavourite(fav.salonId, fav.salonName, e)}
-                                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs shadow-md border border-gray-150 flex items-center justify-center text-[#ff0b01] hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
+                                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-xs shadow-md border border-gray-150 dark:border-gray-800 flex items-center justify-center text-[#ff0b01] hover:scale-110 active:scale-95 transition-all cursor-pointer z-10"
                                             title="Remove from Favourites"
                                         >
                                             <Heart className="w-4 h-4 fill-current" />
                                         </button>
 
                                         {/* Floating Rating Badge */}
-                                        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-xs border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                        <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xs border border-amber-500/20 text-amber-600 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
                                             <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                                             <span>{ratingVal}</span>
                                         </div>
@@ -258,17 +258,17 @@ const Favourites = () => {
                                     {/* Card Body */}
                                     <div className="p-5 flex flex-col flex-1 text-left">
                                         <div className="flex items-start justify-between gap-2 mb-1.5">
-                                            <h3 className="text-lg font-black text-gray-900 group-hover:text-[#ff0b01] transition-colors leading-snug uppercase tracking-tight flex-1 line-clamp-1">
+                                            <h3 className="text-lg font-black text-gray-900 dark:text-white group-hover:text-[#ff0b01] transition-colors leading-snug uppercase tracking-tight flex-1 line-clamp-1">
                                                 {fav.salonName}
                                             </h3>
                                             {fav.salonCode && (
-                                                <span className="text-[8px] font-bold bg-gray-50 text-gray-400 border border-gray-100 px-1.5 py-0.5 rounded uppercase tracking-widest mt-1">
+                                                <span className="text-[8px] font-bold bg-gray-50 dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700 px-1.5 py-0.5 rounded uppercase tracking-widest mt-1">
                                                     {fav.salonCode}
                                                 </span>
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-1.5 text-xs text-gray-700 font-bold mb-1">
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 font-bold mb-1">
                                             <MapPin className="w-3.5 h-3.5 text-[#ff0b01] shrink-0" />
                                             <span className="truncate">
                                                 {[fav.areaName, fav.cityName].filter(Boolean).join(', ') || 'Pune'}
@@ -276,7 +276,7 @@ const Favourites = () => {
                                         </div>
 
                                         {/* Card Footer */}
-                                        <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                                        <div className="mt-auto pt-4 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
                                             <span className="text-[10px] text-gray-400 font-medium">
                                                 Added {fav.favouritedAt ? new Date(fav.favouritedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'recently'}
                                             </span>
@@ -317,3 +317,4 @@ const Favourites = () => {
 };
 
 export default Favourites;
+

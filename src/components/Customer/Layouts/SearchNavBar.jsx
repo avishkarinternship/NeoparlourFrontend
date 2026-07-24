@@ -81,8 +81,7 @@ const SearchNavBar = () => {
       }
   }, [isAuthenticated, dispatch]);
 
-  return (
-    <header className={`w-full border-b px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
+  return ( <> <header className={`w-full border-b px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
         mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
@@ -255,6 +254,8 @@ const SearchNavBar = () => {
         </button>
       </div>
 
+      </header>
+
       {/* Slide-out Panel Overlay */}
       <Drawer 
         isOpen={isDrawerOpen} 
@@ -282,8 +283,10 @@ const SearchNavBar = () => {
           isOpen={isPasswordResetOpen} 
           onClose={() => setIsPasswordResetOpen(false)} 
       />
-    </header>
+    </>
   );
 };
 
 export default SearchNavBar;
+
+

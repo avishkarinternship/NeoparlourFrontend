@@ -29,6 +29,8 @@ import axiosInstance from '../../api/axiosInstance';
 // Imported Layout Components
 import BillDetails from './BillDetails.jsx';
 import AppointmentBooked from './AppointmentBooked.jsx';
+import SEOFooter from '../common/SEOFooter.jsx';
+import { useDarkMode } from '../../context/DarkModeContext';
 
 // Local SVG and Image Assets
 import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
@@ -146,6 +148,7 @@ const SelectService = () => {
     const location = useLocation();
     const activeSalonId = localStorage.getItem('activeSalonId');
     const { isAuthenticated, token } = useSelector((state) => state.customer);
+    const { isDark } = useDarkMode();
 
     // --- STATE ---
     const [salon, setSalon] = useState(null);
@@ -1400,7 +1403,9 @@ const SelectService = () => {
                                             className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
                                                 isSelectedDate
                                                     ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
-                                                    : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
+                                                    : isDark
+                                                        ? 'text-slate-400 bg-[#1A1A1A] border border-gray-700 hover:bg-orange-500 hover:text-white'
+                                                        : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
                                             }`}
                                         >
                                             <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
@@ -1498,22 +1503,7 @@ const SelectService = () => {
                             )}
                         </section>
 
-                        {/* Booking Trigger button and disclaimer */}
-                        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm text-center space-y-4">
-                            <button
-                                type="button"
-                                onClick={handleBookClick}
-                                className="w-full max-w-md bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
-                            >
-                                Book and Pay After Services
-                            </button>
-                            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
-                                By booking an appointment, you agree to our{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
-                                and{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
-                            </p>
-                        </div>
+                        {/* Removed Booking Trigger button from here (Moved below Select Expert) */}
 
                     </div>
 
@@ -1705,7 +1695,7 @@ const SelectService = () => {
                             ) : (
                                 <div className="space-y-4">
                                     {displayedStaffList.length === 0 ? (
-                                        <div className="text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50/50 rounded-2xl border border-red-100 p-4">
+                                        <div className={`text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider rounded-2xl border p-4 ${isDark ? 'bg-black border-gray-500' : 'bg-red-50/50 border-red-100'}`}>
                                             No stylists available for the selected slot. Please select a different slot.
                                         </div>
                                     ) : (
@@ -1853,6 +1843,23 @@ const SelectService = () => {
                             )}
                         </section>
 
+                        {/* Booking Trigger button and disclaimer */}
+                        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm text-center space-y-4">
+                            <button
+                                type="button"
+                                onClick={handleBookClick}
+                                className="w-full max-w-md bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
+                            >
+                                Book and Pay After Services
+                            </button>
+                            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                                By booking an appointment, you agree to our{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
+                                and{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             </main>
@@ -1997,6 +2004,8 @@ const SelectService = () => {
                     </div>
                 </div>
             )}
+            
+            <SEOFooter />
 
         </div>
     );

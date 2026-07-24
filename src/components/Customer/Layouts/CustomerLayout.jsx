@@ -26,7 +26,7 @@ function CustomerLayoutInner() {
   );
 
   return (
-    <div className={`w-full min-h-screen font-sans overflow-x-hidden antialiased flex flex-col justify-between transition-colors duration-300 ${isDark ? 'dark-mode bg-black text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`w-full min-h-screen font-sans overflow-x-hidden antialiased flex flex-col justify-between transition-colors duration-300 ${isDark ? 'dark dark-mode bg-black text-white' : 'bg-white text-gray-900'}`}>
       <div>
         {isSearchRoute ? <SearchNavBar /> : <Navbar />}
         <Outlet />

@@ -109,10 +109,10 @@ const partners = [
 ];
 
 const recommendedSalons = [
-    { name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
-    { name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
-    { name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
-    { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
+    { id: 1, name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
+    { id: 2, name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
+    { id: 3, name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
+    { id: 4, name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
 ];
 
 const HomeScreen = () => {
@@ -423,13 +423,7 @@ const HomeScreen = () => {
     }, []);
 
     const handleRecommendedCardClick = (salon) => {
-        if (locationPermission !== 'granted') {
-            requestLocationAndFetchSalons(true);
-        } else if (salon.isApiSalon) {
-            handleSalonSelect(salon.originalSalon);
-        } else {
-            requestLocationAndFetchSalons(true);
-        }
+        handleSalonSelect(salon.originalSalon || salon);
     };
 
     const handleServiceCardClick = (service) => {
@@ -763,8 +757,8 @@ const HomeScreen = () => {
                     </p>
 
 
-                    <div className="relative w-full max-w-4xl z-50 animate-fade-in" ref={searchDropdownRef} data-aos="fade-up" data-aos-delay="200">
-                        <div className="bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
+                    <div className="relative w-full max-w-4xl z-50" ref={searchDropdownRef}>
+                        <div className={`p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border ${isDark ? 'bg-[#1A1A1A] border-gray-500' : 'bg-white border-gray-100'}`}>
                             <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
@@ -782,7 +776,7 @@ const HomeScreen = () => {
                                         setShowSearchDropdown(false);
                                     }}
                                     onFocus={() => setShowCityDropdown(true)}
-                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                                    className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`} />
                                 <button
                                     type="button"
                                     onClick={handleDetectLocation}
@@ -840,7 +834,7 @@ const HomeScreen = () => {
                                             setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
-                                        className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
+                                        className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
                                     />
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
@@ -873,32 +867,36 @@ const HomeScreen = () => {
 
                             {/* Category/Service Select Dropdown */}
                             <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
-                                <div className="flex items-center gap-3 w-full">
+                                <div className="flex items-center gap-3 w-full pointer-events-none">
                                     <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                    <select
-                                        value={searchData.category}
-                                        onChange={(e) => {
-                                            setSearchData((prev) => ({
-                                                ...prev,
-                                                category: e.target.value,
-                                            }));
-                                            setShowSearchDropdown(false);
-                                        }}
-                                        className="w-full outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer appearance-none"
-                                    >
-                                        <option value="">SELECT SERVICE</option>
-                                        <option value="Hair Services">Hair Services</option>
-                                        <option value="Skin Care">Skin Care</option>
-                                        <option value="Hair Removal">Hair Removal</option>
-                                        <option value="Nail Care">Nail Care</option>
-                                        <option value="Makeup">Makeup</option>
-                                        <option value="Grooming">Grooming</option>
-                                        <option value="Spa & Massage">Spa & Massage</option>
-                                        <option value="Bridal Packages">Bridal Packages</option>
-                                        <option value="Hair Treatment">Hair Treatment</option>
-                                    </select>
+                                    <span className={`text-sm font-medium ${searchData.category ? (isDark ? 'text-white' : 'text-gray-700') : 'text-gray-400'}`}>
+                                        {searchData.category || "SELECT SERVICE"}
+                                    </span>
                                 </div>
-                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 pointer-events-none" />
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain opacity-60 pointer-events-none" />
+                                
+                                <select
+                                    value={searchData.category}
+                                    onChange={(e) => {
+                                        setSearchData((prev) => ({
+                                            ...prev,
+                                            category: e.target.value,
+                                        }));
+                                        setShowSearchDropdown(false);
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                    <option value="">SELECT SERVICE</option>
+                                    <option value="Hair Services">Hair Services</option>
+                                    <option value="Skin Care">Skin Care</option>
+                                    <option value="Hair Removal">Hair Removal</option>
+                                    <option value="Nail Care">Nail Care</option>
+                                    <option value="Makeup">Makeup</option>
+                                    <option value="Grooming">Grooming</option>
+                                    <option value="Spa & Massage">Spa & Massage</option>
+                                    <option value="Bridal Packages">Bridal Packages</option>
+                                    <option value="Hair Treatment">Hair Treatment</option>
+                                </select>
                             </div>
 
                             <button

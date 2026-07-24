@@ -23,28 +23,28 @@ const PartnerWithUs = () => {
     const navigate = useNavigate();
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
-    const stats = [
-        {
-            value: "1.14k",
-            label: "REVIEWS",
-            icon: <Star className="w-5 h-5 text-[#FF2A14]" />
-        },
-        {
-            value: "10k",
-            label: "SALONS",
-            icon: <Home className="w-5 h-5 text-[#FF2A14]" />
-        },
-        {
-            value: "20k",
-            label: "CITIES",
-            icon: <MapPin className="w-5 h-5 text-[#FF2A14]" />
-        },
-        {
-            value: "20000+",
-            label: "APP DOWNLOADS",
-            icon: <Download className="w-5 h-5 text-[#FF2A14]" />
-        }
-    ];
+    // const stats = [
+    //     {
+    //         value: "1.14k",
+    //         label: "REVIEWS",
+    //         icon: <Star className="w-5 h-5 text-[#FF2A14]" />
+    //     },
+    //     {
+    //         value: "10k",
+    //         label: "SALONS",
+    //         icon: <Home className="w-5 h-5 text-[#FF2A14]" />
+    //     },
+    //     {
+    //         value: "20k",
+    //         label: "CITIES",
+    //         icon: <MapPin className="w-5 h-5 text-[#FF2A14]" />
+    //     },
+    //     {
+    //         value: "20000+",
+    //         label: "APP DOWNLOADS",
+    //         icon: <Download className="w-5 h-5 text-[#FF2A14]" />
+    //     }
+    // ];
 
     const benefitsLeft = [
         { id: 1, text: "More Appointments" },
@@ -164,7 +164,7 @@ const PartnerWithUs = () => {
                 </section>
 
                 {/* Stats Bar */}
-                <section className="w-full border-y border-gray-100 bg-gray-50/50 py-10">
+                {/* <section className="w-full border-y border-gray-100 bg-gray-50/50 py-10">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
                         {stats.map((stat, index) => (
                             <div key={index} className="flex flex-col sm:flex-row items-center gap-3.5 text-center sm:text-left justify-center">
@@ -178,7 +178,7 @@ const PartnerWithUs = () => {
                             </div>
                         ))}
                     </div>
-                </section>
+                </section> */}
 
                 {/* Why Partner With Us Section */}
                 <section className="max-w-7xl mx-auto px-6 md:px-12 py-20 lg:py-28">
@@ -328,7 +328,7 @@ const PartnerWithUs = () => {
                 </section>
 
                 {/* How It Works Section */}
-                <section className="w-full bg-gray-50/50 border-y border-gray-100 py-20 lg:py-28">
+                <section className="w-full bg-gray-50/50 dark:bg-black border-y border-gray-100 dark:border-gray-800 py-20 lg:py-28">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
                         
                         {/* Left Column Graphic */}
@@ -339,12 +339,12 @@ const PartnerWithUs = () => {
                                     <Store className="w-5 h-5" />
                                 </div>
                                 {/* Floating Chat Icon Callout */}
-                                <div className="absolute bottom-6 -left-6 w-12 h-12 rounded-2xl bg-white text-[#FF2A14] border border-gray-100 flex items-center justify-center shadow-xl z-10">
+                                <div className="absolute bottom-6 -left-6 w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 text-[#FF2A14] border border-gray-100 dark:border-gray-700 flex items-center justify-center shadow-xl z-10">
                                     <MessageCircle className="w-5 h-5" />
                                 </div>
                                 
-                                <div className="p-4 bg-white border border-gray-100 rounded-[40px] shadow-2xl shadow-gray-200/50 max-w-sm">
-                                    <div className="rounded-[28px] overflow-hidden aspect-[4/5] bg-gray-100">
+                                <div className="p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[40px] shadow-2xl shadow-gray-200/50 max-w-sm">
+                                    <div className="rounded-[28px] overflow-hidden aspect-[4/5] bg-gray-100 dark:bg-gray-800">
                                         <img 
                                             src={partnerUs3} 
                                             alt="Onboarding and CRM details" 
@@ -359,7 +359,7 @@ const PartnerWithUs = () => {
                         <div className="lg:col-span-7 space-y-10">
                             <div>
                                 <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">Simple Setup</span>
-                                <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase">
+                                <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
                                     How It Works?
                                 </h2>
                             </div>
@@ -371,8 +371,8 @@ const PartnerWithUs = () => {
                                             {step.id}
                                         </span>
                                         <div>
-                                            <h4 className="font-extrabold text-gray-900 text-base mb-1 tracking-tight">{step.title}</h4>
-                                            <p className="text-sm font-semibold text-gray-400 leading-relaxed max-w-xl">{step.desc}</p>
+                                            <h4 className="font-extrabold text-gray-900 dark:text-white text-base mb-1 tracking-tight">{step.title}</h4>
+                                            <p className="text-sm font-semibold text-gray-400 dark:text-gray-300 leading-relaxed max-w-xl">{step.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -382,10 +382,11 @@ const PartnerWithUs = () => {
                 </section>
 
                 {/* FAQ Accordion Section */}
-                <section id="faq-section" className="max-w-3xl mx-auto px-6 py-20 lg:py-28">
+                <section id="faq-section" className="w-full dark:bg-black py-20 lg:py-28">
+                  <div className="max-w-3xl mx-auto px-6">
                     <div className="text-center mb-16">
                         <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">Common Queries</span>
-                        <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase">
+                        <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
                             Frequently Asked Questions
                         </h2>
                     </div>
@@ -396,11 +397,11 @@ const PartnerWithUs = () => {
                             return (
                                 <div 
                                     key={index}
-                                    className="border border-gray-100 rounded-2xl overflow-hidden transition duration-300"
+                                    className="border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden transition duration-300"
                                 >
                                     <button
                                         onClick={() => toggleFaq(index)}
-                                        className="w-full flex items-center justify-between p-6 bg-white hover:bg-gray-50/50 transition-colors text-left font-bold text-gray-950 text-sm sm:text-base tracking-tight"
+                                        className="w-full flex items-center justify-between p-6 bg-white dark:bg-gray-900 hover:bg-gray-50/50 dark:hover:bg-gray-800 transition-colors text-left font-bold text-gray-950 dark:text-white text-sm sm:text-base tracking-tight"
                                     >
                                         <span>{faq.q}</span>
                                         {isOpen ? (
@@ -413,10 +414,10 @@ const PartnerWithUs = () => {
                                     {/* Accordion Panel Content */}
                                     <div 
                                         className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                                            isOpen ? 'max-h-52 opacity-100 border-t border-gray-100/50' : 'max-h-0 opacity-0'
+                                            isOpen ? 'max-h-52 opacity-100 border-t border-gray-100/50 dark:border-gray-800' : 'max-h-0 opacity-0'
                                         }`}
                                     >
-                                        <div className="p-6 bg-gray-50/40 text-sm font-semibold text-gray-400 leading-relaxed">
+                                        <div className="p-6 bg-gray-50/40 dark:bg-gray-900 text-sm font-semibold text-gray-400 dark:text-gray-300 leading-relaxed">
                                             {faq.a}
                                         </div>
                                     </div>
@@ -424,6 +425,7 @@ const PartnerWithUs = () => {
                             );
                         })}
                     </div>
+                  </div>
                 </section>
             </main>
             <SEOFooter />

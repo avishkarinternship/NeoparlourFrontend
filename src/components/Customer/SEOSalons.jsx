@@ -25,14 +25,23 @@ export default function SEOSalons() {
 
   const { cityName: paramCity, areaName: paramArea, serviceName: paramService } = useParams();
 
+  const parseSlug = (str) => str ? str.replace(/-/g, ' ') : '';
+
   // Parse URL parameters (supporting both pretty route params and query parameters)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const urlCity = paramCity || queryParams.get('cityName') || '';
-    const urlArea = paramArea || queryParams.get('areaName') || '';
-    const urlService = paramService || queryParams.get('serviceName') || queryParams.get('category') || '';
+    const urlCity = parseSlug(paramCity || queryParams.get('cityName') || '');
+    const urlArea = parseSlug(paramArea || queryParams.get('areaName') || '');
+    const urlService = parseSlug(paramService || queryParams.get('serviceName') || queryParams.get('category') || '');
 
-    if (!stateData.salons && (urlCity || urlArea || urlService)) {
+    if (location.state && location.state.salons) {
+      setCityName(location.state.cityName || urlCity);
+      setAreaName(location.state.areaName || urlArea);
+      setServiceName(location.state.serviceName || urlService);
+      setSalons(location.state.salons);
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (urlCity || urlArea || urlService) {
       setCityName(urlCity);
       setAreaName(urlArea);
       setServiceName(urlService);
@@ -59,8 +68,9 @@ export default function SEOSalons() {
         }
       };
       fetchSalons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [location.search, paramCity, paramArea, paramService, stateData.salons]);
+  }, [location.state, location.search, paramCity, paramArea, paramService]);
 
   // Update dynamic document title and meta description for Google/SEO indexation
   useEffect(() => {
@@ -100,10 +110,34 @@ export default function SEOSalons() {
               params: { salonId }
             });
             const serviceList = res.data || [];
-            services[salonId] = serviceList.slice(0, 4).map((s) => s.name || s.serviceName);
+            
+            let names = serviceList.map((s) => s.name || s.serviceName);
+            if (serviceName) {
+              const matchingService = names.find(n => n.toLowerCase() === serviceName.toLowerCase());
+              if (matchingService) {
+                names = [matchingService, ...names.filter(n => n !== matchingService)];
+              } else {
+                names = [serviceName, ...names]; // Fallback if API returned it but name differs slightly
+              }
+            }
+            
+            services[salonId] = names.slice(0, 4);
+
             if (serviceList.length > 0) {
-              const minPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
-              prices[salonId] = minPrice;
+              let displayPrice = 299;
+              
+              if (serviceName) {
+                const targetService = serviceList.find(s => (s.name || s.serviceName).toLowerCase() === serviceName.toLowerCase());
+                if (targetService && targetService.price) {
+                  displayPrice = parseFloat(targetService.price);
+                } else {
+                  displayPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
+                }
+              } else {
+                displayPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
+              }
+              
+              prices[salonId] = displayPrice;
             } else {
               prices[salonId] = 299;
             }

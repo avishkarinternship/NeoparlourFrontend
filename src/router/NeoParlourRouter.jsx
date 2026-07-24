@@ -173,14 +173,7 @@ export let routes = createBrowserRouter([
                 path: '/buy-subscription',
                 element: <PublicSubscriptionPlans />
             },
-            {
-                path: '/customer/terms-and-conditions',
-                element: <CustomerTermsAndConditions />
-            },
-            {
-                path: '/customer/privacy-policy',
-                element: <PrivacyPolicy />
-            },
+
             {
                 path: '/owner/terms-and-conditions',
                 element: <OwnerTermsAndConditions />
@@ -194,6 +187,14 @@ export let routes = createBrowserRouter([
             {
                 element: <CustomerLayout />,
                 children: [
+                    {
+                        path: '/customer/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
                     {
                         path: '/',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
