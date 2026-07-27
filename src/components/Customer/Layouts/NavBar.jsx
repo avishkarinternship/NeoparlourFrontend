@@ -130,15 +130,17 @@ const Navbar = () => {
                         }`}
                         aria-label="Toggle dark mode"
                     >
-                        <span className={`absolute left-1 transition-all duration-300 flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
+                        <span className={`absolute left-1 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
                             isDark
                                 ? 'translate-x-7 bg-yellow-400'
                                 : 'translate-x-0 bg-white'
                         }`}>
-                            {isDark
-                                ? <Sun className="w-3 h-3 text-yellow-800" />
-                                : <Moon className="w-3 h-3 text-gray-500" />
-                            }
+                            <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+                            }`} />
+                            <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                            }`} />
                         </span>
                     </button>
 
@@ -227,7 +229,7 @@ const Navbar = () => {
                                 <span className="hidden sm:inline">LOGIN</span>
                             </button>
                         </>
-                    )}
+                    )} 
 
                     {/* Cart Icon button */}
                     {isAuthenticated && (

@@ -60,6 +60,7 @@ import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
+import Offers from '../components/Customer/Offers'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -262,6 +263,10 @@ export let routes = createBrowserRouter([
                     {
                         path: '/customer/updates',
                         element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
+                    },
+                    {
+                        path: '/customer/offers',
+                        element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
                     },
                      {
                         path: '/customer/case-studies',

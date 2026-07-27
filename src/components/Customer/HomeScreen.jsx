@@ -1013,7 +1013,7 @@ const HomeScreen = () => {
 
 
             {/* 3. FIXED STATS SECTION */}
-            <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
+            {/* <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-4 px-6">
                     {[
                         { label: "REVIEWS", value: "1.14k", img: reviewIcon },
@@ -1030,7 +1030,7 @@ const HomeScreen = () => {
                         </div>
                     ))}
                 </div>
-            </section>
+            </section> */}
 
             {/* 4. PREMIUM SALONS NEARBY SECTION */}
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto" data-aos="fade-up">

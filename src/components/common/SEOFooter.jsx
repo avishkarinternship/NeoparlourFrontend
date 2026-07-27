@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MapPin, ChevronRight, Loader2 } from 'lucide-react';
 import searchService from '../../services/searchService';
+import { useDarkMode } from '../../context/DarkModeContext';
 
 export default function SEOFooter() {
   const navigate = useNavigate();
+  const { isDark } = useDarkMode();
 
   // 1. Major metropolitan and important Indian cities
   const cities = [
@@ -434,7 +436,7 @@ export default function SEOFooter() {
         const createSlug = (str) => encodeURIComponent(str.trim().replace(/\s+/g, '-'));
 
         // Redirect to SEOSalons route, passing results in navigation state
-        navigate(`/seo-salons/${createSlug(cityName)}/${createSlug(areaName)}/${createSlug(serviceName)}`, {
+        navigate(`/seo-salons/${createSlug(cityName)}/${createSlug(areaName)}/Best-${createSlug(serviceName)}-in-${createSlug(areaName)}`, {
           state: {
             salons: salonsList,
             cityName,
@@ -454,10 +456,10 @@ export default function SEOFooter() {
   };
 
   return (
-    <div className="w-full bg-[#0a0a0c] text-gray-400 py-6 px-6 md:px-12 font-sans border-t border-zinc-900 relative">
+    <div className={`w-full py-6 px-6 md:px-12 font-sans border-t relative transition-colors duration-300 ${isDark ? 'bg-[#0a0a0c] text-gray-400 border-zinc-900' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
       {clickingLink && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50">
-          <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center gap-3 text-white shadow-2xl">
+          <div className={`border rounded-3xl p-6 flex flex-col items-center gap-3 shadow-2xl transition-all ${isDark ? 'bg-zinc-900/90 border-zinc-800 text-white' : 'bg-white/90 border-gray-200 text-gray-900'}`}>
             <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
             <span className="text-xs font-bold uppercase tracking-widest">Searching Best Salons...</span>
           </div>
@@ -467,19 +469,19 @@ export default function SEOFooter() {
       <div className="max-w-[1440px] mx-auto space-y-6">
         {/* Title */}
         <div className="space-y-2">
-          <h2 className="text-xl font-black text-white tracking-wider uppercase flex items-center gap-2">
+          <h2 className={`text-xl font-black tracking-wider uppercase flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
             Local Beauty Salons & Spas Directory
           </h2>
-          <p className="text-xs text-zinc-500 max-w-2xl">
+          <p className={`text-xs max-w-2xl ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>
             Browse static localized directories to discover premium salons, haircut experts, skin treatment clinics, bridal makeovers, and massage therapists near you. Select your city and area to start exploring.
           </p>
         </div>
 
         {/* City Selector */}
         <div className="space-y-4">
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Select City</h3>
-          <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-zinc-900">
+          <h3 className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Select City</h3>
+          <div className={`flex flex-wrap items-center gap-2 pb-4 border-b ${isDark ? 'border-zinc-900' : 'border-gray-200'}`}>
             {(isMobile && !showAllCitiesMobile ? cities.slice(0, 8) : cities).map((city) => {
               const isActive = selectedCity === city;
               return (
@@ -489,7 +491,9 @@ export default function SEOFooter() {
                   className={`text-xs font-extrabold tracking-wider uppercase px-4 py-2 rounded-xl transition-all duration-200 border ${
                     isActive
                       ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/10'
-                      : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                      : isDark
+                        ? 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                        : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 shadow-sm'
                   }`}
                 >
                   {city}
@@ -510,21 +514,21 @@ export default function SEOFooter() {
 
         {/* Area Selector */}
         <div className="space-y-4">
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+          <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
             <MapPin className="w-3.5 h-3.5 text-red-500" />
             Select Area in {selectedCity}
           </h3>
 
           {loadingAreas ? (
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>
               <Loader2 className="w-4 h-4 animate-spin text-red-500" /> Loading available areas...
             </div>
           ) : (
             <div className="space-y-3">
               {/* Compact scrollable container to keep layout size small */}
-              <div className="max-h-36 md:max-h-48 overflow-y-auto pr-1 flex flex-wrap items-center gap-2 content-start border border-zinc-900/60 bg-zinc-950/20 p-3 rounded-2xl">
+              <div className={`max-h-36 md:max-h-48 overflow-y-auto pr-1 flex flex-wrap items-center gap-2 content-start border p-3 rounded-2xl ${isDark ? 'border-zinc-900/60 bg-zinc-950/20' : 'border-gray-200 bg-white/50'}`}>
                 {areas.length === 0 ? (
-                  <span className="text-xs text-zinc-500 italic p-1">No areas available.</span>
+                  <span className={`text-xs italic p-1 ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>No areas available.</span>
                 ) : (
                   areas.map((area) => {
                     const isActive = selectedArea === area;
@@ -534,8 +538,12 @@ export default function SEOFooter() {
                         onClick={() => setSelectedArea(area)}
                         className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? 'bg-zinc-800 text-red-400 border border-red-500/20 shadow-sm'
-                            : 'bg-zinc-900/20 border border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                            ? isDark 
+                              ? 'bg-zinc-800 text-red-400 border border-red-500/20 shadow-sm'
+                              : 'bg-red-50 text-red-600 border border-red-200 shadow-sm'
+                            : isDark
+                              ? 'bg-zinc-900/20 border border-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                              : 'bg-white border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-300'
                         }`}
                       >
                         {area}
@@ -550,7 +558,11 @@ export default function SEOFooter() {
                   <button
                     onClick={handleLoadMore}
                     disabled={loadingMore}
-                    className="text-xs font-extrabold uppercase tracking-wider text-red-500 hover:text-red-400 disabled:text-zinc-600 transition-all duration-200 flex items-center gap-1.5 py-1.5 px-4 bg-zinc-900/60 rounded-xl border border-zinc-800 hover:border-zinc-700 disabled:bg-zinc-900/20 shadow-md shadow-black/10"
+                    className={`text-xs font-extrabold uppercase tracking-wider text-red-500 hover:text-red-600 transition-all duration-200 flex items-center gap-1.5 py-1.5 px-4 rounded-xl border shadow-md ${
+                      isDark
+                        ? 'disabled:text-zinc-600 bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 disabled:bg-zinc-900/20 shadow-black/10'
+                        : 'disabled:text-gray-400 bg-white border-gray-200 hover:border-gray-300 disabled:bg-gray-50 shadow-black/5'
+                    }`}
                   >
                     {loadingMore ? (
                       <>
@@ -567,9 +579,9 @@ export default function SEOFooter() {
         </div>
 
         {/* Categories & Service Links Farm */}
-        <div className="pt-6 border-t border-zinc-900">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-zinc-900/60">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+        <div className={`pt-6 border-t ${isDark ? 'border-zinc-900' : 'border-gray-200'}`}>
+          <div className={`flex items-center justify-between mb-2 pb-2 border-b ${isDark ? 'border-zinc-900/60' : 'border-gray-200'}`}>
+            <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
               Popular Services in {selectedArea}, {selectedCity}
             </h3>
@@ -577,14 +589,22 @@ export default function SEOFooter() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => handleSlide('left')}
-                className="p-3 bg-zinc-950/80 border border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg"
+                className={`p-3 border rounded-full active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg ${
+                  isDark
+                    ? 'bg-zinc-950/80 border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    : 'bg-white border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                }`}
                 aria-label="Slide Left"
               >
                 <ChevronRight className="w-4 h-4 transform rotate-180" />
               </button>
               <button
                 onClick={() => handleSlide('right')}
-                className="p-3 bg-zinc-950/80 border border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-900 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg"
+                className={`p-3 border rounded-full active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg ${
+                  isDark
+                    ? 'bg-zinc-950/80 border-zinc-800/85 hover:border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    : 'bg-white border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                }`}
                 aria-label="Slide Right"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -600,9 +620,13 @@ export default function SEOFooter() {
             {serviceCategories.map((cat, index) => (
               <div 
                 key={index} 
-                className="w-[78vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] shrink-0 snap-start bg-zinc-900/10 border border-zinc-900/60 hover:border-zinc-800 p-5 rounded-[28px] space-y-3 transition-all duration-300 hover:bg-zinc-900/25"
+                className={`w-[78vw] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] shrink-0 snap-start border p-5 rounded-[28px] space-y-3 transition-all duration-300 ${
+                  isDark
+                    ? 'bg-zinc-900/10 border-zinc-900/60 hover:border-zinc-800 hover:bg-zinc-900/25'
+                    : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50 shadow-sm'
+                }`}
               >
-                <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] border-l-[3px] border-red-600 pl-3">
+                <h4 className={`text-xs font-black uppercase tracking-[0.15em] border-l-[3px] border-red-600 pl-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {cat.categoryName}
                 </h4>
                 <ul className="space-y-1">
@@ -611,11 +635,11 @@ export default function SEOFooter() {
                       <a
                         href={`/seo-salons/${encodeURIComponent(
                           selectedCity.trim().replace(/\s+/g, '-')
-                        )}/${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}/${encodeURIComponent(
+                        )}/${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}/Best-${encodeURIComponent(
                           service.trim().replace(/\s+/g, '-')
-                        )}`}
+                        )}-in-${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}`}
                         onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
-                        className="text-zinc-400 hover:text-red-500 transition-colors duration-200 text-xs font-semibold flex items-center group py-0.5"
+                        className={`hover:text-red-500 transition-colors duration-200 text-xs font-semibold flex items-center group py-0.5 ${isDark ? 'text-zinc-400' : 'text-gray-500 hover:text-red-600'}`}
                       >
                         <ChevronRight className="w-3 h-3 text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 -ml-2 group-hover:ml-0 mr-1.5 shrink-0" />
                         {service} in {selectedArea}

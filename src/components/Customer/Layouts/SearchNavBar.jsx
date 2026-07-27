@@ -14,7 +14,7 @@ const SearchNavBar = () => {
   useEffect(() => {
       setMounted(true);
   }, []);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const navigate = useNavigate();
@@ -97,9 +97,9 @@ const SearchNavBar = () => {
       </div>
 
       {/* Global Hub Navigation Search & Filter Bar Group */}
-      <div className={`flex items-center border rounded-lg overflow-hidden max-w-[120px] min-[380px]:max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-2xl w-full mx-1.5 sm:mx-4 h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'}`}>
-        <div className="flex items-center flex-1 px-2 sm:px-3 lg:border-r border-gray-200 min-w-0">
-          <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+      <div className={`flex items-center border rounded-lg overflow-hidden max-w-[120px] min-[380px]:max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-2xl w-full mx-1.5 sm:mx-4 h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-400 bg-white'}`}>
+        <div className={`flex items-center flex-1 px-2 sm:px-3 lg:border-r min-w-0 ${isDark ? 'border-gray-700' : 'border-gray-400'}`}>
+          <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDark ? 'text-gray-200' : 'text-[#8D8D8D]'}`} />
           <input 
             type="text" 
             placeholder="Search..." 
@@ -107,7 +107,7 @@ const SearchNavBar = () => {
           />
         </div>
         
-        <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}>
+        <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
           <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
           <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>Location</span>
           <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
@@ -137,15 +137,17 @@ const SearchNavBar = () => {
           }`}
           aria-label="Toggle dark mode"
         >
-          <span className={`absolute left-1 transition-all duration-300 flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
+          <span className={`absolute left-1 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
             isDark
               ? 'translate-x-7 bg-yellow-400'
               : 'translate-x-0 bg-white'
           }`}>
-            {isDark
-              ? <Sun className="w-3 h-3 text-yellow-800" />
-              : <Moon className="w-3 h-3 text-gray-500" />
-            }
+            <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+            }`} />
+            <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+            }`} />
           </span>
         </button>
 

@@ -32,7 +32,15 @@ export default function SEOSalons() {
     const queryParams = new URLSearchParams(location.search);
     const urlCity = parseSlug(paramCity || queryParams.get('cityName') || '');
     const urlArea = parseSlug(paramArea || queryParams.get('areaName') || '');
-    const urlService = parseSlug(paramService || queryParams.get('serviceName') || queryParams.get('category') || '');
+    let urlService = parseSlug(paramService || queryParams.get('serviceName') || queryParams.get('category') || '');
+
+    // If the service string is in the new "Best {service} in {area}" format, extract the real service name
+    if (urlService.toLowerCase().startsWith('best ') && urlArea) {
+      const suffix = ` in ${urlArea.toLowerCase()}`;
+      if (urlService.toLowerCase().endsWith(suffix)) {
+        urlService = urlService.substring(5, urlService.length - suffix.length).trim();
+      }
+    }
 
     if (location.state && location.state.salons) {
       setCityName(location.state.cityName || urlCity);
