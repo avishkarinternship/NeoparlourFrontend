@@ -115,6 +115,7 @@ const Navbar = () => {
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/features'); }} className={navLinkClass(['/features'])}>FEATURES</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/partner-with-us'); }} className={navLinkClass(['/partner-with-us'])}>PARTNER WITH US</a>
                     <a href="#" onClick={(e) => { e.preventDefault(); navigate('/salons'); }} className={navLinkClass(['/salons'])}>SALONS</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/support'); }} className={navLinkClass(['/support'])}>CONTACT US</a>
 
                 </div>
 
