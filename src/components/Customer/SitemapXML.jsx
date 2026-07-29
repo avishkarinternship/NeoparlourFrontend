@@ -117,7 +117,7 @@ export default function SitemapXML() {
           
           seoServices.forEach(service => {
             if (lowerActiveServices.has(service.toLowerCase())) {
-              xml += `  <url>\n    <loc>https://neoparlour.com/seo-salons/${cleanParam(city)}/${cleanParam(area)}/Best-${cleanParam(service.trim().replace(/\s+/g, '-'))}-in-${cleanParam(area.trim().replace(/\s+/g, '-'))}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+              xml += `  <url>\n    <loc>https://neoparlour.com/${cleanParam(city)}/Best-${cleanParam(service.trim().replace(/\s+/g, '-'))}-in-${cleanParam(area.trim().replace(/\s+/g, '-'))}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
             }
           });
         });

@@ -436,7 +436,7 @@ export default function SEOFooter() {
         const createSlug = (str) => encodeURIComponent(str.trim().replace(/\s+/g, '-'));
 
         // Redirect to SEOSalons route, passing results in navigation state
-        navigate(`/seo-salons/${createSlug(cityName)}/${createSlug(areaName)}/Best-${createSlug(serviceName)}-in-${createSlug(areaName)}`, {
+        navigate(`/${createSlug(cityName)}/Best-${createSlug(serviceName)}-in-${createSlug(areaName)}`, {
           state: {
             salons: salonsList,
             cityName,
@@ -598,7 +598,7 @@ export default function SEOFooter() {
               >
                 <ChevronRight className="w-4 h-4 transform rotate-180" />
               </button>
-              <button
+              <button 
                 onClick={() => handleSlide('right')}
                 className={`p-3 border rounded-full active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center shadow-lg ${
                   isDark
@@ -633,9 +633,9 @@ export default function SEOFooter() {
                   {cat.services.map((service, sIdx) => (
                     <li key={sIdx}>
                       <a
-                        href={`/seo-salons/${encodeURIComponent(
+                        href={`/${encodeURIComponent(
                           selectedCity.trim().replace(/\s+/g, '-')
-                        )}/${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}/Best-${encodeURIComponent(
+                        )}/Best-${encodeURIComponent(
                           service.trim().replace(/\s+/g, '-')
                         )}-in-${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}`}
                         onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}

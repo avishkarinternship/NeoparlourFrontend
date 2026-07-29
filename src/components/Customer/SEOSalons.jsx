@@ -23,19 +23,26 @@ export default function SEOSalons() {
   const [pricesMap, setPricesMap] = useState({});
   const [servicesMap, setServicesMap] = useState({});
 
-  const { cityName: paramCity, areaName: paramArea, serviceName: paramService } = useParams();
+  const { cityName: paramCity, areaName: paramArea, serviceName: paramService, serviceSlug } = useParams();
 
   const parseSlug = (str) => str ? str.replace(/-/g, ' ') : '';
 
   // Parse URL parameters (supporting both pretty route params and query parameters)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const urlCity = parseSlug(paramCity || queryParams.get('cityName') || '');
-    const urlArea = parseSlug(paramArea || queryParams.get('areaName') || '');
+    let urlCity = parseSlug(paramCity || queryParams.get('cityName') || '');
+    let urlArea = parseSlug(paramArea || queryParams.get('areaName') || '');
     let urlService = parseSlug(paramService || queryParams.get('serviceName') || queryParams.get('category') || '');
 
-    // If the service string is in the new "Best {service} in {area}" format, extract the real service name
-    if (urlService.toLowerCase().startsWith('best ') && urlArea) {
+    // Support new route format: /:cityName/:serviceSlug (where serviceSlug is Best-service-in-area)
+    if (serviceSlug) {
+      const match = serviceSlug.match(/^Best-(.+)-in-(.+)$/i);
+      if (match) {
+        urlService = parseSlug(match[1]);
+        urlArea = parseSlug(match[2]);
+      }
+    } else if (urlService.toLowerCase().startsWith('best ') && urlArea) {
+      // Fallback for old route structure
       const suffix = ` in ${urlArea.toLowerCase()}`;
       if (urlService.toLowerCase().endsWith(suffix)) {
         urlService = urlService.substring(5, urlService.length - suffix.length).trim();

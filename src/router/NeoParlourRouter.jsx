@@ -305,6 +305,10 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
                     },
                     {
+                        path: ':cityName/:serviceSlug',
+                        element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
+                    },
+                    {
                         path: 'salon/:salonSlug',
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },

@@ -548,6 +548,11 @@ const SelectService = () => {
             setAvailableStaffList([]);
             return;
         }
+        // Prevent calling API for slots that are in the past to avoid 400 Bad Request
+        if (new Date(selectedSlot.startTime) < new Date()) {
+            setAvailableStaffList([]);
+            return;
+        }
         const fetchAvailableStaff = async () => {
             setAvailableStaffLoading(true);
             try {
