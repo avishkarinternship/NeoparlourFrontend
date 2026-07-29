@@ -374,7 +374,7 @@ export default function SalonsSEO() {
                   We currently do not have any registered salons matching your specific location details. Please try searching in a broader city or nearby area.
                 </p>
                 <Link
-                  to="/customer/salons"
+                  to="/salons"
                   className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-2xl text-sm transition-all shadow-sm"
                 >
                   Explore All Salons

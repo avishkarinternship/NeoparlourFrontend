@@ -149,7 +149,7 @@ export default function Cart() {
             </p>
           </div>
           <button 
-            onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
+            onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
             className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function Cart() {
         {/* Breadcrumbs */}
         <div className="mb-8 space-y-2">
           <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium">
-            <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/home')}>Home</span>
+            <span className="hover:underline cursor-pointer" onClick={() => navigate('/home')}>Home</span>
             <ChevronRight className="w-3 h-3" />
             <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/product-search')}>Products</span>
             <ChevronRight className="w-3 h-3" />
@@ -348,7 +348,7 @@ export default function Cart() {
 
               <button 
                 type="button"
-                onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
+                onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
                 className="w-full py-3.5 mt-3 border border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-extrabold text-[13px] tracking-wider rounded-2xl shadow-xs transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4 text-neutral-400" />

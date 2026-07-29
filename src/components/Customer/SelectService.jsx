@@ -368,7 +368,7 @@ const SelectService = () => {
     useEffect(() => {
         if (!activeSalonId) {
             toast.error('No active salon selected. Redirecting to search.');
-            navigate('/customer/salons');
+            navigate('/salons');
             return;
         }
 
@@ -1068,7 +1068,7 @@ const SelectService = () => {
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/salons')}>Search</span>
                     <span>&gt;</span>
                     <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>Salon Description</span>
                     <span>&gt;</span>
@@ -1859,9 +1859,9 @@ const SelectService = () => {
                             </button>
                             <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
                                 By booking an appointment, you agree to our{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/terms-and-conditions')}>Terms of Service</span>{' '}
                                 and{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/privacy-policy')}>Privacy Policy</span>.
                             </p>
                         </div>
 

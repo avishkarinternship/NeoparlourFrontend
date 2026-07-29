@@ -143,7 +143,7 @@ const Favourites = () => {
             <div className="max-w-[1200px] w-full mx-auto px-6 pt-10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => navigate('/customer/home')}
+                        onClick={() => navigate('/home')}
                         className="w-11 h-11 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all flex-shrink-0"
                         title="Go Back"
                     >
@@ -183,7 +183,7 @@ const Favourites = () => {
                         <h3 className="text-sm font-black text-gray-400 uppercase tracking-wider">No favourite salons yet</h3>
                         <p className="text-[10px] text-gray-300 mt-1.5 max-w-xs mx-auto">Click the heart button on any salon listing or page to save them here for quick access.</p>
                         <button
-                            onClick={() => navigate('/customer/salons')}
+                            onClick={() => navigate('/salons')}
                             className="mt-6 px-5 py-2.5 bg-[#ff0b01] hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg cursor-pointer"
                         >
                             Browse Salons

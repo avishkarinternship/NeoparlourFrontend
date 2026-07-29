@@ -729,8 +729,8 @@ const PublicSubscriptionPlans = () => {
       <footer className="w-full border-t border-neutral-850 py-6 px-6 md:px-12 text-center text-xs text-gray-500 mt-auto z-10 flex flex-col md:flex-row justify-between items-center gap-4">
         <span>© {new Date().getFullYear()} NeoParlour Inc. All Rights Reserved.</span>
         <div className="flex gap-4">
-          <a href="/customer/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="/customer/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</a>
+          <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</a>
         </div>
       </footer>
 

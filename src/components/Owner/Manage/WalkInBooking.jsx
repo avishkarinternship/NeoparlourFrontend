@@ -1359,9 +1359,9 @@ const WalkInBooking = () => {
                             </button>
                             <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
                                 By booking an appointment, you agree to our{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/terms-and-conditions')}>Terms of Service</span>{' '}
                                 and{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/privacy-policy')}>Privacy Policy</span>.
                             </p>
                         </div>
 

@@ -189,11 +189,11 @@ export let routes = createBrowserRouter([
                 element: <CustomerLayout />,
                 children: [
                     {
-                        path: '/customer/terms-and-conditions',
+                        path: '/terms-and-conditions',
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/privacy-policy',
+                        path: '/privacy-policy',
                         element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
                     },
                     {
@@ -201,19 +201,19 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/home',
+                        path: '/home',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/features',
+                        path: '/features',
                         element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/about',
+                        path: '/about',
                         element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/support',
+                        path: '/support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
                     },
                     {
@@ -221,11 +221,11 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/partner-with-us',
+                        path: '/partner-with-us',
                         element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/salons',
+                        path: '/salons',
                         element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
                     },
                     {
@@ -233,35 +233,35 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/blogs',
+                        path: '/blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/leadership',
+                        path: '/leadership',
                         element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/videos',
+                        path: '/videos',
                         element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/security',
+                        path: '/security',
                         element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/services',
+                        path: '/services',
                         element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/client-testimonials',
+                        path: '/client-testimonials',
                         element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/sitemap',
+                        path: '/sitemap',
                         element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/updates',
+                        path: '/updates',
                         element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
                     },
                     {
@@ -269,7 +269,7 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
                     },
                      {
-                        path: '/customer/case-studies',
+                        path: '/case-studies',
                         element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {

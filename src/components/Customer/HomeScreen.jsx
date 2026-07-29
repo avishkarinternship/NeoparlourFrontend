@@ -1046,7 +1046,7 @@ const HomeScreen = () => {
                         </p>
                     </div>
                     <button
-                        onClick={() => navigate('/customer/salons')}
+                        onClick={() => navigate('/salons')}
                         className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
                     >
                         See More

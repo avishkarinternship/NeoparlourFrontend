@@ -498,7 +498,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Help Link Option */}
           <button
-            onClick={() => navigate('/customer/support')}
+            onClick={() => navigate('/support')}
             className="w-full flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-gray-900 text-[13px] font-bold transition-colors duration-150 sidebar-btn text-left"
           >
             <img src={helpIcon} alt="Help" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-60" />

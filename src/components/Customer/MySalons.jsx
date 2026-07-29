@@ -117,7 +117,7 @@ const MySalons = () => {
             {/* Page Header */}
             <div className="max-w-[1200px] w-full mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row md:items-center gap-4">
                 <button
-                    onClick={() => navigate('/customer/home')}
+                    onClick={() => navigate('/home')}
                     className="w-11 h-11 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all flex-shrink-0"
                     title="Go Back"
                 >
@@ -231,7 +231,7 @@ const MySalons = () => {
                         <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider">No salon visits yet</h3>
                         <p className="text-[10px] text-gray-300 mt-1.5 max-w-xs text-center">Book a service at one of our salons to see your visit history here.</p>
                         <button
-                            onClick={() => navigate('/customer/salons')}
+                            onClick={() => navigate('/salons')}
                             className="mt-5 px-5 py-2 bg-[#ff0b01] text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-all"
                         >
                             Browse Salons

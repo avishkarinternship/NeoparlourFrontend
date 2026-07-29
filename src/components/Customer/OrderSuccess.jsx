@@ -235,7 +235,7 @@ const OrderSuccess = () => {
             Continue Shopping
           </button>
           <button
-            onClick={() => navigate('/customer/home')}
+            onClick={() => navigate('/home')}
             className="flex-1 max-w-xs py-3.5 bg-[#FF0B01] hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-md transition duration-200 text-center cursor-pointer"
           >
             Go to Home

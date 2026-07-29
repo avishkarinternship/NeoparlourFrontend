@@ -314,7 +314,7 @@ const SalonPage = () => {
                     setResolvedSalonId(activeId);
                 } else {
                     toast.error('No active salon selected. Redirecting to search.');
-                    navigate('/customer/salons');
+                    navigate('/salons');
                 }
                 return;
             }
@@ -352,12 +352,12 @@ const SalonPage = () => {
                     setResolvedSalonId(id);
                 } else {
                     toast.error('Salon not found. Redirecting...');
-                    navigate('/customer/salons');
+                    navigate('/salons');
                 }
             } catch (e) {
                 console.error("Error resolving salon slug:", e);
                 toast.error('Error finding salon.');
-                navigate('/customer/salons');
+                navigate('/salons');
             }
         };
 
@@ -776,7 +776,7 @@ const SalonPage = () => {
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/salons')}>Search</span>
                     <span>&gt;</span>
                     <span className="text-slate-900 font-black">Salon Description</span>
                 </div>

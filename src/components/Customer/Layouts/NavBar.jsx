@@ -103,18 +103,18 @@ const Navbar = () => {
             } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'}`}>
                 
                 {/* Logo Section */}
-                <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
+                <div onClick={() => navigate('/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
                     <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
                     <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
                 </div>
 
                 {/* Desktop Navigation Links */}
                 <div className={`hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>HOME</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>ABOUT</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>FEATURES</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>PARTNER WITH US</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>SALONS</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/home'); }} className={navLinkClass(['/home', '/customer/dashboard', '/'])}>HOME</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/about'); }} className={navLinkClass(['/about'])}>ABOUT</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/features'); }} className={navLinkClass(['/features'])}>FEATURES</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/partner-with-us'); }} className={navLinkClass(['/partner-with-us'])}>PARTNER WITH US</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/salons'); }} className={navLinkClass(['/salons'])}>SALONS</a>
 
                 </div>
 
@@ -266,8 +266,8 @@ const Navbar = () => {
                 onProfileClick={() => setIsProfileOpen(true)}
                 onChangePasswordClick={() => setIsPasswordResetOpen(true)}
                 setCurrentView={(view) => {
-                    if (view === 'about') navigate('/customer/about');
-                    if (view === 'home') navigate('/customer/home');
+                    if (view === 'about') navigate('/about');
+                    if (view === 'home') navigate('/home');
                 }} 
             />
 

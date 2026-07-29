@@ -549,7 +549,7 @@ const CustomerRegister = () => {
                 <label htmlFor="terms" className="text-xs text-gray-400 cursor-pointer font-bold">
                   I agree with the{' '}
                   <Link 
-                    to="/customer/terms-and-conditions" 
+                    to="/terms-and-conditions" 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-[#ff0b01] font-black hover:underline"

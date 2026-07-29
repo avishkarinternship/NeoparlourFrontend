@@ -86,7 +86,7 @@ const SearchNavBar = () => {
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
       {/* Brand Vector Identity Block */}
-      <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/customer/home')}>
+      <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/home')}>
         <div className="text-[#EF3E23] flex items-center justify-center flex-shrink-0">
           <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fillRule="evenodd" clipRule="evenodd" d="M50.8159 0.709961C51.5247 5.9279 50.2046 10.2438 46.635 13.6787C42.6288 17.5384 38.4736 21.2409 34.4058 25.0377C33.8973 25.5096 33.6303 25.5411 33.1526 25.0167C31.9918 23.7423 30.8002 22.4994 29.5573 21.3143C28.9769 20.7584 29.0797 20.4699 29.619 19.9822C36.0392 14.1665 42.4388 8.32455 48.8435 2.4878C49.4393 1.94765 50.0352 1.41793 50.821 0.71521L50.8159 0.709961Z" fill="#878787"/>
@@ -265,8 +265,8 @@ const SearchNavBar = () => {
         onProfileClick={() => setIsProfileOpen(true)}
         onChangePasswordClick={() => setIsPasswordResetOpen(true)}
         setCurrentView={(view) => {
-          if (view === 'about') navigate('/customer/about');
-          if (view === 'home') navigate('/customer/home');
+          if (view === 'about') navigate('/about');
+          if (view === 'home') navigate('/home');
         }} 
       />
 
