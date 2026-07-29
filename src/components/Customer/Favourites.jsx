@@ -143,7 +143,7 @@ const Favourites = () => {
             <div className="max-w-[1200px] w-full mx-auto px-6 pt-10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => navigate('/home')}
+                        onClick={() => navigate('/')}
                         className="w-11 h-11 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all flex-shrink-0"
                         title="Go Back"
                     >

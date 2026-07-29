@@ -167,7 +167,7 @@ export default function Cart() {
         {/* Breadcrumbs */}
         <div className="mb-8 space-y-2">
           <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium">
-            <span className="hover:underline cursor-pointer" onClick={() => navigate('/home')}>Home</span>
+            <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
             <ChevronRight className="w-3 h-3" />
             <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/product-search')}>Products</span>
             <ChevronRight className="w-3 h-3" />

@@ -200,10 +200,7 @@ export let routes = createBrowserRouter([
                         path: '/',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
-                    {
-                        path: '/home',
-                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
-                    },
+
                     {
                         path: '/features',
                         element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
