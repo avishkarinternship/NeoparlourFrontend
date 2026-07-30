@@ -184,6 +184,35 @@ export let routes = createBrowserRouter([
                 element: <PrivacyPolicyScreen />
             },
 
+            {
+                path: '/customer/cart',
+                element: <Navigate to="/cart" replace />
+            },
+            {
+                path: '/customer/appointments',
+                element: <Navigate to="/appointments" replace />
+            },
+            {
+                path: '/customer/my-orders',
+                element: <Navigate to="/my-orders" replace />
+            },
+            {
+                path: '/customer/my-salons',
+                element: <Navigate to="/my-salons" replace />
+            },
+            {
+                path: '/customer/favourites',
+                element: <Navigate to="/favourites" replace />
+            },
+            {
+                path: '/customer/salon',
+                element: <Navigate to="/salon" replace />
+            },
+            {
+                path: '/customer/book-service',
+                element: <Navigate to="/book-service" replace />
+            },
+
             // Customer Layout wrapper routes
             {
                 element: <CustomerLayout />,
