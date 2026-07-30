@@ -228,7 +228,7 @@ export default function SalonsSEO() {
   ];
 
   const nearbyAreas = {
-    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park', 'Bavdhan'],
+    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman N   agar', 'Kalyani Nagar', 'Koregaon Park', 'Bavdhan'],
     mumbai: ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Thane', 'Navi Mumbai'],
     bangalore: ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar'],
     chennai: ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram'],

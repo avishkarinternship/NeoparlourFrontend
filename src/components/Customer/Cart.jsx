@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 // Helper toast style
 const toastStyle = {
@@ -359,6 +360,9 @@ export default function Cart() {
         </div>
 
       </main>
+      <div className="mt-12 md:mt-20">
+        <SEOFooter />
+      </div>
     </div>
   );
 }
