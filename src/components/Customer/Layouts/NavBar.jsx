@@ -235,7 +235,7 @@ const Navbar = () => {
                     {/* Cart Icon button */}
                     {isAuthenticated && (
                         <button
-                            onClick={() => navigate('/customer/cart')}
+                            onClick={() => navigate('/cart')}
                             className={`p-1.5 sm:p-2 hover:text-[#FF0B01] rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}
                             title="Shopping Cart"
                         >

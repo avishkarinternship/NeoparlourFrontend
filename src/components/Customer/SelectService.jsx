@@ -1033,7 +1033,7 @@ const SelectService = () => {
                 toast.error('Please login to book an appointment.');
                 navigate('/customer/login', { 
                     state: { 
-                        from: '/customer/book-service',
+                        from: '/book-service',
                         bookingState: { 
                             addedServices, 
                             selectedExpert, 
@@ -1070,7 +1070,7 @@ const SelectService = () => {
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
                     <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/salons')}>Search</span>
                     <span>&gt;</span>
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>Salon Description</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/salon`)}>Salon Description</span>
                     <span>&gt;</span>
                     <span className="text-slate-900 font-black">Select Service</span>
                 </div>

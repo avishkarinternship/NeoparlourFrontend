@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 const toastStyle = {
   style: {
@@ -854,6 +855,9 @@ const Appointments = () => {
     return (
       <div className="bg-[#fcfcfd] dark:bg-black text-gray-900 dark:text-white font-sans pb-16">
         {renderMainContent()}
+        <div className="mt-12 md:mt-20">
+          <SEOFooter />
+        </div>
       </div>
     );
   }

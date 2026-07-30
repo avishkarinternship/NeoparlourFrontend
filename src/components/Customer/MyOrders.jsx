@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { ShoppingBag, Calendar, CheckCircle2, AlertCircle, Clock, ShoppingCart } from 'lucide-react';
+import SEOFooter from '../common/SEOFooter';
 
 const MyOrders = () => {
   const navigate = useNavigate();
@@ -201,6 +202,7 @@ const MyOrders = () => {
         )}
 
       </main>
+      <SEOFooter />
     </div>
   );
 };

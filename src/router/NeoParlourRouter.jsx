@@ -270,19 +270,19 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/my-salons',
+                        path: '/my-salons',
                         element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/favourites',
+                        path: '/favourites',
                         element: <CustomerRouteGuard><Favourites /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/appointments',
+                        path: '/appointments',
                         element: <CustomerRouteGuard><Appointments /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/salon',
+                        path: 'salon',
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },
                     {
@@ -310,7 +310,7 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/book-service',
+                        path: 'book-service',
                         element: <CustomerRouteGuard isPublic={true}><SelectService /></CustomerRouteGuard>
                     },
                     {
@@ -334,11 +334,11 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/my-orders',
+                        path: 'my-orders',
                         element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/cart',
+                        path: 'cart',
                         element: <CustomerRouteGuard><Cart /></CustomerRouteGuard>
                     }
                 ]

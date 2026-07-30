@@ -433,10 +433,10 @@ export default function SEOFooter() {
         const salonsList = await response.json();
         toast.success(`Found ${salonsList.length} salons!`, { id: resolveToast });
         
-        const createSlug = (str) => encodeURIComponent(str.trim().replace(/\s+/g, '-'));
+        const createSlug = (str) => encodeURIComponent(str.trim().toLowerCase().replace(/\s+/g, '-'));
 
         // Redirect to SEOSalons route, passing results in navigation state
-        navigate(`/${createSlug(cityName)}/Best-${createSlug(serviceName)}-in-${createSlug(areaName)}`, {
+        navigate(`/${createSlug(cityName)}/best-${createSlug(serviceName)}-in-${createSlug(areaName)}`, {
           state: {
             salons: salonsList,
             cityName,
@@ -634,10 +634,10 @@ export default function SEOFooter() {
                     <li key={sIdx}>
                       <a
                         href={`/${encodeURIComponent(
-                          selectedCity.trim().replace(/\s+/g, '-')
-                        )}/Best-${encodeURIComponent(
-                          service.trim().replace(/\s+/g, '-')
-                        )}-in-${encodeURIComponent(selectedArea.trim().replace(/\s+/g, '-'))}`}
+                          selectedCity.trim().toLowerCase().replace(/\s+/g, '-')
+                        )}/best-${encodeURIComponent(
+                          service.trim().toLowerCase().replace(/\s+/g, '-')
+                        )}-in-${encodeURIComponent(selectedArea.trim().toLowerCase().replace(/\s+/g, '-'))}`}
                         onClick={(e) => handleLinkClick(e, selectedCity, selectedArea, service)}
                         className={`hover:text-red-500 transition-colors duration-200 text-xs font-semibold flex items-center group py-0.5 ${isDark ? 'text-zinc-400' : 'text-gray-500 hover:text-red-600'}`}
                       >

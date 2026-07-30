@@ -13,12 +13,12 @@ function CustomerLayoutInner() {
     '/customer/product-search',
     '/customer/product-details',
     '/customer/product-payment',
-    '/customer/salon',
-    '/customer/book-service',
+    '/salon',
+    '/book-service',
     '/customer/appointment-success',
     '/customer/order-success',
-    '/customer/my-orders',
-    '/customer/cart'
+    '/my-orders',
+    '/cart'
   ];
 
   const isSearchRoute = searchRoutes.some(route =>

@@ -5,6 +5,7 @@ import axiosInstance from '../../api/axiosInstance';
 import { switchTenant, fetchDefaultSalon, setDefaultSalon } from '../../redux/slices/customerSlice';
 import toast from 'react-hot-toast';
 import { Heart, Trash2, MapPin, Star, Clock, ChevronRight, Crown } from 'lucide-react';
+import SEOFooter from '../common/SEOFooter';
 
 const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -82,7 +83,7 @@ const Favourites = () => {
         localStorage.setItem('activeSalonName', salonName);
 
         if (!token) {
-            navigate('/customer/salon');
+            navigate('/salon');
             return;
         }
 
@@ -97,7 +98,7 @@ const Favourites = () => {
             .unwrap()
             .then(() => {
                 toast.success(`Welcome to ${salonName}`, toastStyle);
-                navigate('/customer/salon');
+                navigate('/salon');
             })
             .catch((err) => {
                 const errMsg = String(err).toLowerCase();
@@ -106,7 +107,7 @@ const Favourites = () => {
                     navigate('/customer/login');
                 } else {
                     // Fallback to navigate anyway
-                    navigate('/customer/salon');
+                    navigate('/salon');
                 }
             })
             .finally(() => {
@@ -312,6 +313,7 @@ const Favourites = () => {
                     </div>
                 )}
             </div>
+            <SEOFooter />
         </div>
     );
 };

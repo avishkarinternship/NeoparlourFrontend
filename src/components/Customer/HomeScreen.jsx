@@ -504,7 +504,7 @@ const HomeScreen = () => {
         localStorage.setItem('activeSalonName', salonName);
 
         const hasCategory = !!searchData.category;
-        const targetPath = hasCategory ? '/customer/book-service' : '/customer/salon';
+        const targetPath = hasCategory ? '/book-service' : '/salon';
         const navState = hasCategory ? { state: { selectedCategory: searchData.category } } : undefined;
 
         if (!token) {
@@ -998,8 +998,8 @@ const HomeScreen = () => {
                                     localStorage.setItem('activeSalonName', salonName);
                                     dispatch(switchTenant({ token, salonId, salonName }))
                                         .unwrap()
-                                        .then(() => navigate('/customer/salon'))
-                                        .catch(() => navigate('/customer/salon'));
+                                        .then(() => navigate('/salon'))
+                                        .catch(() => navigate('/salon'));
                                 }}
                                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff0b01] to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
                             >

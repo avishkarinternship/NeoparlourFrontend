@@ -377,7 +377,7 @@ const SalonsListing = () => {
         const hasCategory = !!category;
         const targetPath = isFromProducts 
             ? '/customer/product-search' 
-            : (hasCategory ? '/customer/book-service' : '/customer/salon');
+            : (hasCategory ? '/book-service' : '/salon');
         const navState = (hasCategory && !isFromProducts) 
             ? { state: { selectedCategory: category } } 
             : undefined;

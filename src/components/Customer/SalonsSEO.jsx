@@ -199,7 +199,7 @@ export default function SalonsSEO() {
     localStorage.setItem('activeSalonName', salonName);
 
     if (!token) {
-      navigate('/customer/salon');
+      navigate('/salon');
       return;
     }
 
@@ -208,10 +208,10 @@ export default function SalonsSEO() {
       .unwrap()
       .then(() => {
         toast.success(`Switched to ${salonName}`);
-        navigate('/customer/salon');
+        navigate('/salon');
       })
       .catch(() => {
-        navigate('/customer/salon');
+        navigate('/salon');
       });
   };
 

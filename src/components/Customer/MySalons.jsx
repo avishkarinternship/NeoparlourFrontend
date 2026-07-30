@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 const toastStyle = {
   style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -322,6 +323,7 @@ const MySalons = () => {
                     </div>
                 )}
             </div>
+            <SEOFooter />
         </div>
     );
 };

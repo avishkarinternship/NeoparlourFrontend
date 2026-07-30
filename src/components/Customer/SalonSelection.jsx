@@ -197,7 +197,7 @@ const SalonSelection = () => {
     localStorage.setItem('activeSalonName', salonName);
 
     if (!token) {
-      navigate('/customer/salon');
+      navigate('/salon');
       return;
     }
 
@@ -207,7 +207,7 @@ const SalonSelection = () => {
       salonName: salonName
     };
     dispatch(switchTenant(payload)).unwrap().then(() => {
-      navigate('/customer/salon');
+      navigate('/salon');
     });
   };
 

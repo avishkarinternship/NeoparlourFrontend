@@ -821,7 +821,7 @@ const SalonPage = () => {
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
                         <button
                             type="button"
-                            onClick={() => navigate('/customer/book-service')}
+                            onClick={() => navigate('/book-service')}
                             className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
                         >
                             Book Services
@@ -1021,7 +1021,7 @@ const SalonPage = () => {
                                                             </div>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
+                                                                onClick={() => navigate('/book-service', { state: { selectedOffer: offer } })}
                                                                 className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
                                                             >
                                                                 Claim Deal
@@ -1055,7 +1055,7 @@ const SalonPage = () => {
                                             return (
                                                 <div
                                                     key={catName}
-                                                    onClick={() => navigate('/customer/book-service', { state: { selectedCategory: catName } })}
+                                                    onClick={() => navigate('/book-service', { state: { selectedCategory: catName } })}
                                                     className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all transform hover:scale-105 active:scale-95"
                                                 >
                                                     <img
@@ -1121,7 +1121,7 @@ const SalonPage = () => {
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => navigate('/customer/book-service', { state: { selectedPackage: pkg } })}
+                                                        onClick={() => navigate('/book-service', { state: { selectedPackage: pkg } })}
                                                         className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
                                                     >
                                                         Book Package
@@ -1145,7 +1145,7 @@ const SalonPage = () => {
                                     <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> Top Experts
                                 </h3>
                                 <span
-                                    onClick={() => navigate('/customer/book-service')}
+                                    onClick={() => navigate('/book-service')}
                                     className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider flex items-center gap-0.5"
                                 >
                                     View All <ChevronRight className="w-3.5 h-3.5" />
@@ -1177,7 +1177,7 @@ const SalonPage = () => {
                                                     localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
                                                     if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
                                                     if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                                    navigate('/customer/book-service', {
+                                                    navigate('/book-service', {
                                                         state: {
                                                             selectedExpert: staff.id,
                                                             selectedDateObj: selectedDateObj,
@@ -1271,7 +1271,7 @@ const SalonPage = () => {
                                                     {/* Book Button */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => navigate('/customer/book-service', {
+                                                        onClick={() => navigate('/book-service', {
                                                             state: {
                                                                 selectedExpert: staff.id,
                                                                 selectedDateObj: selectedDateObj,
@@ -1413,7 +1413,7 @@ const SalonPage = () => {
                                                     localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
                                                     localStorage.setItem('bookingSelectedTime', slot.displayTime);
                                                     localStorage.setItem('bookingSelectedSlot', JSON.stringify(slot));
-                                                    navigate('/customer/book-service', {
+                                                    navigate('/book-service', {
                                                         state: {
                                                             selectedDateObj: selectedDateObj,
                                                             selectedTime: slot.displayTime,
@@ -1442,7 +1442,7 @@ const SalonPage = () => {
                                             localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
                                             localStorage.setItem('bookingSelectedTime', selectedTime);
                                             localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                            navigate('/customer/book-service', {
+                                            navigate('/book-service', {
                                                 state: {
                                                     selectedDateObj: selectedDateObj,
                                                     selectedTime: selectedTime
