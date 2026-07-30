@@ -185,31 +185,31 @@ export let routes = createBrowserRouter([
             },
 
             {
-                path: '/cart',
+                path: '/customer/cart',
                 element: <Navigate to="/cart" replace />
             },
             {
-                path: '/appointments',
+                path: '/customer/appointments',
                 element: <Navigate to="/appointments" replace />
             },
             {
-                path: '/my-orders',
+                path: '/customer/my-orders',
                 element: <Navigate to="/my-orders" replace />
             },
             {
-                path: '/my-salons',
+                path: '/customer/my-salons',
                 element: <Navigate to="/my-salons" replace />
             },
             {
-                path: '/favourites',
+                path: '/customer/favourites',
                 element: <Navigate to="/favourites" replace />
             },
             {
-                path: '/salon',
+                path: '/customer/salon',
                 element: <Navigate to="/salon" replace />
             },
             {
-                path: '/book-service',
+                path: '/customer/book-service',
                 element: <Navigate to="/book-service" replace />
             },
 
