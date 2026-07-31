@@ -218,11 +218,11 @@ export let routes = createBrowserRouter([
                 element: <CustomerLayout />,
                 children: [
                     {
-                        path: '/terms-and-conditions',
+                        path: 'customer/terms-and-conditions',
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
-                        path: '/privacy-policy',
+                        path: 'customer/privacy-policy',
                         element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
                     },
                     {
