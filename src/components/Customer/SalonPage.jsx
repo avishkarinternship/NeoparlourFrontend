@@ -1134,363 +1134,365 @@ const SalonPage = () => {
                             </section>
                         )}
 
-
-
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 items-start">
-                        {/* ── Top Experts (Staff) ── */}
-                        <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden" data-aos="fade-up">
-                            {/* Section Header */}
-                            <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
-                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                    <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> Top Experts
-                                </h3>
-                                <span
-                                    onClick={() => navigate('/book-service')}
-                                    className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider flex items-center gap-0.5"
-                                >
-                                    View All <ChevronRight className="w-3.5 h-3.5" />
-                                </span>
-                            </div>
+                            {/* Left Column: Top Experts & Available Slots */}
+                            <div className="flex flex-col gap-6 lg:gap-8">
+                                {/* ── Top Experts (Staff) ── */}
+                                <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden" data-aos="fade-up">
+                                    {/* Section Header */}
+                                    <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+                                        <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                            <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> Top Experts
+                                        </h3>
+                                        <span
+                                            onClick={() => navigate('/book-service')}
+                                            className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider flex items-center gap-0.5"
+                                        >
+                                            View All <ChevronRight className="w-3.5 h-3.5" />
+                                        </span>
+                                    </div>
 
-                            {!staffLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-10 px-6">
-                                    <div className="animate-spin h-8 w-8 border-[3px] border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading top experts...</p>
-                                </div>
-                            ) : staffList.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-10 px-6">
-                                    <Users className="w-10 h-10 text-slate-200 mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No experts currently listed</p>
-                                </div>
-                            ) : (
-                                <div className="px-4 sm:px-6 pb-4 sm:pb-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    {staffList.map((staff, index) => {
-                                        const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
-                                        const rating = staff.rating != null ? parseFloat(staff.rating).toFixed(1) : null;
-                                        const isTopRated = index === 0 && rating && parseFloat(rating) >= 4.0;
-                                        return (
-                                            <div
-                                                key={staff.id}
+                                    {!staffLoaded ? (
+                                        <div className="flex flex-col items-center justify-center py-10 px-6">
+                                            <div className="animate-spin h-8 w-8 border-[3px] border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading top experts...</p>
+                                        </div>
+                                    ) : staffList.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-10 px-6">
+                                            <Users className="w-10 h-10 text-slate-200 mb-2" />
+                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No experts currently listed</p>
+                                        </div>
+                                    ) : (
+                                        <div className="px-4 sm:px-6 pb-4 sm:pb-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                            {staffList.map((staff, index) => {
+                                                const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
+                                                const rating = staff.rating != null ? parseFloat(staff.rating).toFixed(1) : null;
+                                                const isTopRated = index === 0 && rating && parseFloat(rating) >= 4.0;
+                                                return (
+                                                    <div
+                                                        key={staff.id}
+                                                        onClick={() => {
+                                                            setSelectedExpert(staff.id);
+                                                            localStorage.setItem('bookingSelectedExpert', staff.id);
+                                                            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+                                                            if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
+                                                            if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+                                                            navigate('/book-service', {
+                                                                state: {
+                                                                    selectedExpert: staff.id,
+                                                                    selectedDateObj: selectedDateObj,
+                                                                    selectedTime: selectedTime
+                                                                }
+                                                            });
+                                                        }}
+                                                        className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
+                                                            selectedExpert === staff.id
+                                                                ? 'border-[#FF0B01] bg-red-50/20 dark:bg-[#FF0B01]/10 shadow-md ring-2 ring-[#FF0B01]'
+                                                                : isTopRated
+                                                                ? 'border-amber-200 dark:border-amber-700/50 bg-gradient-to-b from-amber-50/60 via-white to-white dark:from-amber-900/30 dark:via-slate-900/80 dark:to-slate-900/80 shadow-md'
+                                                                : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/80 shadow-sm hover:border-slate-200 dark:hover:border-slate-700'
+                                                            }`}
+                                                    >
+                                                        {/* Top Rated Badge */}
+                                                        {isTopRated && (
+                                                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
+                                                                <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
+                                                                    <Award className="w-3 h-3" /> Top Rated
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="p-5 flex flex-col items-center text-center">
+                                                            {/* Avatar */}
+                                                            <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
+                                                                }`}>
+                                                                {staff.imageUrl || staff.imagePath ? (
+                                                                    <img 
+                                                                        src={staff.imageUrl || staff.imagePath} 
+                                                                        alt={staff.name} 
+                                                                        className="w-full h-full object-cover" 
+                                                                        onError={(e) => {
+                                                                            e.target.src = staff.gender === 'FEMALE' 
+                                                                                ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                                : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <img 
+                                                                        src={staff.gender === 'FEMALE' 
+                                                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                                        alt={staff.name} 
+                                                                        className="w-full h-full object-cover" 
+                                                                    />
+                                                                )}
+                                                            </div>
+
+                                                            {/* Name */}
+                                                            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight">{staff.name}</h4>
+
+                                                            {/* Role */}
+                                                            <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{role}</p>
+
+                                                            {/* Rating */}
+                                                            {rating && (
+                                                                <div className="mt-3 flex items-center gap-1.5">
+                                                                    <div className="flex items-center">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`w-3.5 h-3.5 ${i < Math.round(parseFloat(rating))
+                                                                                    ? 'text-amber-400 fill-amber-400'
+                                                                                    : 'text-slate-200'
+                                                                                    }`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-xs font-black text-slate-700">{rating}</span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Contact Info */}
+                                                            {(staff.phone || staff.email) && (
+                                                                <div className="mt-3 pt-3 border-t border-slate-100 w-full space-y-1">
+                                                                    {staff.phone && (
+                                                                        <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
+                                                                            <Phone className="w-3 h-3 shrink-0" /> {staff.phone}
+                                                                        </p>
+                                                                    )}
+                                                                    {staff.email && (
+                                                                        <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
+                                                                            <Mail className="w-3 h-3 shrink-0" /> {staff.email}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Book Button */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => navigate('/book-service', {
+                                                                    state: {
+                                                                        selectedExpert: staff.id,
+                                                                        selectedDateObj: selectedDateObj,
+                                                                        selectedTime: selectedTime
+                                                                    }
+                                                                })}
+                                                                className={`mt-4 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${isTopRated
+                                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
+                                                                    : 'bg-slate-900 hover:bg-black text-white shadow-sm'
+                                                                    }`}
+                                                            >
+                                                                Book Now
+                                                            </button>
+
+                                                            {/* Availability badge */}
+                                                            {selectedSlot && (
+                                                                <div className="mt-2 text-center">
+                                                                    {availableStaffLoading ? (
+                                                                        <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Checking...</span>
+                                                                    ) : availableStaffIds.has(staff.id) ? (
+                                                                        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-green-600">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                            Available at {selectedTime}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-slate-400">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                                                            Unavailable at {selectedTime}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </section>
+
+                                {/* ── Quick Book — Date & Time Slots ── */}
+                                <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
+                                        <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Available Slots
+                                    </h3>
+
+                                    {/* Month/Year Header */}
+                                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700">
+                                        <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
+                                        <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                                            Year {selectedDateObj?.year || '2026'}
+                                        </span>
+                                    </div>
+
+                                    {/* Date Picker Scroller */}
+                                    <div className="flex gap-2.5 overflow-x-auto pb-4 border-b border-slate-100 scrollbar-none">
+                                        {nextDays.map((d, idx) => {
+                                            const isSelectedDate = selectedDateObj?.fullDate === d.fullDate;
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        setSelectedDateObj(d);
+                                                        setSelectedTime(null);
+                                                        setSelectedSlot(null);
+                                                        setAvailableStaffForSlot([]);
+                                                        localStorage.removeItem('bookingSelectedSlot');
+                                                        localStorage.removeItem('bookingSelectedTime');
+                                                    }}
+                                                    className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
+                                                        ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                        : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-[#FF0B01]/20 dark:hover:text-[#FF0B01]'
+                                                        }`}
+                                                >
+                                                    <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
+                                                    <span className="text-sm font-black">{d.num}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Time Slots Grid */}
+                                    {slotsLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-8 mt-5">
+                                            <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading available slots...</p>
+                                        </div>
+                                    ) : salonSlots.length === 0 ? (
+                                        <div className="text-center py-8 mt-5">
+                                            <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
+                                            {salonSlots.map((slot, idx) => {
+                                                const isSelected = selectedSlot?.startTime === slot.startTime;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={slot.startTime || idx}
+                                                        onClick={() => {
+                                                            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
+                                                            localStorage.setItem('bookingSelectedTime', slot.displayTime);
+                                                            localStorage.setItem('bookingSelectedSlot', JSON.stringify(slot));
+                                                            navigate('/book-service', {
+                                                                state: {
+                                                                    selectedDateObj: selectedDateObj,
+                                                                    selectedTime: slot.displayTime,
+                                                                    selectedSlot: slot
+                                                                }
+                                                            });
+                                                        }}
+                                                        className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isSelected
+                                                            ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
+                                                            : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-[#FF0B01]/20 dark:hover:border-[#FF0B01]/30 dark:hover:text-[#FF0B01]'
+                                                            }`}
+                                                    >
+                                                        {slot.displayTime}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* CTA to full booking page */}
+                                    {selectedSlot && (
+                                        <div className="mt-6 pt-4 border-t border-slate-100">
+                                            <button
+                                                type="button"
                                                 onClick={() => {
-                                                    setSelectedExpert(staff.id);
-                                                    localStorage.setItem('bookingSelectedExpert', staff.id);
                                                     localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                                    if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
-                                                    if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+                                                    localStorage.setItem('bookingSelectedTime', selectedTime);
+                                                    localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
                                                     navigate('/book-service', {
                                                         state: {
-                                                            selectedExpert: staff.id,
                                                             selectedDateObj: selectedDateObj,
                                                             selectedTime: selectedTime
                                                         }
                                                     });
                                                 }}
-                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
-                                                    selectedExpert === staff.id
-                                                        ? 'border-[#FF0B01] bg-red-50/20 dark:bg-[#FF0B01]/10 shadow-md ring-2 ring-[#FF0B01]'
-                                                        : isTopRated
-                                                        ? 'border-amber-200 dark:border-amber-700/50 bg-gradient-to-b from-amber-50/60 via-white to-white dark:from-amber-900/30 dark:via-slate-900/80 dark:to-slate-900/80 shadow-md'
-                                                        : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/80 shadow-sm hover:border-slate-200 dark:hover:border-slate-700'
-                                                    }`}
+                                                className="w-full bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
                                             >
-                                                {/* Top Rated Badge */}
-                                                {isTopRated && (
-                                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                                                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                                                            <Award className="w-3 h-3" /> Top Rated
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                <div className="p-5 flex flex-col items-center text-center">
-                                                    {/* Avatar */}
-                                                    <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
-                                                        }`}>
-                                                        {staff.imageUrl || staff.imagePath ? (
-                                                            <img 
-                                                                src={staff.imageUrl || staff.imagePath} 
-                                                                alt={staff.name} 
-                                                                className="w-full h-full object-cover" 
-                                                                onError={(e) => {
-                                                                    e.target.src = staff.gender === 'FEMALE' 
-                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <img 
-                                                                src={staff.gender === 'FEMALE' 
-                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
-                                                                alt={staff.name} 
-                                                                className="w-full h-full object-cover" 
-                                                            />
-                                                        )}
-                                                    </div>
-
-                                                    {/* Name */}
-                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight">{staff.name}</h4>
-
-                                                    {/* Role */}
-                                                    <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{role}</p>
-
-                                                    {/* Rating */}
-                                                    {rating && (
-                                                        <div className="mt-3 flex items-center gap-1.5">
-                                                            <div className="flex items-center">
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <Star
-                                                                        key={i}
-                                                                        className={`w-3.5 h-3.5 ${i < Math.round(parseFloat(rating))
-                                                                            ? 'text-amber-400 fill-amber-400'
-                                                                            : 'text-slate-200'
-                                                                            }`}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                            <span className="text-xs font-black text-slate-700">{rating}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Contact Info */}
-                                                    {(staff.phone || staff.email) && (
-                                                        <div className="mt-3 pt-3 border-t border-slate-100 w-full space-y-1">
-                                                            {staff.phone && (
-                                                                <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
-                                                                    <Phone className="w-3 h-3 shrink-0" /> {staff.phone}
-                                                                </p>
-                                                            )}
-                                                            {staff.email && (
-                                                                <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
-                                                                    <Mail className="w-3 h-3 shrink-0" /> {staff.email}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Book Button */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => navigate('/book-service', {
-                                                            state: {
-                                                                selectedExpert: staff.id,
-                                                                selectedDateObj: selectedDateObj,
-                                                                selectedTime: selectedTime
-                                                            }
-                                                        })}
-                                                        className={`mt-4 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${isTopRated
-                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
-                                                            : 'bg-slate-900 hover:bg-black text-white shadow-sm'
-                                                            }`}
-                                                    >
-                                                        Book Now
-                                                    </button>
-
-                                                    {/* Availability badge */}
-                                                    {selectedSlot && (
-                                                        <div className="mt-2 text-center">
-                                                            {availableStaffLoading ? (
-                                                                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Checking...</span>
-                                                            ) : availableStaffIds.has(staff.id) ? (
-                                                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-green-600">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                    Available at {selectedTime}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-slate-400">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                                    Unavailable at {selectedTime}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Opening Times */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Opening Times
-                            </h3>
-                            <div className="flex flex-col gap-1.5 sm:gap-2">
-                                {weekdays.map((day) => {
-                                    const operatingHours = formatOperatingHours(day, salon?.openingTime, salon?.closingTime, salon?.weeklyOffDay);
-                                    const isOff = operatingHours === 'Closed';
-                                    const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
-                                    const isToday = day.toLowerCase() === todayName.toLowerCase();
-                                    return (
-                                        <div
-                                            key={day}
-                                            className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${isToday
-                                                ? 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-[#FF0B01]/20 dark:to-orange-500/20 border border-red-100 dark:border-[#FF0B01]/30 shadow-sm'
-                                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/80'
-                                                }`}
-                                        >
-                                            <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
-                                                }`}>
-                                                {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] animate-pulse shrink-0"></span>}
-                                                {day}
-                                                {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">TODAY</span>}
-                                            </span>
-                                            <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
-                                                }`}>
-                                                {isOff ? 'Closed' : operatingHours}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                        </div>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 items-start">
-                        {/* ── Quick Book — Date & Time Slots ── */}
-                        <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Available Slots
-                            </h3>
-
-                            {/* Month/Year Header */}
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700">
-                                <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
-                                <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-                                    Year {selectedDateObj?.year || '2026'}
-                                </span>
-                            </div>
-
-                            {/* Date Picker Scroller */}
-                            <div className="flex gap-2.5 overflow-x-auto pb-4 border-b border-slate-100 scrollbar-none">
-                                {nextDays.map((d, idx) => {
-                                    const isSelectedDate = selectedDateObj?.fullDate === d.fullDate;
-                                    return (
-                                        <div
-                                            key={idx}
-                                            onClick={() => {
-                                                setSelectedDateObj(d);
-                                                setSelectedTime(null);
-                                                setSelectedSlot(null);
-                                                setAvailableStaffForSlot([]);
-                                                localStorage.removeItem('bookingSelectedSlot');
-                                                localStorage.removeItem('bookingSelectedTime');
-                                            }}
-                                            className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
-                                                ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
-                                                : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-[#FF0B01]/20 dark:hover:text-[#FF0B01]'
-                                                }`}
-                                        >
-                                            <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
-                                            <span className="text-sm font-black">{d.num}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Time Slots Grid */}
-                            {slotsLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8 mt-5">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading available slots...</p>
-                                </div>
-                            ) : salonSlots.length === 0 ? (
-                                <div className="text-center py-8 mt-5">
-                                    <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
-                                    {salonSlots.map((slot, idx) => {
-                                        const isSelected = selectedSlot?.startTime === slot.startTime;
-                                        return (
-                                            <button
-                                                type="button"
-                                                key={slot.startTime || idx}
-                                                onClick={() => {
-                                                    localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                                    localStorage.setItem('bookingSelectedTime', slot.displayTime);
-                                                    localStorage.setItem('bookingSelectedSlot', JSON.stringify(slot));
-                                                    navigate('/book-service', {
-                                                        state: {
-                                                            selectedDateObj: selectedDateObj,
-                                                            selectedTime: slot.displayTime,
-                                                            selectedSlot: slot
-                                                        }
-                                                    });
-                                                }}
-                                                className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isSelected
-                                                    ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
-                                                    : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-[#FF0B01]/20 dark:hover:border-[#FF0B01]/30 dark:hover:text-[#FF0B01]'
-                                                    }`}
-                                            >
-                                                {slot.displayTime}
+                                                Continue Booking for {selectedTime}
                                             </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-
-                            {/* CTA to full booking page */}
-                            {selectedSlot && (
-                                <div className="mt-6 pt-4 border-t border-slate-100">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                            localStorage.setItem('bookingSelectedTime', selectedTime);
-                                            localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                            navigate('/book-service', {
-                                                state: {
-                                                    selectedDateObj: selectedDateObj,
-                                                    selectedTime: selectedTime
-                                                }
-                                            });
-                                        }}
-                                        className="w-full bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
-                                    >
-                                        Continue Booking for {selectedTime}
-                                    </button>
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Customer Reviews */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> Customer Reviews
-                            </h3>
-                            <div className="space-y-4">
-                                {[
-                                    { name: 'Rahul Sharma', rating: 5, date: '2 days ago', comment: 'Excellent service! The staff was very professional and the haircut was exactly what I wanted.' },
-                                    { name: 'Priya Patel', rating: 4, date: '1 week ago', comment: 'Great ambiance and clean salon. The hair spa was relaxing. Highly recommended!' },
-                                    { name: 'Amit Verma', rating: 5, date: '2 weeks ago', comment: 'Best salon in town. Fast booking and premium experience.' }
-                                ].map((rev, index) => {
-                                    const initials = rev.name.split(' ').map(n => n[0]).join('');
-                                    return (
-                                        <div key={index} className="p-3 sm:p-4 bg-slate-50/50 dark:bg-slate-900/80 rounded-xl sm:rounded-2xl border border-slate-50 dark:border-slate-800/60 flex gap-3 sm:gap-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/80">
-                                            <div className="w-10 h-10 rounded-full bg-red-100 text-[#FF0B01] font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
-                                                {initials}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">{rev.name}</h4>
-                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">{rev.date}</span>
-                                                </div>
-                                                <div className="flex items-center text-amber-400 mt-1">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200 dark:text-slate-700'}`} />
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs text-slate-650 dark:text-slate-300 mt-2 leading-relaxed">{rev.comment}</p>
-                                            </div>
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </section>
                             </div>
-                        </section>
+
+                            {/* Right Column: Opening Times & Customer Reviews */}
+                            <div className="flex flex-col gap-6 lg:gap-8">
+                                {/* Opening Times */}
+                                <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                                        <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Opening Times
+                                    </h3>
+                                    <div className="flex flex-col gap-1.5 sm:gap-2">
+                                        {weekdays.map((day) => {
+                                            const operatingHours = formatOperatingHours(day, salon?.openingTime, salon?.closingTime, salon?.weeklyOffDay);
+                                            const isOff = operatingHours === 'Closed';
+                                            const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
+                                            const isToday = day.toLowerCase() === todayName.toLowerCase();
+                                            return (
+                                                <div
+                                                    key={day}
+                                                    className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${isToday
+                                                        ? 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-[#FF0B01]/20 dark:to-orange-500/20 border border-red-100 dark:border-[#FF0B01]/30 shadow-sm'
+                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                                                        }`}
+                                                >
+                                                    <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
+                                                        }`}>
+                                                        {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] animate-pulse shrink-0"></span>}
+                                                        {day}
+                                                        {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">TODAY</span>}
+                                                    </span>
+                                                    <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
+                                                        }`}>
+                                                        {isOff ? 'Closed' : operatingHours}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+
+                                {/* Customer Reviews */}
+                                <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
+                                        <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> Customer Reviews
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {[
+                                            { name: 'Rahul Sharma', rating: 5, date: '2 days ago', comment: 'Excellent service! The staff was very professional and the haircut was exactly what I wanted.' },
+                                            { name: 'Priya Patel', rating: 4, date: '1 week ago', comment: 'Great ambiance and clean salon. The hair spa was relaxing. Highly recommended!' },
+                                            { name: 'Amit Verma', rating: 5, date: '2 weeks ago', comment: 'Best salon in town. Fast booking and premium experience.' }
+                                        ].map((rev, index) => {
+                                            const initials = rev.name.split(' ').map(n => n[0]).join('');
+                                            return (
+                                                <div key={index} className="p-3 sm:p-4 bg-slate-50/50 dark:bg-slate-900/80 rounded-xl sm:rounded-2xl border border-slate-50 dark:border-slate-800/60 flex gap-3 sm:gap-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/80">
+                                                    <div className="w-10 h-10 rounded-full bg-red-100 text-[#FF0B01] font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
+                                                        {initials}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">{rev.name}</h4>
+                                                            <span className="text-[9px] text-slate-400 font-bold uppercase">{rev.date}</span>
+                                                        </div>
+                                                        <div className="flex items-center text-amber-400 mt-1">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200 dark:text-slate-700'}`} />
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-xs text-slate-650 dark:text-slate-300 mt-2 leading-relaxed">{rev.comment}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+                            </div>
                         </div>
 
 {/* Products Grid */}

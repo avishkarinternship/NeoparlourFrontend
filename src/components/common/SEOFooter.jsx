@@ -365,7 +365,7 @@ export default function SEOFooter() {
       categoryName: 'Skin Care',
       services: [
         'Facial', 'Cleanup', 'Skin Polishing', 'Bleaching', 'De-Tan Treatment',
-        'Face Treatment', 'Anti-Aging Treatment', 'Acne Treatment', 'Skin Brightening Treatment', 'Chemical Peel'
+        'Face Treatment', 'Anti-Aging Treatment', 'Acne Treatment', 'Skin Brightening Treatment'
       ]
     },
     {

@@ -232,9 +232,9 @@ export default function SEOSalons() {
         <div className="bg-white rounded-[32px] border border-gray-100 p-8 md:p-12 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
           <div className="relative space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
+            {/* <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
               <Sparkles className="w-3.5 h-3.5" /> Premium SEO Directories
-            </div>
+            </div> */}
             <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-none">
               {displayTitle}
             </h1>

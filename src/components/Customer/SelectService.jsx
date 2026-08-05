@@ -2009,6 +2009,55 @@ const SelectService = () => {
                     </div>
                 </div>
             )}
+
+            {/* Floating Selection Summary Bar */}
+            {addedServices.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[calc(100%-2rem)] max-w-lg bg-slate-950/95 backdrop-blur-md text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-slate-800/80 flex items-center justify-between gap-4 transition-all duration-300 ease-out transform animate-fade-in">
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-black text-xs sm:text-sm uppercase tracking-wide text-white truncate">
+                            {selectedServiceObjects.length} {selectedServiceObjects.length === 1 ? 'Service' : 'Services'} Selected
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5 flex flex-wrap items-center gap-1.5 min-w-0">
+                            <span className="text-[#FF0B01] font-black shrink-0">₹{serviceSubtotal}</span>
+                            {selectedTime ? (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-slate-700 shrink-0"></span>
+                                    <span className="text-emerald-400 truncate">
+                                        {selectedDateObj?.day || ''} {selectedDateObj?.num || ''} @ {selectedTime}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-slate-700 shrink-0"></span>
+                                    <span className="text-amber-500 shrink-0">No slot selected</span>
+                                </>
+                            )}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (!selectedSlot) {
+                                dateTimeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                toast.success("Scroll down to select a date & time slot!", {
+                                    icon: '📅',
+                                    style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px' }
+                                });
+                            } else {
+                                handleBookClick();
+                            }
+                        }}
+                        className={`px-4 sm:px-6 py-2.5 sm:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 transform active:scale-95 whitespace-nowrap shadow-md cursor-pointer ${
+                            selectedSlot
+                                ? 'bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white shadow-red-500/10'
+                                : 'bg-white hover:bg-slate-100 text-slate-950 shadow-white/5'
+                        }`}
+                    >
+                        {selectedSlot ? 'Confirm Booking' : 'Select Time Slot'}
+                    </button>
+                </div>
+            )}
             
             <SEOFooter />
 
