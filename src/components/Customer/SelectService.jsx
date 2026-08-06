@@ -84,7 +84,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
           }
         }
       } finally {
-        if (isMounted) {
+        if (isMounted) { 
           setLoading(false);
         }
       }
@@ -93,7 +93,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
     fetchImage();
 
     return () => {
-      isMounted = false;
+      isMounted = false ;
       controller.abort();
     };
   }, [imagePath]);
@@ -2045,16 +2045,40 @@ const SelectService = () => {
                                     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px' }
                                 });
                             } else {
-                                handleBookClick();
+                                if (checkConflict(selectedSlot, durationMinutes)) {
+                                    toast.error("Overlapping error: Selected services and slot conflict with an existing appointment. Please choose a different time slot.", {
+                                        style: { background: '#7f1d1d', color: '#fecaca', borderRadius: '16px', padding: '16px 24px' }
+                                    });
+                                    return;
+                                }
+                                if (homeService && !customerAddress.trim()) {
+                                    toast.error('Please enter your complete address for home service.');
+                                    return;
+                                }
+                                if (!token) {
+                                    setShowLoginPrompt(true);
+                                    return;
+                                }
+                                handleConfirmBooking();
                             }
                         }}
+                        disabled={bookingLoading}
                         className={`px-4 sm:px-6 py-2.5 sm:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 transform active:scale-95 whitespace-nowrap shadow-md cursor-pointer ${
                             selectedSlot
                                 ? 'bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white shadow-red-500/10'
                                 : 'bg-white hover:bg-slate-100 text-slate-950 shadow-white/5'
-                        }`}
+                        } ${bookingLoading ? 'opacity-65 cursor-not-allowed' : ''}`}
                     >
-                        {selectedSlot ? 'Confirm Booking' : 'Select Time Slot'}
+                        {bookingLoading ? (
+                            <span className="flex items-center gap-2">
+                                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Booking...
+                            </span>
+                        ) : selectedSlot ? (
+                            'Confirm Booking'
+                        ) : (
+                            'Select Time Slot'
+                        )}
                     </button>
                 </div>
             )}
