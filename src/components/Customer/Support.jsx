@@ -86,7 +86,7 @@ const Support = () => {
                             </div>
                             <div>
                                 <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Email Support</h4>
-                                <p className="text-sm font-semibold text-gray-600">support@neoparlour.com</p>
+                                <p className="text-sm font-semibold text-gray-600">support@neopaceinfotech.com</p>
                                 <p className="text-xs text-gray-400 mt-1">We typically reply within 24 hours.</p>
                             </div>
                         </div>

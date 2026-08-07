@@ -309,7 +309,7 @@ const CustomerTermsAndConditions = () => {
                 <p className="font-medium mb-4">For queries, grievances, or support:</p>
                 <div className="space-y-3">
                   <p><strong>In-App:</strong> Help → Contact Us</p>
-                  <p><strong>Email:</strong> support@Neoparlour.com</p>
+                  <p><strong>Email:</strong> support@neopaceinfotech.com</p>
                   <p>
                     <strong>Grievance Officer:</strong> Jeevan Joshi<br />
                     Mail – Jeevan.j@neopaceinfotech.com<br />

@@ -45,7 +45,7 @@ const OwnerLogin = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(loginOwner(formData)).unwrap().then(() => {
+    dispatch(loginOwner(formData)).unwrap().then((res) => {
       // Save or clear credentials based on rememberMe status
       if (rememberMe) {
         localStorage.setItem('neoparlour_owner_remembered_username', formData.username);
@@ -54,7 +54,25 @@ const OwnerLogin = () => {
         localStorage.removeItem('neoparlour_owner_remembered_username');
         localStorage.removeItem('neoparlour_owner_remembered_password');
       }
-      navigate('/owner/dashboard');
+
+      // Determine role from login response
+      const roleStr = String(
+        res?.role ||
+        res?.user?.role ||
+        (Array.isArray(res?.roles) ? res.roles[0] : res?.roles) ||
+        (Array.isArray(res?.user?.roles) ? res.user.roles[0] : res?.user?.roles) ||
+        res?.userRole ||
+        res?.type ||
+        ''
+      ).toUpperCase();
+
+      if (roleStr.includes('STAFF')) {
+        navigate('/staff/dashboard');
+      } else {
+        navigate('/owner/dashboard');
+      }
+    }).catch((err) => {
+      console.error('Login error:', err);
     });
   };
 

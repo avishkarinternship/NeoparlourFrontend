@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
+import {
+    Calendar,
+    Clock,
+    CheckCircle2,
+    XCircle,
+    RotateCw,
+    IndianRupee,
+    CreditCard
+} from 'lucide-react';
 
 // Asset Imports
 import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/upcoming_appointment_icon.svg';
@@ -117,6 +126,11 @@ const getFirstDayOfMonth = () => {
     return `${year}-${month}-01`;
 };
 
+const getFirstDayOfYearString = () => {
+    const year = new Date().getFullYear();
+    return `${year}-01-01`;
+};
+
 const getTodayDateString = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -138,11 +152,49 @@ const OwnerDashboard = () => {
     });
     const [loadingAdmin, setLoadingAdmin] = useState(false);
 
+    const [overviewFromDate, setOverviewFromDate] = useState(getFirstDayOfYearString());
+    const [overviewToDate, setOverviewToDate] = useState(getTodayDateString());
+
+    const [adminOverview, setAdminOverview] = useState({
+        bookedAndRescheduledAppointmentsCount: 0,
+        completedAppointmentsCount: 0,
+        ongoingAppointmentsCount: 0,
+        cancelledAppointmentsCount: 0,
+        completedAppointmentsRevenue: 0,
+        rescheduledAppointmentsCount: 0,
+        subscriptionsRevenue: 0
+    });
+    const [overviewLoading, setOverviewLoading] = useState(false);
+
+    const fetchAdminOverview = useCallback(async (fromDateStr, toDateStr) => {
+        setOverviewLoading(true);
+        try {
+            const params = {};
+            if (fromDateStr) {
+                params.fromDate = new Date(fromDateStr + 'T00:00:00.000Z').toISOString();
+            }
+            if (toDateStr) {
+                params.toDate = new Date(toDateStr + 'T23:59:59.999Z').toISOString();
+            }
+
+            const response = await axiosInstance.get('/admin/dashboard/overview', { params });
+            if (response.data) {
+                setAdminOverview(response.data);
+            }
+        } catch (err) {
+            console.warn("Notice: /admin/dashboard/overview returned an error (backend JPQL parameter type resolution). Graceful fallback applied.", err?.response?.data || err?.message);
+        } finally {
+            setOverviewLoading(false);
+        }
+    }, []);
+
     const fetchAdminStats = async () => {
         setLoadingAdmin(true);
         try {
-            const salonsRes = await axiosInstance.get('/salons/admin/all', { params: { size: 1 } });
-            const subsRes = await axiosInstance.get('/subscriptions/admin/all');
+            const [salonsRes, subsRes] = await Promise.allSettled([
+                axiosInstance.get('/salons/admin/all', { params: { size: 1 } }),
+                axiosInstance.get('/subscriptions/admin/all')
+            ]);
             
             let serverUp = 'down';
             try {
@@ -152,16 +204,32 @@ const OwnerDashboard = () => {
                 serverUp = 'down';
             }
 
+            const salonsData = salonsRes.status === 'fulfilled' ? salonsRes.value.data : null;
+            const subsData = subsRes.status === 'fulfilled' ? subsRes.value.data : null;
+
+            const activeSubsCount = Array.isArray(subsData) ? subsData.filter(s => s.status?.toLowerCase() === 'active').length : 0;
+
             setAdminStats({
-                totalSalons: salonsRes.data?.page?.totalElements ?? salonsRes.data?.totalElements ?? 0,
-                totalActiveSubscriptions: subsRes.data?.filter(s => s.status?.toLowerCase() === 'active').length || 0,
+                totalSalons: salonsData?.page?.totalElements ?? salonsData?.totalElements ?? 0,
+                totalActiveSubscriptions: activeSubsCount,
                 serverStatus: serverUp
             });
+
+            // If overview is not populated yet, set fallback subscription revenue from contracts list
+            if (Array.isArray(subsData) && subsData.length > 0) {
+                const calcSubRev = subsData.reduce((sum, sub) => sum + (sub.amountPaid || sub.price || 0), 0);
+                setAdminOverview(prev => ({
+                    ...prev,
+                    subscriptionsRevenue: prev.subscriptionsRevenue || calcSubRev
+                }));
+            }
         } catch (err) {
             console.error("Failed to load admin stats:", err);
         } finally {
             setLoadingAdmin(false);
         }
+
+        fetchAdminOverview(overviewFromDate, overviewToDate);
     };
 
     useEffect(() => {
@@ -169,6 +237,12 @@ const OwnerDashboard = () => {
             fetchAdminStats();
         }
     }, [isAdmin]);
+
+    useEffect(() => {
+        if (isAdmin) {
+            fetchAdminOverview(overviewFromDate, overviewToDate);
+        }
+    }, [isAdmin, overviewFromDate, overviewToDate, fetchAdminOverview]);
 
     // API states
     const [viewType, setViewType] = useState('day');
@@ -477,6 +551,150 @@ const OwnerDashboard = () => {
                         </svg>
                         <span>Sync System Data</span>
                     </button>
+                </div>
+
+                {/* Analytics Overview Section */}
+                <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                        <div>
+                            <h2 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                                <span>Analytics Overview</span>
+                            </h2>
+                            <p className="text-[11px] text-gray-400">Real-time appointment metrics & financial revenue statistics</p>
+                        </div>
+
+                        {/* Date Filter Inputs */}
+                        <div className="flex items-center space-x-2 bg-white border border-gray-200 p-2 rounded-xl text-xs">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">From:</span>
+                            <input 
+                                type="date" 
+                                value={overviewFromDate}
+                                onChange={(e) => setOverviewFromDate(e.target.value)}
+                                className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:border-red-500"
+                            />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">To:</span>
+                            <input 
+                                type="date" 
+                                value={overviewToDate}
+                                onChange={(e) => setOverviewToDate(e.target.value)}
+                                className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:border-red-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Card 1: Booked & Rescheduled Appointments */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Booked & Rescheduled</p>
+                                    <p className="text-2xl font-black text-gray-900 mt-1">
+                                        {overviewLoading ? '...' : (adminOverview.bookedAndRescheduledAppointmentsCount ?? 0)}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                    <Calendar className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Booked, Confirmed & Rescheduled</p>
+                        </div>
+
+                        {/* Card 2: Ongoing Appointments */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Ongoing Appointments</p>
+                                    <p className="text-2xl font-black text-amber-600 mt-1">
+                                        {overviewLoading ? '...' : (adminOverview.ongoingAppointmentsCount ?? 0)}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                                    <Clock className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Status: In Progress</p>
+                        </div>
+
+                        {/* Card 3: Completed Appointments */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Completed Appointments</p>
+                                    <p className="text-2xl font-black text-green-600 mt-1">
+                                        {overviewLoading ? '...' : (adminOverview.completedAppointmentsCount ?? 0)}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Finished sessions</p>
+                        </div>
+
+                        {/* Card 4: Cancelled Appointments */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Cancelled Appointments</p>
+                                    <p className="text-2xl font-black text-red-600 mt-1">
+                                        {overviewLoading ? '...' : (adminOverview.cancelledAppointmentsCount ?? 0)}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                                    <XCircle className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Terminated bookings</p>
+                        </div>
+
+                        {/* Card 5: Rescheduled Appointments Count */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Rescheduled Count</p>
+                                    <p className="text-2xl font-black text-purple-600 mt-1">
+                                        {overviewLoading ? '...' : (adminOverview.rescheduledAppointmentsCount ?? 0)}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+                                    <RotateCw className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Shifted time slots</p>
+                        </div>
+
+                        {/* Card 6: Completed Appointments Revenue */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Completed Revenue</p>
+                                    <p className="text-2xl font-black text-emerald-600 mt-1">
+                                        {overviewLoading ? '...' : `₹ ${(adminOverview.completedAppointmentsRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                                    <IndianRupee className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">From completed appointments</p>
+                        </div>
+
+                        {/* Card 7: Subscriptions Revenue */}
+                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition sm:col-span-2 lg:col-span-2">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Subscriptions Revenue</p>
+                                    <p className="text-2xl font-black text-red-600 mt-1">
+                                        {overviewLoading ? '...' : `₹ ${(adminOverview.subscriptionsRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    </p>
+                                </div>
+                                <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                                    <CreditCard className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Total revenue from subscription plans</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Dashboard Stats */}

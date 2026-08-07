@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://sb.neoparlour.com/api'
+  ? 'https://uat.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
@@ -18,7 +18,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const customerToken = localStorage.getItem('customerToken');
-    let ownerToken = localStorage.getItem('ownerStaffToken');
+    let ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
 
     // Robust fallback: if owner token isn't in localStorage yet (e.g. on first page load/mount race condition),
     // extract it directly from the URL search parameters.
@@ -30,10 +30,15 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    // 2. Prioritization: For subscription endpoints, always use the owner token first.
-    // Otherwise, check customer token first.
-    const isSubscriptionRequest = config.url && config.url.includes('/subscriptions');
-    const token = isSubscriptionRequest 
+    // Prioritization: For staff/owner/subscription endpoints, use ownerToken first.
+    const isOwnerOrStaffRequest = config.url && (
+      config.url.includes('/subscriptions') ||
+      config.url.includes('/staff') ||
+      config.url.includes('/appointments/salon') ||
+      config.url.includes('/staff-attendance') ||
+      config.url.includes('/staff-inventory')
+    );
+    const token = isOwnerOrStaffRequest
       ? (ownerToken || customerToken) 
       : (customerToken || ownerToken);
 
@@ -41,11 +46,12 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Attach salonId headers if available in localStorage
-    const activeSalonId = localStorage.getItem('activeSalonId');
+    // Attach salonId / tenant headers if available in localStorage
+    const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
     if (activeSalonId) {
       config.headers['X-Salon-Id'] = activeSalonId;
       config.headers['salonId'] = activeSalonId;
+      config.headers['X-Tenant-ID'] = activeSalonId;
     }
 
     return config;

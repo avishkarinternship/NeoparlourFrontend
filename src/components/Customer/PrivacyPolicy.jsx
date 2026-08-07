@@ -314,7 +314,7 @@ const PrivacyPolicy = () => {
               <div className="bg-gray-100 p-4 rounded-xl mt-4">
                 <p>
                   <span className="font-semibold">Email:</span>{" "}
-                  support@neoparlour.com
+                  support@neopaceinfotech.com
                 </p>
 
                 <p className="mt-2">

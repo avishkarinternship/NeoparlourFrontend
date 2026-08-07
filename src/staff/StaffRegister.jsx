@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 import logoIcon from '../assets/Neoparlour_logo.png';
@@ -11,6 +12,7 @@ import passwordIcon from '../assets/CustomerRegister/password_icon.svg';
 import rightBackground from '../assets/StaffRegister/right_background.jpg'; 
 
 const StaffRegister = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('REGISTER');
   const [mobile, setMobile] = useState('');
 
@@ -54,7 +56,7 @@ const StaffRegister = () => {
             {/* Role Tabs */}
             <div className="flex gap-10 mb-6">
               <button 
-                onClick={() => setActiveTab('LOGIN')}
+                onClick={() => navigate('/owner/login')}
                 className={`pb-2 text-[11px] font-bold tracking-widest transition-all ${
                   activeTab === 'LOGIN' 
                   ? 'text-gray-900 border-b-2 border-[#ff0b01]' 

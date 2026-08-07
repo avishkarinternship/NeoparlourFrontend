@@ -251,7 +251,7 @@ export default function SEOFooter() {
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryString)}&format=json&limit=${limit}`,
         {
           headers: {
-            'User-Agent': 'NeoParlourApp/2.0 (support@neoparlour.com)'
+            'User-Agent': 'NeoParlourApp/2.0 (support@neopaceinfotech.com)'
           }
         }
       );

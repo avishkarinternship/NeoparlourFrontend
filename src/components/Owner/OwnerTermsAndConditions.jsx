@@ -378,7 +378,7 @@ export default function OwnerTermsAndConditions() {
                             <span className="text-[#FF1100]">18. </span> Contact
                         </h3>
                         <p> For Agreement queries or partner support.</p>
-                        <li> Email: Support@neoparlour.com</li>
+                        <li> Email: support@neopaceinfotech.com</li>
                         <li> Contact no- 91-9119591956</li>
                     </section>
 

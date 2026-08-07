@@ -61,6 +61,10 @@ import Blogs from '../components/Customer/Blogs'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
 
+// Import Staff Components
+import StaffDashboard from '../components/StaffDashboard'
+import StaffRegister from '../staff/StaffRegister'
+
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
 import OwnerLayout from '../components/Owner/Layouts/OwnerLayout'
@@ -94,12 +98,35 @@ const OwnerRouteGuard = ({ children }) => {
     return children;
 };
 
+const StaffRouteGuard = ({ children }) => {
+    const token = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (!token) {
+        if (customerToken) {
+            return <Navigate to="/" replace />;
+        }
+        return <Navigate to="/owner/login" replace />;
+    }
+    return children;
+};
+
 const CustomerRouteGuard = ({ children, isPublic = false }) => {
     const ownerToken = localStorage.getItem('ownerStaffToken');
     const customerToken = localStorage.getItem('customerToken');
 
     if (ownerToken) {
-        // Owner trying to access customer page -> send to owner dashboard
+        const savedUserStr = localStorage.getItem('ownerStaffUser');
+        let role = '';
+        if (savedUserStr) {
+            try {
+                const u = JSON.parse(savedUserStr);
+                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            } catch (e) {}
+        }
+        if (role.includes('STAFF')) {
+            return <Navigate to="/staff/dashboard" replace />;
+        }
         return <Navigate to="/owner/dashboard" replace />;
     }
 
@@ -164,6 +191,18 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner-signup',
                 element: <OwnerRegister />
+            },
+            {
+                path: '/staff/dashboard',
+                element: <StaffRouteGuard><StaffDashboard /></StaffRouteGuard>
+            },
+            {
+                path: '/staff/login',
+                element: <StaffRegister />
+            },
+            {
+                path: '/staff/register',
+                element: <StaffRegister />
             },
             {
                 path: '/customer/select-salon',

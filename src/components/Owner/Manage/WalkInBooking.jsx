@@ -141,11 +141,11 @@ const getNextDays = () => {
     return days;
 };
 
-const WalkInBooking = () => {
+const WalkInBooking = ({ onBookingSuccess }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const activeSalonId = localStorage.getItem('activeSalonId');
-    const ownerStaffToken = localStorage.getItem('ownerStaffToken');
+    const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+    const ownerStaffToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
 
     // --- STATE ---
     const [salon, setSalon] = useState(null);
@@ -1728,7 +1728,13 @@ const WalkInBooking = () => {
                 isOpen={isBookedOpen}
                 onClose={() => {
                     setIsBookedOpen(false);
-                    navigate('/owner/manage/schedule');
+                    if (onBookingSuccess) {
+                        onBookingSuccess();
+                    } else if (window.location.pathname.startsWith('/staff')) {
+                        navigate('/staff/dashboard');
+                    } else {
+                        navigate('/owner/manage/schedule');
+                    }
                 }}
                 selectedServices={selectedServiceObjects}
                 date={selectedDateObj ? `${selectedDateObj.num}-${selectedDateObj.month}-${selectedDateObj.year}` : ''}

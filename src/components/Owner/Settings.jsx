@@ -341,6 +341,9 @@ const Settings = () => {
         }
     };
 
+    const storedUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+    const isAdmin = storedUser.role === 'ADMIN';
+
     return (
                 <main className="flex-1 p-8 overflow-y-auto">
                     {/* TABS */}
@@ -349,21 +352,23 @@ const Settings = () => {
                             className={`pb-3 px-4 font-semibold text-lg transition-colors ${activeTab === 'owner' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
                             onClick={() => setActiveTab('owner')}
                         >
-                            Owner Profile
+                            {isAdmin ? 'Admin Profile' : 'Owner Profile'}
                         </button>
-                        <button
-                            className={`pb-3 px-4 font-semibold text-lg transition-colors ${activeTab === 'salon' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
-                            onClick={() => setActiveTab('salon')}
-                        >
-                            Salon Profile
-                        </button>
+                        {!isAdmin && (
+                            <button
+                                className={`pb-3 px-4 font-semibold text-lg transition-colors ${activeTab === 'salon' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
+                                onClick={() => setActiveTab('salon')}
+                            >
+                                Salon Profile
+                            </button>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 max-w-4xl mx-auto">
                         {activeTab === 'owner' && (
                             <div>
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold">Owner Profile</h2>
+                                    <h2 className="text-2xl font-bold">{isAdmin ? 'Admin Profile' : 'Owner Profile'}</h2>
 
                                     <button
                                         onClick={() => setIsOwnerEdit(!isOwnerEdit)}

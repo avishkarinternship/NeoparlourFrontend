@@ -123,14 +123,18 @@ export default function Navbar({ onToggleSidebar }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+  const isAdmin = ownerUser.role === 'ADMIN';
+
   useEffect(() => {
-    fetchSalonProfile();
+    if (!isAdmin) {
+      fetchSalonProfile();
+    }
     fetchNotifications();
-  }, []);
+  }, [isAdmin]);
 
   const fetchNotifications = async () => {
     try {
-      const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
       const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId || 1;
       const response = await axiosInstance.get(`/notifications/search?salonId=${salonId}&page=0&size=10`);
       const notifs = response.data.content || [];
@@ -142,6 +146,7 @@ export default function Navbar({ onToggleSidebar }) {
   };
 
   const fetchSalonProfile = async () => {
+    if (isAdmin) return;
     try {
       const response = await axiosInstance.get("/salons/profile");
 
@@ -615,47 +620,54 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
 
         {/* User Identity Profile Block */}
-  <div 
-    className="flex items-center space-x-2 cursor-pointer group"
-    onClick={() =>{
-      console.log("Clicked");
-      navigate('/owner/settings');
-      console.log(window.location.pathname);
+        {isAdmin ? (
+          <div 
+            className="flex items-center space-x-2.5 bg-red-50/80 border border-red-100 px-3 py-1.5 rounded-full cursor-pointer hover:bg-red-100/60 transition-all"
+            onClick={() => navigate('/owner/settings')}
+            title="Admin Settings"
+          >
+            <div className="h-7 w-7 rounded-full bg-white flex items-center justify-center p-1 border border-red-200 shadow-2xs">
+              <img src={logoIcon} alt="NeoParlour Logo" className="h-full w-full object-contain" />
+            </div>
+            <div className="hidden sm:flex flex-col">
+              <span className="text-xs font-black text-gray-900 leading-tight">NeoParlour Admin</span>
+              <span className="text-[9px] font-bold text-[#FF1100] uppercase tracking-wider">System Administrator</span>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="flex items-center space-x-2 cursor-pointer group"
+            onClick={() => navigate('/owner/settings')}
+          >
+            {/* Profile Image */}
+            <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center">
+              {salonProfile.imageUrl ? (
+                <img
+                  src={salonProfile.imageUrl}
+                  alt={salonProfile.salonName}
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <img
+                  src={profileIcon}
+                  alt="Default Profile"
+                  className="h-full w-full rounded-full object-cover"
+                />
+              )}
+            </div>
 
-    } }
-  >
+            {/* Salon Name */}
+            <div className="hidden sm:flex flex-col">
+              <span className="text-xs font-bold text-gray-800">
+                {salonProfile.salonName || "NeoParlour"}
+              </span>
 
-  {/* Profile Image */}
-  <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center">
-
-    {salonProfile.imageUrl ? (
-      <img
-        src={salonProfile.imageUrl}
-        alt={salonProfile.salonName}
-        className="h-full w-full rounded-full object-cover"
-      />
-    ) : (
-      <img
-        src={profileIcon}
-        alt="Default Profile"
-        className="h-full w-full rounded-full object-cover"
-      />
-    )}
-
-  </div>
-
-  {/* Salon Name */}
-  <div className="hidden sm:flex flex-col">
-    <span className="text-xs font-bold text-gray-800">
-      {salonProfile.salonName || "NeoParlour"}
-    </span>
-
-    <span className="text-[10px] text-gray-400">
-      Salon Owner
-    </span>
-  </div>
-
-</div>
+              <span className="text-[10px] text-gray-400">
+                Salon Owner
+              </span>
+            </div>
+          </div>
+        )}
 
       </div>
     </header>

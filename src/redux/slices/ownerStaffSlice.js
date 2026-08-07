@@ -1,22 +1,34 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
 
-// Async thunk for owner login
+// Async thunk for owner/staff login
 export const loginOwner = createAsyncThunk(
   'ownerStaff/loginOwner',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/login', credentials);
-      if (response.data.token) {
-        localStorage.setItem('ownerStaffToken', response.data.token);
-        localStorage.setItem('ownerStaffUser', JSON.stringify(response.data));
-        if (response.data.tenantName) {
-          localStorage.setItem('activeSalonId', response.data.tenantName);
+      const data = response.data;
+      if (data.token) {
+        localStorage.setItem('ownerStaffToken', data.token);
+        localStorage.setItem('user_token', data.token);
+        localStorage.setItem('ownerStaffUser', JSON.stringify(data));
+
+        if (data.staffId || data.id || data.userId) {
+          const sId = String(data.staffId || data.id || data.userId);
+          const uId = String(data.userId || data.id || data.staffId);
+          localStorage.setItem('staff_id', sId);
+          localStorage.setItem('staff_user_id', uId);
+          localStorage.setItem('user_id', uId);
+        }
+        if (data.salonId || data.tenantName || data.tenantId) {
+          const salonIdVal = String(data.salonId || data.tenantName || data.tenantId);
+          localStorage.setItem('salon_id', salonIdVal);
+          localStorage.setItem('activeSalonId', String(data.tenantName || data.salonId || data.tenantId));
         }
       }
-      return response.data;
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Owner login failed.');
+      return rejectWithValue(error.response?.data?.message || 'Login failed.');
     }
   }
 );

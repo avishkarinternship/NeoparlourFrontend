@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
-import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle } from 'lucide-react';
+import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles } from 'lucide-react';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -56,8 +56,9 @@ const parseConflictsFromMessage = (msg) => {
   return conflicts;
 };
 
-const Schedule = () => {
+const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
   const location = useLocation();
+  const currentStaffId = staffOnlyId || (isStaffPortal ? (localStorage.getItem('staff_id') || localStorage.getItem('user_id')) : null);
 
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
   const [appointments, setAppointments] = useState([]);
@@ -110,9 +111,66 @@ const Schedule = () => {
   const [extendServices, setExtendServices] = useState([]);
   const [extendLoading, setExtendLoading] = useState(false);
   const [extendConflict, setExtendConflict] = useState(null);
-  const [extraSlotParams, setExtraSlotParams] = useState({});
   const [availableServices, setAvailableServices] = useState([]);
   const [serviceSearchQuery, setServiceSearchQuery] = useState('');
+
+  // Start Appointment Handler
+  const handleStartAppointment = async (appt) => {
+    try {
+      await axiosInstance.put(`/appointments/${appt.id}/confirm`);
+      toast.success('Appointment started successfully!', toastStyle);
+      fetchAppointments(currentPage);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to start appointment', toastStyle);
+    }
+  };
+
+  // Opened Products Completion Modal States
+  const [showCompletionProductsModal, setShowCompletionProductsModal] = useState(false);
+  const [completionAppt, setCompletionAppt] = useState(null);
+  const [staffOpenedProducts, setStaffOpenedProducts] = useState([]);
+  const [selectedProductUsages, setSelectedProductUsages] = useState([]);
+  const [noProductsUsed, setNoProductsUsed] = useState(false);
+  const [completionSubmitLoading, setCompletionSubmitLoading] = useState(false);
+
+  const initiateCompletionModal = async (appt) => {
+    setCompletionAppt(appt);
+    setSelectedProductUsages([]);
+    setNoProductsUsed(false);
+    setShowCompletionProductsModal(true);
+
+    const activeStaffId = currentStaffId || appt.staffId || localStorage.getItem('staff_id') || localStorage.getItem('user_id');
+    if (activeStaffId) {
+      try {
+        const res = await axiosInstance.get(`/staff-inventory/opened/${activeStaffId}`);
+        setStaffOpenedProducts(res.data?.content || res.data || []);
+      } catch (err) {
+        console.warn('Could not fetch staff opened products:', err);
+        setStaffOpenedProducts([]);
+      }
+    } else {
+      setStaffOpenedProducts([]);
+    }
+  };
+
+  const handleFinalCompletionSubmit = async () => {
+    if (!completionAppt) return;
+    setCompletionSubmitLoading(true);
+    try {
+      const usagesPayload = noProductsUsed ? [] : selectedProductUsages;
+      await axiosInstance.put(`/appointments/${completionAppt.id}/complete`, {
+        openedProductUsages: usagesPayload
+      });
+      toast.success('Appointment marked as completed!', toastStyle);
+      setShowCompletionProductsModal(false);
+      setCompletionAppt(null);
+      fetchAppointments(currentPage);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to complete appointment', toastStyle);
+    } finally {
+      setCompletionSubmitLoading(false);
+    }
+  };
 
   const handleViewAppointment = async (id) => {
     setLoadingViewAppointment(true);
@@ -144,7 +202,8 @@ const Schedule = () => {
       params.append('size', 10);
 
       if (filters.mobile) params.append('mobile', filters.mobile);
-      if (filters.staffId) params.append('staffId', filters.staffId);
+      const targetStaffId = currentStaffId || filters.staffId;
+      if (targetStaffId) params.append('staffId', targetStaffId);
       if (filters.minAmount) params.append('minAmount', filters.minAmount);
       if (filters.maxAmount) params.append('maxAmount', filters.maxAmount);
 
@@ -597,20 +656,22 @@ const Schedule = () => {
                 <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Mobile Number</label>
                 <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Staff</label>
-                <div className="relative">
-                  <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer">
-                    <option value="">All Staff</option>
-                    {staffList.map(staff => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.name} {staff.phone ? `(${staff.phone})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
+              {!isStaffPortal && !staffOnlyId && (
+                <div>
+                  <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Staff</label>
+                  <div className="relative">
+                    <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer">
+                      <option value="">All Staff</option>
+                      {staffList.map(staff => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.name} {staff.phone ? `(${staff.phone})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
+                  </div>
                 </div>
-              </div>
+              )}
               <div>
                 <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">From Date</label>
                 <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
@@ -705,17 +766,28 @@ const Schedule = () => {
                         <Eye className="w-4 h-4" />
                       </button>
                       
+                      {(appt.status?.toLowerCase() === 'booked' || appt.status?.toLowerCase() === 'confirmed' || appt.status?.toLowerCase() === 'pending') && (
+                        <button 
+                          onClick={() => handleStartAppointment(appt)} 
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5 font-bold normal-case text-xs cursor-pointer"
+                          title="Start Appointment"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          Start
+                        </button>
+                      )}
+
                       {appt.status?.toLowerCase() === 'in_progress' && (
                         <>
                           <button 
                             onClick={() => openExtendModal(appt)} 
-                            className="bg-orange-500 text-white px-4 py-2.5 rounded-xl hover:bg-orange-600 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
+                            className="bg-orange-500 text-[#FF0B01] px-4 py-2.5 rounded-xl hover:bg-orange-600 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs text-white"
                           >
                             <span className="text-base leading-none">➕</span>
                             Extend
                           </button>
                           <button 
-                            onClick={() => handleComplete(appt)} 
+                            onClick={() => initiateCompletionModal(appt)} 
                             className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
                           >
                             <CheckCircle className="w-4.5 h-4.5" />
@@ -743,8 +815,9 @@ const Schedule = () => {
                             </button>
                           )}
                           <button 
-                            onClick={() => handleComplete(appt)} 
+                            onClick={() => initiateCompletionModal(appt)} 
                             className="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-sm cursor-pointer"
+                            title="Complete Appointment"
                           >
                             <CheckCircle className="w-4.5 h-4.5" />
                           </button>
@@ -1407,6 +1480,137 @@ const Schedule = () => {
                   'Confirm Extension'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== POST-COMPLETION OPENED PRODUCTS MODAL ===== */}
+      {showCompletionProductsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg overflow-hidden relative">
+            <button
+              onClick={() => setShowCompletionProductsModal(false)}
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="p-6 sm:p-7 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-gray-900 tracking-tight uppercase">Complete Appointment</h3>
+                  <p className="text-xs text-gray-500 font-semibold">{completionAppt?.customerName} · #{completionAppt?.id}</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-100 text-xs font-semibold text-amber-900">
+                Please select any opened inventory products used during this service session, or choose <strong>"None / No Products Used"</strong>.
+              </div>
+
+              {/* None Option Toggle */}
+              <div
+                onClick={() => {
+                  setNoProductsUsed(!noProductsUsed);
+                  if (!noProductsUsed) setSelectedProductUsages([]);
+                }}
+                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition cursor-pointer ${
+                  noProductsUsed
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                    : 'bg-gray-50/80 text-gray-700 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center ${
+                    noProductsUsed ? 'border-white bg-white text-slate-900' : 'border-gray-400'
+                  }`}>
+                    {noProductsUsed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-xs uppercase tracking-wider block">None / No Products Used</span>
+                    <span className={`text-[10px] ${noProductsUsed ? 'text-gray-300' : 'text-gray-400'}`}>No opened items consumed for this booking</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product list (Disabled if noProductsUsed is true) */}
+              {!noProductsUsed && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 block">Select Used Opened Products</label>
+                  {staffOpenedProducts.length === 0 ? (
+                    <p className="text-xs text-gray-400 font-medium italic text-center py-4 bg-gray-50 rounded-2xl">
+                      No active opened products in staff inventory.
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                      {staffOpenedProducts.map((prod) => {
+                        const existingUsage = selectedProductUsages.find(p => p.staffOpenedProductId === prod.id);
+                        const isSelected = !!existingUsage;
+
+                        return (
+                          <div
+                            key={prod.id}
+                            className={`flex items-center justify-between p-3.5 rounded-2xl border transition ${
+                              isSelected ? 'border-emerald-500 bg-emerald-50/40' : 'border-gray-200 bg-gray-50/50'
+                            }`}
+                          >
+                            <div>
+                              <p className="text-xs font-bold text-gray-800">{prod.productName}</p>
+                              <p className="text-[10px] text-gray-400 font-medium">Remaining: {prod.remainingQuantity} {prod.unit || 'units'}</p>
+                            </div>
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              placeholder="Qty used"
+                              value={existingUsage?.quantityUsed || ''}
+                              className="w-24 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold bg-white text-gray-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+                              onChange={(e) => {
+                                const qty = parseFloat(e.target.value);
+                                if (!isNaN(qty) && qty > 0) {
+                                  setSelectedProductUsages(prev => [
+                                    ...prev.filter(p => p.staffOpenedProductId !== prod.id),
+                                    { staffOpenedProductId: prod.id, quantityUsed: qty }
+                                  ]);
+                                } else {
+                                  setSelectedProductUsages(prev => prev.filter(p => p.staffOpenedProductId !== prod.id));
+                                }
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCompletionProductsModal(false)}
+                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinalCompletionSubmit}
+                  disabled={completionSubmitLoading}
+                  className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {completionSubmitLoading ? (
+                    <><div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> Completing...</>
+                  ) : (
+                    'Confirm & Complete'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
