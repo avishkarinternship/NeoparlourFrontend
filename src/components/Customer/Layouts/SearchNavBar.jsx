@@ -84,7 +84,8 @@ const SearchNavBar = () => {
   }, [isAuthenticated, dispatch]);
 
   return (
-    <header className={`w-full border-b px-3 sm:px-6 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
+    <>
+      <header className={`w-full border-b px-3 sm:px-6 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
         mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 

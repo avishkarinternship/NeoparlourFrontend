@@ -325,7 +325,7 @@ const SalonPage = () => {
                     setResolvedSalonId(activeId);
                 } else {
                     toast.error('No active salon selected. Redirecting to search.');
-                    navigate('/salons');
+                    navigate('/customer/salons');
                 }
                 return;
             }
@@ -363,12 +363,12 @@ const SalonPage = () => {
                     setResolvedSalonId(id);
                 } else {
                     toast.error('Salon not found. Redirecting...');
-                    navigate('/salons');
+                    navigate('/customer/salons');
                 }
             } catch (e) {
                 console.error("Error resolving salon slug:", e);
                 toast.error('Error finding salon.');
-                navigate('/salons');
+                navigate('/customer/salons');
             }
         };
 
@@ -598,11 +598,6 @@ const SalonPage = () => {
     // --- FETCH AVAILABLE STAFF when time slot selected ---
     useEffect(() => {
         if (!resolvedSalonId || !selectedSlot?.startTime) {
-            setAvailableStaffForSlot([]);
-            return;
-        }
-        // Prevent calling API for slots that are in the past to avoid 400 Bad Request
-        if (new Date(selectedSlot.startTime) < new Date()) {
             setAvailableStaffForSlot([]);
             return;
         }
@@ -913,7 +908,7 @@ const SalonPage = () => {
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
                         <button
                             type="button"
-                            onClick={() => navigate('/book-service')}
+                            onClick={() => navigate('/customer/book-service')}
                             className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
                         >
                             {t('salon_page.book_services', 'Book Services')}
@@ -1148,7 +1143,7 @@ const SalonPage = () => {
                                             return (
                                                 <div
                                                     key={catName}
-                                                    onClick={() => navigate('/book-service', { state: { selectedCategory: catName } })}
+                                                    onClick={() => navigate('/customer/book-service', { state: { selectedCategory: catName } })}
                                                     className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all transform hover:scale-105 active:scale-95"
                                                 >
                                                     <img
@@ -1214,7 +1209,7 @@ const SalonPage = () => {
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => navigate('/book-service', { state: { selectedPackage: pkg } })}
+                                                        onClick={() => navigate('/customer/book-service', { state: { selectedPackage: pkg } })}
                                                         className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
                                                     >
                                                         {t('salon_page.book_package', 'Book Package')}
@@ -1259,50 +1254,10 @@ const SalonPage = () => {
                                                 {isOff ? t('salon_page.closed', 'Closed') : operatingHours}
                                             </span>
                                         </div>
-                                    ) : staffList.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-10 px-6">
-                                            <Users className="w-10 h-10 text-slate-200 mb-2" />
-                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No experts currently listed</p>
-                                        </div>
-                                    ) : (
-                                        <div className="px-4 sm:px-6 pb-4 sm:pb-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                            {staffList.map((staff, index) => {
-                                                const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
-                                                const rating = staff.rating != null ? parseFloat(staff.rating).toFixed(1) : null;
-                                                const isTopRated = index === 0 && rating && parseFloat(rating) >= 4.0;
-                                                return (
-                                                    <div
-                                                        key={staff.id}
-                                                        onClick={() => {
-                                                            setSelectedExpert(staff.id);
-                                                            localStorage.setItem('bookingSelectedExpert', staff.id);
-                                                            localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                                            if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
-                                                            if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                                            navigate('/book-service', {
-                                                                state: {
-                                                                    selectedExpert: staff.id,
-                                                                    selectedDateObj: selectedDateObj,
-                                                                    selectedTime: selectedTime
-                                                                }
-                                                            });
-                                                        }}
-                                                        className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
-                                                            selectedExpert === staff.id
-                                                                ? 'border-[#FF0B01] bg-red-50/20 dark:bg-[#FF0B01]/10 shadow-md ring-2 ring-[#FF0B01]'
-                                                                : isTopRated
-                                                                ? 'border-amber-200 dark:border-amber-700/50 bg-gradient-to-b from-amber-50/60 via-white to-white dark:from-amber-900/30 dark:via-slate-900/80 dark:to-slate-900/80 shadow-md'
-                                                                : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/80 shadow-sm hover:border-slate-200 dark:hover:border-slate-700'
-                                                            }`}
-                                                    >
-                                                        {/* Top Rated Badge */}
-                                                        {isTopRated && (
-                                                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                                                                <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                                                                    <Award className="w-3 h-3" /> Top Rated
-                                                                </span>
-                                                            </div>
-                                                        )}
+                                    );
+                                })}
+                            </div>
+                        </section>
 
                         {/* ── Top Experts (Staff) ── */}
                         <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden" data-aos="fade-up">
@@ -1339,17 +1294,26 @@ const SalonPage = () => {
                                             <div
                                                 key={staff.id}
                                                 onClick={() => {
+                                                    setSelectedExpert(staff.id);
+                                                    localStorage.setItem('bookingSelectedExpert', staff.id);
                                                     localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                                    localStorage.setItem('bookingSelectedTime', selectedTime);
-                                                    localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                                    navigate('/book-service', {
+                                                    if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
+                                                    if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
+                                                    navigate('/customer/book-service', {
                                                         state: {
+                                                            selectedExpert: staff.id,
                                                             selectedDateObj: selectedDateObj,
                                                             selectedTime: selectedTime
                                                         }
                                                     });
                                                 }}
-                                                className="w-full bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
+                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
+                                                    selectedExpert === staff.id
+                                                        ? 'border-[#FF0B01] bg-red-50/20 shadow-md ring-2 ring-[#FF0B01]'
+                                                        : isTopRated
+                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
+                                                        : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
+                                                    }`}
                                             >
                                                 {/* Top Rated Badge */}
                                                 {isTopRated && (
@@ -1549,10 +1513,10 @@ const SalonPage = () => {
                                             >
                                                 {slot.displayTime}
                                             </button>
-                                        </div>
-                                    )}
-                                </section>
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {/* CTA to full booking page */}
                             {selectedSlot && (
@@ -1578,44 +1542,7 @@ const SalonPage = () => {
                             )}
                         </section>
 
-                                {/* Customer Reviews */}
-                                <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                        <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> Customer Reviews
-                                    </h3>
-                                    <div className="space-y-4">
-                                        {[
-                                            { name: 'Rahul Sharma', rating: 5, date: '2 days ago', comment: 'Excellent service! The staff was very professional and the haircut was exactly what I wanted.' },
-                                            { name: 'Priya Patel', rating: 4, date: '1 week ago', comment: 'Great ambiance and clean salon. The hair spa was relaxing. Highly recommended!' },
-                                            { name: 'Amit Verma', rating: 5, date: '2 weeks ago', comment: 'Best salon in town. Fast booking and premium experience.' }
-                                        ].map((rev, index) => {
-                                            const initials = rev.name.split(' ').map(n => n[0]).join('');
-                                            return (
-                                                <div key={index} className="p-3 sm:p-4 bg-slate-50/50 dark:bg-slate-900/80 rounded-xl sm:rounded-2xl border border-slate-50 dark:border-slate-800/60 flex gap-3 sm:gap-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/80">
-                                                    <div className="w-10 h-10 rounded-full bg-red-100 text-[#FF0B01] font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
-                                                        {initials}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between">
-                                                            <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">{rev.name}</h4>
-                                                            <span className="text-[9px] text-slate-400 font-bold uppercase">{rev.date}</span>
-                                                        </div>
-                                                        <div className="flex items-center text-amber-400 mt-1">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200 dark:text-slate-700'}`} />
-                                                            ))}
-                                                        </div>
-                                                        <p className="text-xs text-slate-650 dark:text-slate-300 mt-2 leading-relaxed">{rev.comment}</p>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </section>
-                            </div>
-                        </div>
-
-{/* Products Grid */}
+                        {/* Products Grid */}
                         {products.length > 0 && (
                             <section ref={productsSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-5">
@@ -1712,7 +1639,7 @@ const SalonPage = () => {
 
                 </div>
             </main>
-            <SEOFooter />
+            {/* <SEOFooter /> */}
         </div>
     );
 };
