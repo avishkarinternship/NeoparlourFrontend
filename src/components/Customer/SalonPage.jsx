@@ -23,17 +23,27 @@ import {
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import { updateSEOMetadata, injectJSONLD } from '../../utils/seoHelper';
+import { useTranslation } from 'react-i18next';
+import { translateServiceName } from '../../utils/serviceTranslation';
 
 
 
-// Local SVG and Image Assets
-import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
-import hairSpaIcon from '../../assets/Customer/BookingScreen/hair_spa.svg';
-import hairStylingIcon from '../../assets/Customer/BookingScreen/hair_styling.svg';
-import hairWashIcon from '../../assets/Customer/BookingScreen/hair_wash.svg';
-import coloringIcon from '../../assets/Customer/BookingScreen/coloring.svg';
-import shavingIcon from '../../assets/Customer/BookingScreen/shaving.svg';
-import straighteningIcon from '../../assets/Customer/BookingScreen/straightning.svg';
+// SVG Category Logos from src/assets/Logos
+import hairLogo from '../../assets/Logos/Hair.svg';
+import hairStylingLogo from '../../assets/Logos/Hair Styling.svg';
+import hairColoringLogo from '../../assets/Logos/Hair coloring.svg';
+import hairRemovalLogo from '../../assets/Logos/Hair removal.svg';
+import hairSpaLogo from '../../assets/Logos/Hair spa.svg';
+import hairTreatmentLogo from '../../assets/Logos/Hair treatment.svg';
+import hairWashLogo from '../../assets/Logos/Hair wash.svg';
+import nailCareLogo from '../../assets/Logos/Nail care.svg';
+import shavingLogo from '../../assets/Logos/Shaving.svg';
+import skinCareLogo from '../../assets/Logos/Skin care.svg';
+import dryerLogo from '../../assets/Logos/Dryer.svg';
+import groomingLogo from '../../assets/Logos/grooming.svg';
+import makeupLogo from '../../assets/Logos/makeup.svg';
+import spaMassageLogo from '../../assets/Logos/spa & massage.svg';
+
 import appleIcon from '../../assets/Customer/BookingScreen/apple_icon.svg';
 import playstoreIcon from '../../assets/Customer/BookingScreen/playstore_icon.svg';
 
@@ -158,6 +168,7 @@ const formatDiscountText = (text) => {
 };
 
 const SalonPage = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { salonSlug } = useParams();
     const { isAuthenticated } = useSelector((state) => state.customer);
@@ -726,21 +737,102 @@ const SalonPage = () => {
         }
     };
 
-    // Category mapping helper
-    const categoryIcons = {
-        'haircut': hairCutIcon,
-        'hair cut': hairCutIcon,
-        'coloring': coloringIcon,
-        'hair coloring': coloringIcon,
-        'hairspa': hairSpaIcon,
-        'hair spa': hairSpaIcon,
-        'hairstyling': hairStylingIcon,
-        'hair styling': hairStylingIcon,
-        'shaving': shavingIcon,
-        'hair wash': hairWashIcon,
-        'hairwash': hairWashIcon,
-        'straightening': straighteningIcon,
-        'straightning': straighteningIcon,
+    // Category mapping helper using SVG Logos from src/assets/Logos
+    const getCategoryIcon = (catName) => {
+        if (!catName) return hairLogo;
+        const catLower = String(catName).toLowerCase().trim();
+
+        const exactMap = {
+            'hair': hairLogo,
+            'haircut': hairLogo,
+            'hair cut': hairLogo,
+            'hair styling': hairStylingLogo,
+            'hairstyling': hairStylingLogo,
+            'styling': hairStylingLogo,
+            'hair coloring': hairColoringLogo,
+            'coloring': hairColoringLogo,
+            'hair color': hairColoringLogo,
+            'hair removal': hairRemovalLogo,
+            'hairremoval': hairRemovalLogo,
+            'waxing': hairRemovalLogo,
+            'threading': hairRemovalLogo,
+            'hair spa': hairSpaLogo,
+            'hairspa': hairSpaLogo,
+            'hair treatment': hairTreatmentLogo,
+            'hairtreatment': hairTreatmentLogo,
+            'hair wash': hairWashLogo,
+            'hairwash': hairWashLogo,
+            'shampoo': hairWashLogo,
+            'nail care': nailCareLogo,
+            'nailcare': nailCareLogo,
+            'nails': nailCareLogo,
+            'nail': nailCareLogo,
+            'manicure': nailCareLogo,
+            'pedicure': nailCareLogo,
+            'shaving': shavingLogo,
+            'beard': shavingLogo,
+            'skin care': skinCareLogo,
+            'skincare': skinCareLogo,
+            'skin': skinCareLogo,
+            'facial': skinCareLogo,
+            'clean up': skinCareLogo,
+            'cleanup': skinCareLogo,
+            'dryer': dryerLogo,
+            'blowdry': dryerLogo,
+            'grooming': groomingLogo,
+            'makeup': makeupLogo,
+            'make up': makeupLogo,
+            'bridal': makeupLogo,
+            'spa': spaMassageLogo,
+            'massage': spaMassageLogo,
+            'spa & massage': spaMassageLogo,
+            'wellness': spaMassageLogo,
+        };
+
+        if (exactMap[catLower]) return exactMap[catLower];
+
+        // Keyword fuzzy matching against SVG logos
+        if (catLower.includes('color') || catLower.includes('dye') || catLower.includes('highlight')) {
+            return hairColoringLogo;
+        }
+        if (catLower.includes('removal') || catLower.includes('wax') || catLower.includes('thread') || catLower.includes('laser')) {
+            return hairRemovalLogo;
+        }
+        if (catLower.includes('spa') || catLower.includes('massage') || catLower.includes('wellness')) {
+            return spaMassageLogo;
+        }
+        if (catLower.includes('treatment') || catLower.includes('keratin') || catLower.includes('rebond') || catLower.includes('smooth')) {
+            return hairTreatmentLogo;
+        }
+        if (catLower.includes('makeup') || catLower.includes('make-up') || catLower.includes('bridal') || catLower.includes('cosmetic')) {
+            return makeupLogo;
+        }
+        if (catLower.includes('style') || catLower.includes('styling')) {
+            return hairStylingLogo;
+        }
+        if (catLower.includes('dry') || catLower.includes('blow')) {
+            return dryerLogo;
+        }
+        if (catLower.includes('wash') || catLower.includes('shampoo') || catLower.includes('cleanse')) {
+            return hairWashLogo;
+        }
+        if (catLower.includes('shave') || catLower.includes('beard') || catLower.includes('mustache')) {
+            return shavingLogo;
+        }
+        if (catLower.includes('groom')) {
+            return groomingLogo;
+        }
+        if (catLower.includes('skin') || catLower.includes('facial') || catLower.includes('bleach') || catLower.includes('derma')) {
+            return skinCareLogo;
+        }
+        if (catLower.includes('nail') || catLower.includes('mani') || catLower.includes('pedi') || catLower.includes('lash') || catLower.includes('extens')) {
+            return nailCareLogo;
+        }
+        if (catLower.includes('cut') || catLower.includes('hair') || catLower.includes('trim') || catLower.includes('barber')) {
+            return hairLogo;
+        }
+
+        return hairLogo;
     };
 
     // Staff avatar fallback map
@@ -758,7 +850,7 @@ const SalonPage = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center py-32">
                 <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Salon Portal...</p>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.syncing', 'Syncing Salon Portal...')}</p>
             </div>
         );
     }
@@ -771,9 +863,9 @@ const SalonPage = () => {
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>{t('salon_page.search', 'Search')}</span>
                     <span>&gt;</span>
-                    <span className="text-slate-900 font-black">Salon Description</span>
+                    <span className="text-slate-900 font-black">{t('salon_page.salon_description', 'Salon Description')}</span>
                 </div>
             </nav>
 
@@ -797,18 +889,18 @@ const SalonPage = () => {
                                     : 'bg-red-50 border border-red-200 text-red-600'
                             }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
-                                <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open' : 'Closed'}</span>
+                                <span className="whitespace-nowrap">{isSalonOpenNow() ? t('salon_page.open', 'Open') : t('salon_page.closed', 'Closed')}</span>
                                 <span className="text-slate-300">|</span>
                                 <span className="whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
                             </div>
                             {salon?.salonCode && (
                                 <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
-                                    Code: {salon.salonCode}
+                                    {t('salon_page.code', 'Code: {{code}}', { code: salon.salonCode })}
                                 </span>
                             )}
                             {homeServiceCharges > 0 && (
                                 <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
-                                    Home Service: ₹{homeServiceCharges}
+                                    {t('salon_page.home_service', 'Home Service: ₹{{amount}}', { amount: homeServiceCharges })}
                                 </span>
                             )}
                         </div>
@@ -819,7 +911,7 @@ const SalonPage = () => {
                             onClick={() => navigate('/customer/book-service')}
                             className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
                         >
-                            Book Services
+                            {t('salon_page.book_services', 'Book Services')}
                         </button>
                         <button
                             type="button"
@@ -863,7 +955,7 @@ const SalonPage = () => {
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
                                         <Scissors className="w-10 h-10 text-slate-350 mb-2 animate-bounce" />
-                                        <span className="text-xs font-bold uppercase tracking-widest">No Image Available</span>
+                                        <span className="text-xs font-bold uppercase tracking-widest">{t('salon_page.no_image', 'No Image Available')}</span>
                                     </div>
                                 )}
                             </div>
@@ -884,7 +976,7 @@ const SalonPage = () => {
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
                                             <Scissors className="w-6 h-6 text-slate-350 mb-1" />
-                                            <span className="text-[10px] font-bold uppercase">No Image</span>
+                                            <span className="text-[10px] font-bold uppercase">{t('salon_page.no_image_short', 'No Image')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -902,20 +994,22 @@ const SalonPage = () => {
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
                                             <Scissors className="w-6 h-6 text-slate-350 mb-1" />
-                                            <span className="text-[10px] font-bold uppercase">No Image</span>
+                                            <span className="text-[10px] font-bold uppercase">{t('salon_page.no_image_short', 'No Image')}</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </div>                        {/* Photos Gallery Section (placed directly below header images) */}
+                        </div>
+                        
+                        {/* Photos Gallery Section (placed directly below header images) */}
                         {galleryImages.filter(Boolean).length > 0 && (
                             <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                        <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Photos Gallery
+                                        <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.photos_gallery', 'Photos Gallery')}
                                     </h3>
                                     <span className="bg-red-50 text-[#ff0b01] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                        {galleryImages.filter(Boolean).length} photos
+                                        {t('salon_page.photos_count', '{{count}} photos', { count: galleryImages.filter(Boolean).length })}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5">
@@ -940,7 +1034,7 @@ const SalonPage = () => {
                                                 />
                                                 {isMain ? (
                                                     <div className="absolute inset-0 bg-[#ff0b01]/5 flex items-center justify-center">
-                                                        <span className="bg-[#ff0b01] text-white text-[8px] font-black uppercase px-1 rounded-sm">Main</span>
+                                                        <span className="bg-[#ff0b01] text-white text-[8px] font-black uppercase px-1 rounded-sm">{t('salon_page.main', 'Main')}</span>
                                                     </div>
                                                 ) : (
                                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 pointer-events-none">
@@ -958,12 +1052,12 @@ const SalonPage = () => {
                         {offers.length > 0 && (
                             <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-visible relative" data-aos="fade-up">
                                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Exclusive Offers for You
+                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.exclusive_offers', 'Exclusive Offers for You')}
                                 </h3>
                                 {offersLoading ? (
                                     <div className="flex flex-col items-center justify-center py-6">
                                         <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full mb-2"></div>
-                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Syncing Exclusive Deals...</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t('salon_page.syncing_deals', 'Syncing Exclusive Deals...')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1005,21 +1099,21 @@ const SalonPage = () => {
                                                             <div className="min-w-0">
                                                                 {offer.validTo ? (
                                                                     <>
-                                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Expires on</span>
-                                                                        <span className="text-[10px] text-slate-650 font-bold block mt-1 truncate">
-                                                                            {new Date(offer.validTo).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.expires_on', 'Expires on')}</span>
+                                                                        <span className="text-[11px] font-black text-slate-800 mt-1 block truncate">
+                                                                            {new Date(offer.validTo).toLocaleDateString()}
                                                                         </span>
                                                                     </>
                                                                 ) : (
-                                                                    <span className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-wider block">Limited Time</span>
+                                                                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">{t('salon_page.valid_today', 'Valid Today')}</span>
                                                                 )}
                                                             </div>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                                                className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4.5 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
+                                                                className="bg-[#ff0b01] hover:bg-red-700 text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-2 rounded-xl transition duration-300 shadow-xs whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
                                                             >
-                                                                Claim Deal
+                                                                {t('salon_page.claim_deal', 'Claim Deal')}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -1035,18 +1129,17 @@ const SalonPage = () => {
                         {categories.length > 0 && (
                             <section ref={servicesSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                    <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> SERVICES CATEGORIES
+                                    <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> {t('salon_page.services_categories', 'SERVICES CATEGORIES')}
                                 </h3>
                                 {!servicesLoaded ? (
                                     <div className="flex flex-col items-center justify-center py-6">
                                         <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading Categories...</p>
+                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.loading_categories', 'Loading Categories...')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-3 sm:gap-4">
                                         {categories.map((catName) => {
-                                            const catLower = catName.toLowerCase();
-                                            const catIcon = categoryIcons[catLower] || hairCutIcon;
+                                            const catIcon = getCategoryIcon(catName);
                                             return (
                                                 <div
                                                     key={catName}
@@ -1058,7 +1151,7 @@ const SalonPage = () => {
                                                         alt={catName}
                                                         className="w-7 h-7 object-contain mb-1.5"
                                                     />
-                                                    <span className="text-[10px] font-black tracking-tight uppercase text-slate-700">{catName}</span>
+                                                    <span className="text-[10px] font-black tracking-tight uppercase text-slate-700">{translateServiceName(catName, t)}</span>
                                                 </div>
                                             );
                                         })}
@@ -1071,7 +1164,7 @@ const SalonPage = () => {
                         {isAuthenticated && packages.length > 0 && (
                             <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm relative" data-aos="fade-up">
                                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> Special Packages
+                                    <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.special_packages', 'Special Packages')}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {packages.map((pkg) => {
@@ -1086,7 +1179,7 @@ const SalonPage = () => {
                                                         <h4 className="font-extrabold text-sm text-slate-950 uppercase tracking-tight line-clamp-1">{pkg.name}</h4>
                                                         {savings > 0 && (
                                                             <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
-                                                                Save ₹{savings}
+                                                                {t('salon_page.save', 'Save ₹{{amount}}', { amount: savings })}
                                                             </span>
                                                         )}
                                                     </div>
@@ -1097,11 +1190,11 @@ const SalonPage = () => {
                                                     {/* Services included list */}
                                                     {pkg.services && pkg.services.length > 0 && (
                                                         <div className="mt-4">
-                                                            <span className="text-[8px] font-bold text-slate-400 tracking-wider uppercase block mb-1.5">Services Included:</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 tracking-wider uppercase block mb-1.5">{t('salon_page.services_included', 'Services Included:')}</span>
                                                             <div className="flex flex-wrap gap-1">
                                                                 {pkg.services.map(service => (
                                                                     <span key={service.id} className="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-50 text-slate-650 border border-slate-100">
-                                                                        {service.name}
+                                                                        {translateServiceName(service.name, t)}
                                                                     </span>
                                                                 ))}
                                                             </div>
@@ -1111,7 +1204,7 @@ const SalonPage = () => {
 
                                                 <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50 mt-4">
                                                     <div>
-                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">Price</span>
+                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.price', 'Price')}</span>
                                                         <span className="text-sm font-black text-[#ff0b01] mt-1.5 block">₹{pkg.packagePrice}</span>
                                                     </div>
                                                     <button
@@ -1119,7 +1212,7 @@ const SalonPage = () => {
                                                         onClick={() => navigate('/customer/book-service', { state: { selectedPackage: pkg } })}
                                                         className="bg-slate-900 hover:bg-[#ff0b01] text-white text-[9px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl transition duration-300 shadow-sm whitespace-nowrap cursor-pointer transform hover:scale-105 active:scale-95"
                                                     >
-                                                        Book Package
+                                                        {t('salon_page.book_package', 'Book Package')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1134,7 +1227,7 @@ const SalonPage = () => {
                         {/* Opening Times */}
                         <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
-                                <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> Opening Times
+                                <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> {t('salon_page.opening_times', 'Opening Times')}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
                                 {weekdays.map((day) => {
@@ -1153,12 +1246,12 @@ const SalonPage = () => {
                                             <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
                                                 }`}>
                                                 {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] animate-pulse shrink-0"></span>}
-                                                {day}
-                                                {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">TODAY</span>}
+                                                {t('days.' + day.toLowerCase(), day)}
+                                                {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">{t('salon_page.today', 'TODAY')}</span>}
                                             </span>
                                             <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
                                                 }`}>
-                                                {isOff ? 'Closed' : operatingHours}
+                                                {isOff ? t('salon_page.closed', 'Closed') : operatingHours}
                                             </span>
                                         </div>
                                     );
@@ -1171,25 +1264,25 @@ const SalonPage = () => {
                             {/* Section Header */}
                             <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                    <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> Top Experts
+                                    <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.our_experts', 'Our Experts')}
                                 </h3>
                                 <span
                                     onClick={() => navigate('/customer/book-service')}
                                     className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider flex items-center gap-0.5"
                                 >
-                                    View All <ChevronRight className="w-3.5 h-3.5" />
+                                    {t('salon_page.view_all', 'View All')} <ChevronRight className="w-3.5 h-3.5" />
                                 </span>
                             </div>
 
                             {!staffLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6">
                                     <div className="animate-spin h-8 w-8 border-[3px] border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading top experts...</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('salon_page.loading_experts', 'Loading top experts...')}</p>
                                 </div>
                             ) : staffList.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6">
                                     <Users className="w-10 h-10 text-slate-200 mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No experts currently listed</p>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('salon_page.no_experts', 'No experts currently listed')}</p>
                                 </div>
                             ) : (
                                 <div className="px-4 sm:px-6 pb-4 sm:pb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -1226,7 +1319,7 @@ const SalonPage = () => {
                                                 {isTopRated && (
                                                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
                                                         <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                                                            <Award className="w-3 h-3" /> Top Rated
+                                                            <Award className="w-3 h-3" /> {t('salon_page.top_rated', 'Top Rated')}
                                                         </span>
                                                     </div>
                                                 )}
@@ -1312,23 +1405,23 @@ const SalonPage = () => {
                                                             : 'bg-slate-900 hover:bg-black text-white shadow-sm'
                                                             }`}
                                                     >
-                                                        Book Now
+                                                        {t('salon_page.book_now', 'Book Now')}
                                                     </button>
 
                                                     {/* Availability badge */}
                                                     {selectedSlot && (
                                                         <div className="mt-2 text-center">
                                                             {availableStaffLoading ? (
-                                                                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Checking...</span>
+                                                                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">{t('salon_page.checking', 'Checking...')}</span>
                                                             ) : availableStaffIds.has(staff.id) ? (
                                                                 <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-green-600">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                    Available at {selectedTime}
+                                                                    {t('salon_page.available_at', 'Available at {{time}}', { time: selectedTime })}
                                                                 </span>
                                                             ) : (
                                                                 <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-slate-400">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                                    Unavailable at {selectedTime}
+                                                                    {t('salon_page.unavailable_at', 'Unavailable at {{time}}', { time: selectedTime })}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1344,14 +1437,14 @@ const SalonPage = () => {
                         {/* ── Quick Book — Date & Time Slots ── */}
                         <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Available Slots
+                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.available_slots', 'Available Slots')}
                             </h3>
 
                             {/* Month/Year Header */}
                             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700">
                                 <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
                                 <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-                                    Year {selectedDateObj?.year || '2026'}
+                                    {t('salon_page.year', 'Year {{year}}', { year: selectedDateObj?.year || '2026' })}
                                 </span>
                             </div>
 
@@ -1386,12 +1479,12 @@ const SalonPage = () => {
                             {slotsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 mt-5">
                                     <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading available slots...</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.loading_slots', 'Loading available slots...')}</p>
                                 </div>
                             ) : salonSlots.length === 0 ? (
                                 <div className="text-center py-8 mt-5">
                                     <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('salon_page.no_slots', 'No slots available for this day')}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
@@ -1443,7 +1536,7 @@ const SalonPage = () => {
                                         }}
                                         className="w-full bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
                                     >
-                                        Continue Booking for {selectedTime}
+                                        {t('salon_page.continue_booking', 'Continue Booking for {{time}}', { time: selectedTime })}
                                     </button>
                                 </div>
                             )}
@@ -1454,13 +1547,13 @@ const SalonPage = () => {
                             <section ref={productsSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-5">
                                     <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                        <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Products
+                                        <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.specialized_products', 'Products')}
                                     </h3>
                                     <span
                                         onClick={() => navigate('/customer/product-search', { state: { salonId: resolvedSalonId } })}
                                         className="text-xs font-black text-[#FF0B01] cursor-pointer hover:underline uppercase tracking-wider"
                                     >
-                                        See More
+                                        {t('salon_page.see_more', 'See More')}
                                     </span>
                                 </div>
                                 {!productsLoaded ? (
@@ -1488,7 +1581,7 @@ const SalonPage = () => {
                                                 </div>
                                                 <div className="mt-4 pt-3.5 border-t border-slate-55 flex items-center justify-between">
                                                     <div>
-                                                        <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">Price</span>
+                                                        <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">{t('salon_page.price', 'Price')}</span>
                                                         <span className="text-sm font-extrabold text-slate-900 mt-1.5 block">₹{product.price}</span>
                                                     </div>
                                                     <button
@@ -1496,7 +1589,7 @@ const SalonPage = () => {
                                                         onClick={() => navigate('/customer/product-details', { state: { product } })}
                                                         className="bg-slate-950 hover:bg-black text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-sm"
                                                     >
-                                                        Buy Now
+                                                        {t('salon_page.buy_now', 'Buy Now')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1509,7 +1602,7 @@ const SalonPage = () => {
                         {/* Customer Reviews */}
                         <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> Customer Reviews
+                                <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.reviews_rating', 'Customer Reviews')}
                             </h3>
                             <div className="space-y-4">
                                 {[

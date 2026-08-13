@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Phone, Calendar, LogOut, User, Edit2, Save, Sparkles, Mail, MapPin } from 'lucide-react';
 import { fetchCustomerProfile, logoutCustomerApi, updateCustomerProfile } from '../../redux/slices/customerSlice';
@@ -169,7 +170,7 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
     const displayName = getDisplayName();
     const firstInitial = ((displayName.startsWith('+') ? displayName.slice(1) : displayName).charAt(0) || 'P').toUpperCase();
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300 font-sans">
             {/* Backdrop click to close */}
             <div className="absolute inset-0" onClick={onClose}></div>
@@ -179,85 +180,89 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                 {/* Close Button */}
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition text-gray-400 hover:text-gray-600 cursor-pointer"
+                    className="absolute top-5 right-5 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all duration-200 cursor-pointer border-0"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
-                {loading && !profile ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3">
-                        <div className="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Profile...</p>
+                {/* Profile Header Block */}
+                <div className="flex flex-col items-center text-center pb-6 border-b border-slate-100">
+                    {/* Avatar Circle with Badge */}
+                    <div className="relative mb-3">
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-red-500 to-red-600 text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-red-500/20 border-4 border-white">
+                            {firstInitial}
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center shadow-xs" title="Account Active">
+                            <Sparkles className="w-3 h-3 text-white" />
+                        </div>
                     </div>
-                ) : isEditing ? (
-                    <form onSubmit={handleSave} className="w-full flex flex-col items-center">
-                        <h3 className="text-xl font-black text-gray-900 tracking-tight mb-6 uppercase">
-                            Edit Profile
-                        </h3>
 
-                        <div className="w-full space-y-4 max-h-[350px] overflow-y-auto pr-1">
-                            {/* Full Name */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{displayName}</h3>
+                    <p className="text-xs font-semibold text-slate-400 mt-0.5">{profile?.mobile || user?.mobile || user?.phone || 'Customer'}</p>
+                    
+                    <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all duration-200 cursor-pointer border-0"
+                    >
+                        {isEditing ? (
+                            <>
+                                <X className="w-3.5 h-3.5" /> Cancel Editing
+                            </>
+                        ) : (
+                            <>
+                                <Edit2 className="w-3.5 h-3.5 text-[#FF0B01]" /> Edit Profile
+                            </>
+                        )}
+                    </button>
+                </div>
+
+                {/* Profile Information / Edit Form */}
+                <div className="py-6 space-y-4 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
+                    {isEditing ? (
+                        <form onSubmit={handleSave} className="space-y-4">
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Full Name</label>
                                 <input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleInputChange}
-                                    placeholder="Enter your name"
+                                    placeholder="Enter full name"
                                     required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF0B01] focus:bg-white transition-all"
                                 />
                             </div>
 
-                            {/* Mobile Number */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile Number</label>
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Mobile Number</label>
                                 <input
                                     type="tel"
                                     name="mobile"
                                     value={formData.mobile}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter 10 digit number"
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
+                                    disabled
+                                    className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-400 cursor-not-allowed"
                                 />
                             </div>
-                            
-                            {/* Email */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
+
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Email Address</label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    placeholder="Enter your email"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
+                                    placeholder="Enter email address"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF0B01] focus:bg-white transition-all"
                                 />
                             </div>
 
-                            {/* Address */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter your address"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
-                                />
-                            </div>
-
-                            {/* Gender */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</label>
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Gender</label>
                                 <select
                                     name="gender"
                                     value={formData.gender}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF0B01] focus:bg-white transition-all"
                                 >
                                     <option value="">Select Gender</option>
                                     <option value="MALE">Male</option>
@@ -266,146 +271,74 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                                 </select>
                             </div>
 
-                            {/* Birthdate */}
-                            <div className="flex flex-col gap-1 w-full">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Birthdate</label>
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Date of Birth</label>
                                 <input
                                     type="date"
                                     name="birthdate"
                                     value={formData.birthdate}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-gray-700"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF0B01] focus:bg-white transition-all"
                                 />
                             </div>
-                        </div>
 
-                        {/* Save & Cancel Buttons */}
-                        <div className="w-full mt-6 flex flex-col gap-2">
+                            <div>
+                                <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Address</label>
+                                <textarea
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your complete address"
+                                    rows="2"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF0B01] focus:bg-white transition-all resize-none"
+                                />
+                            </div>
+
                             <button
                                 type="submit"
-                                disabled={loading}
-                                className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] disabled:bg-red-400 disabled:cursor-not-allowed active:scale-[0.98] text-white py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-sm"
+                                disabled={saving}
+                                className="w-full py-3 bg-[#FF0B01] hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-200 shadow-md shadow-red-500/20 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-0"
                             >
                                 <Save className="w-4 h-4" />
-                                {loading ? 'SAVING...' : 'SAVE CHANGES'}
+                                {saving ? 'SAVING...' : 'SAVE CHANGES'}
                             </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                                className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-semibold text-gray-500 transition duration-150 cursor-pointer text-sm"
-                            >
-                                CANCEL
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="flex flex-col items-center">
-                        {/* Avatar */}
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-lg mb-4">
-                            <User className="w-10 h-10 text-white" />
-                        </div>
+                        </form>
+                    ) : null}
+                </div>
 
-                        <h3 className="text-xl font-black text-gray-900 text-center tracking-tight mb-6">
-                            {displayName}
-                        </h3>
-
-                        {isIncomplete(profile?.fullName || user?.name || '') && (
-                            <div className="w-full mb-6 px-4 py-3 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-[#FF0B01] flex-shrink-0 animate-pulse" />
-                                <p className="text-xs font-bold text-red-700">
-                                    Please complete your profile to personalize your experience.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Info Fields */}
-                        <div className="w-full space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                            {/* Mobile */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile Number</span>
-                                    <span className="text-sm font-semibold text-gray-700">{profile?.mobile || user?.phone || 'Not provided'}</span>
-                                </div>
-                            </div>
-
-                            {/* Email */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</span>
-                                    <span className="text-sm font-semibold text-gray-700">{profile?.email || user?.email || 'Not provided'}</span>
-                                </div>
-                            </div>
-
-                            {/* Gender */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gender</span>
-                                    <span className="text-sm font-semibold text-gray-700 capitalize">
-                                        {profile?.gender && profile.gender !== 'Select Gender' ? profile.gender.toLowerCase() : 'Not provided'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Birth Date */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Birthdate</span>
-                                    <span className="text-sm font-semibold text-gray-700">{profile?.birthdate || profile?.birthDate || 'Not provided'}</span>
-                                </div>
-                            </div>
-
-                            {/* Address */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Address</span>
-                                    <span className="text-sm font-semibold text-gray-700">{profile?.address || 'Not provided'}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Buttons Footer */}
-                        <div className="w-full mt-8 flex flex-col gap-2">
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="w-full border border-[#FF2A14] hover:bg-red-50 text-[#FF2A14] py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm"
-                            >
-                                <Edit2 className="w-4 h-4" />
-                                EDIT PROFILE
-                            </button>
-                            {onChangePasswordClick && (
-                                <button
-                                    onClick={onChangePasswordClick}
-                                    className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-bold text-gray-600 transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm"
-                                >
-                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                    CHANGE PASSWORD
-                                </button>
-                            )}
-                            <button
-                                onClick={handleLogout}
-                                className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] active:scale-[0.98] text-white py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-sm"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                LOGOUT
-                            </button>
-                            <button
-                                onClick={onClose}
-                                className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-semibold text-gray-500 transition duration-150 cursor-pointer text-sm"
-                            >
-                                CLOSE
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {/* Footer Action Buttons */}
+                <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
+                    {onChangePasswordClick && (
+                        <button
+                            type="button"
+                            onClick={onChangePasswordClick}
+                            className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-bold text-gray-600 transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                        >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            CHANGE PASSWORD
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] active:scale-[0.98] text-white py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-sm"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        LOGOUT
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-semibold text-gray-500 transition duration-150 cursor-pointer text-sm"
+                    >
+                        CLOSE
+                    </button>
+                </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

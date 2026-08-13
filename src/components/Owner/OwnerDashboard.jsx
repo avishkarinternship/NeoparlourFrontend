@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
@@ -141,6 +141,10 @@ const getTodayDateString = () => {
 
 const OwnerDashboard = () => {
     const navigate = useNavigate();
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode !== undefined 
+      ? outletContext.isDarkMode 
+      : document.documentElement.classList.contains('dark');
 
     const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
     const isAdmin = user.role === 'ADMIN';
@@ -527,7 +531,9 @@ const OwnerDashboard = () => {
             return false;
         }
     };
-    const todaysAppointments = upcomingAppointments.filter(appt => isTodayDate(appt.appointmentAt));
+    const todaysAppointments = Array.isArray(upcomingAppointments)
+        ? upcomingAppointments.filter(appt => isTodayDate(appt?.appointmentAt))
+        : [];
 
     if (isAdmin) {
         return (
@@ -820,23 +826,27 @@ const OwnerDashboard = () => {
     }
 
     return (
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className={`flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+        }`}>
                     {/* Workspace Header Title */}
-                    <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
+                    <h1 className={`text-[22px] font-bold mb-6 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Dashboard</h1>
 
                     {/* Responsive Workspace Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         {/* 1. Revenue Graph Card (Upgraded UI) */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between min-h-[350px]">
+                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[350px] transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
                             <div>
                                 <div className="flex justify-between items-start mb-1">
                                     <div>
-                                        <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Revenue</h3>
-                                        <p className="text-[11px] text-gray-400 font-medium capitalize">{viewType} view</p>
+                                        <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Revenue</h3>
+                                        <p className={`text-[11px] font-medium capitalize ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{viewType} view</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[11px] text-gray-400 font-medium">Total Revenue</p>
+                                        <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total Revenue</p>
                                         <p className="text-2xl font-black text-[#ff0b01]">₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                     </div>
                                 </div>
@@ -849,8 +859,8 @@ const OwnerDashboard = () => {
                                             onClick={() => handleViewTypeChange(type)}
                                             className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
                                                 viewType === type
-                                                    ? 'bg-[#ff0b01] text-white shadow-lg shadow-red-200 scale-105'
-                                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                                                    ? 'bg-[#ff0b01] text-white'
+                                                    : isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
                                             }`}
                                         >
                                             {type}
@@ -859,24 +869,30 @@ const OwnerDashboard = () => {
                                 </div>
 
                                 {viewType === 'custom' && (
-                                    <div className="flex items-center space-x-3 mb-6 bg-gray-50 border border-gray-200 p-3 rounded-2xl max-w-md">
+                                    <div className={`flex items-center space-x-3 mb-6 border p-3 rounded-2xl max-w-md ${
+                                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'
+                                    }`}>
                                         <div className="flex-1">
-                                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">From</label>
+                                            <label className={`text-[9px] font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From</label>
                                             <input 
                                                 type="date"
                                                 value={customStartDate}
                                                 onChange={(e) => setCustomStartDate(e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                                                className={`w-full border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] ${
+                                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
+                                                }`}
                                             />
                                         </div>
-                                        <div className="text-gray-300 text-xs mt-4">to</div>
+                                        <div className={`text-xs mt-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>to</div>
                                         <div className="flex-1">
-                                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">To</label>
+                                            <label className={`text-[9px] font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To</label>
                                             <input 
                                                 type="date"
                                                 value={customEndDate}
                                                 onChange={(e) => setCustomEndDate(e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] text-gray-700"
+                                                className={`w-full border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] ${
+                                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
+                                                }`}
                                             />
                                         </div>
                                     </div>
@@ -891,10 +907,10 @@ const OwnerDashboard = () => {
                                     </div>
                                 ) : revenueData.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-center">
-                                        <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <svg className={`w-10 h-10 mb-2 ${isDarkMode ? 'text-slate-600' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                                         </svg>
-                                        <p className="text-[12px] font-semibold text-gray-400">No revenue data available</p>
+                                        <p className={`text-[12px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No revenue data available</p>
                                     </div>
                                 ) : (
                                     <ResponsiveContainer width="100%" height="100%">
@@ -905,20 +921,20 @@ const OwnerDashboard = () => {
                                                     <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#f5f5f5'} vertical={false} />
                                             <XAxis
                                                 dataKey="label"
                                                 tickFormatter={(val) => formatLabel(val, viewType)}
-                                                tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }}
-                                                axisLine={{ stroke: '#e5e7eb' }}
+                                                tick={{ fontSize: 10, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
+                                                axisLine={{ stroke: isDarkMode ? '#334155' : '#e5e7eb' }}
                                                 tickLine={false}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis
-                                                tick={{ fontSize: 10, fill: '#9ca3af', fontWeight: 600 }}
+                                                tickFormatter={(val) => `₹${val}`}
+                                                tick={{ fontSize: 10, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tickFormatter={(val) => `₹${val}`}
                                             />
                                             <Tooltip content={<CustomTooltip viewType={viewType} />} />
                                             <Area
@@ -927,8 +943,8 @@ const OwnerDashboard = () => {
                                                 stroke="#ff0b01"
                                                 strokeWidth={3}
                                                 fill="url(#revenueGradient)"
-                                                dot={{ r: 4, fill: '#ff0b01', stroke: '#fff', strokeWidth: 2 }}
-                                                activeDot={{ r: 6, fill: '#ff0b01', stroke: '#fff', strokeWidth: 2, className: 'animate-pulse' }}
+                                                dot={{ r: 4, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2 }}
+                                                activeDot={{ r: 6, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2, className: 'animate-pulse' }}
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -937,15 +953,17 @@ const OwnerDashboard = () => {
                         </div>
 
                         {/* 2. Upcoming Appointments (Booked) */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
+                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Upcoming Appointments</h3>
-                                    <p className="text-[11px] text-gray-400 font-medium">Booked sessions status</p>
+                                    <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upcoming Appointments</h3>
+                                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked sessions status</p>
                                 </div>
                                 <button 
                                     onClick={() => navigate('/owner/manage/schedule')}
-                                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors"
+                                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                                 >
                                     More
                                 </button>
@@ -960,23 +978,23 @@ const OwnerDashboard = () => {
                                     <img
                                         src={upcomingAppointmentIcon}
                                         alt="Upcoming Appointments Icon"
-                                        className="w-12"
+                                        className="w-12 opacity-80 dark:invert"
                                     />
-                                    <h4 className="text-[14px] font-bold text-gray-800 mt-3">Your Schedule Is Empty</h4>
-                                    <p className="text-[11px] font-semibold text-gray-400 max-w-[240px] mt-1.5 leading-relaxed">
+                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>Your Schedule Is Empty</h4>
+                                    <p className={`text-[11px] font-semibold max-w-[240px] mt-1.5 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                         No upcoming booked slots found.
                                     </p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
                                     {upcomingAppointments.slice(0, 3).map((appt) => (
                                         <div key={appt.id} className="flex justify-between items-center py-3">
                                             <div>
-                                                <h4 className="text-[13px] font-bold text-gray-800">{appt.customerName}</h4>
-                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.customerName}</h4>
+                                                <p className={`text-[11px] font-semibold mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                     {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
                                                 </p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                                     {formatAppointmentTime(appt.appointmentAt)}
                                                 </p>
                                             </div>
@@ -984,8 +1002,8 @@ const OwnerDashboard = () => {
                                                 <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
                                                 <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
                                                     appt.status === 'in_progress' 
-                                                        ? 'bg-orange-50 text-orange-600' 
-                                                        : 'bg-red-50 text-[#ff0b01]'
+                                                        ? 'bg-orange-50 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400' 
+                                                        : 'bg-red-50 dark:bg-red-950/70 text-[#ff0b01]'
                                                 }`}>
                                                     {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                                                 </span>
@@ -997,10 +1015,12 @@ const OwnerDashboard = () => {
                         </div>
 
                         {/* 3. Completed Appointments Activity Log */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col">
+                        <div className={`p-6 rounded-2xl border shadow-sm min-h-[350px] flex flex-col transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
                             <div>
-                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Completed Appointments</h3>
-                                <p className="text-[11px] text-gray-400 font-medium mb-4">Feed of successful sessions</p>
+                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Completed Appointments</h3>
+                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Feed of successful sessions</p>
                             </div>
 
                             {completedLoading ? (
@@ -1009,28 +1029,28 @@ const OwnerDashboard = () => {
                                 </div>
                             ) : completedAppointments.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
-                                    <img src={appointmentActivityIcon} alt="Log Icon" className="w-10 opacity-40" />
-                                    <h4 className="text-[14px] font-bold text-gray-400 mt-3">No Completed Sessions</h4>
-                                    <p className="text-[11px] text-gray-300 mt-1">Mark sessions as completed to see activity.</p>
+                                    <img src={appointmentActivityIcon} alt="Log Icon" className="w-10 opacity-40 dark:invert" />
+                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Completed Sessions</h4>
+                                    <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>Mark sessions as completed to see activity.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
                                     {completedAppointments.slice(0, 3).map((appt) => (
                                         <div key={appt.id} className="flex justify-between items-center py-3">
                                             <div>
-                                                <h4 className="text-[13px] font-bold text-gray-800">{appt.serviceNames?.join(', ') || 'Service'}</h4>
+                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.serviceNames?.join(', ') || 'Service'}</h4>
                                                 <div className="flex items-center space-x-1.5 mt-0.5">
                                                     <img
                                                         src={appointmentActivityIcon}
                                                         alt="Log Icon"
-                                                        className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                                                        className="w-3.5 h-3.5 object-contain flex-shrink-0 opacity-70"
                                                     />
-                                                    <p className="text-[11px] text-gray-400 font-semibold">{appt.customerName} • {formatAppointmentTime(appt.appointmentAt)}</p>
+                                                    <p className={`text-[11px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{appt.customerName} • {formatAppointmentTime(appt.appointmentAt)}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[13px] font-black text-gray-900">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-[#E3F9EC] text-[#299764] font-bold px-2 py-0.5 rounded-md mt-1.5">Completed</span>
+                                                <p className={`text-[13px] font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                                <span className="inline-block text-[9px] bg-[#E3F9EC] dark:bg-emerald-950/70 text-[#299764] dark:text-emerald-400 font-bold px-2 py-0.5 rounded-md mt-1.5">Completed</span>
                                             </div>
                                         </div>
                                     ))}
@@ -1039,9 +1059,11 @@ const OwnerDashboard = () => {
                         </div>
 
                         {/* 4. Unallocated Appointments Panel */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
-                            <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Unallocated Appointments</h3>
-                            <p className="text-[11px] text-gray-400 font-medium mb-4">Appointments waiting for staff allocation</p>
+                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
+                            <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Unallocated Appointments</h3>
+                            <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Appointments waiting for staff allocation</p>
 
                             {unallocatedLoading ? (
                                 <div className="flex-1 flex items-center justify-center">
@@ -1125,10 +1147,12 @@ const OwnerDashboard = () => {
                         </div>
 
                         {/* 5. Stylist Status & Availability */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[350px] flex flex-col">
+                        <div className={`p-6 rounded-2xl border shadow-sm min-h-[350px] flex flex-col transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
                             <div>
-                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Stylist Status & Availability</h3>
-                                <p className="text-[11px] text-gray-400 font-medium mb-4">Real-time team active status</p>
+                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Stylist Status & Availability</h3>
+                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Real-time team active status</p>
                             </div>
                             
                             {staffAvailabilityLoading ? (
@@ -1137,17 +1161,21 @@ const OwnerDashboard = () => {
                                 </div>
                             ) : staffStatusList.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
-                                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                    <svg className={`w-10 h-10 mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                     </svg>
-                                    <p className="text-[12px] font-semibold text-gray-400">No staff status available</p>
+                                    <p className={`text-[12px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No staff status available</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${
+                                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
+                                }`}>
                                     {staffStatusList.map((staff, idx) => (
                                         <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 font-bold text-xs border border-gray-200 shadow-sm overflow-hidden flex-shrink-0">
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border shadow-sm overflow-hidden flex-shrink-0 ${
+                                                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-gray-50 border-gray-200 text-gray-800'
+                                                }`}>
                                                     {staff.imageUrl || staff.imagePath ? (
                                                         <img 
                                                             src={staff.imageUrl || staff.imagePath} 
@@ -1170,18 +1198,18 @@ const OwnerDashboard = () => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[13px] font-bold text-gray-800">{staff.name || 'Stylist'}</h4>
-                                                    <p className="text-[10px] text-gray-400 font-semibold">
+                                                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{staff.name || 'Stylist'}</h4>
+                                                    <p className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                         {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? 'No rating yet' : `★ ${Number(staff.rating).toFixed(1)}`}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div>
                                                 <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
-                                                    staff.status === 'Available' ? 'bg-[#E3F9EC] text-[#299764]' :
-                                                    staff.status === 'In Session' ? 'bg-red-50 text-[#ff0b01]' :
-                                                    staff.status === 'On Leave' ? 'bg-amber-50 text-amber-600' :
-                                                    'bg-gray-100 text-gray-500'
+                                                    staff.status === 'Available' ? (isDarkMode ? 'bg-[#E3F9EC]/10 text-[#299764]' : 'bg-[#E3F9EC] text-[#299764]') :
+                                                    staff.status === 'In Session' ? (isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]') :
+                                                    staff.status === 'On Leave' ? (isDarkMode ? 'bg-amber-950/30 text-amber-500' : 'bg-amber-50 text-amber-600') :
+                                                    isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
                                                 }`}>
                                                     {staff.status || 'Offline'}
                                                 </span>
@@ -1193,10 +1221,12 @@ const OwnerDashboard = () => {
                         </div>
 
                         {/* 6. Cancelled Appointments Panel */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col min-h-[350px]">
+                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
+                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                        }`}>
                             <div>
-                                <h3 className="text-[15px] font-bold text-gray-900 tracking-tight">Cancelled Appointments</h3>
-                                <p className="text-[11px] text-gray-400 font-medium mb-4">Booked slots cancelled for today</p>
+                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cancelled Appointments</h3>
+                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked slots cancelled for today</p>
                             </div>
 
                             {cancelledLoading ? (
@@ -1210,25 +1240,29 @@ const OwnerDashboard = () => {
                                         alt="Cancelled Appointments Icon"
                                         className="w-12 h-12 object-contain opacity-50"
                                     />
-                                    <h4 className="text-[14px] font-bold text-gray-400 mt-3">No Cancelled Appointments</h4>
-                                    <p className="text-[11px] text-gray-300 mt-1">There are no cancelled slots for today.</p>
+                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Cancelled Appointments</h4>
+                                    <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>There are no cancelled slots for today.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
+                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${
+                                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
+                                }`}>
                                     {cancelledAppointments.map((appt) => (
                                         <div key={appt.id} className="flex justify-between items-center py-3">
                                             <div>
-                                                <h4 className="text-[13px] font-bold text-gray-800">{appt.customerName}</h4>
-                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{appt.customerName}</h4>
+                                                <p className={`text-[11px] font-semibold mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                     {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
                                                 </p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                                     {formatAppointmentTime(appt.appointmentAt)}
                                                 </p>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-red-50 text-[#ff0b01] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize">
+                                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
+                                                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
+                                                }`}>
                                                     {appt.status}
                                                 </span>
                                             </div>

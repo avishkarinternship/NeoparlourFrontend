@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
-const LazyImage = ({ src, alt, className }) => {
+const LazyImage = ({ src, alt, className, isDarkMode = false }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(false);
     const imgRef = React.useRef();
@@ -30,7 +31,7 @@ const LazyImage = ({ src, alt, className }) => {
     if (!src) return null;
 
     return (
-        <div ref={imgRef} className={`relative bg-gray-100 overflow-hidden shrink-0 ${className}`}>
+        <div ref={imgRef} className={`relative ${isDarkMode ? 'bg-zinc-800' : 'bg-gray-100'} overflow-hidden shrink-0 ${className}`}>
             {isInView && (
                 <img
                     src={src}
@@ -43,15 +44,18 @@ const LazyImage = ({ src, alt, className }) => {
                 />
             )}
             {!isLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center text-[8px] text-gray-300 font-bold bg-gray-50 uppercase tracking-widest animate-pulse">
-                    🖼️
-                </div>
+                <div className={`absolute inset-0 ${isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'} animate-pulse`} />
             )}
         </div>
     );
 };
 
 const Orders = () => {
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode !== undefined 
+      ? outletContext.isDarkMode 
+      : document.documentElement.classList.contains('dark');
+
     const [activeTab, setActiveTab] = useState('ordered'); // 'ordered' | 'completed' | 'cancelled'
     
 
@@ -222,21 +226,23 @@ const Orders = () => {
     };
 
     return (
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-6">
+                <main className={`flex-1 min-w-0 p-6 md:p-8 space-y-6 transition-colors duration-300 ${
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                }`}>
                     
                     {/* Header Title Section Line Block */}
                     <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-[18px] font-bold text-gray-900 tracking-tight">
+                            <h1 className={`text-[18px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Orders Management
                             </h1>
-                            <p className="text-[11px] text-gray-400 font-medium">Manage product sales orders, status updates, and customer purchase logs</p>
+                            <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Manage product sales orders, status updates, and customer purchase logs</p>
                         </div>
                     </div>
 
                     {/* TABS CONTAINER */}
-                    <div className="max-w-6xl mx-auto border-b border-gray-200">
-                        <div className="flex space-x-6 text-[11px] font-bold tracking-wider text-gray-400">
+                    <div className={`max-w-6xl mx-auto border-b ${isDarkMode ? 'border-zinc-700' : 'border-gray-200'}`}>
+                        <div className={`flex space-x-6 text-[11px] font-bold tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                             {[
                                 { key: 'ordered', label: 'Active / Ordered' },
                                 { key: 'completed', label: 'Completed' },
@@ -246,7 +252,7 @@ const Orders = () => {
                                     key={tab.key}
                                     onClick={() => setActiveTab(tab.key)}
                                     className={`pb-3 relative transition-colors uppercase ${
-                                        activeTab === tab.key ? 'text-gray-900 font-extrabold' : 'hover:text-gray-600'
+                                        activeTab === tab.key ? (isDarkMode ? 'text-white font-extrabold' : 'text-gray-900 font-extrabold') : (isDarkMode ? 'hover:text-zinc-300' : 'hover:text-gray-600')
                                     }`}
                                 >
                                     {tab.label}
@@ -259,74 +265,74 @@ const Orders = () => {
                     </div>
 
                     {/* Filter and Global Query Toolbar Input Row Segment Controls */}
-                    <div className="max-w-6xl mx-auto bg-gray-50 border border-gray-100 rounded-xl p-4 shadow-2xs">
+                    <div className={`max-w-6xl mx-auto ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-100'} border rounded-xl p-4 shadow-2xs transition-colors duration-300`}>
                         <form onSubmit={handleSearchSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {/* Keyword input */}
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Search Keyword</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>Search Keyword</label>
                                     <input
                                         type="text"
                                         value={keyword}
                                         onChange={(e) => setKeyword(e.target.value)}
                                         placeholder="Product or Customer name..."
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
                                 {/* Customer Mobile */}
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Customer Mobile</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>Customer Mobile</label>
                                     <input
                                         type="text"
                                         value={mobile}
                                         onChange={(e) => setMobile(e.target.value)}
                                         placeholder="Filter by mobile..."
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
                                 {/* Amount Filters */}
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Min Amount (₹)</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>Min Amount (₹)</label>
                                     <input
                                         type="number"
                                         value={minAmount}
                                         onChange={(e) => setMinAmount(e.target.value)}
                                         placeholder="e.g. 100"
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Max Amount (₹)</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>Max Amount (₹)</label>
                                     <input
                                         type="number"
                                         value={maxAmount}
                                         onChange={(e) => setMaxAmount(e.target.value)}
                                         placeholder="e.g. 5000"
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
                                 {/* Date Filters */}
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">From Date</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>From Date</label>
                                     <input
                                         type="date"
                                         value={fromDate}
                                         onChange={(e) => setFromDate(e.target.value)}
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
                                 <div className="flex flex-col">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">To Date</label>
+                                    <label className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider mb-1`}>To Date</label>
                                     <input
                                         type="date"
                                         value={toDate}
                                         onChange={(e) => setToDate(e.target.value)}
-                                        className="w-full px-3 py-2 bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors"
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -338,7 +344,7 @@ const Orders = () => {
                                 <button
                                     type="button"
                                     onClick={handleClearFilters}
-                                    className="px-4 py-2 border border-gray-200 bg-white rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                                    className={`px-4 py-2 border rounded-lg text-[11px] font-bold transition-colors ${isDarkMode ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                                 >
                                     Clear Filters
                                 </button>
@@ -357,15 +363,15 @@ const Orders = () => {
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
                                 <div className="animate-spin h-8 w-8 border-2 border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
-                                <p className="text-[11px] font-bold text-gray-400 tracking-wide uppercase">Loading orders...</p>
+                                <p className={`text-[11px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} tracking-wide uppercase`}>Loading orders...</p>
                             </div>
                         ) : !Array.isArray(orders) || orders.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-50/50 border border-dashed border-gray-200 rounded-2xl">
-                                <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                            <div className={`flex flex-col items-center justify-center py-16 text-center border border-dashed rounded-2xl ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50/50 border-gray-200'}`}>
+                                <svg className={`w-10 h-10 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'} mb-3`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                 </svg>
-                                <h3 className="text-xs font-bold text-gray-900">No orders found</h3>
-                                <p className="text-[10px] text-gray-400 max-w-xs mt-1">No product purchase records match the selected active tab or filters.</p>
+                                <h3 className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No orders found</h3>
+                                <p className={`text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} max-w-xs mt-1`}>No product purchase records match the selected active tab or filters.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -380,16 +386,16 @@ const Orders = () => {
                                             key={order.id}
                                             className={`border rounded-xl p-4 shadow-3xs transition-all duration-200 flex flex-col justify-between ${
                                                 isCompleted
-                                                    ? 'bg-white border-emerald-100 hover:border-emerald-250'
-                                                    : 'bg-white border-gray-100 hover:border-gray-200'
+                                                    ? (isDarkMode ? 'bg-zinc-900 border-emerald-900/50 hover:border-emerald-700' : 'bg-white border-emerald-100 hover:border-emerald-250')
+                                                    : (isDarkMode ? 'bg-zinc-900 border-zinc-700 hover:border-zinc-600' : 'bg-white border-gray-100 hover:border-gray-200')
                                             }`}
                                         >
                                             <div>
                                                 {/* Header */}
-                                                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                                <div className={`flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'} pb-2 mb-2`}>
                                                     <div>
-                                                        <span className="text-[11px] font-bold text-gray-900">#ORD-{order.id}</span>
-                                                        <div className="text-[9px] text-gray-400 font-medium mt-0.5">
+                                                        <span className={`text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>#ORD-{order.id}</span>
+                                                        <div className={`text-[9px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} font-medium mt-0.5`}>
                                                             {formatDateTime(order.createdAt)}
                                                         </div>
                                                     </div>
@@ -419,33 +425,34 @@ const Orders = () => {
 
                                                 {/* Customer Info */}
                                                 <div className="space-y-0.5 mb-2.5">
-                                                    <div className="flex items-center text-[11px] font-bold text-gray-900">
+                                                    <div className={`flex items-center text-[11px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 ${isCompleted ? 'bg-emerald-500' : isCancelled ? 'bg-gray-300' : 'bg-blue-500'}`}></span>
                                                         {order.customerName || 'Anonymous Customer'}
                                                     </div>
                                                     {order.customerMobile && (
-                                                        <div className="text-[9px] font-semibold text-gray-500 pl-3">
+                                                        <div className={`text-[9px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'} pl-3`}>
                                                             📞 {order.customerMobile}
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {/* Order Items */}
-                                                <div className={`rounded-lg p-2.5 mb-3 space-y-1.5 max-h-36 overflow-y-auto ${isCompleted ? 'bg-emerald-50/20 border border-emerald-100/30' : 'bg-gray-50'}`}>
-                                                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-200/50 pb-1 mb-1">Items</div>
+                                                <div className={`rounded-lg p-2.5 mb-3 space-y-1.5 max-h-36 overflow-y-auto ${isCompleted ? (isDarkMode ? 'bg-emerald-950/30 border border-emerald-800/30' : 'bg-emerald-50/20 border border-emerald-100/30') : (isDarkMode ? 'bg-zinc-800/80' : 'bg-gray-50')}`}>
+                                                    <div className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wider border-b ${isDarkMode ? 'border-zinc-700/50' : 'border-gray-200/50'} pb-1 mb-1`}>Items</div>
                                                     {Array.isArray(order.items) && order.items.map((item) => (
-                                                        <div key={item.id} className="flex items-center justify-between text-[10px] font-medium text-gray-700 py-0.5">
+                                                        <div key={item.id} className={`flex items-center justify-between text-[10px] font-medium ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'} py-0.5`}>
                                                             <div className="flex items-center min-w-0 mr-2">
                                                                 {item.productImageUrl ? (
                                                                     <LazyImage 
                                                                         src={item.productImageUrl} 
                                                                         alt={item.productName} 
+                                                                        isDarkMode={isDarkMode}
                                                                         className="w-7 h-7 rounded-md border border-gray-200/60 mr-2"
                                                                     />
                                                                 ) : null}
-                                                                <span className="truncate font-semibold text-gray-800">{item.productName}</span>
+                                                                <span className={`truncate font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{item.productName}</span>
                                                             </div>
-                                                            <span className="shrink-0 font-bold text-gray-900">
+                                                            <span className={`shrink-0 font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                                                 {item.quantity} x ₹{parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                             </span>
                                                         </div>
@@ -454,9 +461,9 @@ const Orders = () => {
                                             </div>
 
                                             {/* Total & Action Footer */}
-                                            <div className="border-t border-gray-100 pt-2.5">
+                                            <div className={`border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'} pt-2.5`}>
                                                 <div className="flex items-center justify-between mb-2.5">
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wide">Grand Total</span>
+                                                    <span className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wide`}>Grand Total</span>
                                                     <span className={`text-sm font-black ${isCompleted ? 'text-emerald-600' : 'text-[#FF0B01]'}`}>
                                                         ₹{parseFloat(order.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                     </span>
@@ -524,11 +531,11 @@ const Orders = () => {
                     {/* Custom Confirm Modal for Cancel / Delete Actions */}
                     {showConfirmModal && confirmTargetId && (
                         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-100 text-left">
-                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-tight mb-2">
+                            <div className={`rounded-2xl p-6 w-full max-w-md shadow-xl border text-left transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
+                                <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} uppercase tracking-tight mb-2`}>
                                     {confirmModalType === 'cancel' ? 'Cancel Product Order' : 'Delete Order Record'}
                                 </h3>
-                                <p className="text-[11px] text-gray-400 font-semibold leading-relaxed mb-6">
+                                <p className={`text-[11px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} font-semibold leading-relaxed mb-6`}>
                                     {confirmModalType === 'cancel' 
                                         ? `Are you sure you want to cancel Order #ORD-${confirmTargetId}? This will transition the order status to Cancelled. This action cannot be undone.`
                                         : `Are you sure you want to permanently delete the record of Order #ORD-${confirmTargetId}? This action will wipe the order from database logs and cannot be undone.`
@@ -540,7 +547,7 @@ const Orders = () => {
                                             setShowConfirmModal(false);
                                             setConfirmTargetId(null);
                                         }}
-                                        className="flex-1 py-2 border border-gray-200 rounded-lg text-[10px] font-bold text-gray-500 hover:bg-gray-50 uppercase tracking-wide transition-colors"
+                                        className={`flex-1 py-2 border rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors ${isDarkMode ? 'border-zinc-700 text-zinc-400 hover:bg-zinc-800' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
                                     >
                                         No, Go Back
                                     </button>
@@ -549,7 +556,7 @@ const Orders = () => {
                                         className={`flex-1 py-2 text-white rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
                                             confirmModalType === 'cancel'
                                                 ? 'bg-[#FF0B01] hover:bg-[#e00a00] hover:shadow-lg'
-                                                : 'bg-gray-900 hover:bg-gray-800 hover:shadow-lg'
+                                                : (isDarkMode ? 'bg-slate-200 text-slate-900 hover:bg-white hover:shadow-lg' : 'bg-gray-900 hover:bg-gray-800 hover:shadow-lg')
                                         }`}
                                     >
                                         {confirmModalType === 'cancel' ? 'Yes, Cancel Order' : 'Yes, Delete Record'}
@@ -561,22 +568,22 @@ const Orders = () => {
 
                     {/* PAGINATION FOOTER */}
                     {!loading && Array.isArray(orders) && orders.length > 0 && (
-                        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase">
+                        <div className={`max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
+                            <span className={`text-[10px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'} uppercase`}>
                                 Page {currentPage + 1} of {totalPages} ({totalElements} total orders)
                             </span>
                             <div className="flex items-center space-x-1.5">
                                 <button
                                     onClick={() => setCurrentPage(0)}
                                     disabled={currentPage <= 0}
-                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-40 transition-colors cursor-pointer border ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                 >
                                     « First
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                                     disabled={currentPage <= 0}
-                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-40 transition-colors cursor-pointer border ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                 >
                                     ‹ Prev
                                 </button>
@@ -589,14 +596,14 @@ const Orders = () => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(Math.max(0, totalPages - 1), prev + 1))}
                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-40 transition-colors cursor-pointer border ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                 >
                                     Next ›
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(Math.max(0, totalPages - 1))}
                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-40 transition-colors cursor-pointer border ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                 >
                                     Last »
                                 </button>

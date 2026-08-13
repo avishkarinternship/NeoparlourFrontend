@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 
@@ -9,6 +10,8 @@ const toastStyle = {
 };
 
 const HomeServices = () => {
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
 
     const [serviceCharge, setServiceCharge] = useState('0.0');
@@ -80,27 +83,27 @@ const HomeServices = () => {
     };
 
     return (
-                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
+                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 md:border-l md:border-zinc-800' : 'bg-white md:border-l md:border-gray-200'}`}>
                     {/* Header */}
                     <div className="mb-10">
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-3">
-                            <span className="text-[12px] font-bold uppercase tracking-wider text-gray-900">
+                            <span className={`text-[12px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Home Service
                             </span>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900">Home Service Charge</h1>
-                        <p className="text-gray-500 mt-2">
+                        <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Home Service Charge</h1>
+                        <p className={`mt-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                             Configure the additional charge applied when customers book services at their location.
                         </p>
                     </div>
 
                     {/* Main Card */}
-                    <div className="max-w-2xl bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                    <div className={`max-w-2xl border rounded-3xl p-8 shadow-sm transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}>
                         <form onSubmit={handleSave} className="space-y-8">
                             {/* Service Charge Section */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-semibold text-gray-700">
+                                    <label className={`block text-sm font-semibold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>
                                         Home Service Charge
                                     </label>
                                     {!isEditing && !loading && (
@@ -115,7 +118,7 @@ const HomeServices = () => {
                                 </div>
 
                                 <div className="relative">
-                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl text-gray-400 font-light">₹</div>
+                                    <div className={`absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-light ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>₹</div>
 
                                     <input
                                         type="text"
@@ -124,14 +127,18 @@ const HomeServices = () => {
                                         disabled={!isEditing || loading}
                                         className={`w-full pl-14 pr-6 py-5 text-4xl font-semibold rounded-2xl border transition-all ${
                                             isEditing 
-                                                ? 'border-red-500 focus:border-red-600 focus:ring-0 bg-white text-gray-900 shadow-xs' 
-                                                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                                                ? isDarkMode
+                                                    ? 'border-red-500 focus:border-red-600 focus:ring-0 bg-zinc-900 text-white shadow-xs'
+                                                    : 'border-red-500 focus:border-red-600 focus:ring-0 bg-white text-gray-900 shadow-xs' 
+                                                : isDarkMode
+                                                    ? 'border-zinc-700 bg-zinc-800/80 text-zinc-500 cursor-not-allowed'
+                                                    : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
                                         }`}
                                         placeholder="0.0"
                                     />
                                 </div>
 
-                                <p className="mt-3 text-sm text-gray-500">
+                                <p className={`mt-3 text-sm ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                     This amount will be added to the final service total for every home service booking.
                                 </p>
                             </div>
@@ -149,7 +156,9 @@ const HomeServices = () => {
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 border border-gray-300 hover:bg-gray-50 transition-all text-gray-700 font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm"
+                                        className={`flex-1 border transition-all font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm ${
+                                            isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-700/50' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
                                     >
                                         Cancel
                                     </button>
@@ -159,7 +168,7 @@ const HomeServices = () => {
                     </div>
 
                     {/* Info Note */}
-                    <div className="max-w-2xl mt-8 text-xs text-gray-400 flex items-start gap-2">
+                    <div className={`max-w-2xl mt-8 text-xs flex items-start gap-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                         <span className="text-base leading-none mt-0.5">ℹ</span>
                         <p>
                             Changes will take effect immediately for new bookings. Existing bookings will not be affected.

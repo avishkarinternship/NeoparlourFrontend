@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { 
     Search, Calendar, Check, X, Clock, User, 
@@ -34,6 +35,11 @@ const monthNames = [
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function StaffAttendance() {
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode !== undefined 
+      ? outletContext.isDarkMode 
+      : document.documentElement.classList.contains('dark');
+
     const today = toLocalISODate(new Date());
 
     const [attendanceData, setAttendanceData] = useState([]);
@@ -257,14 +263,14 @@ export default function StaffAttendance() {
     /* ─── Status badge helper ────────────────────────────── */
     const statusBadge = (status) => {
         const map = {
-            PRESENT: 'bg-emerald-50 text-emerald-700 border border-emerald-100/50',
-            ABSENT: 'bg-red-50 text-red-600 border border-red-100/50',
-            LATE: 'bg-amber-50 text-amber-700 border border-amber-100/50',
-            APPROVED: 'bg-emerald-50 text-emerald-700 border border-emerald-100/50',
-            PENDING: 'bg-amber-50 text-amber-700 border border-amber-100/50',
-            REJECTED: 'bg-red-50 text-red-600 border border-red-100/50',
+            PRESENT: isDarkMode ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-100/50',
+            ABSENT: isDarkMode ? 'bg-red-900/40 text-red-400 border border-red-700/50' : 'bg-red-50 text-red-600 border border-red-100/50',
+            LATE: isDarkMode ? 'bg-amber-900/40 text-amber-400 border border-amber-700/50' : 'bg-amber-50 text-amber-700 border border-amber-100/50',
+            APPROVED: isDarkMode ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-100/50',
+            PENDING: isDarkMode ? 'bg-amber-900/40 text-amber-400 border border-amber-700/50' : 'bg-amber-50 text-amber-700 border border-amber-100/50',
+            REJECTED: isDarkMode ? 'bg-red-900/40 text-red-400 border border-red-700/50' : 'bg-red-50 text-red-600 border border-red-100/50',
         };
-        return map[status] || 'bg-gray-50 text-gray-500 border border-gray-100/50';
+        return map[status] || (isDarkMode ? 'bg-zinc-800 text-zinc-400 border border-zinc-700/50' : 'bg-gray-50 text-gray-500 border border-gray-100/50');
     };
 
     /* ─── Format time "HH:MM:SS" → "HH:MM AM/PM" ─────────── */
@@ -285,26 +291,28 @@ export default function StaffAttendance() {
         : '';
 
     return (
-        <main className="flex-1 p-6 md:p-8 bg-gray-50/30 flex flex-col justify-between overflow-x-hidden min-h-screen">
+        <main className={`flex-1 p-6 md:p-8 flex flex-col justify-between overflow-x-hidden min-h-screen transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+        }`}>
             <div>
                 {/* ── Page Header ───────────────────────────── */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+                        <h1 className={`text-xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             Staff Attendance
                         </h1>
-                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-1">Manage attendance logs & leaves</p>
+                        <p className={`text-xs font-semibold uppercase tracking-wider mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Manage attendance logs & leaves</p>
                     </div>
                 </div>
 
                 {/* Sleek Minimalist Tabs */}
-                <div className="flex border-b border-gray-200/60 mb-6 gap-8">
+                <div className={`flex border-b mb-6 gap-8 ${isDarkMode ? 'border-zinc-700/60' : 'border-gray-200/60'}`}>
                     <button
                         onClick={() => setActiveTab('LEAVE_REQUEST')}
                         className={`pb-3 text-sm font-semibold tracking-wide transition-all relative flex items-center gap-2 cursor-pointer
                             ${activeTab === 'LEAVE_REQUEST'
                                 ? 'text-[#FF0B01] border-b-2 border-[#FF0B01]'
-                                : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
+                                : isDarkMode ? 'text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent' : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
                             }`}
                     >
                         <ClipboardList className="w-4 h-4" />
@@ -321,7 +329,7 @@ export default function StaffAttendance() {
                         className={`pb-3 text-sm font-semibold tracking-wide transition-all relative flex items-center gap-2 cursor-pointer
                             ${activeTab === 'ATTENDANCE'
                                 ? 'text-[#FF0B01] border-b-2 border-[#FF0B01]'
-                                : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
+                                : isDarkMode ? 'text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent' : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
                             }`}
                     >
                         <UserCheck className="w-4 h-4" />
@@ -333,14 +341,14 @@ export default function StaffAttendance() {
                 {activeTab === 'ATTENDANCE' && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
                         {[
-                            { label: "Total Staff", value: staffSummary.total, color: "text-slate-800", bg: "bg-slate-50", icon: Users },
-                            { label: "Present Today", value: staffSummary.present, color: "text-emerald-600", bg: "bg-emerald-50/50", icon: UserCheck },
-                            { label: "On Leave", value: staffSummary.onLeave, color: "text-amber-600", bg: "bg-amber-50/50", icon: CalendarDays },
-                            { label: "Absent", value: staffSummary.absent, color: "text-red-600", bg: "bg-red-50/50", icon: XCircle }
+                            { label: "Total Staff", value: staffSummary.total, color: isDarkMode ? "text-white" : "text-slate-800", bg: isDarkMode ? "bg-zinc-700" : "bg-slate-50", icon: Users },
+                            { label: "Present Today", value: staffSummary.present, color: "text-emerald-600", bg: isDarkMode ? "bg-emerald-900/30" : "bg-emerald-50/50", icon: UserCheck },
+                            { label: "On Leave", value: staffSummary.onLeave, color: "text-amber-600", bg: isDarkMode ? "bg-amber-900/30" : "bg-amber-50/50", icon: CalendarDays },
+                            { label: "Absent", value: staffSummary.absent, color: "text-red-600", bg: isDarkMode ? "bg-red-900/30" : "bg-red-50/50", icon: XCircle }
                         ].map((card, idx) => (
-                            <div key={idx} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+                            <div key={idx} className={`rounded-2xl p-5 border shadow-sm flex items-center justify-between transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                                 <div>
-                                    <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">{card.label}</p>
+                                    <p className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{card.label}</p>
                                     <p className={`text-3xl font-black ${card.color} mt-1.5`}>{card.value}</p>
                                 </div>
                                 <div className={`w-12 h-12 rounded-xl ${card.bg} flex items-center justify-center flex-shrink-0`}>
@@ -355,13 +363,13 @@ export default function StaffAttendance() {
                 {activeTab === 'LEAVE_REQUEST' && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
                         {[
-                            { label: "Pending Requests", value: pendingCount, color: "text-amber-600", bg: "bg-amber-50/50", icon: AlertCircle },
-                            { label: "Approved Leaves", value: approvedCount, color: "text-emerald-600", bg: "bg-emerald-50/50", icon: CheckCircle2 },
-                            { label: "Rejected Requests", value: rejectedCount, color: "text-red-600", bg: "bg-red-50/50", icon: XCircle }
+                            { label: "Pending Requests", value: pendingCount, color: "text-amber-600", bg: isDarkMode ? "bg-amber-900/30" : "bg-amber-50/50", icon: AlertCircle },
+                            { label: "Approved Leaves", value: approvedCount, color: "text-emerald-600", bg: isDarkMode ? "bg-emerald-900/30" : "bg-emerald-50/50", icon: CheckCircle2 },
+                            { label: "Rejected Requests", value: rejectedCount, color: "text-red-600", bg: isDarkMode ? "bg-red-900/30" : "bg-red-50/50", icon: XCircle }
                         ].map((card, idx) => (
-                            <div key={idx} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+                            <div key={idx} className={`rounded-2xl p-5 border shadow-sm flex items-center justify-between transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                                 <div>
-                                    <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">{card.label}</p>
+                                    <p className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{card.label}</p>
                                     <p className={`text-3xl font-black ${card.color} mt-1.5`}>{card.value}</p>
                                 </div>
                                 <div className={`w-12 h-12 rounded-xl ${card.bg} flex items-center justify-center flex-shrink-0`}>
@@ -373,18 +381,18 @@ export default function StaffAttendance() {
                 )}
 
                 {/* ── Date Strip ────────────────────────────── */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 p-6">
+                <div className={`rounded-2xl border shadow-sm mb-6 p-6 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                     {/* Month / Year navigation */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-50">
+                    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b ${isDarkMode ? 'border-zinc-800' : 'border-gray-50'}`}>
                         <div>
-                            <h2 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Selected Date</h2>
-                            <p className="text-sm font-bold text-gray-800 mt-1 flex items-center gap-2">
+                            <h2 className={`text-[10px] font-extrabold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Selected Date</h2>
+                            <p className={`text-sm font-bold mt-1 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                 <Calendar className="w-4 h-4 text-[#FF0B01]" />
                                 {selectedDateLabel}
                             </p>
                         </div>
 
-                        <div className="flex items-center bg-gray-50 rounded-xl p-2 border border-gray-200 relative">
+                        <div className={`flex items-center rounded-xl p-2 border relative ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
                             <select
                                 value={`${currentMonth}-${currentYear}`}
                                 onChange={(e) => {
@@ -400,7 +408,7 @@ export default function StaffAttendance() {
                                         setSelectedDate(firstDayStr);
                                     }
                                 }}
-                                className="bg-transparent text-xs text-gray-600 font-bold uppercase tracking-wider outline-none cursor-pointer border-none pr-8 appearance-none"
+                                className={`bg-transparent text-xs font-bold uppercase tracking-wider outline-none cursor-pointer border-none pr-8 appearance-none ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}
                             >
                                 {allowedMonthsList.map((item, idx) => (
                                     <option key={idx} value={`${item.month}-${item.year}`}>
@@ -408,7 +416,7 @@ export default function StaffAttendance() {
                                     </option>
                                 ))}
                             </select>
-                            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">
+                            <span className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                 ▼
                             </span>
                         </div>
@@ -446,7 +454,7 @@ export default function StaffAttendance() {
                                     <span className={`text-[10px] font-bold uppercase tracking-wider mb-2 transition
                                         ${isToday 
                                             ? 'text-[#FF0B01]' 
-                                            : 'text-gray-400 group-hover:text-gray-600'
+                                            : isDarkMode ? 'text-zinc-400 group-hover:text-zinc-200' : 'text-gray-400 group-hover:text-gray-600'
                                         }`}
                                     >
                                         {isToday ? 'Today' : (d ? dayNames[d.getDay()] : '')}
@@ -454,10 +462,10 @@ export default function StaffAttendance() {
                                     <div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all duration-200 relative cursor-pointer
                                             ${isSelected
-                                                ? 'bg-[#FF0B01] text-white shadow-md shadow-red-100/50 scale-105'
+                                                ? isDarkMode ? 'bg-[#FF0B01] text-white shadow-md shadow-red-900/50 scale-105' : 'bg-[#FF0B01] text-white shadow-md shadow-red-100/50 scale-105'
                                                 : isToday
-                                                    ? 'bg-red-50 text-[#FF0B01] border-2 border-[#FF0B01] hover:bg-red-100/50'
-                                                    : 'bg-gray-50 text-gray-600 hover:bg-red-50/30 hover:text-[#FF0B01]'
+                                                    ? isDarkMode ? 'bg-red-900/30 text-[#FF0B01] border-2 border-[#FF0B01] hover:bg-red-900/50' : 'bg-red-50 text-[#FF0B01] border-2 border-[#FF0B01] hover:bg-red-100/50'
+                                                    : isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-red-900/20 hover:text-[#FF0B01]' : 'bg-gray-50 text-gray-600 hover:bg-red-50/30 hover:text-[#FF0B01]'
                                             }`}
                                     >
                                         {d ? d.getDate() : ''}
@@ -472,19 +480,19 @@ export default function StaffAttendance() {
                             );
                         })}
                         {stripDates.length === 0 && (
-                            <p className="text-xs text-gray-400 py-3 font-semibold uppercase tracking-widest text-center w-full">No dates available for this month.</p>
+                            <p className={`text-xs py-3 font-semibold uppercase tracking-widest text-center w-full ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No dates available for this month.</p>
                         )}
                     </div>
                 </div>
 
                 {/* ── Search & Filter Row ───────────────────── */}
-                <div className="bg-white rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between border border-gray-100 shadow-sm">
+                <div className={`rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between border shadow-sm transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                     <div className="relative w-full sm:w-80">
                         <div className="relative w-full">
                             <select
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF0B01] focus:ring-4 focus:ring-red-100/10 focus:bg-white transition appearance-none cursor-pointer font-bold text-gray-600"
+                                className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#FF0B01] focus:ring-4 focus:ring-red-100/10 transition appearance-none cursor-pointer font-bold ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-600 focus:bg-white'}`}
                             >
                                 <option value="">All Staff</option>
                                 {staffList.map(staff => (
@@ -493,10 +501,10 @@ export default function StaffAttendance() {
                                     </option>
                                 ))}
                             </select>
-                            <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-gray-400">
+                            <span className={`absolute inset-y-0 left-3.5 flex items-center pointer-events-none ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                 <Users className="w-4 h-4" />
                             </span>
-                            <span className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-gray-400 text-[10px]">
+                            <span className={`absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                 ▼
                             </span>
                         </div>
@@ -504,12 +512,12 @@ export default function StaffAttendance() {
 
                     {/* Show filter only in Leave Request tab */}
                     {activeTab === "LEAVE_REQUEST" && (
-                        <div className="flex items-center gap-2 px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl">
-                            <Filter className="w-4 h-4 text-gray-400" />
+                        <div className={`flex items-center gap-2 px-3.5 py-2 border rounded-xl ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
+                            <Filter className={`w-4 h-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} />
                             <select
                                 value={leaveStatusFilter}
                                 onChange={(e) => setLeaveStatusFilter(e.target.value)}
-                                className="bg-transparent text-xs text-gray-600 font-bold uppercase tracking-wider outline-none cursor-pointer border-none"
+                                className={`bg-transparent text-xs font-bold uppercase tracking-wider outline-none cursor-pointer border-none ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}
                             >
                                 <option value="ALL">All Requests</option>
                                 <option value="PENDING">Pending</option>
@@ -541,18 +549,19 @@ export default function StaffAttendance() {
                 {activeTab === 'LEAVE_REQUEST' && (
                     <>
                         {filteredLeave.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                                <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
+                            <div className={`flex flex-col items-center justify-center py-20 border rounded-2xl shadow-sm ${isDarkMode ? 'text-zinc-400 bg-zinc-900 border-zinc-700' : 'text-gray-400 bg-white border-gray-100'}`}>
+                                <AlertCircle className={`w-12 h-12 mb-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`} />
                                 <p className="text-sm font-semibold uppercase tracking-wider">No leave requests for this date</p>
-                                <p className="text-xs text-gray-400 mt-1">Select another date or check filters</p>
+                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Select another date or check filters</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                                 {filteredLeave.map(leave => (
                                     <div
                                         key={leave.id}
-                                        className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between
-                                            ${leave.status === 'PENDING' ? 'border-amber-200 ring-1 ring-amber-100/50' : 'border-gray-100'}`}
+                                        className={`border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between
+                                            ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}
+                                            ${leave.status === 'PENDING' ? (isDarkMode ? 'border-amber-700 ring-1 ring-amber-900/50' : 'border-amber-200 ring-1 ring-amber-100/50') : (isDarkMode ? 'border-zinc-700' : 'border-gray-100')}`}
                                     >
                                         <div>
                                             {/* Card Header */}
@@ -562,10 +571,10 @@ export default function StaffAttendance() {
                                                         <User className="w-4 h-4" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="font-bold text-gray-800 text-sm leading-tight truncate">
+                                                        <p className={`font-bold text-sm leading-tight truncate ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                                             {leave.staffName || `Staff #${leave.staffId}`}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">ID: {leave.staffId}</p>
+                                                        <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>ID: {leave.staffId}</p>
                                                     </div>
                                                 </div>
 
@@ -584,23 +593,23 @@ export default function StaffAttendance() {
                                             )}
 
                                             {/* Date Range */}
-                                            <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-3.5 mb-4 space-y-2.5">
+                                            <div className={`border rounded-xl p-3.5 mb-4 space-y-2.5 ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-gray-50/50 border-gray-100'}`}>
                                                 <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span className={`font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                                        <Calendar className={`w-3.5 h-3.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} />
                                                         Start
                                                     </span>
-                                                    <span className="font-bold text-gray-700">
+                                                    <span className={`font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>
                                                         {parseLocalDate(leave.startDate)?.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) || '--'}
                                                     </span>
                                                 </div>
-                                                <div className="w-full h-px bg-gray-200/50" />
+                                                <div className={`w-full h-px ${isDarkMode ? 'bg-zinc-700/50' : 'bg-gray-200/50'}`} />
                                                 <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span className={`font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                                        <Calendar className={`w-3.5 h-3.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} />
                                                         End
                                                     </span>
-                                                    <span className="font-bold text-gray-700">
+                                                    <span className={`font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>
                                                         {parseLocalDate(leave.endDate)?.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) || '--'}
                                                     </span>
                                                 </div>
@@ -608,8 +617,8 @@ export default function StaffAttendance() {
 
                                             {/* Reason */}
                                             {leave.reason && (
-                                                <p className="text-xs text-gray-500 mb-5 bg-gray-50 rounded-xl p-3 border border-gray-100 line-clamp-2">
-                                                    <span className="font-bold text-gray-600">Reason: </span>
+                                                <p className={`text-xs mb-5 rounded-xl p-3 border line-clamp-2 ${isDarkMode ? 'text-zinc-400 bg-zinc-800 border-zinc-700' : 'text-gray-500 bg-gray-50 border-gray-100'}`}>
+                                                    <span className={`font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}>Reason: </span>
                                                     {leave.reason}
                                                 </p>
                                             )}
@@ -645,10 +654,10 @@ export default function StaffAttendance() {
                 {activeTab === 'ATTENDANCE' && (
                     <>
                         {filteredAttendance.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                                <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
+                            <div className={`flex flex-col items-center justify-center py-20 border rounded-2xl shadow-sm ${isDarkMode ? 'text-zinc-400 bg-zinc-900 border-zinc-700' : 'text-gray-400 bg-white border-gray-100'}`}>
+                                <AlertCircle className={`w-12 h-12 mb-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`} />
                                 <p className="text-sm font-semibold uppercase tracking-wider">No logs for this date</p>
-                                <p className="text-xs text-gray-400 mt-1">Select a date with attendance indicator (dot)</p>
+                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Select a date with attendance indicator (dot)</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -666,8 +675,9 @@ export default function StaffAttendance() {
                                     return (
                                         <div
                                             key={att.id}
-                                            className={`bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between
-                                                ${hasPending ? 'border-amber-200 ring-1 ring-amber-100/50' : 'border-gray-100'}`}
+                                            className={`border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between
+                                                ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}
+                                                ${hasPending ? (isDarkMode ? 'border-amber-700 ring-1 ring-amber-900/50' : 'border-amber-200 ring-1 ring-amber-100/50') : (isDarkMode ? 'border-zinc-700' : 'border-gray-100')}`}
                                         >
                                             {/* Status Top bar indicator */}
                                             <div className={`h-1.5 w-full
@@ -689,10 +699,10 @@ export default function StaffAttendance() {
                                                                 {(att.staffName || String(att.staffId)).charAt(0).toUpperCase()}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="font-bold text-gray-800 text-sm leading-tight truncate">
+                                                                <p className={`font-bold text-sm leading-tight truncate ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                                                     {att.staffName || `Staff #${att.staffId}`}
                                                                 </p>
-                                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">ID: {att.staffId}</p>
+                                                                <p className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>ID: {att.staffId}</p>
                                                             </div>
                                                         </div>
 
@@ -715,7 +725,7 @@ export default function StaffAttendance() {
                                                                 <Clock className="w-3.5 h-3.5" />
                                                             </div>
                                                             <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider">Check In</p>
-                                                            <p className="text-xs font-black text-gray-800 mt-1">
+                                                            <p className={`text-xs font-black mt-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                                                 {formatTime(att.checkIn)}
                                                             </p>
                                                         </div>
@@ -725,7 +735,7 @@ export default function StaffAttendance() {
                                                                 <Clock className="w-3.5 h-3.5" />
                                                             </div>
                                                             <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider">Check Out</p>
-                                                            <p className="text-xs font-black text-gray-800 mt-1">
+                                                            <p className={`text-xs font-black mt-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                                                 {formatTime(att.checkOut)}
                                                             </p>
                                                         </div>
@@ -733,14 +743,14 @@ export default function StaffAttendance() {
                                                 </div>
 
                                                 {/* Footer */}
-                                                <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
-                                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                <div className={`flex items-center justify-between pt-3 border-t mt-2 ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                                         <Calendar className="w-3.5 h-3.5" />
                                                         {parseLocalDate(att.attendanceDate)?.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) || '--'}
                                                     </span>
 
                                                     {att.workHours != null && (
-                                                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wider ${isDarkMode ? 'text-zinc-400 bg-zinc-800' : 'text-gray-500 bg-gray-100'}`}>
                                                             {att.workHours}h worked
                                                         </span>
                                                     )}

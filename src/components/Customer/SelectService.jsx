@@ -25,19 +25,29 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
+import { useTranslation } from 'react-i18next';
+import { translateServiceName } from '../../utils/serviceTranslation';
 
 // Imported Layout Components
 import BillDetails from './BillDetails.jsx';
 import AppointmentBooked from './AppointmentBooked.jsx';
 
-// Local SVG and Image Assets
-import hairCutIcon from '../../assets/Customer/BookingScreen/hair_cut.svg';
-import hairSpaIcon from '../../assets/Customer/BookingScreen/hair_spa.svg';
-import hairStylingIcon from '../../assets/Customer/BookingScreen/hair_styling.svg';
-import hairWashIcon from '../../assets/Customer/BookingScreen/hair_wash.svg';
-import coloringIcon from '../../assets/Customer/BookingScreen/coloring.svg';
-import shavingIcon from '../../assets/Customer/BookingScreen/shaving.svg';
-import straighteningIcon from '../../assets/Customer/BookingScreen/straightning.svg';
+// SVG Category Logos from src/assets/Logos
+import hairLogo from '../../assets/Logos/Hair.svg';
+import hairStylingLogo from '../../assets/Logos/Hair Styling.svg';
+import hairColoringLogo from '../../assets/Logos/Hair coloring.svg';
+import hairRemovalLogo from '../../assets/Logos/Hair removal.svg';
+import hairSpaLogo from '../../assets/Logos/Hair spa.svg';
+import hairTreatmentLogo from '../../assets/Logos/Hair treatment.svg';
+import hairWashLogo from '../../assets/Logos/Hair wash.svg';
+import nailCareLogo from '../../assets/Logos/Nail care.svg';
+import shavingLogo from '../../assets/Logos/Shaving.svg';
+import skinCareLogo from '../../assets/Logos/Skin care.svg';
+import dryerLogo from '../../assets/Logos/Dryer.svg';
+import groomingLogo from '../../assets/Logos/grooming.svg';
+import makeupLogo from '../../assets/Logos/makeup.svg';
+import spaMassageLogo from '../../assets/Logos/spa & massage.svg';
+
 import appleIcon from '../../assets/Customer/BookingScreen/apple_icon.svg';
 import playstoreIcon from '../../assets/Customer/BookingScreen/playstore_icon.svg';
 
@@ -142,6 +152,7 @@ const getNextDays = () => {
 };
 
 const SelectService = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const activeSalonId = localStorage.getItem('activeSalonId');
@@ -849,25 +860,106 @@ const SelectService = () => {
         }
     };
 
-    // Category mapping helper
-    const categoryIcons = {
-        'haircut': hairCutIcon,
-        'hair cut': hairCutIcon,
-        'coloring': coloringIcon,
-        'hair coloring': coloringIcon,
-        'hairspa': hairSpaIcon,
-        'hair spa': hairSpaIcon,
-        'hairstyling': hairStylingIcon,
-        'hair styling': hairStylingIcon,
-        'shaving': shavingIcon,
-        'hair wash': hairWashIcon,
-        'hairwash': hairWashIcon,
-        'straightening': straighteningIcon,
-        'straightning': straighteningIcon,
+    // Category mapping helper using SVG Logos from src/assets/Logos
+    const getCategoryIcon = (catName) => {
+        if (!catName) return hairLogo;
+        const catLower = String(catName).toLowerCase().trim();
+
+        const exactMap = {
+            'hair': hairLogo,
+            'haircut': hairLogo,
+            'hair cut': hairLogo,
+            'hair styling': hairStylingLogo,
+            'hairstyling': hairStylingLogo,
+            'styling': hairStylingLogo,
+            'hair coloring': hairColoringLogo,
+            'coloring': hairColoringLogo,
+            'hair color': hairColoringLogo,
+            'hair removal': hairRemovalLogo,
+            'hairremoval': hairRemovalLogo,
+            'waxing': hairRemovalLogo,
+            'threading': hairRemovalLogo,
+            'hair spa': hairSpaLogo,
+            'hairspa': hairSpaLogo,
+            'hair treatment': hairTreatmentLogo,
+            'hairtreatment': hairTreatmentLogo,
+            'hair wash': hairWashLogo,
+            'hairwash': hairWashLogo,
+            'shampoo': hairWashLogo,
+            'nail care': nailCareLogo,
+            'nailcare': nailCareLogo,
+            'nails': nailCareLogo,
+            'nail': nailCareLogo,
+            'manicure': nailCareLogo,
+            'pedicure': nailCareLogo,
+            'shaving': shavingLogo,
+            'beard': shavingLogo,
+            'skin care': skinCareLogo,
+            'skincare': skinCareLogo,
+            'skin': skinCareLogo,
+            'facial': skinCareLogo,
+            'clean up': skinCareLogo,
+            'cleanup': skinCareLogo,
+            'dryer': dryerLogo,
+            'blowdry': dryerLogo,
+            'grooming': groomingLogo,
+            'makeup': makeupLogo,
+            'make up': makeupLogo,
+            'bridal': makeupLogo,
+            'spa': spaMassageLogo,
+            'massage': spaMassageLogo,
+            'spa & massage': spaMassageLogo,
+            'wellness': spaMassageLogo,
+        };
+
+        if (exactMap[catLower]) return exactMap[catLower];
+
+        // Keyword fuzzy matching against SVG logos
+        if (catLower.includes('color') || catLower.includes('dye') || catLower.includes('highlight')) {
+            return hairColoringLogo;
+        }
+        if (catLower.includes('removal') || catLower.includes('wax') || catLower.includes('thread') || catLower.includes('laser')) {
+            return hairRemovalLogo;
+        }
+        if (catLower.includes('spa') || catLower.includes('massage') || catLower.includes('wellness')) {
+            return spaMassageLogo;
+        }
+        if (catLower.includes('treatment') || catLower.includes('keratin') || catLower.includes('rebond') || catLower.includes('smooth')) {
+            return hairTreatmentLogo;
+        }
+        if (catLower.includes('makeup') || catLower.includes('make-up') || catLower.includes('bridal') || catLower.includes('cosmetic')) {
+            return makeupLogo;
+        }
+        if (catLower.includes('style') || catLower.includes('styling')) {
+            return hairStylingLogo;
+        }
+        if (catLower.includes('dry') || catLower.includes('blow')) {
+            return dryerLogo;
+        }
+        if (catLower.includes('wash') || catLower.includes('shampoo') || catLower.includes('cleanse')) {
+            return hairWashLogo;
+        }
+        if (catLower.includes('shave') || catLower.includes('beard') || catLower.includes('mustache')) {
+            return shavingLogo;
+        }
+        if (catLower.includes('groom')) {
+            return groomingLogo;
+        }
+        if (catLower.includes('skin') || catLower.includes('facial') || catLower.includes('bleach') || catLower.includes('derma')) {
+            return skinCareLogo;
+        }
+        if (catLower.includes('nail') || catLower.includes('mani') || catLower.includes('pedi') || catLower.includes('lash') || catLower.includes('extens')) {
+            return nailCareLogo;
+        }
+        if (catLower.includes('cut') || catLower.includes('hair') || catLower.includes('trim') || catLower.includes('barber')) {
+            return hairLogo;
+        }
+
+        return hairLogo;
     };
 
     // Filtered services
-    const filteredServicesList = services.filter(s => {
+    const filteredServicesList = (Array.isArray(services) ? services : []).filter(s => {
         const matchesCategory = selectedCategory.toLowerCase() === 'all' || s.category?.toLowerCase() === selectedCategory?.toLowerCase();
         if (!matchesCategory) return false;
         
@@ -1049,7 +1141,7 @@ const SelectService = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center py-32">
                 <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">Syncing Booking Portal...</p>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.syncing', 'Syncing Booking Portal...')}</p>
             </div>
         );
     }
@@ -1060,11 +1152,11 @@ const SelectService = () => {
             {/* ==================== BREADCRUMBS ==================== */}
             <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>Search</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>{t('salon_page.search', 'Search')}</span>
                     <span>&gt;</span>
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>Salon Description</span>
+                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate(`/customer/salon`)}>{t('salon_page.salon_description', 'Salon Description')}</span>
                     <span>&gt;</span>
-                    <span className="text-slate-900 font-black">Select Service</span>
+                    <span className="text-slate-900 font-black">{t('select_service.select_service', 'Select Service')}</span>
                 </div>
             </nav>
 
@@ -1088,18 +1180,18 @@ const SelectService = () => {
                                     : 'bg-red-50 border border-red-200 text-red-600'
                             }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
-                                <span className="whitespace-nowrap">{isSalonOpenNow() ? 'Open Now' : 'Closed'}</span>
+                                <span className="whitespace-nowrap">{isSalonOpenNow() ? t('salon_page.open', 'Open') : t('salon_page.closed', 'Closed')}</span>
                                 <span className="text-slate-300">|</span>
                                 <span className="whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
                             </div>
                             {salon?.salonCode && (
                                 <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
-                                    Code: {salon.salonCode}
+                                    {t('salon_page.code', 'Code: {{code}}', { code: salon.salonCode })}
                                 </span>
                             )}
                             {homeServiceCharges > 0 && (
                                 <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
-                                    Home Service: ₹{homeServiceCharges}
+                                    {t('salon_page.home_service', 'Home Service: ₹{{amount}}', { amount: homeServiceCharges })}
                                 </span>
                             )}
                         </div>
@@ -1139,13 +1231,13 @@ const SelectService = () => {
                             {!servicesLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-12">
                                     <div className="animate-spin h-8 w-8 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading catalog...</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_catalog', 'Loading catalog...')}</p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                         <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                                            <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Services
+                                            <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('select_service.select_services', 'Select Services')}
                                         </h3>
                                         {/* Gender filter dropdown */}
                                         <div className="relative">
@@ -1154,9 +1246,9 @@ const SelectService = () => {
                                                 onChange={(e) => setSelectedGender(e.target.value)}
                                                 className="appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-xs font-bold text-slate-700 outline-none focus:border-red-500 cursor-pointer shadow-sm hover:bg-white transition-all"
                                             >
-                                                <option value="All">All Genders</option>
-                                                <option value="Male">Male Only</option>
-                                                <option value="Female">Female Only</option>
+                                                <option value="All">{t('select_service.all_genders', 'All Genders')}</option>
+                                                <option value="Male">{t('select_service.male_only', 'Male Only')}</option>
+                                                <option value="Female">{t('select_service.female_only', 'Female Only')}</option>
                                             </select>
                                             <ChevronDown className="w-4 h-4 text-slate-450 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                                         </div>
@@ -1177,13 +1269,12 @@ const SelectService = () => {
                                                 <Sparkles
                                                     className={`w-7 h-7 mb-1.5 ${selectedCategory.toLowerCase() === 'all' ? 'text-white' : 'text-slate-500'}`}
                                                 />
-                                                <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">All</span>
+                                                <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">{t('services.all', 'All')}</span>
                                             </button>
 
                                             {categories.map((catName) => {
-                                                const catLower = catName.toLowerCase();
                                                 const isActive = selectedCategory === catName;
-                                                const catIcon = categoryIcons[catLower] || hairCutIcon;
+                                                const catIcon = getCategoryIcon(catName);
                                                 return (
                                                     <button
                                                         type="button"
@@ -1200,13 +1291,13 @@ const SelectService = () => {
                                                             alt={catName}
                                                             className={`w-7 h-7 object-contain mb-1.5 ${isActive ? 'invert brightness-0' : ''}`}
                                                         />
-                                                        <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">{catName}</span>
+                                                        <span className="text-[10px] font-black tracking-tight uppercase line-clamp-1">{translateServiceName(catName, t)}</span>
                                                     </button>
                                                 );
                                             })}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">No Categories Found.</div>
+                                        <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">{t('book_service.no_categories', 'No Categories Found.')}</div>
                                     )}
 
                                     {/* Selected Offer Services Section */}
@@ -1220,20 +1311,20 @@ const SelectService = () => {
                                                     <Sparkles className="w-5 h-5 text-[#FF0B01] animate-pulse shrink-0" />
                                                     <div>
                                                         <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                                                            {selectedOffer.name} Special Bundle
+                                                            {selectedOffer.name} {t('book_service.special_bundle', 'Special Bundle')}
                                                         </h4>
                                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-                                                            Services Included ({selectedOffer.percentage}% OFF Applied)
+                                                            {t('book_service.services_included_off', 'Services Included ({{percent}}% OFF Applied)', { percent: selectedOffer.percentage })}
                                                         </p>
                                                         <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-wider">
                                                             <span className="px-2.5 py-1 bg-white/80 border border-slate-200/50 rounded-lg text-slate-500 shadow-sm">
-                                                                Services Amount: <span className="line-through text-slate-400 font-bold ml-1">₹{offerOriginalTotal}</span>
+                                                                {t('book_service.services_amount', 'Services Amount:')} <span className="line-through text-slate-400 font-bold ml-1">₹{offerOriginalTotal}</span>
                                                             </span>
                                                             <span className="px-2.5 py-1 bg-green-50/80 border border-green-100 rounded-lg text-green-700 shadow-sm">
-                                                                Discount: <span className="font-black ml-1">-₹{offerDiscount}</span>
+                                                                {t('book_service.discount', 'Discount:')} <span className="font-black ml-1">-₹{offerDiscount}</span>
                                                             </span>
                                                             <span className="px-2.5 py-1 bg-red-50/80 border border-red-100 rounded-lg text-slate-900 shadow-sm">
-                                                                Difference/Final: <span className="text-[#FF0B01] font-black ml-1">₹{offerFinalTotal}</span>
+                                                                {t('book_service.difference_final', 'Difference/Final:')} <span className="text-[#FF0B01] font-black ml-1">₹{offerFinalTotal}</span>
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1243,7 +1334,7 @@ const SelectService = () => {
                                                     onClick={handleDiscardOffer}
                                                     className="px-3.5 py-1.5 bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm shadow-red-500/10 shrink-0"
                                                 >
-                                                    Discard Offer
+                                                    {t('book_service.discard_offer', 'Discard Offer')}
                                                 </button>
                                             </div>
 
@@ -1264,7 +1355,7 @@ const SelectService = () => {
                                                         >
                                                             <div className="min-w-0">
                                                                 <h5 className="text-xs font-black text-slate-900 uppercase truncate">
-                                                                    {service.name}
+                                                                    {translateServiceName(service.name, t)}
                                                                 </h5>
                                                                 <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                                                     <span className="flex items-center gap-1">
@@ -1287,7 +1378,7 @@ const SelectService = () => {
                                                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                 }`}
                                                             >
-                                                                {isAdded ? 'Added' : 'Add'}
+                                                                {t(isAdded ? 'buttons.added' : 'buttons.add', isAdded ? 'Added' : 'Add')}
                                                             </button>
                                                         </div>
                                                     );
@@ -1315,19 +1406,19 @@ const SelectService = () => {
                                                     </div>
                                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                         <div className="flex flex-wrap items-center gap-2">
-                                                            <h4 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight uppercase leading-tight">{service.name}</h4>
+                                                            <h4 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight uppercase leading-tight">{translateServiceName(service.name, t)}</h4>
                                                             <span className="bg-slate-100 text-slate-500 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                                                {service.category}
+                                                                {translateServiceName(service.category, t)}
                                                             </span>
                                                             {isOfferIncluded && (
                                                                 <span className="bg-red-50 text-[#FF0B01] text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                                                    <Sparkles className="w-2.5 h-2.5 animate-pulse shrink-0" /> Offer Included
+                                                                    <Sparkles className="w-2.5 h-2.5 animate-pulse shrink-0" /> {t('book_service.offer_included', 'Offer Included')}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
                                                             <Clock className="w-3.5 h-3.5 text-slate-450" />
-                                                            Approx. {service.duration || 30} Min duration
+                                                            {t('book_service.approx_duration', 'Approx. {{mins}} Min duration', { mins: service.duration || 30 })}
                                                         </p>
                                                         <p className="text-base font-black text-slate-900 mt-2">₹{service.price}</p>
                                                     </div>
@@ -1344,12 +1435,12 @@ const SelectService = () => {
                                                             {isAdded ? (
                                                                 <>
                                                                     <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                                                    <span>Added</span>
+                                                                    <span>{t('buttons.added', 'Added')}</span>
                                                                 </>
                                                             ) : (
                                                                 <>
                                                                     <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                                                                    <span>Add</span>
+                                                                    <span>{t('buttons.add', 'Add')}</span>
                                                                 </>
                                                             )}
                                                         </button>
@@ -1360,7 +1451,7 @@ const SelectService = () => {
 
                                         {filteredServicesList.length === 0 && (
                                             <div className="text-center py-8 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                                No services found matching filters.
+                                                {t('book_service.no_services', 'No services found matching filters.')}
                                             </div>
                                         )}
                                     </div>
@@ -1371,7 +1462,7 @@ const SelectService = () => {
                         {/* Calendar Selector Component */}
                         <section ref={dateTimeSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
-                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Date and Time
+                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_date_time', 'Select Date and Time')}
                             </h3>
                             
                             {/* Months Indicator header */}
@@ -1379,7 +1470,7 @@ const SelectService = () => {
                                 <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
                                 <div className="flex items-center gap-2">
                                     <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-                                        Year {selectedDateObj?.year || '2026'}
+                                        {t('book_service.year', 'Year {{year}}', { year: selectedDateObj?.year || '2026' })}
                                     </span>
                                 </div>
                             </div>
@@ -1414,14 +1505,14 @@ const SelectService = () => {
                             {slotsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 mt-5">
                                     <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading available slots...</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_slots', 'Loading available slots...')}</p>
                                 </div>
                             ) : displayedSlots.length === 0 ? (
                                 <div className="text-center py-8 mt-5">
                                     <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No slots available for this day</p>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('book_service.no_slots', 'No slots available for this day')}</p>
                                     {selectedExpert && selectedExpert !== 'any' && (
-                                        <p className="text-[10px] text-slate-350 font-medium mt-1">Try selecting a different date or "No Preference"</p>
+                                        <p className="text-[10px] text-slate-350 font-medium mt-1">{t('book_service.try_different_date', 'Try selecting a different date or "No Preference"')}</p>
                                     )}
                                 </div>
                             ) : (
@@ -1431,12 +1522,12 @@ const SelectService = () => {
                                         <div className="col-span-full mb-1 flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
                                             <span className="flex items-center gap-1.5">
                                                 <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block border border-amber-500"></span>
-                                                <span className="text-slate-500">Appointment window</span>
+                                                <span className="text-slate-500">{t('book_service.appointment_window', 'Appointment window')}</span>
                                             </span>
                                             {displayedSlots.some(s => occupiedSlotTimes.has(s.startTime) && s.busy) && (
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-3 h-3 rounded-sm bg-red-400 inline-block border border-red-500"></span>
-                                                    <span className="text-red-500">Conflict — slot already booked</span>
+                                                    <span className="text-red-500">{t('book_service.conflict_booked', 'Conflict — slot already booked')}</span>
                                                 </span>
                                             )}
                                         </div>
@@ -1476,12 +1567,12 @@ const SelectService = () => {
                                                 <span>{slot.displayTime}</span>
                                                 {isConflict && (
                                                     <span className="text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full bg-red-200 text-red-700">
-                                                        Conflict
+                                                        {t('book_service.conflict', 'Conflict')}
                                                     </span>
                                                 )}
                                                 {isInWindow && !isConflict && (
                                                     <span className="text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                                                        In use
+                                                        {t('book_service.in_use', 'In use')}
                                                     </span>
                                                 )}
                                                 {!isInWindow && !isConflict && slot.discountPercentage > 0 && slot.discountMessage && (
@@ -1505,13 +1596,13 @@ const SelectService = () => {
                                 onClick={handleBookClick}
                                 className="w-full max-w-md bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
                             >
-                                Book and Pay After Services
+                                {t('book_service.book_pay_after', 'Book and Pay After Services')}
                             </button>
                             <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
-                                By booking an appointment, you agree to our{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>Terms of Service</span>{' '}
-                                and{' '}
-                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>Privacy Policy</span>.
+                                {t('book_service.terms_agree', 'By booking an appointment, you agree to our')}{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/terms-and-conditions')}>{t('book_service.terms_of_service', 'Terms of Service')}</span>{' '}
+                                {t('book_service.and', 'and')}{' '}
+                                <span className="text-slate-650 underline cursor-pointer" onClick={() => navigate('/customer/privacy-policy')}>{t('book_service.privacy_policy', 'Privacy Policy')}</span>.
                             </p>
                         </div>
 
@@ -1523,11 +1614,11 @@ const SelectService = () => {
                         {/* Real-time Booking Summary Card */}
                         <section className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
-                                <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Booking Summary
+                                <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.booking_summary', 'Booking Summary')}
                             </h3>
                             {selectedServiceObjects.length === 0 ? (
                                 <div className="text-center py-6 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                    No services selected yet.
+                                    {t('book_service.no_services_selected', 'No services selected yet.')}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -1547,13 +1638,13 @@ const SelectService = () => {
                                                         className="text-[9px] font-black uppercase text-red-500 hover:text-red-700 bg-red-100/50 hover:bg-red-100 px-2 py-1 rounded-lg transition-colors shrink-0"
                                                         title="Discard offer and related services"
                                                     >
-                                                        Discard
+                                                        {t('book_service.discard', 'Discard')}
                                                     </button>
                                                 </div>
                                                 <div className="pl-2 border-l-2 border-red-200 space-y-2">
                                                     {selectedServiceObjects.filter(s => offerServiceIds.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-xs">
-                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
+                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{translateServiceName(s.name, t)}</span>
                                                             <span className="font-extrabold text-slate-900">₹{s.price}</span>
                                                         </div>
                                                     ))}
@@ -1566,13 +1657,13 @@ const SelectService = () => {
                                             <div className="space-y-2 pt-2">
                                                 {selectedOffer && (
                                                     <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                                                        Regular Services
+                                                        {t('book_service.regular_services', 'Regular Services')}
                                                     </div>
                                                 )}
                                                 <div className="space-y-2">
                                                     {selectedServiceObjects.filter(s => !offerServiceIds.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-xs">
-                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
+                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{translateServiceName(s.name, t)}</span>
                                                             <span className="font-extrabold text-slate-900">₹{s.price}</span>
                                                         </div>
                                                     ))}
@@ -1584,14 +1675,14 @@ const SelectService = () => {
                                     {/* Cost breakdown ledger */}
                                     <div className="border-t border-slate-100 pt-3 space-y-2.5 text-xs font-semibold text-slate-500">
                                         <div className="flex justify-between">
-                                            <span>Subtotal</span>
+                                            <span>{t('book_service.subtotal', 'Subtotal')}</span>
                                             <span className="text-slate-800 font-bold">₹{serviceSubtotal}</span>
                                         </div>
                                         
                                         {discountAmount > 0 && (
                                             <div className="flex justify-between text-green-600">
                                                 <span className="flex items-center gap-1">
-                                                    <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Offer Discount
+                                                    <Sparkles className="w-3 h-3 text-[#FF0B01]" /> {t('book_service.offer_discount', 'Offer Discount')}
                                                 </span>
                                                 <span className="font-bold">-₹{discountAmount}</span>
                                             </div>
@@ -1600,8 +1691,8 @@ const SelectService = () => {
                                         {/* Home Service toggle */}
                                         <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-800">Home Service?</span>
-                                                <span className="text-[9px] text-slate-400 font-medium normal-case">Avail services at your place</span>
+                                                <span className="font-bold text-slate-800">{t('book_service.home_service_q', 'Home Service?')}</span>
+                                                <span className="text-[9px] text-slate-400 font-medium normal-case">{t('book_service.avail_home', 'Avail services at your place')}</span>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer shrink-0">
                                                 <input 
@@ -1617,7 +1708,7 @@ const SelectService = () => {
                                         {fetchingHomeCharges && (
                                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pl-1">
                                                 <span className="w-3 h-3 border-2 border-[#FF0B01] border-t-transparent rounded-full animate-spin"></span>
-                                                Fetching home charges...
+                                                {t('book_service.fetching_home_charges', 'Fetching home charges...')}
                                             </div>
                                         )}
 
@@ -1625,16 +1716,16 @@ const SelectService = () => {
                                             <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                                                 {homeServiceCharges > 0 && (
                                                     <div className="flex justify-between text-xs font-bold text-slate-700 bg-red-50/50 border border-red-100/50 p-2.5 rounded-xl">
-                                                        <span>Home Charges</span>
+                                                        <span>{t('book_service.home_charges', 'Home Charges')}</span>
                                                         <span className="text-[#FF0B01]">₹{homeServiceCharges}</span>
                                                     </div>
                                                 )}
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">Delivery Address <span className="text-[#FF0B01] font-black">*</span></label>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">{t('book_service.delivery_address', 'Delivery Address')} <span className="text-[#FF0B01] font-black">*</span></label>
                                                     <textarea
                                                         value={customerAddress}
                                                         onChange={(e) => setCustomerAddress(e.target.value)}
-                                                        placeholder="Enter complete home address"
+                                                        placeholder={t('book_service.address_placeholder', 'Enter complete home address')}
                                                         rows="2"
                                                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-slate-700 resize-none"
                                                     />
@@ -1643,7 +1734,7 @@ const SelectService = () => {
                                         )}
 
                                         <div className="flex justify-between text-sm font-black text-slate-950 pt-2.5 border-t border-dashed border-slate-100">
-                                            <span>Grand Total</span>
+                                            <span>{t('book_service.grand_total', 'Grand Total')}</span>
                                             <span className="text-base text-[#FF0B01] font-black">₹{grandTotal}</span>
                                         </div>
                                     </div>
@@ -1690,23 +1781,23 @@ const SelectService = () => {
                         {/* Select Expert Section */}
                         <section ref={staffSectionRef} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
-                                <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Expert
+                                <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_expert', 'Select Expert')}
                             </h3>
                             {firstSelected === 'slot' && availableStaffLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8">
                                     <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Finding available stylists...</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.finding_stylists', 'Finding available stylists...')}</p>
                                 </div>
                             ) : !staffLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-8">
                                     <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading roster...</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_roster', 'Loading roster...')}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {displayedStaffList.length === 0 ? (
                                         <div className="text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50/50 rounded-2xl border border-red-100 p-4">
-                                            No stylists available for the selected slot. Please select a different slot.
+                                            {t('book_service.no_stylists', 'No stylists available for the selected slot. Please select a different slot.')}
                                         </div>
                                     ) : (
                                         <>
@@ -1728,17 +1819,17 @@ const SelectService = () => {
                                                     <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-slate-400'}`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs font-black text-slate-900 uppercase">No Preference</h4>
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">{t('book_service.no_preference', 'No Preference')}</h4>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
                                                     <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                                                        Instant
+                                                        {t('book_service.instant', 'Instant')}
                                                     </span>
                                                     <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
                                                         selectedExpert === 'any' ? 'bg-[#FF0B01] text-white shadow-sm' : 'bg-slate-100 text-slate-600'
                                                     }`}>
-                                                        {selectedExpert === 'any' ? 'Selected' : 'Select'}
+                                                        {selectedExpert === 'any' ? t('book_service.selected', 'Selected') : t('book_service.select_btn', 'Select')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1811,24 +1902,24 @@ const SelectService = () => {
                                                             {availableStaffLoading ? (
                                                                 <span className="flex items-center gap-1 text-[8px] font-black uppercase text-slate-400">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></span>
-                                                                    Checking...
+                                                                    {t('book_service.checking', 'Checking...')}
                                                                 </span>
                                                             ) : selectedSlot && availableStaffList.length > 0 ? (
                                                                 availableStaffIds.has(staff.id) ? (
                                                                     <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
                                                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                        Available
+                                                                        {t('book_service.available', 'Available')}
                                                                     </span>
                                                                 ) : (
                                                                     <span className="flex items-center gap-1 text-[8px] font-black uppercase text-slate-400">
                                                                         <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                                        Unavailable
+                                                                        {t('book_service.unavailable', 'Unavailable')}
                                                                     </span>
                                                                 )
                                                             ) : (
                                                                 <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
                                                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                    Available
+                                                                    {t('book_service.available', 'Available')}
                                                                 </span>
                                                             )}
                                                             
@@ -1841,7 +1932,7 @@ const SelectService = () => {
                                                                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                 }`}
                                                             >
-                                                                {isSelectedExp ? 'Added' : 'Add'}
+                                                                {isSelectedExp ? t('buttons.added', 'Added') : t('buttons.add', 'Add')}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -1910,9 +2001,9 @@ const SelectService = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Login Required</h3>
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{t('book_service.login_required', 'Login Required')}</h3>
                                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                    To confirm your slot and book this appointment, please log in to your account. We will preserve your selected services and booking details!
+                                    {t('book_service.login_required_msg', 'To confirm your slot and book this appointment, please log in to your account. We will preserve your selected services and booking details!')}
                                 </p>
                             </div>
 
@@ -1937,14 +2028,14 @@ const SelectService = () => {
                                     }}
                                     className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
                                 >
-                                    Log In Now
+                                    {t('book_service.log_in_now', 'Log In Now')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowLoginPrompt(false)}
                                     className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
                                 >
-                                    Cancel
+                                    {t('book_service.cancel', 'Cancel')}
                                 </button>
                             </div>
                         </div>
@@ -1967,9 +2058,9 @@ const SelectService = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Discard Offer?</h3>
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{t('book_service.discard_offer_title', 'Discard Offer?')}</h3>
                                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                    Deselecting this service will remove your currently selected offer and its associated services. Do you want to proceed?
+                                    {t('book_service.discard_offer_desc', 'Deselecting this service will remove your currently selected offer and its associated services. Do you want to proceed?')}
                                 </p>
                             </div>
 
@@ -1983,18 +2074,41 @@ const SelectService = () => {
                                     }}
                                     className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15"
                                 >
-                                    Yes, Discard Offer
+                                    {t('book_service.yes_discard', 'Yes, Discard Offer')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowDiscardOfferModal(false)}
                                     className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150"
                                 >
-                                    No, Keep Offer
+                                    {t('book_service.no_keep', 'No, Keep Offer')}
                                 </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Sticky Mobile Bottom Bar for Quick Booking Summary */}
+            {selectedServiceObjects.length > 0 && (
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3.5 shadow-2xl flex items-center justify-between animate-in slide-in-from-bottom duration-300">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                            {selectedServiceObjects.length} {selectedServiceObjects.length === 1 ? 'Service' : 'Services'}
+                        </span>
+                        <span className="text-sm font-black text-[#FF0B01]">₹{grandTotal}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (dateTimeSectionRef.current) {
+                                dateTimeSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                        className="bg-gradient-to-r from-[#FF0B01] to-[#D00600] text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-md shadow-red-500/20 active:scale-95 transition-all"
+                    >
+                        {t('buttons.proceed_to_book', 'Proceed to Book')}
+                    </button>
                 </div>
             )}
 

@@ -321,11 +321,13 @@ const Appointments = () => {
   };
 
   // Filtered Appointments based on search query
-  const filteredAppointments = appointments.filter(app => 
-    app.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    app.customerMobile?.includes(searchQuery) ||
-    app.serviceNames?.some(name => name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredAppointments = Array.isArray(appointments)
+    ? appointments.filter(app => 
+        app?.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app?.customerMobile?.includes(searchQuery) ||
+        app?.serviceNames?.some(name => name.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
 
 
 

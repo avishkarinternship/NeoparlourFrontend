@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -30,6 +31,10 @@ const PRODUCT_TYPES = ['consumable', 'tool', 'equipment', 'chemical', 'cosmetic'
 const SWAP_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
 
 const Inventory = () => {
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode !== undefined 
+      ? outletContext.isDarkMode 
+      : document.documentElement.classList.contains('dark');
 
     const [activeTab, setActiveTab] = useState('add'); // 'add' | 'view' | 'swaps'
 
@@ -456,9 +461,11 @@ const Inventory = () => {
 
     return (
         <>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
+                <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-auto transition-colors duration-300 ${
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                }`}>
                     <div className="max-w-7xl mx-auto">
-                        <h1 className="text-3xl font-light tracking-tight mb-8">Inventory Management</h1>
+                        <h1 className={`text-3xl font-light tracking-tight mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Inventory Management</h1>
 
                         {/* Tab Navigation */}
                         <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">

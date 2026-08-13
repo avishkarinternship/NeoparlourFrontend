@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { useOutletContext } from 'react-router-dom';
 
 
 import axiosInstance from '../../../api/axiosInstance';
@@ -15,6 +16,9 @@ const toastStyle = {
 };
 
 const AddPackages = () => {
+
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
     const [activeTab, setActiveTab] = useState('add');
 
@@ -344,24 +348,24 @@ const AddPackages = () => {
     );
 
     return (
-                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
-                    <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-10 max-w-md border border-gray-100 shadow-sm">
+                <main className={`flex-1 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-zinc-700' : 'bg-[#FAFAFA] text-slate-800 md:border-gray-200'}`}>
+                    <div className={`flex gap-2 p-1 rounded-2xl mb-10 max-w-md border shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-100'}`}>
                         <button
                             onClick={() => setActiveTab('add')}
-                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                         >
                             Add / Edit Package
                         </button>
                         <button
                             onClick={() => setActiveTab('view')}
-                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                         >
                             View All Packages
                         </button>
                     </div>
 
                     {activeTab === 'add' && (
-                        <div className="max-w-4xl mx-auto bg-white border border-gray-100 rounded-[32px] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className={`max-w-4xl mx-auto border rounded-[32px] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                             <div className="bg-gradient-to-r from-[#FF0B01] via-red-650 to-orange-600 text-white px-8 py-8 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-12 -translate-y-12"></div>
                                 <h2 className="text-3xl font-black tracking-tight">
@@ -373,7 +377,7 @@ const AddPackages = () => {
                             <form onSubmit={handleSubmit} className="p-8 space-y-8">
                                 <div className="grid grid-cols-1 gap-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Package Name</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Package Name</label>
                                         <div className="relative">
                                             <img src={productDetailsIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
                                             <input
@@ -381,7 +385,7 @@ const AddPackages = () => {
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleInputChange}
-                                                className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                                className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                                 placeholder="Premium Bridal Glow Package"
                                                 required
                                             />
@@ -391,7 +395,7 @@ const AddPackages = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
-                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Package Price (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Package Price (₹)</label>
                                          <div className="relative">
                                              <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
                                              <input
@@ -400,7 +404,7 @@ const AddPackages = () => {
                                                  name="packagePrice"
                                                  value={formData.packagePrice}
                                                  onChange={handleInputChange}
-                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                                  placeholder="2999"
                                                  required
                                              />
@@ -409,20 +413,20 @@ const AddPackages = () => {
                                     </div>
 
                                     <div>
-                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Services Value (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Total Services Value (₹)</label>
                                          <div className="relative">
                                              <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
                                              <input
                                                  type="text"
                                                  readOnly
                                                  value={totalServicePrice.toFixed(2)}
-                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-100 rounded-2xl text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm cursor-not-allowed focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
                                              />
                                          </div>
                                     </div>
 
                                     <div>
-                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Discount Price / Savings (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Discount Price / Savings (₹)</label>
                                          <div className="relative">
                                               <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
                                              <input
@@ -433,7 +437,7 @@ const AddPackages = () => {
                                                          ? (totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)
                                                          : '0.00'
                                                  }
-                                                 className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-100 rounded-2xl text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm cursor-not-allowed focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
                                              />
                                          </div>
                                     </div>
@@ -450,37 +454,37 @@ const AddPackages = () => {
                                  )}
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description</label>
+                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Description</label>
                                     <textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
                                         rows={4}
-                                        className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                        className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                         placeholder="Describe the package benefits and included services..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-3">Select Services</label>
+                                    <label className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Select Services</label>
 
-                                    <div className="border border-gray-300 rounded-2xl p-4 bg-gray-50">
+                                    <div className={`border rounded-2xl p-4 ${isDarkMode ? 'border-zinc-700 bg-zinc-800' : 'border-gray-300 bg-gray-50'}`}>
                                         <input
                                             type="text"
                                             placeholder="Search services..."
                                             value={serviceSearch}
                                             onChange={(e) => setServiceSearch(e.target.value)}
-                                            className="w-full mb-4 px-4 py-3 border border-gray-300 rounded-xl focus:border-red-500"
+                                            className={`w-full mb-4 px-4 py-3 border rounded-xl focus:border-red-500 focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-white placeholder-slate-500' : 'bg-white border-gray-300 text-gray-900'}`}
                                         />
 
                                         <div className="max-h-72 overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {filteredServices.length === 0 ? (
-                                                <p className="text-gray-500 py-4 text-center col-span-2">No services found</p>
+                                                <p className={`py-4 text-center col-span-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No services found</p>
                                             ) : (
                                                 filteredServices.map(service => (
                                                     <label
                                                         key={service.id}
-                                                        className="flex items-center gap-3 p-3 bg-white border border-gray-100 hover:border-gray-200 rounded-xl cursor-pointer transition group shadow-sm"
+                                                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition group shadow-sm ${isDarkMode ? 'bg-zinc-700 border-zinc-600 hover:border-zinc-500' : 'bg-white border-gray-100 hover:border-gray-200'}`}
                                                     >
                                                         <input
                                                             type="checkbox"
@@ -490,7 +494,7 @@ const AddPackages = () => {
                                                         />
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-medium text-sm truncate">{service.name}</div>
-                                                            <div className="text-xs text-gray-500">₹{service.price}</div>
+                                                            <div className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>₹{service.price}</div>
                                                         </div>
                                                     </label>
                                                 ))
@@ -498,7 +502,7 @@ const AddPackages = () => {
                                         </div>
 
                                         {selectedServices.length > 0 && (
-                                            <div className="mt-4 pt-4 border-t text-sm text-gray-600">
+                                            <div className={`mt-4 pt-4 border-t text-sm ${isDarkMode ? 'border-zinc-600 text-zinc-400' : 'border-gray-200 text-gray-600'}`}>
                                                 Selected: <span className="font-semibold text-red-600">{selectedServices.length}</span> services |
                                                 Total Value: <span className="font-semibold">₹{totalServicePrice}</span>
                                             </div>
@@ -508,7 +512,7 @@ const AddPackages = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Usage Limit per Customer</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Usage Limit per Customer</label>
                                         <input
                                             type="number"
                                             name="usageLimitPerCustomer"
@@ -516,12 +520,12 @@ const AddPackages = () => {
                                             onChange={handleInputChange}
                                             min="1"
                                             step="1"
-                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full border rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                             placeholder="Leave empty for unlimited"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Usage Limit</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Total Usage Limit</label>
                                         <input
                                             type="number"
                                             name="totalUsageLimit"
@@ -529,7 +533,7 @@ const AddPackages = () => {
                                             onChange={handleInputChange}
                                             min="1"
                                             step="1"
-                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full border rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                             placeholder="Leave empty for unlimited"
                                         />
                                     </div>
@@ -555,7 +559,7 @@ const AddPackages = () => {
                                     <button
                                         type="button"
                                         onClick={resetForm}
-                                        className="flex-1 border border-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-50 transition uppercase text-sm tracking-wider"
+                                        className={`flex-1 border py-4 rounded-2xl font-bold transition uppercase text-sm tracking-wider ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                                     >
                                         Discard Changes
                                     </button>
@@ -568,7 +572,7 @@ const AddPackages = () => {
                     {activeTab === 'view' && (
                         <div className="max-w-6xl mx-auto">
                             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                                <h2 className="text-3xl font-black tracking-tight text-gray-900">All Packages</h2>
+                                <h2 className={`text-3xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>All Packages</h2>
 
                                 <div className="flex flex-wrap gap-4">
                                     <input
@@ -576,12 +580,12 @@ const AddPackages = () => {
                                         placeholder="Search packages..."
                                         value={filters.name}
                                         onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))}
-                                        className="border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all w-80 shadow-sm"
+                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all w-80 shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                     />
                                     <select
                                         value={filters.active}
                                         onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value }))}
-                                        className="border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all shadow-sm cursor-pointer"
+                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all shadow-sm cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                     >
                                         <option value="">All Status</option>
                                         <option value="true">Active</option>
@@ -591,9 +595,9 @@ const AddPackages = () => {
                             </div>
 
                             {loadingPackages ? (
-                                <div className="text-center py-20 text-gray-500 font-medium">Loading packages...</div>
+                                <div className={`text-center py-20 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading packages...</div>
                             ) : packages.length === 0 ? (
-                                <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                                <div className={`text-center py-20 border rounded-3xl shadow-sm ${isDarkMode ? 'text-zinc-400 bg-zinc-900 border-zinc-700' : 'text-gray-500 bg-white border-gray-100'}`}>
                                     No packages found
                                 </div>
                             ) : (
@@ -607,7 +611,7 @@ const AddPackages = () => {
                                         return (
                                             <div
                                                 key={pkg.id}
-                                                className="bg-white border border-gray-200 border-l-4 border-l-[#FF0B01] rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between"
+                                                className={`border border-l-4 border-l-[#FF0B01] rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'}`}
                                             >
                                                 {/* Subtle top indicator bar */}
                                                 <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/5 group-hover:bg-[#FF0B01]/10 transition-colors duration-300"></div>
@@ -615,7 +619,7 @@ const AddPackages = () => {
                                                 <div>
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex-1 min-w-0 pr-4">
-                                                            <h3 className="font-extrabold text-xl text-gray-900 group-hover:text-[#FF0B01] transition-colors duration-300 truncate" title={pkg.name}>
+                                                            <h3 className={`font-extrabold text-xl group-hover:text-[#FF0B01] transition-colors duration-300 truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`} title={pkg.name}>
                                                                 {pkg.name}
                                                             </h3>
                                                         </div>
@@ -649,17 +653,17 @@ const AddPackages = () => {
                                                         )}
                                                     </div>
 
-                                                    <p className="mt-4 text-gray-500 line-clamp-3 text-xs font-medium leading-relaxed">
+                                                    <p className={`mt-4 line-clamp-3 text-xs font-medium leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                         {pkg.description || "No description provided."}
                                                     </p>
 
                                                     {/* Services list */}
                                                     {pkgServices.length > 0 && (
                                                         <div className="mt-5">
-                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Services Included</span>
+                                                            <span className={`text-[9px] font-bold uppercase tracking-wider block mb-2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Services Included</span>
                                                             <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                                                                 {pkgServices.map(service => (
-                                                                    <span key={service.id} className="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100 transition-colors">
+                                                                    <span key={service.id} className={`inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' : 'bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-100'}`}>
                                                                         {service.name}
                                                                     </span>
                                                                 ))}
@@ -668,10 +672,10 @@ const AddPackages = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="mt-6 pt-4 border-t border-gray-100">
+                                                <div className={`mt-6 pt-4 border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
                                                      <button
                                                          onClick={() => handleEdit(pkg)}
-                                                         className="w-full flex items-center justify-center gap-1.5 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 text-xs font-bold transition-all bg-gray-50 py-3 rounded-xl border border-gray-150"
+                                                         className={`w-full flex items-center justify-center gap-1.5 hover:text-[#FF0B01] text-xs font-bold transition-all py-3 rounded-xl border ${isDarkMode ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-red-50'}`}
                                                      >
                                                          <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
                                                          Edit
@@ -683,22 +687,22 @@ const AddPackages = () => {
                                 </div>
 
                                 {/* PAGINATION FOOTER */}
-                                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                <div className={`max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-200'}`}>
+                                    <span className={`text-[10px] font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                         PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PACKAGES)
                                     </span>
                                     <div className="flex items-center space-x-1.5">
                                         <button
                                             onClick={() => fetchPackages(0)}
                                             disabled={currentPage <= 0}
-                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                            className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                         >
                                             « First
                                         </button>
                                         <button
                                             onClick={() => fetchPackages(Math.max(0, currentPage - 1))}
                                             disabled={currentPage <= 0}
-                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                            className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                         >
                                             ‹ Prev
                                         </button>
@@ -711,14 +715,14 @@ const AddPackages = () => {
                                         <button
                                             onClick={() => fetchPackages(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
                                             disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                            className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                         >
                                             Next ›
                                         </button>
                                         <button
                                             onClick={() => fetchPackages(Math.max(0, totalPages - 1))}
                                             disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                            className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                            className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                         >
                                             Last »
                                         </button>

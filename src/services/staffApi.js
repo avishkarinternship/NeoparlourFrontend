@@ -51,6 +51,7 @@ export const staffApi = {
   bookWalkIn: (bookingData) => axiosInstance.post('/appointments/walk-in', bookingData),
   sendWhatsAppInvite: (inviteData) => axiosInstance.post('/staff/invite', inviteData),
   checkPhoneExists: (mobile) => axiosInstance.get(`/customer/exists?mobile=${mobile}`),
+  getStaffReferralStats: (staffId) => axiosInstance.get(`/staff/${staffId}/referral-stats`),
 };
 
 export default staffApi;

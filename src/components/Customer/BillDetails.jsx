@@ -1,5 +1,7 @@
 import React from 'react';
 import { X, Plus, Clock, Sparkles, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { translateServiceName } from '../../utils/serviceTranslation';
 
 const BillDetails = ({ 
   isOpen, 
@@ -20,6 +22,7 @@ const BillDetails = ({
   homeCharge = 0,
   address = ''
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const serviceTotal = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
@@ -38,7 +41,7 @@ const BillDetails = ({
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-[#FF0B01]" />
             <h2 className="text-sm font-black text-slate-900 tracking-tight uppercase">
-              Bill Details
+              {t('bill.header', 'Bill Details')}
             </h2>
           </div>
           <button
@@ -56,7 +59,7 @@ const BillDetails = ({
           {/* Services List */}
           <div>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
-              Confirm Your Services
+              {t('bill.confirm_services', 'Confirm Your Services')}
             </h3>
 
             <div className="space-y-2">
@@ -73,7 +76,7 @@ const BillDetails = ({
                     {selectedServices.filter(s => selectedOffer.services?.some(os => os.id === s.id)).map((service) => (
                       <div key={service.id} className="flex items-center justify-between gap-3 bg-white rounded-xl px-3 py-2 border border-red-50">
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 uppercase truncate">{service.name || service.title}</p>
+                          <p className="text-xs font-bold text-slate-900 uppercase truncate">{translateServiceName(service.name || service.title, t)}</p>
                           <p className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold mt-0.5">
                             <Clock className="w-3 h-3 shrink-0" />
                             {service.duration || 30} Min
@@ -92,10 +95,10 @@ const BillDetails = ({
                         <div key={service.id} className="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="text-xs font-bold text-slate-900 uppercase truncate">{service.name || service.title}</p>
+                              <p className="text-xs font-bold text-slate-900 uppercase truncate">{translateServiceName(service.name || service.title, t)}</p>
                               {service.category && (
                                 <span className="bg-slate-200 text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                  {service.category}
+                                  {translateServiceName(service.category, t)}
                                 </span>
                               )}
                             </div>
@@ -115,10 +118,10 @@ const BillDetails = ({
                   <div key={service.id} className="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-xs font-bold text-slate-900 uppercase truncate">{service.name || service.title}</p>
+                        <p className="text-xs font-bold text-slate-900 uppercase truncate">{translateServiceName(service.name || service.title, t)}</p>
                         {service.category && (
                           <span className="bg-red-50 text-[#FF0B01] text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                            {service.category}
+                            {translateServiceName(service.category, t)}
                           </span>
                         )}
                       </div>

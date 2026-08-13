@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useLocation, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -32,6 +32,9 @@ const DISCOUNT_TYPES = [
 
 const AddOffers = () => {
     const location = useLocation();
+
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
     const [activeFilter, setActiveFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('add');
@@ -389,19 +392,19 @@ const AddOffers = () => {
     });
 
     return (
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
+                <main className={`flex-1 min-w-0 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-zinc-700' : 'bg-[#FAFAFA] text-slate-800 md:border-gray-200'}`}>
                     <div className="max-w-5xl mx-auto">
                         {/* Tabs */}
-                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-10 max-w-md border border-gray-100 shadow-sm">
+                        <div className={`flex gap-2 p-1 rounded-2xl mb-10 max-w-md border shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-100'}`}>
                             <button
                                 onClick={() => setActiveTab('add')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 Add / Edit Offer
                             </button>
                             <button
                                 onClick={() => setActiveTab('view')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 View Offers
                             </button>
@@ -409,7 +412,7 @@ const AddOffers = () => {
 
                         {activeTab === 'add' && (
                             <>
-                                <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
+                                <div className={`flex items-center gap-3 mb-8 pb-3 border-b ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
                             <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
                                 %
                             </div>
@@ -417,13 +420,13 @@ const AddOffers = () => {
                                 <span className="text-[12px] font-extrabold uppercase tracking-widest text-red-600 block">
                                     {editingOfferId ? 'Edit Mode' : 'Creation Mode'}
                                 </span>
-                                <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                                <h2 className={`text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                     {editingOfferId ? 'Edit Offer Details' : 'Add New Offer'}
                                 </h2>
                             </div>
                         </div>
 
-                        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-12">
+                        <div className={`border rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-12 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -436,7 +439,7 @@ const AddOffers = () => {
                                             value={offerName}
                                             onChange={(e) => setOfferName(e.target.value)}
                                             placeholder="Offer Name *"
-                                            className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -450,7 +453,7 @@ const AddOffers = () => {
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Description"
-                                            className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         />
                                     </div>
                                 </div>
@@ -464,7 +467,7 @@ const AddOffers = () => {
                                         <select
                                             value={discountType}
                                             onChange={(e) => setDiscountType(e.target.value)}
-                                            className="w-full pl-12 pr-10 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer"
+                                            className={`w-full pl-12 pr-10 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         >
                                             {DISCOUNT_TYPES.map(dt => (
                                                 <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -481,7 +484,7 @@ const AddOffers = () => {
                                                  value={discountValue}
                                                  onChange={(e) => handleDiscountValueChange(e.target.value)}
                                                  placeholder="Discount Value *"
-                                                 className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                                 className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                                  required
                                              />
                                          </div>
@@ -496,7 +499,7 @@ const AddOffers = () => {
                                             placeholder="Usage Limit per Customer"
                                             min="1"
                                             step="1"
-                                            className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         />
                                     </div>
                                 </div>
@@ -509,7 +512,7 @@ const AddOffers = () => {
                                         placeholder="Total Usage Limit (Optional)"
                                         min="1"
                                         step="1"
-                                        className="w-full px-5 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                        className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                     />
                                 </div>
 
@@ -521,7 +524,7 @@ const AddOffers = () => {
                                             type="datetime-local"
                                             value={validFrom}
                                             onChange={(e) => setValidFrom(e.target.value)}
-                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -531,7 +534,7 @@ const AddOffers = () => {
                                             type="datetime-local"
                                             value={validTo}
                                             onChange={(e) => setValidTo(e.target.value)}
-                                            className="w-full border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200"
+                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -542,16 +545,16 @@ const AddOffers = () => {
                                     <label className="text-xs font-bold text-gray-400 mb-3 block uppercase tracking-wider">
                                         Applicable Services * ({selectedServices.length} selected)
                                     </label>
-                                    <div className="max-h-60 overflow-y-auto border border-gray-200 bg-gray-50/30 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2 shadow-inner">
+                                    <div className={`max-h-60 overflow-y-auto border rounded-2xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2 shadow-inner ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-gray-50/30 border-gray-200'}`}>
                                         {loadingServices ? (
-                                            <p className="text-gray-500">Loading services...</p>
+                                            <p className={isDarkMode ? 'text-zinc-400' : 'text-gray-500'}>Loading services...</p>
                                         ) : activeServices.length === 0 ? (
-                                            <p className="text-gray-500">No active services available</p>
+                                            <p className={isDarkMode ? 'text-zinc-400' : 'text-gray-500'}>No active services available</p>
                                         ) : (
                                             sortedServices.map(service => (
                                                 <label
                                                     key={service.id}
-                                                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer border border-transparent hover:border-gray-200"
+                                                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border border-transparent ${isDarkMode ? 'hover:bg-zinc-700 hover:border-zinc-600' : 'hover:bg-gray-50 hover:border-gray-200'}`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <input
@@ -562,7 +565,7 @@ const AddOffers = () => {
                                                         />
                                                         <span className="text-sm">{service.name}</span>
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700">₹{service.price || 0}</span>
+                                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>₹{service.price || 0}</span>
                                                 </label>
                                             ))
                                         )}
@@ -573,15 +576,15 @@ const AddOffers = () => {
                                             <h4 className="font-semibold text-green-800 mb-3">Price Breakdown</h4>
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600">Original Total</span>
+                                                    <span className={isDarkMode ? 'text-zinc-400' : 'text-gray-600'}>Original Total</span>
                                                     <span className="font-medium">₹{totalOriginalPrice.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between text-red-600">
                                                     <span>Discount Amount</span>
                                                     <span>- ₹{discountAmount.toFixed(2)}</span>
                                                 </div>
-                                                <hr className="border-gray-200 my-2" />
-                                                <div className="flex justify-between font-bold text-lg text-gray-900">
+                                                <hr className={`my-2 ${isDarkMode ? 'border-zinc-600' : 'border-gray-200'}`} />
+                                                <div className={`flex justify-between font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                                     <span>Final Price After Discount</span>
                                                     <span>₹{finalPrice.toFixed(2)}</span>
                                                 </div>
@@ -611,7 +614,7 @@ const AddOffers = () => {
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className="flex-1 border border-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-all text-sm tracking-wider uppercase"
+                                        className={`flex-1 border py-4 rounded-2xl font-bold transition-all text-sm tracking-wider uppercase ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 hover:bg-gray-50'}`}
                                     >
                                         Discard
                                     </button>
@@ -631,7 +634,7 @@ const AddOffers = () => {
                                     <button
                                         key={filter}
                                         onClick={() => setActiveFilter(filter)}
-                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
+                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : isDarkMode ? 'bg-zinc-800 border border-zinc-600 text-zinc-300 hover:bg-zinc-700' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
                                     >
                                         {filter.charAt(0).toUpperCase() + filter.slice(1)}
                                     </button>
@@ -642,18 +645,18 @@ const AddOffers = () => {
                         {loadingOffers ? (
                             <div className="text-center py-12">Loading offers...</div>
                         ) : offers.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500 bg-white border border-gray-100 rounded-2xl">
+                            <div className={`text-center py-12 border rounded-2xl ${isDarkMode ? 'text-zinc-400 bg-zinc-900 border-zinc-800' : 'text-gray-500 bg-white border-gray-100'}`}>
                                 No offers found
                             </div>
                         ) : (
                             <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                                 {offers.map((offer) => (
-                                    <div key={offer.id} className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                                    <div key={offer.id} className={`border rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
                                         {/* Subtle top indicator bar */}
                                         <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/10 group-hover:bg-[#FF0B01] transition-colors duration-300"></div>
                                         
                                         <div className="flex justify-between items-start mt-2">
-                                            <h4 className="font-bold text-lg text-gray-900 group-hover:text-[#FF0B01] transition-colors duration-300">{offer.name}</h4>
+                                            <h4 className={`font-bold text-lg group-hover:text-[#FF0B01] transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{offer.name}</h4>
                                             <div className="flex items-center gap-3">
                                                 <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full ${offer.active ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
                                                     {offer.active ? 'ACTIVE' : 'INACTIVE'}
@@ -669,13 +672,13 @@ const AddOffers = () => {
                                                 </label>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">{offer.description}</p>
+                                        <p className={`text-sm mt-2 line-clamp-2 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>{offer.description}</p>
                                         
                                         {/* Services list */}
                                         {getOfferServicesDisplay(offer) && (
-                                            <div className="mt-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Services Included</span>
-                                                <span className="text-xs font-semibold text-gray-700 mt-0.5 block whitespace-normal break-words" title={getOfferServicesDisplay(offer)}>
+                                            <div className={`mt-3 p-2.5 rounded-xl border ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-gray-50/50 border-gray-100/50'}`}>
+                                                <span className={`text-[9px] font-bold uppercase tracking-wider block ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Services Included</span>
+                                                <span className={`text-xs font-semibold mt-0.5 block whitespace-normal break-words ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`} title={getOfferServicesDisplay(offer)}>
                                                     {getOfferServicesDisplay(offer)}
                                                 </span>
                                             </div>
@@ -689,7 +692,7 @@ const AddOffers = () => {
                                             <button
                                                 onClick={() => handleEdit(offer)}
                                                 disabled={loadingEdit}
-                                                className="flex items-center gap-1.5 text-gray-700 hover:text-[#FF0B01] text-xs font-bold transition-all disabled:opacity-60 bg-gray-50 hover:bg-red-50 px-3.5 py-2 rounded-xl border border-gray-100"
+                                                className={`flex items-center gap-1.5 hover:text-[#FF0B01] text-xs font-bold transition-all disabled:opacity-60 hover:bg-red-50 px-3.5 py-2 rounded-xl border ${isDarkMode ? 'text-zinc-300 bg-zinc-800 border-zinc-700' : 'text-gray-700 bg-gray-50 border-gray-100'}`}
                                             >
                                                 <img src={editIcon} alt="edit" className="w-3.5 h-3.5" />
                                                 {loadingEdit ? 'Loading...' : 'Edit Offer'}
@@ -703,21 +706,21 @@ const AddOffers = () => {
                         {/* PAGINATION FOOTER */}
                         {!loadingOffers && (
                             <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                <span className={`text-[10px] font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                     PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL OFFERS)
                                 </span>
                                 <div className="flex items-center space-x-1.5">
                                     <button
                                         onClick={() => fetchOffers(0)}
                                         disabled={currentPage <= 0}
-                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                     >
                                         « First
                                     </button>
                                     <button
                                         onClick={() => fetchOffers(Math.max(0, currentPage - 1))}
                                         disabled={currentPage <= 0}
-                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                     >
                                         ‹ Prev
                                     </button>
@@ -730,14 +733,14 @@ const AddOffers = () => {
                                     <button
                                         onClick={() => fetchOffers(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
                                         disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                     >
                                         Next ›
                                     </button>
                                     <button
                                         onClick={() => fetchOffers(Math.max(0, totalPages - 1))}
                                         disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                        className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                     >
                                         Last »
                                     </button>

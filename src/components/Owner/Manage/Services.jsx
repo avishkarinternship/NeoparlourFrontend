@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useLocation, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -124,6 +124,8 @@ const getCategoryIcon = (catName) => {
 
 const Service = () => {
     const location = useLocation();
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
 
     const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -669,26 +671,32 @@ const Service = () => {
 
 
     return (
-                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
-                    <div className="max-w-5xl mx-auto">
+                 <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
+                     isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                 }`}>
+                     <div className="max-w-5xl mx-auto">
 
-                        {/* ==================== SERVICE TAB ==================== */}
-                        <>
-                                <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
-                                    <div className="flex items-center space-x-2 text-gray-900">
-                                        <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
-                                        <span className="text-[13px] font-bold uppercase tracking-wider">
-                                            {editingServiceId ? 'Edit Service' : 'Add Service'}
-                                        </span>
-                                    </div>
-                                </div>
+                         {/* ==================== SERVICE TAB ==================== */}
+                         <>
+                                 <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
+                                     <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                         <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
+                                         <span className="text-[13px] font-bold uppercase tracking-wider">
+                                             {editingServiceId ? 'Edit Service' : 'Add Service'}
+                                         </span>
+                                     </div>
+                                 </div>
 
-                                <div className="max-w-3xl border border-gray-100 rounded-3xl p-8 bg-white shadow-md hover:shadow-lg transition-all duration-300 mb-8">
+                                 <div className={`max-w-3xl border rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-8 ${
+                                     isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'
+                                 }`}>
                                     <form onSubmit={handleServiceSave} className="space-y-5">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             {/* Category Option (GIVEN FIRST) */}
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                }`}>
                                                     <img src={categoryIcon} alt="Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <select
                                                         value={selectedCategory}
@@ -701,11 +709,13 @@ const Service = () => {
                                                             if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
                                                             if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                         }}
-                                                        className="w-full text-sm font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
+                                                        className={`w-full text-sm font-semibold appearance-none bg-transparent outline-none cursor-pointer ${
+                                                            isDarkMode ? 'text-white' : 'text-gray-800'
+                                                        }`}
                                                     >
-                                                        <option value="" disabled hidden>Category</option>
+                                                        <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Category</option>
                                                         {Object.keys(PREDEFINED_CATEGORIES).map((catName) => (
-                                                            <option key={catName} value={catName}>{catName}</option>
+                                                            <option key={catName} value={catName} className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>{catName}</option>
                                                         ))}
                                                     </select>
                                                     <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
@@ -716,7 +726,9 @@ const Service = () => {
                                             {/* Predefined Service Select (Only if selectedCategory is predefined and not 'Other') */}
                                             {selectedCategory && selectedCategory !== 'Other' && (
                                                 <div className="relative">
-                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
+                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                    }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                         <select
                                                             value={selectedServiceName}
@@ -728,13 +740,15 @@ const Service = () => {
                                                                 }
                                                                 if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                             }}
-                                                            className="w-full text-sm font-semibold text-gray-800 appearance-none bg-transparent outline-none cursor-pointer"
+                                                            className={`w-full text-sm font-semibold appearance-none bg-transparent outline-none cursor-pointer ${
+                                                                isDarkMode ? 'text-white' : 'text-gray-800'
+                                                            }`}
                                                         >
-                                                            <option value="" disabled hidden>Service Name</option>
+                                                            <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Service Name</option>
                                                             {(PREDEFINED_CATEGORIES[selectedCategory] || []).map((srvName) => (
-                                                                <option key={srvName} value={srvName}>{srvName}</option>
+                                                                <option key={srvName} value={srvName} className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>{srvName}</option>
                                                             ))}
-                                                            <option value="Other">Other (Type Custom Service)</option>
+                                                            <option value="Other" className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>Other (Type Custom Service)</option>
                                                         </select>
                                                         <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                                     </div>
@@ -745,7 +759,9 @@ const Service = () => {
                                             {/* Custom Service Name Input (If selectedCategory === 'Other' OR selectedServiceName === 'Other') */}
                                             {(selectedCategory === 'Other' || selectedServiceName === 'Other') && (
                                                 <div className="relative">
-                                                    <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
+                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                    }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                         <input
                                                             type="text"
@@ -755,7 +771,9 @@ const Service = () => {
                                                                 setCustomServiceName(e.target.value);
                                                                 if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                             }}
-                                                            className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                            className={`w-full text-sm font-semibold outline-none bg-transparent ${
+                                                                isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                            }`}
                                                         />
                                                     </div>
                                                     {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
@@ -764,7 +782,9 @@ const Service = () => {
  
                                             {/* Price Input */}
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                }`}>
                                                     <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
@@ -784,7 +804,9 @@ const Service = () => {
                                                                 setFormErrors(prev => ({ ...prev, price: "" }));
                                                             }
                                                         }}
-                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        className={`w-full text-sm font-semibold outline-none bg-transparent ${
+                                                            isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                        }`}
                                                     />
                                                 </div>
                                                 {formErrors.price && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.price}</p>}
@@ -792,7 +814,9 @@ const Service = () => {
  
                                             {/* Duration Input */}
                                             <div className="relative">
-                                                <div className="relative flex items-center border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200">
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                }`}>
                                                     <img src={durationIcon} alt="Duration" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
@@ -803,7 +827,9 @@ const Service = () => {
                                                             setDuration(val);
                                                             if (formErrors.duration) setFormErrors(prev => ({ ...prev, duration: '' }));
                                                         }}
-                                                        className="w-full text-sm font-semibold placeholder-gray-400 text-gray-800 outline-none bg-transparent"
+                                                        className={`w-full text-sm font-semibold outline-none bg-transparent ${
+                                                            isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                        }`}
                                                     />
                                                 </div>
                                                 {formErrors.duration && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.duration}</p>}
@@ -822,7 +848,9 @@ const Service = () => {
                                             <button
                                                 type="button"
                                                 onClick={resetServiceForm}
-                                                className="w-full sm:flex-1 border border-gray-300 text-gray-700 py-4 rounded-2xl hover:bg-gray-50 transition"
+                                                className={`w-full sm:flex-1 border py-4 rounded-2xl transition ${
+                                                    isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}
                                             >
                                                 {editingServiceId ? 'Discard' : 'Cancel'}
                                             </button>
@@ -832,39 +860,45 @@ const Service = () => {
                                  {/* Services List */}
                                  <div>
                                      {/* Search Filters */}
-                                     <form onSubmit={handleSearchServices} className="max-w-3xl bg-white border border-gray-200 rounded-3xl p-6 mb-8 shadow-sm">
-                                         <h4 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-4">Search Filters</h4>
+                                     <form onSubmit={handleSearchServices} className={`max-w-3xl border rounded-3xl p-6 mb-8 shadow-sm ${
+                                         isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'
+                                     }`}>
+                                         <h4 className={`text-xs font-extrabold uppercase tracking-widest mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Search Filters</h4>
                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                                              {/* Name filter */}
                                              <div className="space-y-1.5">
-                                                 <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Service Name</label>
+                                                 <label className={`text-[10px] font-extrabold uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Service Name</label>
                                                  <input 
                                                      type="text" 
                                                      placeholder="Filter by Name" 
                                                      value={searchName} 
                                                      onChange={(e) => setSearchName(e.target.value)} 
-                                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all" 
+                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#FF0B01] transition-all ${
+                                                         isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus:bg-zinc-800 text-white' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-55 focus:bg-white text-gray-900'
+                                                     }`} 
                                                  />
                                              </div>
 
                                              {/* Category filter */}
                                              <div className="space-y-1.5">
-                                                 <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Category</label>
+                                                 <label className={`text-[10px] font-extrabold uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Category</label>
                                                  <select 
                                                      value={searchCategory} 
                                                      onChange={(e) => setSearchCategory(e.target.value)} 
-                                                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gray-50/50 hover:bg-gray-50 focus:bg-white outline-none focus:border-[#FF0B01] transition-all cursor-pointer"
+                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#FF0B01] transition-all cursor-pointer ${
+                                                         isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus:bg-zinc-800 text-white' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-55 focus:bg-white text-gray-900'
+                                                     }`}
                                                  >
-                                                     <option value="">All Categories</option>
+                                                     <option value="" className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>All Categories</option>
                                                      {Array.from(new Set([
                                                          ...categories,
                                                          ...services.map(s => getNormalisedCategory(s.category)).filter(Boolean)
                                                      ])).map(catName => (
-                                                         <option key={catName} value={catName}>{catName}</option>
+                                                         <option key={catName} value={catName} className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>{catName}</option>
                                                      ))}
                                                  </select>
                                              </div>
-                                         </div>
+                                          </div>
 
                                          {/* Action Buttons */}
                                          <div className="flex justify-end gap-3 mt-5">
@@ -874,7 +908,9 @@ const Service = () => {
                                                      setSearchName('');
                                                      setSearchCategory('');
                                                  }} 
-                                                 className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                                                 className={`px-5 py-2.5 text-xs font-bold uppercase tracking-wider border rounded-xl transition-all ${
+                                                     isDarkMode ? 'text-zinc-300 border-zinc-700 hover:bg-zinc-800' : 'text-gray-500 border-gray-200 hover:bg-gray-55'
+                                                 }`}
                                              >
                                                  Clear Filters
                                              </button>
@@ -888,19 +924,21 @@ const Service = () => {
                                      </form>
 
                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 max-w-3xl">
-                                         <h3 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">All Services</h3>
-                                         <div className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl p-1 shadow-sm text-xs font-bold uppercase select-none">
+                                         <h3 className={`text-xs font-extrabold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>All Services</h3>
+                                         <div className={`flex items-center border rounded-2xl p-1 shadow-sm text-xs font-bold uppercase select-none ${
+                                             isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'
+                                         }`}>
                                              <button 
                                                  type="button" 
                                                  onClick={() => setDndMode('shift')}
-                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'shift' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'shift' ? 'bg-[#FF0B01] text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
                                              >
                                                  Shift Mode
                                              </button>
                                              <button 
                                                  type="button" 
                                                  onClick={() => setDndMode('swap')}
-                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'swap' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'swap' ? 'bg-[#FF0B01] text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
                                              >
                                                  Swap Mode
                                              </button>
@@ -908,12 +946,14 @@ const Service = () => {
                                      </div>
                                      
                                      {!hasSearched ? (
-                                         <div className="text-center py-20 text-gray-500 bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 max-w-3xl">
+                                         <div className={`text-center py-20 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 max-w-3xl border ${
+                                             isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'text-gray-500 bg-white border-gray-100'
+                                         }`}>
                                              <svg className="w-16 h-16 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                              </svg>
-                                             <h4 className="text-base font-bold text-gray-800">Search Services</h4>
-                                             <p className="text-xs font-semibold text-gray-400 max-w-md mx-auto">Use the filters above and click Search to display the services list.</p>
+                                             <h4 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Search Services</h4>
+                                             <p className={`text-xs font-semibold max-w-md mx-auto ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Use the filters above and click Search to display the services list.</p>
                                          </div>
 ) : loading ? (
                                          <div className="py-10 flex flex-col items-center justify-center gap-2 max-w-3xl">
@@ -942,12 +982,12 @@ const Service = () => {
                                                          onDragLeave={(e) => handleCategoryDragLeave(e, cat)}
                                                          onDragEnd={handleCategoryDragEnd}
                                                          onDrop={(e) => handleCategoryDrop(e, cat)}
-                                                         className={`bg-white border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100 hover:border-gray-200'}`}
+                                                         className={`border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'} ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : isDarkMode ? 'hover:border-zinc-700' : 'hover:border-gray-250'}`}
                                                      >
                                                          {/* Category Header Row */}
                                                          <div 
                                                              onClick={() => toggleCategoryExpand(cat)}
-                                                             className="flex items-center justify-between p-5 cursor-pointer bg-gray-50/50 hover:bg-gray-55 select-none transition-colors"
+                                                             className={`flex items-center justify-between p-5 cursor-pointer select-none transition-colors ${isDarkMode ? 'bg-zinc-900/50 hover:bg-zinc-800/80' : 'bg-gray-50/50 hover:bg-gray-55'}`}
                                                          >
                                                              <div className="flex items-center space-x-3.5 min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
                                                                  {/* Category Drag Handle */}
@@ -961,7 +1001,7 @@ const Service = () => {
                                                                      ☰
                                                                  </div>
                                                                   <div 
-                                                                      className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center p-1.5 shadow-sm transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+                                                                      className={`w-10 h-10 rounded-xl border flex items-center justify-center p-1.5 shadow-sm transition-transform duration-300 group-hover:scale-105 cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}
                                                                       onClick={() => toggleCategoryExpand(cat)}
                                                                   >
                                                                       <img 
@@ -971,28 +1011,35 @@ const Service = () => {
                                                                       />
                                                                   </div>
                                                                  <div className="min-w-0 flex-1 cursor-pointer" onClick={() => toggleCategoryExpand(cat)}>
-                                                                     <h4 className="text-sm font-extrabold text-gray-800 tracking-tight uppercase">
+                                                                     <h4 className={`text-sm font-extrabold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                                                          {cat}
                                                                      </h4>
-                                                                     <p className="text-[10px] text-gray-400 font-semibold mt-0.5">
+                                                                     <p className={`text-[10px] font-semibold mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                                          {catServices.length} {catServices.length === 1 ? 'Service' : 'Services'}
                                                                      </p>
                                                                  </div>
                                                              </div>
-
                                                              <div className="flex items-center space-x-3" onClick={(e) => e.stopPropagation()}>
                                                                  {/* Up / Down category arrows */}
                                                                  <div className="flex items-center gap-1">
                                                                      <button
                                                                          onClick={() => catIdx > 0 && handleSwapCategories(cat, categories[catIdx - 1])}
                                                                          disabled={catIdx === 0}
-                                                                         className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-50 rounded-lg border border-gray-250 hover:border-red-200 transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                         className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer ${
+                                                                             isDarkMode 
+                                                                                 ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                 : 'text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-50 border-gray-250 hover:border-red-200'
+                                                                         }`}
                                                                          title="Move Category Up"
                                                                      >▲</button>
                                                                      <button
                                                                          onClick={() => catIdx < categories.length - 1 && handleSwapCategories(cat, categories[catIdx + 1])}
                                                                          disabled={catIdx === categories.length - 1}
-                                                                         className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-55 rounded-lg border border-gray-250 hover:border-red-200 transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                         className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer ${
+                                                                             isDarkMode 
+                                                                                 ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                 : 'text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-55 border-gray-250 hover:border-red-200'
+                                                                         }`}
                                                                          title="Move Category Down"
                                                                      >▼</button>
                                                                  </div>
@@ -1000,16 +1047,22 @@ const Service = () => {
                                                                  {/* Expand / Collapse Indicator */}
                                                                  <button 
                                                                      onClick={() => toggleCategoryExpand(cat)}
-                                                                     className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-xs font-bold text-gray-600"
+                                                                     className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors text-xs font-bold ${
+                                                                         isDarkMode 
+                                                                             ? 'bg-slate-850 border-zinc-700 hover:bg-slate-750 text-zinc-300' 
+                                                                             : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                                     }`}
                                                                  >
                                                                      {isExpanded ? '▼' : '►'}
                                                                  </button>
                                                              </div>
                                                          </div>
-
+ 
                                                          {/* Expanded Category Services List */}
-                                                         {isExpanded && (
-                                                             <div className="p-5 bg-white border-t border-gray-100 space-y-4">
+                                         {isExpanded && (
+                                                             <div className={`p-5 border-t space-y-4 ${
+                                                                 isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'
+                                                             }`}>
                                                                  {catServices.length > 0 ? (
                                                                      catServices.map((service) => {
                                                                          const getCategoryTheme = (cat) => {
@@ -1017,80 +1070,80 @@ const Service = () => {
                                                                              if (norm.includes('hair services')) {
                                                                                  return {
                                                                                      accent: 'bg-[#FF0B01]',
-                                                                                     bg: 'bg-red-50/70',
+                                                                                     bg: isDarkMode ? 'bg-red-950/40' : 'bg-red-50/70',
                                                                                      text: 'text-[#FF0B01]',
-                                                                                     border: 'border-red-100/50',
+                                                                                     border: isDarkMode ? 'border-red-900/40' : 'border-red-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('hair treatment')) {
                                                                                  return {
                                                                                      accent: 'bg-orange-500',
-                                                                                     bg: 'bg-orange-50/70',
-                                                                                     text: 'text-orange-700',
-                                                                                     border: 'border-orange-100/50',
+                                                                                     bg: isDarkMode ? 'bg-orange-950/40' : 'bg-orange-50/70',
+                                                                                     text: isDarkMode ? 'text-orange-400' : 'text-orange-700',
+                                                                                     border: isDarkMode ? 'border-orange-900/40' : 'border-orange-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('skin care')) {
                                                                                  return {
                                                                                      accent: 'bg-amber-500',
-                                                                                     bg: 'bg-amber-50/70',
-                                                                                     text: 'text-amber-700',
-                                                                                     border: 'border-amber-100/50',
+                                                                                     bg: isDarkMode ? 'bg-amber-950/40' : 'bg-amber-50/70',
+                                                                                     text: isDarkMode ? 'text-amber-400' : 'text-amber-700',
+                                                                                     border: isDarkMode ? 'border-amber-900/40' : 'border-amber-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('hair removal')) {
                                                                                  return {
                                                                                      accent: 'bg-purple-500',
-                                                                                     bg: 'bg-purple-50/70',
-                                                                                     text: 'text-purple-700',
-                                                                                     border: 'border-purple-100/50',
+                                                                                     bg: isDarkMode ? 'bg-purple-950/40' : 'bg-purple-50/70',
+                                                                                     text: isDarkMode ? 'text-purple-300' : 'text-purple-700',
+                                                                                     border: isDarkMode ? 'border-purple-900/40' : 'border-purple-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('nail care')) {
                                                                                  return {
                                                                                      accent: 'bg-teal-500',
-                                                                                     bg: 'bg-teal-50/70',
-                                                                                     text: 'text-teal-700',
-                                                                                     border: 'border-teal-100/50',
+                                                                                     bg: isDarkMode ? 'bg-teal-950/40' : 'bg-teal-50/70',
+                                                                                     text: isDarkMode ? 'text-teal-300' : 'text-teal-700',
+                                                                                     border: isDarkMode ? 'border-teal-900/40' : 'border-teal-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('makeup')) {
                                                                                  return {
                                                                                      accent: 'bg-rose-500',
-                                                                                     bg: 'bg-rose-50/70',
-                                                                                     text: 'text-rose-700',
-                                                                                     border: 'border-rose-100/50',
+                                                                                     bg: isDarkMode ? 'bg-rose-950/40' : 'bg-rose-50/70',
+                                                                                     text: isDarkMode ? 'text-rose-300' : 'text-rose-700',
+                                                                                     border: isDarkMode ? 'border-rose-900/40' : 'border-rose-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('grooming')) {
                                                                                  return {
                                                                                      accent: 'bg-blue-500',
-                                                                                     bg: 'bg-blue-50/70',
-                                                                                     text: 'text-blue-700',
-                                                                                     border: 'border-blue-100/50',
+                                                                                     bg: isDarkMode ? 'bg-blue-950/40' : 'bg-blue-50/70',
+                                                                                     text: isDarkMode ? 'text-blue-300' : 'text-blue-700',
+                                                                                     border: isDarkMode ? 'border-blue-900/40' : 'border-blue-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('spa & massage')) {
                                                                                  return {
                                                                                      accent: 'bg-emerald-500',
-                                                                                     bg: 'bg-emerald-50/70',
-                                                                                     text: 'text-emerald-700',
-                                                                                     border: 'border-emerald-100/50',
+                                                                                     bg: isDarkMode ? 'bg-emerald-950/40' : 'bg-emerald-50/70',
+                                                                                     text: isDarkMode ? 'text-emerald-300' : 'text-emerald-700',
+                                                                                     border: isDarkMode ? 'border-emerald-900/40' : 'border-emerald-100/50',
                                                                                  };
                                                                              }
                                                                              if (norm.includes('bridal')) {
                                                                                  return {
                                                                                      accent: 'bg-pink-500',
-                                                                                     bg: 'bg-pink-50/70',
-                                                                                     text: 'text-pink-700',
-                                                                                     border: 'border-pink-100/50',
+                                                                                     bg: isDarkMode ? 'bg-pink-950/40' : 'bg-pink-50/70',
+                                                                                     text: isDarkMode ? 'text-pink-300' : 'text-pink-700',
+                                                                                     border: isDarkMode ? 'border-pink-900/40' : 'border-pink-100/50',
                                                                                  };
                                                                              }
                                                                              return {
                                                                                  accent: 'bg-gray-400',
-                                                                                 bg: 'bg-gray-50/70',
-                                                                                 text: 'text-gray-700',
-                                                                                 border: 'border-gray-100/50',
+                                                                                 bg: isDarkMode ? 'bg-zinc-800/70' : 'bg-gray-50/70',
+                                                                                 text: isDarkMode ? 'text-zinc-300' : 'text-gray-700',
+                                                                                 border: isDarkMode ? 'border-zinc-700/50' : 'border-gray-100/50',
                                                                              };
                                                                          };
                                                                          const theme = getCategoryTheme(service.category);
@@ -1106,7 +1159,11 @@ const Service = () => {
                                                                                  onDragLeave={(e) => handleServiceDragLeave(e, service.id)}
                                                                                  onDragEnd={handleServiceDragEnd}
                                                                                  onDrop={(e) => handleServiceDrop(e, service.id)}
-                                                                                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white border rounded-3xl hover:border-gray-250 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all duration-300 relative overflow-hidden group pl-7 gap-4 cursor-grab active:cursor-grabbing ${isSvcDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isSvcDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : 'border-gray-100'}`}
+                                                                                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 border rounded-3xl transition-all duration-300 relative overflow-hidden group pl-7 gap-4 cursor-grab active:cursor-grabbing ${
+                                                                                     isDarkMode 
+                                                                                         ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)]' 
+                                                                                         : 'bg-white border-gray-100 hover:border-gray-250 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                                                                                 } ${isSvcDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isSvcDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : ''}`}
                                                                              >
                                                                                  {/* Sleek Vertical Accent stripe */}
                                                                                  <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${theme.accent} rounded-r-md`}></div>
@@ -1122,16 +1179,18 @@ const Service = () => {
                                                                                          {service.name?.charAt(0) || 'S'}
                                                                                      </div>
                                                                                      <div className="min-w-0 flex-1">
-                                                                                         <h4 className="text-sm font-semibold text-gray-900 tracking-tight truncate mb-1" title={service.name}>
+                                                                                         <h4 className={`text-sm font-semibold tracking-tight truncate mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} title={service.name}>
                                                                                              {service.name}
                                                                                          </h4>
                                                                                          <div className="flex flex-wrap items-center gap-2">
                                                                                              {/* Category Tag */}
-                                                                                             <span className="px-2 py-0.5 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider border border-gray-100">
+                                                                                             <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border ${
+                                                                                                 isDarkMode ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-gray-50 text-gray-500 border-gray-100'
+                                                                                             }`}>
                                                                                                  {service.category}
                                                                                              </span>
                                                                                              {/* Duration Badge */}
-                                                                                             <span className="flex items-center text-[10px] font-semibold text-gray-400 gap-1 flex-shrink-0">
+                                                                                             <span className={`flex items-center text-[10px] font-semibold gap-1 flex-shrink-0 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                                                                  <img src={durationIcon} alt="Duration" className="w-3.5 h-3.5 opacity-40 object-contain" />
                                                                                                  {service.duration} mins
                                                                                              </span>
@@ -1140,9 +1199,9 @@ const Service = () => {
                                                                                  </div>
 
                                                                                  {/* Right section: Price & Controls */}
-                                                                                 <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0">
+                                                                                 <div className={`flex items-center gap-4 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end border-t pt-3 sm:pt-0 sm:border-t-0 ${isDarkMode ? 'border-zinc-800' : 'border-gray-50'}`}>
                                                                                      <div className="text-left sm:text-right pr-1 flex-shrink-0">
-                                                                                         <p className="text-[16px] font-bold text-gray-900 tracking-tight">₹{service.price}</p>
+                                                                                         <p className={`text-[16px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{service.price}</p>
                                                                                      </div>
 
                                                                                      <div className="flex items-center gap-2">
@@ -1153,7 +1212,11 @@ const Service = () => {
                                                                                                  if (idx > 0) handleSwapServices(service.id, catServices[idx - 1].id);
                                                                                              }}
                                                                                              disabled={catServices.findIndex(s => s.id === service.id) === 0}
-                                                                                             className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 rounded-lg border border-gray-100 hover:border-blue-100 transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                                                                                             className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs ${
+                                                                                                 isDarkMode 
+                                                                                                     ? 'text-zinc-400 hover:text-blue-400 bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                                     : 'text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 border-gray-100 hover:border-blue-100'
+                                                                                             }`}
                                                                                              title="Move Up"
                                                                                          >▲</button>
                                                                                          {/* Priority swap: Move Down */}
@@ -1163,13 +1226,21 @@ const Service = () => {
                                                                                                  if (idx < catServices.length - 1) handleSwapServices(service.id, catServices[idx + 1].id);
                                                                                              }}
                                                                                              disabled={catServices.findIndex(s => s.id === service.id) === catServices.length - 1}
-                                                                                             className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 rounded-lg border border-gray-100 hover:border-blue-100 transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs"
+                                                                                             className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all duration-200 flex-shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs ${
+                                                                                                 isDarkMode 
+                                                                                                     ? 'text-zinc-400 hover:text-blue-400 bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                                     : 'text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-55 border-gray-100 hover:border-blue-100'
+                                                                                             }`}
                                                                                              title="Move Down"
                                                                                          >▼</button>
                                                                                          {/* Circular icon button for edit */}
                                                                                          <button
                                                                                              onClick={() => handleEditService(service)}
-                                                                                             className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 rounded-full border border-gray-100 hover:border-red-100 transition-all duration-200 flex-shrink-0 cursor-pointer"
+                                                                                             className={`w-9 h-9 flex items-center justify-center rounded-full border transition-all duration-200 flex-shrink-0 cursor-pointer ${
+                                                                                                 isDarkMode 
+                                                                                                     ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                                     : 'text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 border-gray-100 hover:border-red-100'
+                                                                                             }`}
                                                                                              title="Edit Service"
                                                                                          >
                                                                                              <img src={editIcon} alt="Edit" className="w-4 h-4 opacity-70 group-hover:opacity-100" />
@@ -1183,7 +1254,9 @@ const Service = () => {
                                                                                                  onChange={() => toggleServiceStatus(service.id, service.active)}
                                                                                                  className="sr-only peer"
                                                                                              />
-                                                                                             <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                                                             <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200 ${
+                                                                                                 isDarkMode ? 'bg-zinc-800' : 'bg-gray-100'
+                                                                                             }`}></div>
                                                                                          </label>
                                                                                      </div>
                                                                                  </div>
@@ -1191,7 +1264,9 @@ const Service = () => {
                                                                          );
                                                                      })
                                                                  ) : (
-                                                                     <div className="py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50/30 rounded-2xl border border-gray-100">
+                                                                     <div className={`py-4 text-center text-xs font-bold uppercase tracking-widest rounded-2xl border ${
+                                                                         isDarkMode ? 'bg-zinc-800/30 text-zinc-400 border-zinc-800' : 'bg-gray-50/30 text-gray-400 border-gray-100'
+                                                                     }`}>
                                                                          No services in this category
                                                                      </div>
                                                                  )}

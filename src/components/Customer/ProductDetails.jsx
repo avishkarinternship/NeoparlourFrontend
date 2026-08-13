@@ -215,9 +215,13 @@ const ProductDetails = () => {
         params: { active: true, size: 10, salonId: product.salonId }
       })
       .then(res => {
-        const data = res.data?.content || res.data || [];
+        const data = Array.isArray(res.data?.content)
+          ? res.data.content
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
         // Filter out current product
-        const filtered = data.filter(p => p.id !== product.id);
+        const filtered = data.filter(p => p?.id !== product?.id);
         // Slice to exactly 8 products
         setRecommendations({
           list: filtered.slice(0, 8),

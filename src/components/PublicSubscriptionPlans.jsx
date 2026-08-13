@@ -210,6 +210,7 @@ const PublicSubscriptionPlans = () => {
         modal: {
           ondismiss: function () {
             setPayingPlanCode(null);
+            localStorage.removeItem('pending_subscription_payment');
             toast.error('Payment cancelled.');
           }
         }
@@ -217,6 +218,11 @@ const PublicSubscriptionPlans = () => {
 
       if (isAutoPayMode) {
         options.subscription_id = data.subscriptionId;
+        localStorage.setItem('pending_subscription_payment', JSON.stringify({
+          razorpaySubscriptionId: data.subscriptionId,
+          planCode: plan.planCode,
+          timestamp: Date.now()
+        }));
         options.handler = async function (transaction) {
           try {
             toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
@@ -229,6 +235,7 @@ const PublicSubscriptionPlans = () => {
 
             toast.dismiss('payment-verifying');
             if (verifyRes.data.success) {
+              localStorage.removeItem('pending_subscription_payment');
               setSuccessPlanName(plan.planName);
               setShowSuccessDialog(true);
             } else {
@@ -247,6 +254,11 @@ const PublicSubscriptionPlans = () => {
         options.order_id = data.id;
         options.amount = data.amount;
         options.currency = data.currency;
+        localStorage.setItem('pending_subscription_payment', JSON.stringify({
+          razorpayOrderId: data.id,
+          planCode: plan.planCode,
+          timestamp: Date.now()
+        }));
         options.handler = async function (transaction) {
           try {
             toast.loading('Verifying your payment setup...', { id: 'payment-verifying' });
@@ -259,6 +271,7 @@ const PublicSubscriptionPlans = () => {
 
             toast.dismiss('payment-verifying');
             if (verifyRes.data.success) {
+              localStorage.removeItem('pending_subscription_payment');
               setSuccessPlanName(plan.planName);
               setShowSuccessDialog(true);
             } else {
@@ -276,6 +289,7 @@ const PublicSubscriptionPlans = () => {
       }
 
       const rzp = new window.Razorpay(options);
+      window.activeRazorpayInstance = rzp;
       rzp.open();
     } catch (error) {
       console.error('Subscription initiation failed', error);

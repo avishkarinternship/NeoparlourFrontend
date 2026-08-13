@@ -1,6 +1,7 @@
 import React from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
+import RouteErrorElement from '../components/common/RouteErrorElement'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
 import OwnerLogin from '../components/Owner/OwnerLogin'
@@ -54,6 +55,7 @@ import Favourites from '../components/Customer/Favourites'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
 import AdminSupportRequests from '../components/Owner/AdminSupportRequests'
+import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
 
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
@@ -142,6 +144,7 @@ export let routes = createBrowserRouter([
     {
         path: '/',
         element: <App />,
+        errorElement: <RouteErrorElement />,
         children: [
             {
                 path: '/sitemap.xml',
@@ -435,6 +438,14 @@ export let routes = createBrowserRouter([
                     {
                         path: '/owner/support-requests',
                         element: <OwnerRouteGuard><AdminSupportRequests /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/maintenance',
+                        element: <OwnerRouteGuard><MaintenanceAdminPage /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/maintenance',
+                        element: <OwnerRouteGuard><MaintenanceAdminPage /></OwnerRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

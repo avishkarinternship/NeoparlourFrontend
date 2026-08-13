@@ -2,6 +2,7 @@ import React from 'react';
 
 import logoIcon from '../../assets/Neoparlour_logo.png';
 import profileIcon from '../../assets/Owner/profile.jpg';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 const Navbar = ({ onToggleSidebar }) => {
   return (
@@ -34,6 +35,9 @@ const Navbar = ({ onToggleSidebar }) => {
 
       {/* Right Container Elements */}
       <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2.5 sm:space-x-6 min-w-0">
+
+        {/* Language Switcher */}
+        <LanguageSwitcher />
 
         {/* Pill-Shaped Inline Search Field */}
         <div className="relative flex-1 max-w-[140px] sm:max-w-xs md:max-w-md transition-all duration-300">

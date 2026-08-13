@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { X, Phone, Lock, Eye, EyeOff, KeyRound, Sparkles, Send } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
@@ -121,7 +122,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[110] flex items-center justify-center p-4 transition-all duration-300 font-sans">
             {/* Backdrop click to close */}
             <div className="absolute inset-0" onClick={onClose}></div>
@@ -206,24 +207,21 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                             </div>
 
                             {/* New Password */}
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider pl-1">New Password</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF2A14] transition-colors">
-                                        <Lock className="w-4 h-4" />
-                                    </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">New Password</label>
+                                <div className="relative flex items-center">
                                     <input
-                                        type={showPassword ? 'text' : 'password'}
+                                        type={showPassword ? "text" : "password"}
                                         value={newPassword}
                                         onChange={(e) => setResetFlow(prev => ({ ...prev, newPassword: e.target.value }))}
-                                        placeholder="Min 6 characters"
+                                        placeholder="Enter new password"
                                         required
-                                        className="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all pr-10"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-[#FF2A14] transition-colors"
+                                        className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer border-0"
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -231,21 +229,16 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                             </div>
 
                             {/* Confirm Password */}
-                            <div className="flex flex-col gap-1">
-                                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider pl-1">Confirm Password</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF2A14] transition-colors">
-                                        <Lock className="w-4 h-4" />
-                                    </div>
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={confirmPassword}
-                                        onChange={(e) => setResetFlow(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                        placeholder="Repeat new password"
-                                        required
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
-                                    />
-                                </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Confirm New Password</label>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setResetFlow(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    placeholder="Re-enter new password"
+                                    required
+                                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all"
+                                />
                             </div>
 
                             {/* Submit and Resend */}
@@ -253,7 +246,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] disabled:bg-red-400 text-white py-3.5 rounded-2xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-red-500/10 cursor-pointer text-xs uppercase tracking-widest"
+                                    className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] disabled:bg-red-300 text-white py-3.5 rounded-2xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-red-500/15 cursor-pointer text-xs uppercase tracking-widest"
                                 >
                                     <KeyRound className="w-4 h-4" />
                                     {loading ? 'RESETTING...' : 'RESET PASSWORD'}
@@ -261,14 +254,14 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
 
                                 <div className="text-center">
                                     {resendTimer > 0 ? (
-                                        <span className="text-[11px] font-bold text-gray-400">
+                                        <span className="text-[11px] font-bold text-slate-400">
                                             Resend OTP in {resendTimer}s
                                         </span>
                                     ) : (
                                         <button
                                             type="button"
                                             onClick={handleSendOtp}
-                                            className="text-[11px] font-extrabold text-[#FF2A14] hover:underline uppercase tracking-wider"
+                                            className="text-[11px] font-extrabold text-[#FF2A14] hover:underline uppercase tracking-wider bg-transparent border-0 cursor-pointer"
                                         >
                                             Resend Verification OTP
                                         </button>
@@ -279,7 +272,8 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

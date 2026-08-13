@@ -2,8 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
 import { useDarkMode } from '../../../context/DarkModeContext';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { isDark } = useDarkMode();
 
@@ -26,46 +28,46 @@ const Footer = () => {
 
                 {/* Column 1: Company Info */}
                 <div className="md:col-span-3">
-                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Our Company</h4>
+                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.our_company', 'Our Company')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
-                        <li onClick={() => navigate('/customer/about')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• About Us</li>
-                        <li onClick={() => navigate('/customer/leadership')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Leadership</li>
-                        <li onClick={() => navigate('/customer/terms-and-conditions')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Terms & Condition</li>
-                        <li onClick={() => navigate('/customer/privacy-policy')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Privacy Policy</li>
-                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Contact Us</li>
-                        <li onClick={() => navigate('/customer/blogs')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Blogs</li>
-                        <li onClick={() => navigate('/customer/sitemap')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Sitemap</li>
+                        <li onClick={() => navigate('/customer/about')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.about_us', 'About Us')}</li>
+                        <li onClick={() => navigate('/customer/leadership')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.leadership', 'Leadership')}</li>
+                        <li onClick={() => navigate('/customer/terms-and-conditions')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.terms_conditions', 'Terms & Condition')}</li>
+                        <li onClick={() => navigate('/customer/privacy-policy')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.privacy_policy', 'Privacy Policy')}</li>
+                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.contact_us', 'Contact Us')}</li>
+                        <li onClick={() => navigate('/customer/blogs')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.blogs', 'Blogs')}</li>
+                        <li onClick={() => navigate('/customer/sitemap')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.sitemap', 'Sitemap')}</li>
                     </ul>
                 </div>
 
                 {/* Column 2: Services */}
                 <div className="md:col-span-3">
-                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Services</h4>
+                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.services', 'Services')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Hair Services</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Skin Care</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Hair Removal</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Nail Care</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Makeup Artist</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Gromming</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Spa & Massage</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Bridal Packages</li>
-                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Hair Treatment</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.hair', 'Hair Services')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.skin_care', 'Skin Care')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.hair_removal', 'Hair Removal')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.nail_care', 'Nail Care')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.makeup', 'Makeup Artist')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.grooming', 'Grooming')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.spa_massage', 'Spa & Massage')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.bridal_packages', 'Bridal Packages')}</li>
+                        <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.hair_treatment', 'Hair Treatment')}</li>
                     </ul>
                 </div>
 
                 {/* Column 3: Resources */}
                 <div className="md:col-span-3">
-                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Our Resources</h4>
+                    <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.our_resources', 'Our Resources')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
-                        <li onClick={() => navigate('/customer/videos')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Videos</li>
-                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Help Center</li>
-                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Support</li>
-                        <li onClick={() => navigate('/customer/security')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Security</li>
-                        <li onClick={() => navigate('/delete-account')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Delete Account</li>
-                        <li onClick={() => navigate('/customer/updates')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Updates</li>
-                        <li onClick={() => navigate('/customer/case-studies')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Case Studies</li>
-                        <li onClick={() => navigate('/customer/client-testimonials')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Client Testimonial</li>
+                        <li onClick={() => navigate('/customer/videos')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.videos', 'Videos')}</li>
+                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.help_center', 'Help Center')}</li>
+                        <li onClick={() => navigate('/customer/support')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.support', 'Support')}</li>
+                        <li onClick={() => navigate('/customer/security')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.security', 'Security')}</li>
+                        <li onClick={() => navigate('/delete-account')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.delete_account', 'Delete Account')}</li>
+                        <li onClick={() => navigate('/customer/updates')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.updates', 'Updates')}</li>
+                        <li onClick={() => navigate('/customer/case-studies')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.case_studies', 'Case Studies')}</li>
+                        <li onClick={() => navigate('/customer/client-testimonials')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.client_testimonial', 'Client Testimonial')}</li>
                     </ul>
                 </div>
             </div>

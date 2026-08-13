@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useLocation, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -91,6 +91,8 @@ const LazyImage = ({ src, alt, className }) => {
 
 const AddProducts = () => {
     const location = useLocation();
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
     const [activeTab, setActiveTab] = useState('add'); // 'add' or 'view'
 
@@ -456,20 +458,20 @@ const AddProducts = () => {
 
     return (
         <>
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
+                <main className={`flex-1 min-w-0 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-zinc-700' : 'bg-[#FAFAFA] text-slate-800 md:border-gray-200'}`}>
                     <div className="max-w-5xl mx-auto">
 
                         {/* Tabs */}
-                        <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-md border border-gray-100 shadow-sm">
+                        <div className={`flex gap-2 p-1 rounded-2xl mb-8 max-w-md shadow-sm ${isDarkMode ? 'bg-zinc-800 border border-zinc-700' : 'bg-gray-50 border border-gray-100'}`}>
                             <button
                                 onClick={() => { setActiveTab('add'); setIsEditMode(false); setEditingProductId(null); }}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 {isEditMode ? 'Edit Product' : 'Add New Product'}
                             </button>
                             <button
                                 onClick={() => setActiveTab('view')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
                             >
                                 View Products
                             </button>
@@ -477,8 +479,8 @@ const AddProducts = () => {
 
                         {/* ==================== ADD / EDIT PRODUCT TAB ==================== */}
                         {activeTab === 'add' && (
-                            <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300">
-                                <div className="flex items-center gap-3 mb-8 pb-3 border-b border-gray-100">
+                            <div className={`border rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
+                                <div className={`flex items-center gap-3 mb-8 pb-3 border-b ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
                                     <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
                                         🛍️
                                     </div>
@@ -486,7 +488,7 @@ const AddProducts = () => {
                                         <span className="text-[12px] font-extrabold uppercase tracking-widest text-red-600 block">
                                             {isEditMode ? 'Edit Mode' : 'Creation Mode'}
                                         </span>
-                                        <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                                        <h2 className={`text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                             {isEditMode ? 'Edit Product Details' : 'Add New Product'}
                                         </h2>
                                     </div>
@@ -494,8 +496,8 @@ const AddProducts = () => {
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     {/* Main Image */}
-                                    <div className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6">
-                                        <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Main Product Image</p>
+                                    <div className={`border border-dashed rounded-2xl p-6 ${isDarkMode ? 'border-zinc-600 bg-zinc-800/30' : 'border-gray-200 bg-gray-50/30'}`}>
+                                        <p className={`text-xs font-bold mb-3 uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Main Product Image</p>
                                         <div className="flex gap-6 text-sm mb-4">
                                             <label className="flex items-center gap-2 hover:text-[#FF0B01] cursor-pointer font-semibold">
                                                 <img src={openCameraIcon} alt="Camera" className="w-5 h-5 opacity-60" />
@@ -519,8 +521,8 @@ const AddProducts = () => {
                                     </div>
 
                                     {/* Additional Images */}
-                                    <div className="border border-dashed border-gray-200 bg-gray-50/30 rounded-2xl p-6">
-                                        <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">
+                                    <div className={`border border-dashed rounded-2xl p-6 ${isDarkMode ? 'border-zinc-600 bg-zinc-800/30' : 'border-gray-200 bg-gray-50/30'}`}>
+                                        <p className={`text-xs font-bold mb-3 uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                             Additional Images ({additionalImagesBase64.length + existingAdditionalImageUrls.length})
                                         </p>
                                         <label className="flex items-center gap-2 hover:text-red-600 cursor-pointer text-sm mb-4">
@@ -550,12 +552,12 @@ const AddProducts = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productDetailsIcon} alt="Name" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product Name *" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Product Name *" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} required />
                                         </div>
 
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={couponCodeIcon} alt="Category" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="text" list="categoryList" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                            <input type="text" list="categoryList" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Category" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} />
                                             <datalist id="categoryList">
                                                 {PRODUCT_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
                                             </datalist>
@@ -566,20 +568,20 @@ const AddProducts = () => {
                                         <div>
                                             <div className="relative">
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={rateIcon} alt="Price" className="w-5 h-5 opacity-40" /></div>
-                                                <input type="text" inputMode="decimal" value={price} onChange={(e) => handlePriceChange(e.target.value)} placeholder="Original Price *" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                                <input type="text" inputMode="decimal" value={price} onChange={(e) => handlePriceChange(e.target.value)} placeholder="Original Price *" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} required />
                                             </div>
                                             {priceError && <p className="text-red-500 text-xs mt-1 ml-1">{priceError}</p>}
                                         </div>
                                         <div>
                                             <div className="relative">
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={percentageIcon} alt="Discount" className="w-5 h-5 opacity-40" /></div>
-                                                <input type="text" inputMode="decimal" value={discountPrice} onChange={(e) => handleDiscountPriceChange(e.target.value)} placeholder="Discount Price (₹)" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                                <input type="text" inputMode="decimal" value={discountPrice} onChange={(e) => handleDiscountPriceChange(e.target.value)} placeholder="Discount Price (₹)" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} />
                                             </div>
                                             {discountPriceError && <p className="text-red-500 text-xs mt-1 ml-1">{discountPriceError}</p>}
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productTypeIcon} alt="Type" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="text" list="productTypeList" value={productType} onChange={(e) => setProductType(e.target.value)} placeholder="Product Type" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                            <input type="text" list="productTypeList" value={productType} onChange={(e) => setProductType(e.target.value)} placeholder="Product Type" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} />
                                             <datalist id="productTypeList">
                                                 {PRODUCT_TYPES.map(type => <option key={type} value={type} />)}
                                             </datalist>
@@ -599,24 +601,24 @@ const AddProducts = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Quantity" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Quantity *" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" required />
+                                            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Quantity *" min="1" step="1" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} required />
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2"><img src={productQuantityIcon} alt="Restock" className="w-5 h-5 opacity-40" /></div>
-                                            <input type="number" value={restockLevel} onChange={(e) => setRestockLevel(e.target.value)} placeholder="Restock Level" min="1" step="1" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+                                            <input type="number" value={restockLevel} onChange={(e) => setRestockLevel(e.target.value)} placeholder="Restock Level" min="1" step="1" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} />
                                         </div>
                                     </div>
 
                                     <div className="relative">
                                         <div className="absolute left-4 top-5"><img src={productDescriptionIcon} alt="Description" className="w-5 h-5 opacity-40" /></div>
-                                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Product Description" rows="4" className="w-full pl-12 pr-4 py-4 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 resize-none" />
+                                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Product Description" rows="4" className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 resize-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white text-gray-900'}`} />
                                     </div>
 
                                     <div className="flex gap-4 pt-6">
                                         <button type="submit" disabled={loadingSubmit} className="flex-1 bg-[#FF0B01] hover:bg-[#d90900] transition text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg text-sm tracking-wider uppercase active:scale-[0.985]">
                                             {loadingSubmit ? (isEditMode ? 'Updating...' : 'Adding...') : isEditMode ? 'Update Product' : 'Add Product'}
                                         </button>
-                                        <button type="button" onClick={handleCancel} className="flex-1 border border-gray-300 py-4 rounded-2xl font-bold hover:bg-gray-50 text-sm tracking-wider uppercase transition">
+                                        <button type="button" onClick={handleCancel} className={`flex-1 border py-4 rounded-2xl font-bold text-sm tracking-wider uppercase transition ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 hover:bg-gray-50'}`}>
                                             Discard
                                         </button>
                                     </div>
@@ -628,7 +630,7 @@ const AddProducts = () => {
                         {activeTab === 'view' && (
                             <>
                                 {/* Filters Section */}
-                                <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+                                <div className={`border rounded-2xl p-6 mb-8 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'}`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold">Search & Filters</h3>
                                         <div className="flex gap-3">
@@ -638,48 +640,47 @@ const AddProducts = () => {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {/* Filter inputs remain the same */}
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Keyword / Search</label>
-                                            <input type="text" value={filters.keyword} onChange={(e) => setFilters(prev => ({ ...prev, keyword: e.target.value }))} placeholder="Search products..." className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Keyword / Search</label>
+                                            <input type="text" value={filters.keyword} onChange={(e) => setFilters(prev => ({ ...prev, keyword: e.target.value }))} placeholder="Search products..." className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500' : 'border-gray-300 text-gray-900'}`} />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Product Name</label>
-                                            <input type="text" value={filters.name} onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))} placeholder="Product name" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Product Name</label>
+                                            <input type="text" value={filters.name} onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))} placeholder="Product name" className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500' : 'border-gray-300 text-gray-900'}`} />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Category</label>
-                                            <select value={filters.category} onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Category</label>
+                                            <select value={filters.category} onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))} className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-gray-300 text-gray-900'}`}>
                                                 <option value="">All Categories</option>
                                                 {PRODUCT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Product Type</label>
-                                            <select value={filters.productType} onChange={(e) => setFilters(prev => ({ ...prev, productType: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Product Type</label>
+                                            <select value={filters.productType} onChange={(e) => setFilters(prev => ({ ...prev, productType: e.target.value }))} className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-gray-300 text-gray-900'}`}>
                                                 <option value="">All Types</option>
                                                 {PRODUCT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Min Price</label>
-                                            <input type="number" value={filters.minPrice} onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))} placeholder="Min ₹" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Min Price</label>
+                                            <input type="number" value={filters.minPrice} onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))} placeholder="Min ₹" className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500' : 'border-gray-300 text-gray-900'}`} />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Max Price</label>
-                                            <input type="number" value={filters.maxPrice} onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))} placeholder="Max ₹" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500" />
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Max Price</label>
+                                            <input type="number" value={filters.maxPrice} onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))} placeholder="Max ₹" className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500' : 'border-gray-300 text-gray-900'}`} />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
-                                            <select value={filters.active === null ? '' : filters.active.toString()} onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value === '' ? null : e.target.value === 'true' }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Status</label>
+                                            <select value={filters.active === null ? '' : filters.active.toString()} onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value === '' ? null : e.target.value === 'true' }))} className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-gray-300 text-gray-900'}`}>
                                                 <option value="">All Status</option>
                                                 <option value="true">Active</option>
                                                 <option value="false">Inactive</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-500 mb-1 block">Stock</label>
-                                            <select value={filters.inStock === null ? '' : filters.inStock.toString()} onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.value === '' ? null : e.target.value === 'true' }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-red-500">
+                                            <label className={`text-xs font-medium mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Stock</label>
+                                            <select value={filters.inStock === null ? '' : filters.inStock.toString()} onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.value === '' ? null : e.target.value === 'true' }))} className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-red-500 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-gray-300 text-gray-900'}`}>
                                                 <option value="">All Stock</option>
                                                 <option value="true">In Stock</option>
                                                 <option value="false">Out of Stock</option>
@@ -696,7 +697,7 @@ const AddProducts = () => {
                                 {loadingProducts ? (
                                     <div className="text-center py-12">Loading products...</div>
                                 ) : products.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">No products found</div>
+                                    <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No products found</div>
                                 ) : (
                                     <>
                                         <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
@@ -704,19 +705,19 @@ const AddProducts = () => {
                                                 const imageUrl = getProductImage(product);
                                                 const discount = discountPercent(product.price, product.discountPrice);
                                                 return (
-                                                    <div key={product.id} className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                                                    <div key={product.id} className={`border rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                                                         <div 
                                                             onClick={() => handleViewProduct(product.id)}
-                                                            className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer"
+                                                            className={`relative aspect-square flex items-center justify-center overflow-hidden cursor-pointer ${isDarkMode ? 'bg-zinc-800' : 'bg-gray-50'}`}
                                                         >
                                                             {imageUrl ? (
                                                                 <LazyImage src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                             ) : (
-                                                                <div className="text-center text-gray-400 text-xs px-4">No Image</div>
+                                                                <div className={`text-center text-xs px-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No Image</div>
                                                             )}
                                                             {/* Quick View Hover Overlay */}
                                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                                                                <div className="bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                                                <div className="bg-white/95 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 dark:bg-zinc-800/95 dark:text-zinc-100">
                                                                     <Eye className="w-4 h-4 text-[#FF0B01]" />
                                                                     <span>Quick View</span>
                                                                 </div>
@@ -753,7 +754,7 @@ const AddProducts = () => {
                                                             <button
                                                                 onClick={() => handleEdit(product)}
                                                                 disabled={loadingEdit}
-                                                                className="flex-1 flex items-center justify-center gap-1 py-2.5 bg-gray-50 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 border border-gray-100 rounded-xl transition"
+                                                                className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl transition border ${isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:text-[#FF0B01] hover:bg-red-950/30 border-zinc-700' : 'bg-gray-50 text-gray-700 hover:text-[#FF0B01] hover:bg-red-50 border-gray-100'}`}
                                                             >
                                                                 <img src={editIcon} alt="edit" className="w-3.5 h-3.5" />
                                                                 Edit
@@ -772,22 +773,22 @@ const AddProducts = () => {
                                         </div>
 
                                         {/* Pagination */}
-                                        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t border-gray-150">
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase">
+                                        <div className={`max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-8 border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-200'}`}>
+                                            <span className={`text-[10px] font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                 PAGE {totalPages === 0 ? 1 : currentPage + 1} OF {totalPages} ({totalElements} TOTAL PRODUCTS)
                                             </span>
                                             <div className="flex items-center space-x-1.5">
                                                 <button
                                                     onClick={() => fetchProducts(0)}
                                                     disabled={currentPage <= 0}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                    className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                                 >
                                                     « First
                                                 </button>
                                                 <button
                                                     onClick={() => fetchProducts(Math.max(0, currentPage - 1))}
                                                     disabled={currentPage <= 0}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                    className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                                 >
                                                     ‹ Prev
                                                 </button>
@@ -800,14 +801,14 @@ const AddProducts = () => {
                                                 <button
                                                     onClick={() => fetchProducts(Math.min(Math.max(0, totalPages - 1), currentPage + 1))}
                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                    className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                                 >
                                                     Next ›
                                                 </button>
                                                 <button
                                                     onClick={() => fetchProducts(Math.max(0, totalPages - 1))}
                                                     disabled={currentPage >= totalPages - 1 || totalPages <= 1}
-                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors cursor-pointer"
+                                                    className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 disabled:hover:bg-white'}`}
                                                 >
                                                     Last »
                                                 </button>
@@ -824,11 +825,11 @@ const AddProducts = () => {
             {/* View Product Details Modal */}
             {isViewModalOpen && selectedProduct && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-                    <div className="bg-white rounded-[32px] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative border border-gray-100 flex flex-col md:flex-row p-6 md:p-8 gap-8 animate-in fade-in zoom-in duration-200">
+                    <div className={`rounded-[32px] w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative border flex flex-col md:flex-row p-6 md:p-8 gap-8 animate-in fade-in zoom-in duration-200 ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                         {/* Close button */}
                         <button 
                             onClick={() => setIsViewModalOpen(false)}
-                            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-[#FF0B01] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className={`absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 hover:text-[#FF0B01] hover:bg-red-50 ${isDarkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-gray-100 text-gray-500'}`}
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -836,7 +837,7 @@ const AddProducts = () => {
                         {/* Left Column: Images */}
                         <div className="w-full md:w-1/2 flex flex-col gap-4">
                             {/* Main Preview Container */}
-                            <div className="relative w-full aspect-square rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+                            <div className={`relative w-full aspect-square rounded-2xl border overflow-hidden flex items-center justify-center ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-100'}`}>
                                 {(() => {
                                     const allUrls = [selectedProduct.imageUrl, ...(selectedProduct.additionalImageUrls || [])].filter(Boolean);
                                     const currentUrl = allUrls[activeImageIndex] || null;
@@ -847,7 +848,7 @@ const AddProducts = () => {
                                             className="w-full h-full object-cover" 
                                         />
                                     ) : (
-                                        <div className="text-gray-400 text-sm">No Image Available</div>
+                                        <div className={`text-sm ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No Image Available</div>
                                     );
                                 })()}
                                 
@@ -868,7 +869,7 @@ const AddProducts = () => {
                                             <button
                                                 key={idx}
                                                 onClick={() => setActiveImageIndex(idx)}
-                                                className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${activeImageIndex === idx ? 'border-[#FF0B01] ring-2 ring-red-500/10' : 'border-gray-200 hover:border-gray-300'}`}
+                                                className={`w-16 h-16 rounded-xl border-2 overflow-hidden flex-shrink-0 transition-all ${activeImageIndex === idx ? 'border-[#FF0B01] ring-2 ring-red-500/10' : isDarkMode ? 'border-zinc-600 hover:border-zinc-500' : 'border-gray-200 hover:border-gray-300'}`}
                                             >
                                                 <img src={url} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                                             </button>
@@ -904,18 +905,18 @@ const AddProducts = () => {
 
                                 {/* Title & Meta */}
                                 <div>
-                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 leading-tight tracking-tight">
+                                    <h3 className={`text-xl md:text-2xl font-black leading-tight tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                         {selectedProduct.name}
                                     </h3>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                                         ID: NP-{selectedProduct.id} • Added on {selectedProduct.createdAt ? new Date(selectedProduct.createdAt).toLocaleDateString() : 'N/A'}
                                     </p>
                                 </div>
 
                                 {/* Pricing Section */}
-                                <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
+                                <div className={`border rounded-2xl p-4 flex items-center justify-between ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-gray-50/50 border-gray-100'}`}>
                                     <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pricing Details</p>
+                                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Pricing Details</p>
                                         <div className="flex items-baseline gap-2">
                                             {selectedProduct.discountPrice ? (
                                                 <>
@@ -937,10 +938,10 @@ const AddProducts = () => {
 
                                 {/* Inventory Metrics */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="border border-gray-150 rounded-2xl p-4 flex flex-col justify-center">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Stock Level</p>
+                                    <div className={`border rounded-2xl p-4 flex flex-col justify-center ${isDarkMode ? 'border-zinc-700' : 'border-gray-200'}`}>
+                                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Stock Level</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xl font-extrabold text-gray-900">{selectedProduct.stock} units</span>
+                                            <span className={`text-xl font-extrabold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedProduct.stock} units</span>
                                             {selectedProduct.stock <= (selectedProduct.restockLevel || 10) && (
                                                 <span className="h-2 w-2 rounded-full bg-red-500 animate-ping"></span>
                                             )}
@@ -952,18 +953,18 @@ const AddProducts = () => {
                                         )}
                                     </div>
 
-                                    <div className="border border-gray-150 rounded-2xl p-4">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Restock Level</p>
-                                        <p className="text-xl font-extrabold text-gray-900">{selectedProduct.restockLevel || 10} units</p>
-                                        <p className="text-[9px] font-semibold text-gray-400 mt-1">Threshold for low-stock alerts</p>
+                                    <div className={`border rounded-2xl p-4 ${isDarkMode ? 'border-zinc-700' : 'border-gray-200'}`}>
+                                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Restock Level</p>
+                                        <p className={`text-xl font-extrabold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedProduct.restockLevel || 10} units</p>
+                                        <p className={`text-[9px] font-semibold mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Threshold for low-stock alerts</p>
                                     </div>
                                 </div>
 
                                 {/* Description */}
                                 {selectedProduct.description && (
                                     <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Product Description</p>
-                                        <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100 font-medium whitespace-pre-line">
+                                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Product Description</p>
+                                        <p className={`text-xs leading-relaxed p-4 rounded-xl border font-medium whitespace-pre-line ${isDarkMode ? 'text-zinc-400 bg-zinc-800/50 border-zinc-700' : 'text-gray-600 bg-gray-50/50 border-gray-100'}`}>
                                             {selectedProduct.description}
                                         </p>
                                     </div>
@@ -971,7 +972,7 @@ const AddProducts = () => {
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="flex gap-4 pt-6 border-t border-gray-100 mt-6">
+                            <div className={`flex gap-4 pt-6 border-t mt-6 ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
                                 <button
                                     onClick={() => {
                                         setIsViewModalOpen(false);
@@ -984,7 +985,7 @@ const AddProducts = () => {
                                 </button>
                                 <button
                                     onClick={() => setIsViewModalOpen(false)}
-                                    className="flex-1 border border-gray-300 py-3.5 rounded-2xl font-bold hover:bg-gray-50 text-gray-700 text-xs tracking-wider uppercase transition cursor-pointer"
+                                    className={`flex-1 border py-3.5 rounded-2xl font-bold text-xs tracking-wider uppercase transition cursor-pointer ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                                 >
                                     Close Details
                                 </button>
@@ -997,9 +998,9 @@ const AddProducts = () => {
             {/* Fetching loading state indicator overlay */}
             {loadingViewProduct && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-2xl p-6 shadow-2xl flex items-center gap-3 border border-gray-100">
+                    <div className={`rounded-2xl p-6 shadow-2xl flex items-center gap-3 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
                         <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
-                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
+                        <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Fetching details...</span>
                     </div>
                 </div>
             )}

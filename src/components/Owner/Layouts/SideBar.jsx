@@ -13,7 +13,7 @@ import attendanceIcon from '../../../assets/Owner/Attendance/total_attendance.sv
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -78,9 +78,11 @@ const Sidebar = ({ isOpen, onClose }) => {
         <>
           {/* Mobile Header with Close Button */}
           {isMobile && (
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 lg:hidden flex-shrink-0">
-              <span className="text-gray-900 font-bold text-sm">Navigation</span>
-              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-900">
+            <div className={`flex items-center justify-between p-4 border-b lg:hidden flex-shrink-0 ${
+              isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+            }`}>
+              <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Navigation</span>
+              <button onClick={onClose} className={`p-1 ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -98,20 +100,10 @@ const Sidebar = ({ isOpen, onClose }) => {
               }}
               className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
                 ${location.pathname === '/owner/dashboard'
-                  ? 'text-red-600 bg-red-50'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  ? 'bg-red-50 text-[#FF0B01] border-r-4 border-[#FF0B01]'
+                  : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-gray-600 hover:bg-gray-50'}`}
             >
-              {location.pathname === '/owner/dashboard' && (
-                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
-              )}
-              <img
-                src={homeIcon}
-                alt="Dashboard"
-                className={`w-[18px] h-[18px] sidebar-icon ${
-                  location.pathname === '/owner/dashboard' ? 'active-icon-glow' : 'opacity-60'
-                }`}
-              />
+              <img src={homeIcon} alt="Home" className="w-5 h-5" />
               <span>Dashboard</span>
             </button>
 
@@ -121,15 +113,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                 navigate('/owner/salons');
                 if (isMobile && onClose) onClose();
               }}
-              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
-                ${location.pathname === '/owner/salons'
-                  ? 'text-red-600 bg-red-50'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                location.pathname === '/owner/salons'
+                  ? 'bg-red-50 text-[#FF0B01] border-r-4 border-[#FF0B01]'
+                  : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-gray-600 hover:bg-gray-50'
+              }`}
             >
-              {location.pathname === '/owner/salons' && (
-                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
-              )}
               <svg
                 className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
                   location.pathname === '/owner/salons' ? 'active-icon-glow text-red-600' : 'opacity-65'
@@ -230,6 +219,35 @@ const Sidebar = ({ isOpen, onClose }) => {
               </svg>
               <span>Support Requests</span>
             </button>
+
+            {/* System Maintenance */}
+            <button
+              onClick={() => {
+                navigate('/owner/maintenance');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/maintenance' || location.pathname === '/admin/maintenance'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {(location.pathname === '/owner/maintenance' || location.pathname === '/admin/maintenance') && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg 
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/maintenance' || location.pathname === '/admin/maintenance' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                }`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 4a2 2 0 114 0v1a2 2 0 01-2 2 2 2 0 01-2-2V4zm-6 8a2 2 0 114 0v1a2 2 0 01-2 2 2 2 0 01-2-2v-1zm12 0a2 2 0 114 0v1a2 2 0 01-2 2 2 2 0 01-2-2v-1zM4 20h16" />
+              </svg>
+              <span>System Maintenance</span>
+            </button>
           </div>
 
           {/* Bottom Admin Utility Actions Group */}
@@ -294,19 +312,19 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => navigate('/owner/dashboard')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/dashboard'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/dashboard' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={homeIcon}
               alt="Dashboard"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/dashboard' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/dashboard' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Dashboard</span>
@@ -317,23 +335,23 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => handleManageClick(isMobile)}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${isManagePath
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {isManagePath && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={manageIcon}
               alt="Manage"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                isManagePath ? 'active-icon-glow' : 'opacity-60'
+                isManagePath ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Manage</span>
-            <span className="ml-auto text-[10px] text-gray-400 md:hidden">
+            <span className={`ml-auto text-[10px] md:hidden ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
               {showManageDrawer ? '▼' : '▶'}
             </span>
           </button>
@@ -351,7 +369,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                       if (onClose) onClose(); // Close mobile main sidebar
                     }}
                     className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-[12px] font-bold text-left transition-colors duration-150
-                      ${isActive ? 'text-red-600 bg-red-50/50' : 'text-gray-500 hover:bg-gray-50'}
+                      ${isActive 
+                        ? (isDarkMode ? 'text-[#FF0B01] bg-white/[0.07]' : 'text-red-600 bg-red-50/50') 
+                        : (isDarkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-gray-600 hover:bg-gray-50')}
                     `}
                   >
                     <span>{item.label}</span>
@@ -369,52 +389,22 @@ const Sidebar = ({ isOpen, onClose }) => {
             }}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/analytics'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/analytics' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={analyticsIcon}
               alt="Analytics"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/analytics' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/analytics' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Analytics</span>
-          </button>
-
-          {/* Server Health */}
-          <button
-            onClick={() => {
-              navigate('/owner/monitoring');
-              if (isMobile && onClose) onClose();
-            }}
-            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
-              ${location.pathname === '/owner/monitoring'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-          >
-            {location.pathname === '/owner/monitoring' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
-            )}
-
-            <svg
-              className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
-                location.pathname === '/owner/monitoring' ? 'active-icon-glow text-red-600' : 'opacity-60'
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-            </svg>
-            <span>Server Health</span>
           </button>
 
           {/* Customers */}
@@ -422,17 +412,17 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => navigate('/owner/customers')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/customers'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/customers' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <svg
               className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
-                location.pathname === '/owner/customers' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                location.pathname === '/owner/customers' ? 'active-icon-glow text-red-600' : 'opacity-70'
               }`}
               fill="none"
               viewBox="0 0 24 24"
@@ -449,19 +439,19 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => navigate('/owner/orders')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/orders'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/orders' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={ordersIcon}
               alt="Orders"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/orders' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/orders' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Orders</span>
@@ -472,19 +462,19 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => navigate('/owner/attendance')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/attendance'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/attendance' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={attendanceIcon}
               alt="Attendance"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/attendance' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/attendance' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Attendance</span>
@@ -494,14 +484,16 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Bottom Utility Profile/Config Actions Group */}
-        <div className="p-3 border-t border-gray-100 space-y-1 flex-shrink-0">
+        <div className={`p-3 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
 
           {/* Help Link Option */}
           <button
             onClick={() => navigate('/customer/support')}
-            className="w-full flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-gray-900 text-[13px] font-bold transition-colors duration-150 sidebar-btn text-left"
+            className={`w-full flex items-center space-x-3.5 px-4 py-2.5 text-[13px] font-bold transition-colors duration-150 sidebar-btn text-left ${
+              isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800/80' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
           >
-            <img src={helpIcon} alt="Help" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-60" />
+            <img src={helpIcon} alt="Help" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-70" />
             <span>Help</span>
           </button>
 
@@ -510,31 +502,33 @@ const Sidebar = ({ isOpen, onClose }) => {
             onClick={() => navigate('/owner/settings')}
             className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
               ${location.pathname === '/owner/settings'
-                ? 'text-red-600 bg-red-50'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             {location.pathname === '/owner/settings' && (
-              <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
             )}
 
             <img
               src={settingIcon}
               alt="Settings"
               className={`w-[18px] h-[18px] sidebar-icon ${
-                location.pathname === '/owner/settings' ? 'active-icon-glow' : 'opacity-60'
+                location.pathname === '/owner/settings' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
             <span>Settings</span>
           </button>
 
           {/* Session Termination Area */}
-          <div className="pt-2 border-t border-gray-100 mt-2">
+          <div className={`pt-2 border-t mt-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center space-x-3.5 px-4 py-2.5 text-gray-500 hover:text-red-600 text-[13px] font-bold transition-colors duration-150 cursor-pointer sidebar-btn"
+              className={`w-full flex items-center space-x-3.5 px-4 py-2.5 text-[13px] font-bold transition-colors duration-150 cursor-pointer sidebar-btn ${
+                isDarkMode ? 'text-zinc-300 hover:text-red-400 hover:bg-zinc-800/80' : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+              }`}
             >
-              <img src={logoutIcon} alt="Logout" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-60" />
+              <img src={logoutIcon} alt="Logout" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-70" />
               <span>Logout</span>
             </button>
           </div>
@@ -554,7 +548,9 @@ const Sidebar = ({ isOpen, onClose }) => {
       )}
 
       {/* Desktop Column: Wrapper stretches background to footer, inner box is sticky */}
-      <div className="hidden lg:block lg:w-64 lg:bg-white lg:border-r lg:border-gray-200 lg:flex-shrink-0">
+      <div className={`hidden lg:block lg:w-64 lg:border-r lg:flex-shrink-0 transition-colors duration-300 ${
+        isDarkMode ? 'lg:bg-zinc-800 lg:border-zinc-700 text-zinc-100' : 'lg:bg-white lg:border-gray-200 text-gray-900'
+      }`}>
         <aside className="sticky top-16 h-[calc(100vh-64px)] w-full flex flex-col justify-between overflow-y-auto">
           {renderSidebarContent(false)}
         </aside>
@@ -562,7 +558,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Mobile Column: Slide-over drawer */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col justify-between h-screen overflow-y-auto transition-transform duration-300 ease-in-out lg:hidden
+        fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col justify-between h-screen overflow-y-auto transition-all duration-300 ease-in-out lg:hidden
+        ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {renderSidebarContent(true)}

@@ -251,6 +251,13 @@ const SubscriptionPlans = () => {
         return;
       }
 
+      // Save pending payment details to localStorage for network recovery
+      localStorage.setItem('pending_subscription_payment', JSON.stringify({
+        razorpayOrderId: data.id,
+        planCode: plan.planCode,
+        timestamp: Date.now()
+      }));
+
       // Open Razorpay Checkout Payment Sheet
       const options = {
         key: data.key,
@@ -291,6 +298,7 @@ const SubscriptionPlans = () => {
 
             toast.dismiss('payment-verifying');
             if (verifyRes.data?.success) {
+              localStorage.removeItem('pending_subscription_payment');
               setSuccessPlanName(plan.planName);
               setShowSuccessDialog(true);
             } else {
@@ -308,12 +316,14 @@ const SubscriptionPlans = () => {
         modal: {
           ondismiss: function () {
             setPayingPlanCode(null);
+            localStorage.removeItem('pending_subscription_payment');
             toast.error('Payment cancelled.');
           }
         }
       };
 
       const rzp = new window.Razorpay(options);
+      window.activeRazorpayInstance = rzp;
       rzp.open();
     } catch (error) {
       console.error('Payment initiation failed', error);

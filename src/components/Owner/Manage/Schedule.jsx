@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-
+﻿import React, { useState, useEffect } from 'react';
+import { useLocation, useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
-import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles } from 'lucide-react';
+import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles, Clock, Hourglass, AlertTriangle, Filter, SlidersHorizontal } from 'lucide-react';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -56,11 +55,14 @@ const parseConflictsFromMessage = (msg) => {
   return conflicts;
 };
 
-const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
+const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModeProp }) => {
+  const outletContext = useOutletContext() || {};
+  const isDarkMode = isDarkModeProp !== undefined ? isDarkModeProp : (outletContext.isDarkMode || document.documentElement.classList.contains('dark'));
   const location = useLocation();
   const currentStaffId = staffOnlyId || (isStaffPortal ? (localStorage.getItem('staff_id') || localStorage.getItem('user_id')) : null);
 
   const [currentSubTab, setCurrentSubTab] = useState('Scheduled');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,6 +70,73 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
   const [lastActionTime, setLastActionTime] = useState(0);
+
+  // Live Timer & Overdue State
+  const [nowTime, setNowTime] = useState(Date.now());
+  const [overdueNotified, setOverdueNotified] = useState({});
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAppointmentTimerInfo = (appt, currentTime) => {
+    if (!appt) return null;
+
+    const start = appt.startedAt ? new Date(appt.startedAt) : (appt.appointmentAt ? new Date(appt.appointmentAt) : new Date());
+    const durationMins = appt.serviceDuration || appt.durationMinutes || 30;
+
+    let end;
+    if (appt.estimatedEndAt) {
+      end = new Date(appt.estimatedEndAt);
+    } else {
+      end = new Date(start.getTime() + durationMins * 60 * 1000);
+    }
+
+    const elapsedMs = Math.max(0, currentTime - start.getTime());
+    const elapsedMinutes = Math.floor(elapsedMs / (1000 * 60));
+    const elapsedSeconds = Math.floor((elapsedMs % (1000 * 60)) / 1000);
+
+    const formattedElapsed = `${String(elapsedMinutes).padStart(2, '0')}:${String(elapsedSeconds).padStart(2, '0')}`;
+
+    const istEnd = new Date(end.getTime() + 5.5 * 60 * 60 * 1000);
+    const formattedEstimatedEnd = istEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const isOverdue = currentTime > end.getTime();
+    const overdueMs = isOverdue ? (currentTime - end.getTime()) : 0;
+    const is5MinOverdue = overdueMs >= 5 * 60 * 1000;
+
+    return {
+      start,
+      end,
+      durationMins,
+      formattedElapsed,
+      formattedEstimatedEnd,
+      isOverdue,
+      overdueMs,
+      is5MinOverdue,
+      overdueMins: Math.floor(overdueMs / (1000 * 60))
+    };
+  };
+
+  useEffect(() => {
+    if (!appointments || appointments.length === 0) return;
+
+    appointments.forEach((appt) => {
+      if (appt.status?.toLowerCase() === 'in_progress' || appt.status?.toLowerCase() === 'booked' || appt.status?.toLowerCase() === 'confirmed') {
+        const timerInfo = getAppointmentTimerInfo(appt, nowTime);
+        if (timerInfo && timerInfo.is5MinOverdue && !overdueNotified[appt.id]) {
+          toast.error(
+            `⚠️ Appointment #${appt.id} for ${appt.customerName || 'Customer'} is ${timerInfo.overdueMins}m past estimated finish time! Is it completed or extended?`,
+            { duration: 10000 }
+          );
+          setOverdueNotified((prev) => ({ ...prev, [appt.id]: true }));
+        }
+      }
+    });
+  }, [nowTime, appointments]);
 
   // Advanced Filters
   const [filters, setFilters] = useState({
@@ -96,6 +165,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
   const [rescheduleSlots, setRescheduleSlots] = useState([]);
   const [rescheduleSlotsLoading, setRescheduleSlotsLoading] = useState(false);
   const [selectedRescheduleSlot, setSelectedRescheduleSlot] = useState(null);
+  const [extraSlotParams, setExtraSlotParams] = useState({});
 
   // Staff Modal
   const [newStaffId, setNewStaffId] = useState('');
@@ -206,14 +276,8 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       if (targetStaffId) params.append('staffId', targetStaffId);
       if (filters.minAmount) params.append('minAmount', filters.minAmount);
       if (filters.maxAmount) params.append('maxAmount', filters.maxAmount);
-
-      const status = (currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') ? 'booked'
-        : currentSubTab === 'Cancelled' ? 'cancelled' : 'completed';
-      params.append('status', status);
-
       params.append('sort', 'appointmentAt,desc');
 
-      // Get the start of today in IST (Asia/Kolkata) timezone
       const getStartOfTodayIST = () => {
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -225,27 +289,59 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
         const dateStr = formatter.format(now);
         return `${dateStr}T00:00:00+05:30`;
       };
-      
       const startOfTodayIST = getStartOfTodayIST();
 
-      if (filters.fromDate) {
-        params.append('fromDate', convertToISTZoned(filters.fromDate));
-      } else if (currentSubTab === 'Scheduled') {
-        params.append('fromDate', startOfTodayIST);
+      if (currentSubTab === 'Scheduled') {
+        const fromDateVal = filters.fromDate ? convertToISTZoned(filters.fromDate) : startOfTodayIST;
+
+        const paramsInProgress = new URLSearchParams(params);
+        paramsInProgress.append('status', 'in_progress');
+        if (fromDateVal) paramsInProgress.append('fromDate', fromDateVal);
+        if (filters.toDate) paramsInProgress.append('toDate', convertToISTZoned(filters.toDate));
+
+        const paramsBooked = new URLSearchParams(params);
+        paramsBooked.append('status', 'booked');
+        if (fromDateVal) paramsBooked.append('fromDate', fromDateVal);
+        if (filters.toDate) paramsBooked.append('toDate', convertToISTZoned(filters.toDate));
+
+        const [resInProgress, resBooked] = await Promise.all([
+          axiosInstance.get(`/appointments/search/advanced?${paramsInProgress.toString()}`).catch(() => ({ data: { content: [] } })),
+          axiosInstance.get(`/appointments/search/advanced?${paramsBooked.toString()}`).catch(() => ({ data: { content: [] } }))
+        ]);
+
+        const listInProgress = resInProgress.data?.content || resInProgress.data || [];
+        const listBooked = resBooked.data?.content || resBooked.data || [];
+
+        const combinedMap = new Map();
+        [...listInProgress, ...listBooked].forEach(item => {
+          if (item && item.id) combinedMap.set(item.id, item);
+        });
+
+        const combinedList = Array.from(combinedMap.values());
+        setAppointments(combinedList);
+        setTotalPages(1);
+        setCurrentPage(page);
+      } else {
+        const status = currentSubTab === 'Past Appointments' ? 'booked'
+          : currentSubTab === 'Cancelled' ? 'cancelled' : 'completed';
+        params.append('status', status);
+
+        if (filters.fromDate) {
+          params.append('fromDate', convertToISTZoned(filters.fromDate));
+        }
+
+        if (filters.toDate) {
+          params.append('toDate', convertToISTZoned(filters.toDate));
+        } else if (currentSubTab === 'Past Appointments') {
+          params.append('toDate', startOfTodayIST);
+        }
+
+        const response = await axiosInstance.get(`/appointments/search/advanced?${params.toString()}`);
+        const data = response.data;
+        setAppointments(data?.content || []);
+        setTotalPages(data?.page?.totalPages || 1);
+        setCurrentPage(page);
       }
-
-      if (filters.toDate) {
-        params.append('toDate', convertToISTZoned(filters.toDate));
-      } else if (currentSubTab === 'Past Appointments') {
-        params.append('toDate', startOfTodayIST);
-      }
-
-      const response = await axiosInstance.get(`/appointments/search/advanced?${params.toString()}`);
-
-      const data = response.data;
-      setAppointments(data?.content || []);
-      setTotalPages(data?.page?.totalPages || 1);
-      setCurrentPage(page);
     } catch (error) {
       toast.error('Failed to load appointments', toastStyle);
       setAppointments([]);
@@ -626,233 +722,428 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
     }
   };
 
-  return (
-    <>
-        <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
-          <div className="flex gap-2 p-1 bg-gray-50 rounded-2xl mb-8 max-w-3xl border border-gray-100 shadow-sm overflow-x-auto scrollbar-none">
-            {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setCurrentSubTab(tab)}
-                className={`flex-1 px-5 py-3 font-bold text-xs uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${currentSubTab === tab ? 'bg-[#FF0B01] text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-              >
-                {tab}
-              </button>
-            ))}
+  const renderAppointmentCard = (appt) => {
+    const istTime = formatToIST(appt.appointmentAt);
+    const isStartedOrInProgress = appt.status?.toLowerCase() === 'in_progress' || appt.status?.toLowerCase() === 'confirmed';
+
+    return (
+      <div key={appt.id} className={`flex flex-col lg:flex-row items-start lg:items-center justify-between p-3.5 sm:p-5 border rounded-2xl sm:rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-5 sm:pl-8 gap-3 sm:gap-4 w-full ${
+        isDarkMode 
+          ? 'bg-zinc-900 border-zinc-800 text-zinc-100 shadow-slate-950/40' 
+          : 'bg-white border-gray-100 text-slate-800'
+      }`}>
+        {/* Left status vertical border indicator */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 sm:w-2.5 ${isStartedOrInProgress ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+        
+        <div 
+          onClick={() => handleViewAppointment(appt.id)}
+          className="flex items-start sm:items-center space-x-3 sm:space-x-3.5 cursor-pointer hover:opacity-85 transition-all group/info w-full lg:w-auto"
+          title="Click to view details"
+        >
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200 mt-0.5 sm:mt-0">
+            <img src={appt.customerAvatar || profileIcon} alt={appt.customerName} className="w-full h-full object-cover" />
           </div>
-
-          {/* Advanced Filters */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-md hover:shadow-lg transition-all duration-300 mb-8">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-gray-900">Advanced Search Filters</h3>
-              <div className="flex gap-3">
-                <button onClick={resetFilters} className="text-gray-400 hover:text-[#FF0B01] text-xs font-bold uppercase tracking-wider transition-all">Reset</button>
-                <button onClick={handleSearch} className="bg-[#FF0B01] text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.985]">Search</button>
-              </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={`text-xs sm:text-[14px] font-bold tracking-tight group-hover/info:text-[#FF0B01] transition-colors truncate ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>{appt.customerName || 'Customer'}</h4>
+            <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] sm:text-[11px] font-semibold text-gray-400 mt-0.5 sm:mt-1 flex-wrap gap-y-1">
+              <span className={`font-bold max-w-[180px] sm:max-w-none truncate ${
+                isDarkMode ? 'text-zinc-300' : 'text-gray-600'
+              }`}>{appt.serviceName || (appt.serviceNames && appt.serviceNames.join(", "))}</span>
+              <span className="flex items-center text-gray-400 whitespace-nowrap">
+                <img src={calendarIcon} alt="Calendar" className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />
+                {istTime.date}
+              </span>
+              <span className="flex items-center text-gray-400 whitespace-nowrap">
+                <img src={clockIcon} alt="Clock" className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />
+                {istTime.time} <span className="text-[9px] sm:text-[10px] ml-0.5 sm:ml-1">(IST)</span>
+              </span>
+              {appt.customerMobile && (
+                <span className={`font-medium whitespace-nowrap ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                  📞 {appt.customerMobile}
+                </span>
+              )}
+              {appt.staffId && appt.staffName && (
+                <span className={`font-semibold flex items-center gap-1 whitespace-nowrap ${isDarkMode ? 'text-purple-300' : 'text-slate-700'}`}>
+                  👤 Stylist: {appt.staffName}
+                </span>
+              )}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Mobile Number</label>
-                <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+            {currentSubTab === 'Cancelled' && appt.cancelReason && (
+              <div className={`text-[10px] sm:text-[11px] font-bold mt-1.5 sm:mt-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1 break-words max-w-full border ${
+                isDarkMode 
+                  ? 'bg-rose-950/70 border-rose-900/60 text-rose-400' 
+                  : 'bg-red-50/50 border-red-100/50 text-red-600'
+              }`}>
+                🚫 Cancellation Reason: {appt.cancelReason}
               </div>
-              {!isStaffPortal && !staffOnlyId && (
-                <div>
-                  <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Staff</label>
-                  <div className="relative">
-                    <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer">
-                      <option value="">All Staff</option>
-                      {staffList.map(staff => (
-                        <option key={staff.id} value={staff.id}>
-                          {staff.name} {staff.phone ? `(${staff.phone})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
+            )}
+            {currentSubTab === 'Scheduled' && isStartedOrInProgress && (() => {
+              const timerInfo = getAppointmentTimerInfo(appt, nowTime);
+              if (!timerInfo) return null;
+
+              return (
+                <div className="mt-2.5 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Live Timer Badge */}
+                    <div className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1.5 border ${
+                      isDarkMode 
+                        ? 'bg-orange-950/70 border-orange-900/60 text-orange-400' 
+                        : 'bg-orange-50 border-orange-200 text-orange-600'
+                    }`}>
+                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                      <span>In Progress</span>
+                    </div>
+
+                    <div className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1 border ${
+                      isDarkMode 
+                        ? 'bg-zinc-800/90 border-zinc-700 text-zinc-200' 
+                        : 'bg-slate-100 border-slate-200 text-slate-700'
+                    }`}>
+                      <Clock className={`w-3 h-3 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
+                      <span>Elapsed: {timerInfo.formattedElapsed}</span>
+                    </div>
+
+                    {/* Dynamic Estimated Finishing Time Badge */}
+                    <div className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1 border transition-all ${
+                      timerInfo.is5MinOverdue
+                        ? 'bg-rose-600 text-white animate-pulse shadow-xs font-black border-rose-700'
+                        : timerInfo.isOverdue
+                          ? 'bg-amber-500 text-white animate-pulse border-amber-600'
+                          : isDarkMode 
+                            ? 'bg-emerald-950/70 text-emerald-300 border-emerald-900/60' 
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}>
+                      <Hourglass className="w-3 h-3" />
+                      <span>
+                        Est. Finish: {timerInfo.formattedEstFinish}
+                        {timerInfo.isOverdue && ` (${timerInfo.overdueMins}m overdue)`}
+                      </span>
+                    </div>
+
+                    {/* Break gap notice */}
+                    {(() => { const gap = getGapMinutes(appt); return gap ? (
+                      <div className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1 border ${
+                        isDarkMode
+                          ? 'bg-indigo-950/70 text-indigo-300 border-indigo-900/60'
+                          : 'bg-blue-50/50 text-blue-600 border-blue-100/50'
+                      }`}>
+                        ⏸ {gap}m break before next appt
+                      </div>
+                    ) : null; })()}
                   </div>
                 </div>
+              );
+            })()}
+            {currentSubTab === 'Scheduled' && !isStartedOrInProgress && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
+              <div className={`text-[10px] sm:text-[11px] font-bold mt-1.5 sm:mt-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl inline-flex items-center gap-1 break-words max-w-full border ${
+                isDarkMode 
+                  ? 'bg-amber-950/70 text-amber-300 border-amber-900/60' 
+                  : 'bg-amber-50/50 text-amber-600 border-amber-100/50'
+              }`}>
+                🔄 Reschedule Reason: {appt.ownerRescheduleReason || appt.customerRescheduleReason || 'Rescheduled'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={`flex items-center gap-1.5 sm:gap-2 w-full lg:w-auto justify-between sm:justify-start lg:justify-end text-[10px] font-extrabold uppercase tracking-widest pt-2.5 lg:pt-0 border-t lg:border-t-0 ${
+          isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+        }`}>
+          {/* View Details Eye Button */}
+          <button 
+            onClick={() => handleViewAppointment(appt.id)} 
+            className={`w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center rounded-xl transition shadow-xs cursor-pointer border ${
+              isDarkMode
+                ? 'bg-zinc-800/90 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-[#FF0B01]'
+                : 'bg-gray-50 text-gray-600 hover:text-[#FF0B01] hover:bg-red-50 border-gray-150'
+            }`}
+            title="View Details"
+          >
+            <Eye className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+          </button>
+          
+          {(!isStartedOrInProgress && appt.status?.toLowerCase() !== 'completed' && appt.status?.toLowerCase() !== 'cancelled') && (
+            <button 
+              onClick={() => handleStartAppointment(appt)} 
+              className="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 font-bold normal-case text-xs cursor-pointer whitespace-nowrap"
+              title="Start Appointment"
+            >
+              <Play className="w-3.5 h-3.5" />
+              Start
+            </button>
+          )}
+
+          {isStartedOrInProgress && (
+            <>
+              <button 
+                onClick={() => openExtendModal(appt)} 
+                className="flex-1 sm:flex-none bg-orange-500 text-white px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-orange-600 transition shadow-sm flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer font-bold normal-case text-[11px] sm:text-xs whitespace-nowrap"
+              >
+                <span className="text-xs sm:text-sm leading-none">➕</span>
+                Extend
+              </button>
+              <button 
+                onClick={() => initiateCompletionModal(appt)} 
+                className="flex-1 sm:flex-none bg-emerald-600 text-white px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-emerald-700 transition shadow-sm flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer font-bold normal-case text-[11px] sm:text-xs whitespace-nowrap"
+              >
+                <CheckCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                Complete <span className="hidden xs:inline">Session</span>
+              </button>
+            </>
+          )}
+
+          {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && !isStartedOrInProgress && (
+            <>
+              <button 
+                onClick={() => openActionModal(appt, 'reschedule')} 
+                className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-[#FF0B01] text-white rounded-xl hover:bg-red-700 transition shadow-sm cursor-pointer"
+                title="Reschedule Appointment"
+              >
+                <CalendarClock className="w-4 h-4" />
+              </button>
+              {currentSubTab === 'Scheduled' && (
+                <button 
+                  onClick={() => openExtendModal(appt)} 
+                  className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-sm cursor-pointer"
+                  title="Extend Appointment"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                </button>
               )}
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">From Date</label>
-                <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+              <button 
+                onClick={() => initiateCompletionModal(appt)} 
+                className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-sm cursor-pointer"
+                title="Complete Appointment"
+              >
+                <CheckCircle className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => openCancelModal(appt)} 
+                className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-gray-400 text-white rounded-xl hover:bg-gray-500 transition shadow-sm cursor-pointer"
+                title="Cancel Appointment"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+              {appt.staffId ? (
+                <button onClick={() => openStaffModal(appt)} className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl flex items-center gap-1 transition shadow-2xs text-[11px] sm:text-xs border ${
+                  isDarkMode
+                    ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}>
+                  <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Change Staff
+                </button>
+              ) : (
+                <button onClick={() => openStaffModal(appt)} className="border border-[#FF0B01] text-[#FF0B01] bg-red-50/20 dark:bg-red-950/40 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-red-50 flex items-center gap-1 transition shadow-2xs text-[11px] sm:text-xs">
+                  <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" style={{ filter: 'invert(15%) sepia(95%) saturate(6935%) hue-rotate(357deg) brightness(95%) contrast(115%)' }} /> Assign Staff
+                </button>
+              )}
+            </>
+          )}
+
+          {currentSubTab === 'Completed' && (
+            <button 
+              onClick={() => handleDownloadInvoice(appt.id)}
+              className="bg-green-600 hover:bg-green-700 text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 font-bold normal-case text-xs cursor-pointer"
+            >
+              📄 Invoice
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+        <main className={`flex-1 p-3 sm:p-6 md:p-8 overflow-auto transition-colors duration-300 ${
+          isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+        }`}>
+          {/* Header Bar with Subtabs & Mobile Filter Button */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4 sm:mb-8">
+            <div className={`flex gap-1.5 sm:gap-2 p-1 rounded-2xl flex-1 max-w-3xl border shadow-xs overflow-x-auto scrollbar-none transition-colors duration-300 ${
+              isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'
+            }`}>
+              {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setCurrentSubTab(tab)}
+                  className={`flex-1 px-3 sm:px-5 py-2.5 sm:py-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                    currentSubTab === tab 
+                      ? 'bg-[#FF0B01] text-white shadow-md' 
+                      : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Filter Toggle Button */}
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className={`sm:hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs cursor-pointer border ${
+                showMobileFilters
+                  ? 'bg-[#FF0B01] text-white border-[#FF0B01]'
+                  : isDarkMode
+                    ? 'bg-zinc-900 text-zinc-200 border-zinc-800 hover:bg-zinc-800'
+                    : 'bg-white text-slate-800 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5 text-[#FF0B01]" />
+              <span>{showMobileFilters ? 'Hide Filters' : 'Filter Appointments'}</span>
+              {Object.values(filters).some(Boolean) && (
+                <span className="w-2 h-2 rounded-full bg-[#FF0B01] ml-0.5 animate-pulse" />
+              )}
+            </button>
+          </div>
+
+          {/* Advanced Filters (Collapsible on Mobile with Smooth Animation) */}
+          <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+            showMobileFilters
+              ? 'max-h-[800px] opacity-100 mb-6'
+              : 'max-h-0 sm:max-h-none opacity-0 sm:opacity-100 pointer-events-none sm:pointer-events-auto mb-0 sm:mb-8'
+          }`}>
+            <div className={`border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-md transition-all duration-300 ${
+              isDarkMode 
+                ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100 shadow-slate-950/50 backdrop-blur-xl' 
+                : 'bg-white border-gray-100 text-gray-900'
+            }`}>
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
+                <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Advanced Search Filters</h3>
+                <div className="flex gap-2 sm:gap-3">
+                  <button onClick={resetFilters} className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-[#FF0B01]' : 'text-gray-400 hover:text-[#FF0B01]'}`}>Reset</button>
+                  <button onClick={handleSearch} className="bg-[#FF0B01] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer">Search</button>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">To Date</label>
-                <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Min Amount (₹)</label>
-                <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 mb-1.5 block uppercase tracking-wider">Max Amount (₹)</label>
-                <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className="w-full px-4 py-3.5 border border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white rounded-xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Mobile Number</label>
+                  <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  }`} />
+                </div>
+                {!isStaffPortal && !staffOnlyId && (
+                  <div>
+                    <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Staff</label>
+                    <div className="relative">
+                      <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer ${
+                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                      }`}>
+                        <option value="">All Staff</option>
+                        {staffList.map(staff => (
+                          <option key={staff.id} value={staff.id}>
+                            {staff.name} {staff.phone ? `(${staff.phone})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]">▼</span>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From Date</label>
+                  <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  }`} />
+                </div>
+                <div>
+                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To Date</label>
+                  <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  }`} />
+                </div>
+                <div>
+                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Min Amount (₹)</label>
+                  <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  }`} />
+                </div>
+                <div>
+                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Max Amount (₹)</label>
+                  <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  }`} />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Appointments List */}
           {loading ? (
-            <div className="text-center py-12">Loading appointments...</div>
+            <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading appointments...</div>
           ) : appointments.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No appointments found</div>
-          ) : (
-            <div className="space-y-4 max-w-5xl">
-              {appointments.map((appt) => {
-                const istTime = formatToIST(appt.appointmentAt);
-                return (
-                  <div key={appt.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-5 bg-white border border-gray-100 rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-8 gap-4">
-                    {/* Left status vertical border indicator */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-2.5 ${appt.status?.toLowerCase() === 'in_progress' ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
-                    
-                    <div 
-                      onClick={() => handleViewAppointment(appt.id)}
-                      className="flex items-center space-x-3.5 cursor-pointer hover:opacity-85 transition-all group/info"
-                      title="Click to view details"
-                    >
-                      <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border border-gray-200">
-                        <img src={appt.customerAvatar || profileIcon} alt={appt.customerName} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <h4 className="text-[14px] font-bold text-gray-900 tracking-tight group-hover/info:text-[#FF0B01] transition-colors">{appt.customerName || 'Customer'}</h4>
-                        <div className="flex items-center space-x-3 text-[11px] font-semibold text-gray-400 mt-1 flex-wrap">
-                          <span className="text-gray-500">{appt.serviceName || (appt.serviceNames && appt.serviceNames.join(", "))}</span>
-                          <span className="flex items-center text-gray-400">
-                            <img src={calendarIcon} alt="Calendar" className="w-3.5 h-3.5 mr-1" />
-                            {istTime.date}
-                          </span>
-                          <span className="flex items-center text-gray-400">
-                            <img src={clockIcon} alt="Clock" className="w-3.5 h-3.5 mr-1" />
-                            {istTime.time} <span className="text-[10px] ml-1">(IST)</span>
-                          </span>
-                          {appt.customerMobile && <span className="text-emerald-600 font-medium">📞 {appt.customerMobile}</span>}
-                          {appt.staffId && appt.staffName && (
-                            <span className="text-blue-600 font-semibold flex items-center gap-1">
-                              👤 Stylist: {appt.staffName}
-                            </span>
-                          )}
+            <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No appointments found</div>
+          ) : currentSubTab === 'Scheduled' ? (
+            (() => {
+              const inProgressList = appointments.filter(a => a.status?.toLowerCase() === 'in_progress' || a.status?.toLowerCase() === 'confirmed');
+              const upcomingList = appointments.filter(a => a.status?.toLowerCase() !== 'in_progress' && a.status?.toLowerCase() !== 'confirmed');
+
+              return (
+                <div className="space-y-4 sm:space-y-6 max-w-5xl">
+                  {/* Top Section: Active In-Progress Sessions */}
+                  {inProgressList.length > 0 && (
+                    <div className={`border-2 rounded-2xl sm:rounded-[28px] p-3.5 sm:p-5 shadow-xl backdrop-blur-xl transition-all duration-300 space-y-3 sm:space-y-4 ${
+                      isDarkMode 
+                        ? 'bg-zinc-900/80 border-orange-500/40 text-zinc-100 shadow-orange-950/20' 
+                        : 'bg-gradient-to-r from-orange-50/70 via-red-50/40 to-slate-50 border-orange-200 text-slate-900'
+                    }`}>
+                      <div className={`flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-2 ${
+                        isDarkMode ? 'border-zinc-800' : 'border-orange-200/60'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500 animate-ping flex-shrink-0" />
+                          <h3 className={`text-xs sm:text-sm font-black uppercase tracking-tight flex items-center gap-2 ${
+                            isDarkMode ? 'text-white' : 'text-slate-900'
+                          }`}>
+                            🔥 Active In-Progress Sessions ({inProgressList.length})
+                          </h3>
                         </div>
-                        {currentSubTab === 'Cancelled' && appt.cancelReason && (
-                          <div className="text-[11px] font-bold text-red-500 mt-2 bg-red-50/50 border border-red-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
-                            🚫 Cancellation Reason: {appt.cancelReason}
-                          </div>
-                        )}
-                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() === 'in_progress' && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <div className="text-[11px] font-bold text-orange-600 bg-orange-50/50 border border-orange-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
-                              🔥 In Progress
-                            </div>
-                            {(() => { const gap = getGapMinutes(appt); return gap ? (
-                              <div className="text-[11px] font-bold text-blue-600 bg-blue-50/50 border border-blue-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
-                                ⏸ {gap}m break before next appt
-                              </div>
-                            ) : null; })()}
-                          </div>
-                        )}
-                        {currentSubTab === 'Scheduled' && appt.status?.toLowerCase() !== 'in_progress' && (appt.status?.toLowerCase() === 'rescheduled' || appt.ownerRescheduleReason || appt.customerRescheduleReason) && (
-                          <div className="text-[11px] font-bold text-amber-600 mt-2 bg-amber-50/50 border border-amber-100/50 px-3 py-1 rounded-xl inline-flex items-center gap-1">
-                            🔄 Reschedule Reason: {appt.ownerRescheduleReason || appt.customerRescheduleReason || 'Rescheduled'}
-                          </div>
-                        )}
+                        <span className="self-start sm:self-auto px-2.5 py-0.5 sm:px-3 sm:py-1 bg-orange-500 text-white font-extrabold text-[9px] sm:text-[10px] uppercase tracking-wider rounded-lg sm:rounded-xl shadow-2xs">
+                          Live Active
+                        </span>
+                      </div>
+
+                      <div className="space-y-3 sm:space-y-4">
+                        {inProgressList.map(renderAppointmentCard)}
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end text-[10px] font-extrabold uppercase tracking-widest pt-2 lg:pt-0 border-t border-gray-50 lg:border-t-0">
-                      {/* View Details Eye Button */}
-                      <button 
-                        onClick={() => handleViewAppointment(appt.id)} 
-                        className="w-9 h-9 flex items-center justify-center bg-gray-50 text-gray-600 hover:text-[#FF0B01] hover:bg-red-50 border border-gray-150 rounded-xl transition shadow-xs cursor-pointer"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      
-                      {(appt.status?.toLowerCase() === 'booked' || appt.status?.toLowerCase() === 'confirmed' || appt.status?.toLowerCase() === 'pending') && (
-                        <button 
-                          onClick={() => handleStartAppointment(appt)} 
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5 font-bold normal-case text-xs cursor-pointer"
-                          title="Start Appointment"
-                        >
-                          <Play className="w-3.5 h-3.5" />
-                          Start
-                        </button>
+                  {/* Bottom Section: Upcoming Scheduled Bookings */}
+                  {upcomingList.length > 0 ? (
+                    <div className="space-y-3 sm:space-y-4">
+                      {inProgressList.length > 0 && (
+                        <h3 className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mb-2 flex items-center gap-1.5 pl-1 ${
+                          isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
+                        }`}>
+                          <CalendarClock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#FF0B01]" />
+                          Upcoming Scheduled Bookings ({upcomingList.length})
+                        </h3>
                       )}
-
-                      {appt.status?.toLowerCase() === 'in_progress' && (
-                        <>
-                          <button 
-                            onClick={() => openExtendModal(appt)} 
-                            className="bg-orange-500 text-[#FF0B01] px-4 py-2.5 rounded-xl hover:bg-orange-600 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs text-white"
-                          >
-                            <span className="text-base leading-none">➕</span>
-                            Extend
-                          </button>
-                          <button 
-                            onClick={() => initiateCompletionModal(appt)} 
-                            className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer font-bold normal-case text-xs"
-                          >
-                            <CheckCircle className="w-4.5 h-4.5" />
-                            Complete Session
-                          </button>
-                        </>
-                      )}
-
-                      {(currentSubTab === 'Scheduled' || currentSubTab === 'Past Appointments') && appt.status?.toLowerCase() !== 'in_progress' && (
-                        <>
-                          <button 
-                            onClick={() => openActionModal(appt, 'reschedule')} 
-                            className="w-9 h-9 flex items-center justify-center bg-[#FF0B01] text-white rounded-xl hover:bg-red-700 transition shadow-sm cursor-pointer"
-                            title="Reschedule Appointment"
-                          >
-                            <CalendarClock className="w-4.5 h-4.5" />
-                          </button>
-                          {currentSubTab === 'Scheduled' && (
-                            <button 
-                              onClick={() => openExtendModal(appt)} 
-                              className="w-9 h-9 flex items-center justify-center bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-sm cursor-pointer"
-                              title="Extend Appointment"
-                            >
-                              <PlusCircle className="w-4.5 h-4.5" />
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => initiateCompletionModal(appt)} 
-                            className="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-xl hover:bg-green-700 transition shadow-sm cursor-pointer"
-                            title="Complete Appointment"
-                          >
-                            <CheckCircle className="w-4.5 h-4.5" />
-                          </button>
-                          <button 
-                            onClick={() => openCancelModal(appt)} 
-                            className="w-9 h-9 flex items-center justify-center bg-gray-400 text-white rounded-xl hover:bg-gray-500 transition shadow-sm cursor-pointer"
-                          >
-                            <XCircle className="w-4.5 h-4.5" />
-                          </button>
-                          {appt.staffId ? (
-                            <button onClick={() => openStaffModal(appt)} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center gap-1 transition shadow-2xs">
-                              <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Change Staff
-                            </button>
-                          ) : (
-                            <button onClick={() => openStaffModal(appt)} className="border border-[#FF0B01] text-[#FF0B01] bg-red-50/20 px-4 py-2.5 rounded-xl hover:bg-red-50 flex items-center gap-1 transition shadow-2xs">
-                              <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" style={{ filter: 'invert(15%) sepia(95%) saturate(6935%) hue-rotate(357deg) brightness(95%) contrast(115%)' }} /> Assign Staff
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {currentSubTab === 'Completed' && (
-                        <button 
-                          onClick={() => handleDownloadInvoice(appt.id)} 
-                          className="bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          Invoice
-                        </button>
-                      )}
+                      {upcomingList.map(renderAppointmentCard)}
                     </div>
-                  </div>
-                );
-              })}
+                  ) : (
+                    inProgressList.length > 0 ? (
+                      <div className={`text-center py-6 rounded-2xl border border-dashed font-semibold text-xs transition-colors duration-300 ${
+                        isDarkMode 
+                          ? 'bg-zinc-900/60 border-zinc-800 text-zinc-400 backdrop-blur-md' 
+                          : 'bg-slate-50 border-slate-200 text-zinc-400'
+                      }`}>
+                        No additional upcoming bookings scheduled for today.
+                      </div>
+                    ) : (
+                      <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No appointments found</div>
+                    )
+                  )}
+                </div>
+              );
+            })()
+          ) : (
+            <div className="space-y-3 sm:space-y-4 max-w-5xl">
+              {appointments.map(renderAppointmentCard)}
             </div>
           )}
 
@@ -867,7 +1158,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* Cancel Modal */}
       {showCancelModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100 text-gray-900'} rounded-2xl border p-6 w-full max-w-md mx-4`}>
             <h3 className="text-lg font-bold mb-4">Cancel Appointment</h3>
             <p className="text-sm text-gray-600 mb-3">Customer: <strong>{selectedAppointment.customerName}</strong></p>
             <textarea value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Reason for cancellation..." className="w-full border border-gray-300 rounded-xl p-3 h-28 resize-y text-sm" />
@@ -882,7 +1173,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* Action Modal */}
       {showActionModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100 text-gray-900'} rounded-2xl border p-6 w-full max-w-md mx-4`}>
             <h3 className="text-lg font-bold mb-4">
               {actionType === 'complete' ? 'Mark Appointment as Complete' : 'Reschedule Appointment'}
             </h3>
@@ -1008,7 +1299,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* Assign Staff Modal */}
       {showStaffModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100 text-gray-900'} rounded-2xl border p-6 w-full max-w-md mx-4`}>
             <h3 className="text-lg font-bold mb-4">
               {selectedAppointment.staffId ? 'Change Assigned Staff' : 'Assign Staff'}
             </h3>
@@ -1039,7 +1330,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* View Appointment Details Modal */}
       {isViewModalOpen && selectedAppointmentDetails && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative border border-gray-100 p-6 md:p-8 animate-in fade-in zoom-in duration-200">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'} rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative border p-6 md:p-8 animate-in fade-in zoom-in duration-200`}>
             {/* Close button */}
             <button 
               onClick={() => setIsViewModalOpen(false)}
@@ -1286,7 +1577,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* Fetching loading state indicator overlay */}
       {loadingViewAppointment && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl flex items-center gap-3 border border-gray-100">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-2xl flex items-center gap-3 border`}>
             <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
           </div>
@@ -1296,7 +1587,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* ===== EXTEND APPOINTMENT MODAL ===== */}
       {showExtendModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'} rounded-3xl shadow-2xl border w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden`}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
@@ -1396,7 +1687,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
                     {parsedConflicts.length > 0 ? (
                       <div className="space-y-3.5">
                         {parsedConflicts.map((conflict, idx) => (
-                          <div key={conflict.id || idx} className="bg-white/90 border border-amber-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                          <div key={conflict.id || idx} className={`${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-white/90 border-amber-200'} border rounded-2xl p-4 shadow-2xs space-y-3`}>
                             <div className="text-[11px] font-bold text-gray-800 flex items-start gap-1 leading-relaxed">
                               <span>•</span>
                               <span>{conflict.lineText}</span>
@@ -1488,7 +1779,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
       {/* ===== POST-COMPLETION OPENED PRODUCTS MODAL ===== */}
       {showCompletionProductsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-lg overflow-hidden relative">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'} rounded-3xl shadow-2xl border w-full max-w-lg overflow-hidden relative`}>
             <button
               onClick={() => setShowCompletionProductsModal(false)}
               className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
@@ -1519,7 +1810,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false }) => {
                 }}
                 className={`flex items-center justify-between p-4 rounded-2xl border-2 transition cursor-pointer ${
                   noProductsUsed
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                    ? 'bg-zinc-900 text-white border-slate-900 shadow-md'
                     : 'bg-gray-50/80 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >

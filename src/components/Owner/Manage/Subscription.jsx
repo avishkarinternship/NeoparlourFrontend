@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -25,6 +25,8 @@ const toastStyle = {
 
 const Subscription = () => {
     const navigate = useNavigate();
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
     const [subscriptionPlans, setSubscriptionPlans] = useState([]);
     const [userSubscriptions, setUserSubscriptions] = useState([]);
@@ -120,17 +122,17 @@ const Subscription = () => {
     };
 
     return (
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white md:border-l md:border-gray-200 space-y-10">
+                <main className={`flex-1 min-w-0 p-6 md:p-8 space-y-10 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 md:border-l md:border-zinc-800' : 'bg-white md:border-l md:border-gray-200'}`}>
                     {/* Subscription Plans Section */}
                     <div className="space-y-6 max-w-5xl mx-auto">
                         <div className="inline-block border-b-2 border-red-600 pb-1">
-                            <span className="text-[12px] font-bold uppercase tracking-wider text-gray-900">
+                            <span className={`text-[12px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Subscription Plans
                             </span>
                         </div>
 
                         {loadingPlans ? (
-                            <div className="text-center py-12">Loading plans...</div>
+                            <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading plans...</div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {subscriptionPlans.map((plan) => {
@@ -143,11 +145,11 @@ const Subscription = () => {
                                             key={plan.id}
                                             className={`rounded-xl border p-6 flex flex-col justify-between relative shadow-sm transition-all duration-200 ${isCurrent
                                                     ? 'bg-[#FF0B01] border-[#FF0B01] text-white'
-                                                    : 'bg-white border-gray-200 text-gray-800'
+                                                    : isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-800'
                                                 }`}
                                         >
                                             <div>
-                                                <div className={`text-[10px] font-bold uppercase tracking-wider text-right mb-1 ${isCurrent ? 'text-white/90' : 'text-gray-500'
+                                                <div className={`text-[10px] font-bold uppercase tracking-wider text-right mb-1 ${isCurrent ? 'text-white/90' : isDarkMode ? 'text-zinc-400' : 'text-gray-500'
                                                     }`}>
                                                     {plan.planName}
                                                 </div>
@@ -164,14 +166,14 @@ const Subscription = () => {
                                                     <span className="text-2xl font-black tracking-tight">
                                                         ₹{(plan.amountInPaise / 100).toFixed(0)}
                                                     </span>
-                                                    <span className={`text-[11px] font-medium ml-0.5 ${isCurrent ? 'text-white/80' : 'text-gray-400'
+                                                    <span className={`text-[11px] font-medium ml-0.5 ${isCurrent ? 'text-white/80' : isDarkMode ? 'text-zinc-400' : 'text-gray-400'
                                                         }`}>
                                                         / {plan.durationMonths ? `${plan.durationMonths} Months` : 'Lifetime'}
                                                     </span>
                                                 </div>
 
                                                 <div className="space-y-2.5 mb-6 max-w-md mx-auto">
-                                                    <div className={`text-[11px] font-bold tracking-wide ${isCurrent ? 'text-white' : 'text-gray-900'
+                                                    <div className={`text-[11px] font-bold tracking-wide ${isCurrent ? 'text-white' : isDarkMode ? 'text-zinc-200' : 'text-gray-900'
                                                         }`}>
                                                         What You Get
                                                     </div>
@@ -202,14 +204,14 @@ const Subscription = () => {
                     </div>
 
                     {/* Billing / Invoice History */}
-                    <div className="max-w-5xl mx-auto space-y-4 pt-4 border-t border-dashed border-gray-200">
+                    <div className={`max-w-5xl mx-auto space-y-4 pt-4 border-t border-dashed ${isDarkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-4">
-                            <span className="text-[12px] font-bold uppercase tracking-wider text-gray-900">
+                            <span className={`text-[12px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Billing History
                             </span>
                         </div>
 
-                        <div className="bg-[#F8F9FA] px-6 py-3 rounded-lg grid grid-cols-5 gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <div className={`px-6 py-3 rounded-lg grid grid-cols-5 gap-4 text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-[#F8F9FA] text-gray-400'}`}>
                             <div>Invoice</div>
                             <div>Plan</div>
                             <div>Amount</div>
@@ -217,7 +219,7 @@ const Subscription = () => {
                             <div className="text-right pr-14">Billing Date</div>
                         </div>
 
-                        <div className="divide-y divide-gray-100 px-2">
+                        <div className={`divide-y px-2 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
                             {userSubscriptions.length > 0 ? (
                                 [...userSubscriptions]
                                     .sort((a, b) => {
@@ -239,55 +241,59 @@ const Subscription = () => {
                                                 key={sub.id}
                                                 className={`grid grid-cols-5 gap-4 items-center py-4 px-4 text-[12px] rounded-xl transition-all duration-200 ${
                                                     isActive
-                                                        ? 'bg-red-50/40 border border-red-100/80 text-gray-900 font-semibold'
-                                                        : 'text-gray-600 font-medium opacity-70 hover:opacity-100'
+                                                        ? isDarkMode
+                                                            ? 'bg-red-950/30 border border-red-900/50 text-white font-semibold'
+                                                            : 'bg-red-50/40 border border-red-100/80 text-gray-900 font-semibold'
+                                                        : isDarkMode
+                                                            ? 'text-zinc-300 font-medium hover:bg-zinc-800/50'
+                                                            : 'text-gray-600 font-medium opacity-70 hover:opacity-100'
                                                 }`}
                                             >
                                                 <div className="flex items-center space-x-2.5">
                                                     <img src={invoiceIcon} alt="Invoice" className="w-4 h-4" />
-                                                    <span className={`font-semibold ${isActive ? 'text-[#FF0B01]' : 'text-gray-900'}`}>SUB-{sub.id}</span>
+                                                    <span className={`font-semibold ${isActive ? 'text-[#FF0B01]' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>SUB-{sub.id}</span>
                                                 </div>
-                                                <div className="text-gray-700">{planInfo.name}</div>
-                                                <div className="font-bold text-gray-900">
+                                                <div className={isDarkMode ? 'text-zinc-200' : 'text-gray-700'}>{planInfo.name}</div>
+                                                <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                                     ₹{planInfo.amount}
                                                 </div>
                                                 <div>
                                                     {isActive ? (
                                                         <div className="space-y-0.5">
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-green-100 text-green-800 uppercase tracking-wider">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-800'}`}>
                                                                 Currently In Use
                                                             </span>
                                                             {totalMonths && (
-                                                                <div className="text-[10px] text-gray-500 font-semibold leading-tight">
+                                                                <div className={`text-[10px] font-semibold leading-tight ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                                     Active: {totalMonths} months {remainingMonths !== null && `(${remainingMonths} left)`}
                                                                 </div>
                                                             )}
-                                                            <div className="text-[9px] text-gray-400 font-semibold leading-tight">
+                                                            <div className={`text-[9px] font-semibold leading-tight ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                                                                 Starting from: {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'} till {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'N/A'}
                                                             </div>
                                                         </div>
                                                     ) : isPending ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-yellow-100 text-yellow-800 uppercase tracking-wider">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-yellow-900/40 text-yellow-400' : 'bg-yellow-100 text-yellow-800'}`}>
                                                             Pending
                                                         </span>
                                                     ) : isEnded ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gray-100 text-gray-800 uppercase tracking-wider">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-800'}`}>
                                                             Ended
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gray-100 text-gray-800 uppercase tracking-wider">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-800'}`}>
                                                             {sub.status || 'Inactive'}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center justify-end space-x-7 text-right">
-                                                    <span className="text-gray-500 text-[11px]">
+                                                    <span className={`text-[11px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                         {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}
                                                     </span>
                                                     <button
                                                         onClick={() => handleDownloadInvoice(sub.id)}
                                                         disabled={isPending}
-                                                        className={`p-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 ${isPending ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                                        className={`p-1.5 rounded-lg border ${isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-700/50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'} ${isPending ? 'opacity-30 cursor-not-allowed' : ''}`}
                                                         title={isPending ? 'Invoice not available for pending subscription' : 'Download Invoice'}
                                                     >
                                                         <img src={billingIcon} alt="Download" className="w-3.5 h-3.5" />
@@ -297,7 +303,7 @@ const Subscription = () => {
                                         );
                                     })
                             ) : (
-                                <div className="text-center py-12 text-gray-500">
+                                <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                     No billing history available
                                 </div>
                             )}

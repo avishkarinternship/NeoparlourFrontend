@@ -8,8 +8,11 @@ import Drawer from '../Drawer';
 import ProfilePopup from '../ProfilePopup';
 import PasswordResetModal from '../PasswordResetModal';
 import { useDarkMode } from '../../../context/DarkModeContext';
+import LanguageSwitcher from '../../LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const SearchNavBar = () => {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
       setMounted(true);
@@ -40,22 +43,21 @@ const SearchNavBar = () => {
   const isNameBlank = isIncomplete(profile?.fullName || user?.name || user?.username || '');
 
   const getProfileCompletion = () => {
-      if (!profile) return 0;
       let filled = 0;
-      const name = (profile.fullName || user?.name || user?.username || '').trim();
-      if (name && name.toLowerCase() !== 'customer') filled++;
+      const name = (profile?.fullName || user?.name || user?.username || '').trim();
+      if (name && name.toLowerCase() !== 'customer' && !name.startsWith('+')) filled++;
       
-      const phone = (profile.mobile || user?.phone || '').trim();
+      const phone = (profile?.mobile || user?.mobile || user?.phone || '').trim();
       if (phone) filled++;
       
-      const gen = (profile.gender || '').trim();
-      if (gen && gen !== 'Select Gender') filled++;
-      
-      const addr = (profile.address || '').trim();
-      if (addr) filled++;
-      
-      const mail = (profile.email || user?.email || '').trim();
+      const mail = (profile?.email || user?.email || '').trim();
       if (mail) filled++;
+      
+      const gen = (profile?.gender || '').trim();
+      if (gen && gen.toUpperCase() !== 'SELECT GENDER') filled++;
+      
+      const addr = (profile?.address || '').trim();
+      if (addr) filled++;
       
       return filled / 5;
   };
@@ -82,7 +84,7 @@ const SearchNavBar = () => {
   }, [isAuthenticated, dispatch]);
 
   return (
-    <header className={`w-full border-b px-4 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
+    <header className={`w-full border-b px-3 sm:px-6 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
         mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
@@ -98,49 +100,52 @@ const SearchNavBar = () => {
       </div>
 
       {/* Global Hub Navigation Search & Filter Bar Group */}
-      <div className={`flex items-center border rounded-lg overflow-hidden max-w-[120px] min-[380px]:max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-2xl w-full mx-1.5 sm:mx-4 h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'}`}>
+      <div className={`flex items-center border rounded-lg overflow-hidden max-w-[140px] xs:max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-2xl w-full mx-1.5 sm:mx-4 h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'}`}>
         <div className="flex items-center flex-1 px-2 sm:px-3 lg:border-r border-gray-200 min-w-0">
           <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
           <input 
             type="text" 
-            placeholder="Search..." 
+            placeholder={t('navbar.search_placeholder', 'Search...')} 
             className={`w-full text-xs sm:text-[13px] outline-none placeholder-[#8D8D8D] bg-transparent ${isDark ? 'text-gray-200' : 'text-[#8D8D8D]'}`}
           />
         </div>
         
         <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}>
           <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>Location</span>
+          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
           <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
         </div>
 
         <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
           <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>Date</span>
+          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
           <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
         </div>
 
         <button className="bg-[#FF0B01] text-white text-[11px] sm:text-[13px] font-bold tracking-widest px-3 sm:px-6 h-full transition-opacity hover:opacity-90 uppercase flex-shrink-0 flex items-center justify-center">
-          <span className="hidden sm:inline">Search</span>
+          <span className="hidden sm:inline">{t('buttons.search', 'SEARCH')}</span>
           <Search className="w-3.5 h-3.5 sm:hidden" />
         </button>
       </div>
 
       {/* Session Profiles / Control Triggers Block */}
-      <div className="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+      <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+
+        {/* Language Switcher */}
+        <LanguageSwitcher />
 
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleDark}
           data-tooltip={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          className={`relative w-14 h-7 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
+          className={`relative w-11 h-6 sm:w-13 sm:h-6.5 md:w-14 md:h-7 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
             isDark ? 'bg-gray-700' : 'bg-gray-200'
           }`}
           aria-label="Toggle dark mode"
         >
-          <span className={`absolute left-1 transition-all duration-300 flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
+          <span className={`absolute left-0.5 transition-all duration-300 flex items-center justify-center w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full shadow-md ${
             isDark
-              ? 'translate-x-7 bg-yellow-400'
+              ? 'translate-x-5 sm:translate-x-6 md:translate-x-7 bg-yellow-400'
               : 'translate-x-0 bg-white'
           }`}>
             {isDark
@@ -155,12 +160,12 @@ const SearchNavBar = () => {
               {!isCompleted ? (
                   <div className="relative flex items-center gap-1.5 sm:gap-2">
                       <button
-                          onClick={() => setIsProfileOpen(true)}
-                          className="relative flex items-center justify-center w-11 h-11 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 group cursor-pointer border-0 shrink-0 p-0 bg-transparent"
-                          title={`Profile is ${(completion * 100).toFixed(0)}% complete. Click to complete.`}
+                          onClick={() => setIsDrawerOpen(true)}
+                          className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 group cursor-pointer border-0 shrink-0 p-0 bg-transparent"
+                          title={`Profile is ${(completion * 100).toFixed(0)}% complete. Click to open menu.`}
                       >
                           {/* Progress Ring SVG */}
-                          <svg className="absolute w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                          <svg className="absolute w-10 h-10 sm:w-11 sm:h-11 -rotate-90" viewBox="0 0 36 36">
                               <circle stroke="#E2E8F0" strokeWidth="3" fill="transparent" r="15" cx="18" cy="18" />
                               <circle
                                   stroke="#FF0B01"
@@ -175,32 +180,37 @@ const SearchNavBar = () => {
                                   style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
                               />
                           </svg>
+
                           {/* Avatar inside */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm relative z-10 ${isDark ? 'bg-gray-700' : 'bg-slate-100'} text-[#FF0B01]`}>
-                              <User className="w-4.5 h-4.5 text-[#FF0B01]" />
+                          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-sm relative z-10 ${isDark ? 'bg-gray-700' : 'bg-slate-100'} text-[#FF0B01]`}>
+                              <User className="w-4 h-4 text-[#FF0B01]" />
                           </div>
                       </button>
                       
-                      {/* Bouncing cursor hand */}
+                      {/* Bouncing cursor hand pointing at the button across all screen sizes */}
                       <style>{`
                           @keyframes bounce-x {
                               0%, 100% { transform: translateX(0); }
                               50% { transform: translateX(4px); }
                           }
-                          .animate-bounce-x { animation: bounce-x 1s infinite; }
+                          .animate-bounce-x {
+                              animation: bounce-x 1s infinite;
+                          }
                       `}</style>
-                      <div className="pointer-events-none select-none hidden sm:block animate-bounce-x shrink-0">
+                      <div className="pointer-events-none select-none flex items-center gap-1 animate-bounce-x shrink-0">
                           <MousePointerClick className="w-4 h-4 text-[#FF0B01]" />
                       </div>
                   </div>
               ) : (
                   <button 
-                      onClick={() => setIsProfileOpen(true)} 
-                      className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 hover:bg-red-50 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans ${isDark ? 'bg-gray-800 text-white' : 'bg-red-50/50 text-gray-900'}`}
+                      onClick={() => setIsDrawerOpen(true)} 
+                      className={`flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1 sm:py-1.5 border border-red-200 hover:bg-red-50 rounded-full transition shadow-xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer pl-1.5 sm:pl-2 pr-1.5 sm:pr-4 font-sans ${isDark ? 'bg-[#1a1a1a] text-white' : 'bg-red-50/50 text-gray-900'}`}
                   >
+                      {/* Circular Logo/Avatar */}
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white flex items-center justify-center shadow-sm flex-shrink-0">
                           <User className="w-4 h-4 text-white" />
                       </div>
+                      {/* User Name */}
                       <span className={`text-xs font-black tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-gray-800'}`}>
                           {displayName}
                       </span>
@@ -208,51 +218,23 @@ const SearchNavBar = () => {
               )}
           </div>
         ) : (
-          <>
-            <button 
-              onClick={() => navigate('/register')}
-              className={`flex items-center space-x-1 sm:space-x-2 border rounded-lg px-1.5 sm:px-4 py-1.5 sm:py-2 hover:bg-gray-50 transition-colors text-[11px] sm:text-[13px] font-semibold uppercase ${isDark ? 'border-gray-600 text-gray-300 hover:bg-gray-800' : 'border-[#909090] text-[#909090]'}`}
-            >
-              <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Signup</span>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/customer/login')}
-              className="flex items-center space-x-1 sm:space-x-2 bg-[#FF0B01] border border-[#909090] rounded-lg px-1.5 sm:px-4 py-1.5 sm:py-2 text-white hover:opacity-95 transition-opacity text-[11px] sm:text-[13px] font-semibold uppercase"
-            >
-              <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Login</span>
-            </button>
-          </>
+          /* Hamburger Menu Icon for Guest Users */
+          <button 
+            type="button"
+            onClick={() => setIsDrawerOpen(true)} 
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95 ${
+                isDark 
+                    ? 'bg-gray-900 border-gray-700 text-white hover:bg-gray-800 hover:border-gray-600' 
+                    : 'bg-slate-100 border-slate-200 text-slate-900 hover:bg-slate-200 hover:border-slate-300'
+            }`}
+            title="Open Menu"
+            aria-label="Open Navigation Menu"
+          >
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
         )}
-
-        {/* Cart Icon button */}
-        {isAuthenticated && (
-            <button
-                onClick={() => navigate('/customer/cart')}
-                className={`p-1.5 sm:p-2 hover:text-[#FF0B01] rounded-lg transition relative ml-0.5 sm:ml-1 cursor-pointer shrink-0 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}
-                title="Shopping Cart"
-            >
-                <ShoppingCart className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
-                {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#FF0B01] text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border border-white">
-                        {cartCount}
-                    </span>
-                )}
-            </button>
-        )}
-
-        {/* Hamburger Menu Icon */}
-        <button 
-          onClick={() => setIsDrawerOpen(true)} 
-          className={`p-1.5 sm:p-2 rounded-lg transition ml-0.5 sm:ml-1 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-400 hover:bg-gray-100'}`}
-          title="Menu"
-        >
-          <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
       </div>
 
       {/* Slide-out Panel Overlay */}

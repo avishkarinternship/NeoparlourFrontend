@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://uat.neoparlour.com/api'
+  ? 'https://sb.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
@@ -17,6 +17,11 @@ const axiosInstance = axios.create({
 // Request Interceptor to attach tokens automatically
 axiosInstance.interceptors.request.use(
   (config) => {
+    // If request has explicitly opted out of attaching stale tokens after a 401 retry
+    if (config.skipTokenAttach) {
+      return config;
+    }
+
     const customerToken = localStorage.getItem('customerToken');
     let ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
 
@@ -62,16 +67,51 @@ axiosInstance.interceptors.request.use(
 // Response Interceptor for Global Error Handling
 axiosInstance.interceptors.response.use(
   (response) => {
+    // Intercept explicit maintenance status checks
+    if (response.config?.url?.includes('/maintenance')) {
+      if (response.data?.enabled === true || response.data?.maintenance === true) {
+        window.dispatchEvent(
+          new CustomEvent('SYSTEM_MAINTENANCE_ACTIVE', { detail: { ...response.data, enabled: true } })
+        );
+      } else if (response.data?.enabled === false || response.data?.maintenance === false) {
+        window.dispatchEvent(
+          new CustomEvent('SYSTEM_MAINTENANCE_CLEARED')
+        );
+      }
+    }
     return response;
   },
   async (error) => {
+    // Intercept 503 Service Unavailable or maintenance flag in error response
+    if (error.response?.status === 503 || error.response?.data?.maintenance === true || error.response?.data?.enabled === true) {
+      const maintenanceData = {
+        enabled: true,
+        is503: true,
+        message: error.response?.data?.message && !error.response.data.message.toLowerCase().includes('operational')
+          ? error.response.data.message
+          : "We're currently performing scheduled backend updates. We will be back shortly!",
+        ...(error.response?.data || {})
+      };
+      window.dispatchEvent(
+        new CustomEvent('SYSTEM_MAINTENANCE_ACTIVE', { detail: maintenanceData })
+      );
+    }
+
     // Handle 401 Unauthorized globally for stale tokens
     if (error.response?.status === 401) {
+      // Prevent infinite retry loops
+      if (error.config?._retry) {
+        return Promise.reject(error);
+      }
+
       const hasAuthHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
-      const isLoginRequest = error.config?.url?.includes('/customer/login');
+      const isLoginRequest = error.config?.url?.includes('/login');
 
       if (hasAuthHeader && !isLoginRequest) {
-        console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request...");
+        console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request ONCE...");
+        error.config._retry = true;
+        error.config.skipTokenAttach = true;
+
         localStorage.removeItem('customerToken');
         localStorage.removeItem('customerUser');
         localStorage.removeItem('customerProfile');
@@ -84,7 +124,7 @@ axiosInstance.interceptors.response.use(
           delete error.config.headers.authorization;
         }
 
-        // Retry the request
+        // Retry the request ONCE without token
         return axiosInstance(error.config);
       } else {
         console.error("[axiosInstance] Received 401 for request without stale token (or login request). URL:", error.config?.url);

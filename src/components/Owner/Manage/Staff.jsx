@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { useLocation, useOutletContext } from 'react-router-dom';
+import { User, Users, TrendingUp, Award, Share2 } from 'lucide-react';
+import StaffReferralStatsView from '../../StaffReferralStatsView';
 
 // Icons
 import cameraIcon from '../../../assets/Owner/Manage/Services/camera_icon.svg';
@@ -22,9 +23,14 @@ const toastStyle = {
 
 const Staff = () => {
     const location = useLocation();
+    const outletContext = useOutletContext() || {};
+    const isDarkMode = outletContext.isDarkMode !== undefined 
+      ? outletContext.isDarkMode 
+      : document.documentElement.classList.contains('dark');
 
-
-    // Form States
+    // Active Navigation Tab
+    const [activeTab, setActiveTab] = useState('manage'); // 'manage' | 'referrals'
+    const [selectedReferralStaffId, setSelectedReferralStaffId] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -261,10 +267,46 @@ const Staff = () => {
 
     return (
         <>
-                <main className="flex-1 p-6 md:p-8 bg-white md:border-l md:border-gray-200 overflow-auto">
-                    {/* Add New Staff Form */}
-                    <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-                        <h2 className="text-xl font-bold mb-6">Add New Staff</h2>
+                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                }`}>
+                    {/* Top Section Tab Navigation */}
+                    <div className="flex items-center gap-3 border-b border-gray-200 dark:border-zinc-800 mb-8 pb-1 overflow-x-auto">
+                        <button
+                            onClick={() => setActiveTab('manage')}
+                            className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                                activeTab === 'manage'
+                                    ? 'border-red-600 text-red-600'
+                                    : 'border-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                        >
+                            <Users className="w-4 h-4" /> Staff Directory & Add Member
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('referrals')}
+                            className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                                activeTab === 'referrals'
+                                    ? 'border-red-600 text-red-600'
+                                    : 'border-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                        >
+                            <TrendingUp className="w-4 h-4" /> My Staff Referrals & Stats
+                        </button>
+                    </div>
+
+                    {activeTab === 'referrals' ? (
+                        <StaffReferralStatsView
+                            staffId={selectedReferralStaffId || (staffList.length > 0 ? staffList[0].id : null)}
+                            staffList={staffList}
+                            onSelectStaff={(id) => setSelectedReferralStaffId(id)}
+                            isDarkMode={isDarkMode}
+                        />
+                    ) : (
+                        <>
+                            {/* Add New Staff Form */}
+                            <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
+                                <h2 className="text-xl font-bold mb-6">Add New Staff</h2>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Profile Image Uploader */}
@@ -397,7 +439,17 @@ const Staff = () => {
                                                     {staff.active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
-                                            <button onClick={() => handleEdit(staff.id)} className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedReferralStaffId(staff.id);
+                                                    setActiveTab('referrals');
+                                                }} 
+                                                className="px-3 py-1.5 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                                                title="View Referral Performance & Rewards"
+                                            >
+                                                <TrendingUp className="w-3.5 h-3.5 text-amber-600" /> Stats
+                                            </button>
+                                            <button onClick={() => handleEdit(staff.id)} className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 cursor-pointer">
                                                 <img src={editIcon} alt="edit" className="w-4 h-4" /> Edit
                                             </button>
                                         </div>
@@ -406,7 +458,9 @@ const Staff = () => {
                             </div>
                         )}
                     </div>
-                </main>
+                </>
+            )}
+        </main>
 
             {/* Edit Staff Modal Overlay */}
             {isEditModalOpen && (

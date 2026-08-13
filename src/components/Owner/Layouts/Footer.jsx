@@ -2,64 +2,66 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
 
-const Footer = () => {
+const Footer = ({ isDarkMode = false }) => {
     const navigate = useNavigate();
     return (
-        <footer className="bg-[#EAEAEA] text-gray-900 pt-16 pb-8 px-6 md:px-12 font-sans w-full">
+        <footer className={`pt-16 pb-8 px-6 md:px-12 font-sans w-full transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-t border-zinc-800 text-zinc-100' : 'bg-[#EAEAEA] text-gray-900'
+        }`}>
             {/* Main Footer Container */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 items-start">
 
-                {/* Identity Column (Expanded span to prevent company text overlap) */}
+                {/* Identity Column */}
                 <div className="md:col-span-4 flex items-center space-x-2.5">
                     <img
                         src={logoIcon}
                         alt="NeoParlour Logo"
                         className="w-8 h-8 object-contain flex-shrink-0"
                     />
-                    <span className="text-xl font-black text-gray-900 tracking-tight">
+                    <span className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                         NeoParlour
                     </span>
                 </div>
 
                 {/* Column 1: Company Info */}
                 <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Company</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Influencer Program</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Careers</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• About Us</li>
-                        <li onClick={() => navigate('/customer/partner-with-us')} className="cursor-pointer hover:text-gray-900 transition-colors">• Partner With Us</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Buy Gift Card</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Blogs</li>
+                    <h4 className={`font-extrabold text-base mb-4 tracking-wide ${isDarkMode ? 'text-zinc-100' : 'text-black'}`}>Company</h4>
+                    <ul className={`space-y-3 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-700'}`}>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Influencer Program</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Careers</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• About Us</li>
+                        <li onClick={() => navigate('/customer/partner-with-us')} className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Partner With Us</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Buy Gift Card</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Blogs</li>
                     </ul>
                 </div>
 
                 {/* Column 2: Legal */}
                 <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Legal</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Privacy Policy</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Terms Of Service</li>
+                    <h4 className={`font-extrabold text-base mb-4 tracking-wide ${isDarkMode ? 'text-zinc-100' : 'text-black'}`}>Legal</h4>
+                    <ul className={`space-y-3 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-700'}`}>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Privacy Policy</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Terms Of Service</li>
                     </ul>
                 </div>
 
-                {/* Column 3: Contact/Socials Links */}
+                {/* Column 3: Contact */}
                 <div className="md:col-span-2">
-                    <h4 className="font-extrabold text-base mb-4 tracking-wide text-black">Contact</h4>
-                    <ul className="space-y-3 text-sm font-semibold text-gray-700">
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Whatsapp</li>
-                        <li className="cursor-pointer hover:text-gray-900 transition-colors">• Emails</li>
+                    <h4 className={`font-extrabold text-base mb-4 tracking-wide ${isDarkMode ? 'text-zinc-100' : 'text-black'}`}>Contact</h4>
+                    <ul className={`space-y-3 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-700'}`}>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Whatsapp</li>
+                        <li className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Emails</li>
                     </ul>
                 </div>
 
             </div>
 
-            {/* Bottom Sub-Footer Separator */}
-            <hr className="border-gray-400/60 my-8 max-w-7xl mx-auto" />
+            {/* Bottom Separator */}
+            <hr className={`my-8 max-w-7xl mx-auto ${isDarkMode ? 'border-zinc-700/60' : 'border-gray-400/60'}`} />
 
             {/* Copyright and Social Media Icons */}
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>
                     copyright@neopaceinfotech.com
                 </span>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { 
@@ -147,7 +147,7 @@ const AdminSupportRequests = () => {
         
         <div className="bg-white px-4 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-6 shrink-0 self-start md:self-center">
           <div className="text-left">
-            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Queries</span>
+            <span className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest">Total Queries</span>
             <span className="text-xl font-black text-slate-900">{totalElements}</span>
           </div>
         </div>
@@ -163,7 +163,7 @@ const AdminSupportRequests = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Global Search */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Search Keyword</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Search Keyword</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <Search className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -171,14 +171,14 @@ const AdminSupportRequests = () => {
                 placeholder="Keyword..." 
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-zinc-400"
               />
             </div>
           </div>
 
           {/* Name Filter */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer Name</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Customer Name</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <User className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -186,14 +186,14 @@ const AdminSupportRequests = () => {
                 placeholder="Name..." 
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-zinc-400"
               />
             </div>
           </div>
 
           {/* Email Filter */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer Email</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Customer Email</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <Mail className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -201,14 +201,14 @@ const AdminSupportRequests = () => {
                 placeholder="Email..." 
                 value={emailFilter}
                 onChange={(e) => setEmailFilter(e.target.value)}
-                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-zinc-400"
               />
             </div>
           </div>
 
           {/* Mobile Filter */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer Mobile</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Customer Mobile</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <Phone className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -216,14 +216,14 @@ const AdminSupportRequests = () => {
                 placeholder="Mobile..." 
                 value={mobileFilter}
                 onChange={(e) => setMobileFilter(e.target.value.replace(/\D/g, ''))}
-                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-slate-400"
+                className="w-full bg-transparent text-xs font-semibold outline-none text-slate-800 placeholder:text-zinc-400"
               />
             </div>
           </div>
 
           {/* Start Date */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Date</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Start Date</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <Calendar className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -237,7 +237,7 @@ const AdminSupportRequests = () => {
 
           {/* End Date */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Date</label>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">End Date</label>
             <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:bg-white focus-within:border-[#ff0b01] transition-all">
               <Calendar className="w-4 h-4 text-slate-450 mr-2" />
               <input 
@@ -275,7 +275,7 @@ const AdminSupportRequests = () => {
         {loading && requests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
             <div className="animate-spin h-10 w-10 border-4 border-[#ff0b01] border-t-transparent rounded-full shadow-sm"></div>
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading inquiries...</p>
+            <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Loading inquiries...</p>
           </div>
         ) : requests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center px-6">
@@ -290,12 +290,12 @@ const AdminSupportRequests = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-100">
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider">Date & Time</th>
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider">Email Address</th>
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider">Mobile Number</th>
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider">Message Description</th>
-                  <th className="px-6 py-4.5 text-[9px] font-black text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider">Date & Time</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider">Email Address</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider">Mobile Number</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider">Message Description</th>
+                  <th className="px-6 py-4.5 text-[9px] font-black text-zinc-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -307,7 +307,7 @@ const AdminSupportRequests = () => {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                         <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">{formatDate(req.createdAt)}</span>
                       </div>
                     </td>
@@ -321,7 +321,7 @@ const AdminSupportRequests = () => {
                       <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{req.mobile || 'N/A'}</span>
                     </td>
                     <td className="px-6 py-4 flex-1">
-                      <p className="text-xs font-medium text-slate-500 line-clamp-1 max-w-[320px]">{req.description}</p>
+                      <p className="text-xs font-medium text-zinc-500 line-clamp-1 max-w-[320px]">{req.description}</p>
                     </td>
                     <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <button 
@@ -342,11 +342,11 @@ const AdminSupportRequests = () => {
         {totalPages > 0 && (
           <div className="bg-white border-t border-slate-100 px-6 py-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Range Counter & Size Selector */}
-            <div className="flex items-center gap-4 text-xs text-slate-500">
+            <div className="flex items-center gap-4 text-xs text-zinc-500">
               <span className="font-semibold text-slate-450">
                 Showing <strong className="text-slate-900 font-bold">{startEntry}</strong> - <strong className="text-slate-900 font-bold">{endEntry}</strong> of <strong className="text-slate-900 font-bold">{totalElements}</strong> entries
               </span>
-              <span className="text-slate-200">|</span>
+              <span className="text-zinc-200">|</span>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-slate-450">Size:</span>
                 <select
@@ -430,7 +430,7 @@ const AdminSupportRequests = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Glassmorphism backdrop */}
           <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"
+            className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setSelectedRequest(null)}
           />
           
@@ -442,12 +442,12 @@ const AdminSupportRequests = () => {
                 <MessageSquare className="w-5 h-5 text-[#ff0b01]" />
                 <div>
                   <h3 className="text-base font-black text-slate-950 uppercase tracking-tight">Support Request Details</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Submitted via customer portal</p>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Submitted via customer portal</p>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedRequest(null)}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-150/40 p-2 rounded-xl transition-all cursor-pointer"
+                className="text-zinc-400 hover:text-slate-600 hover:bg-slate-150/40 p-2 rounded-xl transition-all cursor-pointer"
               >
                 <X className="w-4.5 h-4.5 stroke-[2.5]" />
               </button>
@@ -457,8 +457,8 @@ const AdminSupportRequests = () => {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Date Metadata */}
               <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl w-fit">
-                <Clock className="w-4 h-4 text-slate-400" />
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-zinc-400" />
+                <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
                   Submitted On: <strong className="text-slate-700 ml-1">{formatDate(selectedRequest.createdAt)}</strong>
                 </span>
               </div>
@@ -466,15 +466,15 @@ const AdminSupportRequests = () => {
               {/* Customer details info grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
-                  <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Customer Name</span>
+                  <span className="block text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1">Customer Name</span>
                   <span className="text-xs font-bold text-slate-900">{selectedRequest.name || 'N/A'}</span>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
-                  <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Address</span>
+                  <span className="block text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1">Email Address</span>
                   <span className="text-xs font-semibold text-slate-700 break-all">{selectedRequest.email || 'N/A'}</span>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
-                  <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile Number</span>
+                  <span className="block text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1">Mobile Number</span>
                   <span className="text-xs font-bold text-slate-900">{selectedRequest.mobile || 'N/A'}</span>
                 </div>
               </div>
@@ -492,7 +492,7 @@ const AdminSupportRequests = () => {
             <div className="px-6 py-4.5 border-t border-slate-50 bg-slate-50/50 flex justify-end">
               <button 
                 onClick={() => setSelectedRequest(null)}
-                className="px-5 py-2.5 bg-slate-950 hover:bg-slate-900 text-white text-xs font-black tracking-wider uppercase rounded-xl transition-all shadow-sm cursor-pointer"
+                className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900 text-white text-xs font-black tracking-wider uppercase rounded-xl transition-all shadow-sm cursor-pointer"
               >
                 Close Request View
               </button>

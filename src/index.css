@@ -2,8 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Typography System */
 *, *::before, *::after {
-  font-family: 'Outfit', sans-serif !important;
+  font-family: 'Outfit', 'Jost', system-ui, -apple-system, sans-serif;
+}
+
+/* Hindi (Devanagari) Typography — Inknut Antiqua & Noto Sans Devanagari */
+html[lang="hi"] *, 
+html[lang="hi"] *::before, 
+html[lang="hi"] *::after {
+  font-family: 'Inknut Antiqua', 'Noto Sans Devanagari', 'Poppins', 'Outfit', sans-serif !important;
+}
+
+/* Marathi (Devanagari) Typography — Inknut Antiqua & Noto Sans Devanagari */
+html[lang="mr"] *, 
+html[lang="mr"] *::before, 
+html[lang="mr"] *::after {
+  font-family: 'Inknut Antiqua', 'Noto Sans Devanagari', 'Poppins', 'Outfit', sans-serif !important;
 }
 
 html {
@@ -16,7 +31,7 @@ body {
 
 /* Custom Sidebar Icon Glow & Color effects */
 .active-icon-glow {
-  filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%) drop-shadow(0 0 5px rgba(255, 11, 1, 0.6)) !important;
+  filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%) !important;
   opacity: 1 !important;
 }
 
@@ -25,8 +40,8 @@ body {
 }
 
 .sidebar-btn:hover .sidebar-icon {
-  filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%) drop-shadow(0 0 3px rgba(255, 11, 1, 0.3));
-  opacity: 0.9;
+  filter: invert(13%) sepia(92%) saturate(7483%) hue-rotate(359deg) brightness(97%) contrast(114%);
+  opacity: 0.85;
 }
 
 /* ─── Global Dark Mode Overrides ─────────────────────────────────────────── */
@@ -243,4 +258,120 @@ body {
 .group-hover\:scale-105,
 .group-hover\:scale-110 {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Custom premium scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8; /* zinc-300 */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa; /* zinc-400 */
+}
+
+/* Dark mode overrides for scrollbars */
+.dark ::-webkit-scrollbar-track,
+.dark::-webkit-scrollbar-track {
+  background: #09090b; /* bg-zinc-950 */
+}
+
+.dark ::-webkit-scrollbar-thumb,
+.dark::-webkit-scrollbar-thumb {
+  background: #27272a; /* bg-zinc-800 */
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+.dark::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46; /* bg-zinc-700 */
+}
+
+/* Also support Firefox scrollbar styling */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d4d4d8 transparent;
+  }
+  .dark * {
+    scrollbar-color: #27272a #09090b;
+  }
+}
+
+/* Custom dark/light mode toggle sun/moon animations */
+@keyframes sunEnter {
+  0% {
+    transform: translate(120%, 120%) rotate(180deg) scale(0.2);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-8%, -8%) rotate(-10deg) scale(1.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sunExit {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-120%, 120%) rotate(-180deg) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes moonEnter {
+  0% {
+    transform: translate(120%, 120%) rotate(180deg) scale(0.2);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-8%, -8%) rotate(-10deg) scale(1.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes moonExit {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-120%, 120%) rotate(-180deg) scale(0.2);
+    opacity: 0;
+  }
+}
+
+.animate-sun-enter {
+  animation: sunEnter 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-sun-exit {
+  animation: sunExit 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-moon-enter {
+  animation: moonEnter 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-moon-exit {
+  animation: moonExit 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

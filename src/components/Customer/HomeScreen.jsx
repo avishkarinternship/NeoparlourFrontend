@@ -11,6 +11,8 @@ import {
 } from '../../redux/slices/customerSlice';
 import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
+import { useTranslation } from 'react-i18next';
+import { translateServiceName } from '../../utils/serviceTranslation';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -116,6 +118,7 @@ const recommendedSalons = [
 ];
 
 const HomeScreen = () => {
+    const { t } = useTranslation();
     const { isDark } = useDarkMode();
     const dispatch = useDispatch();
     const isUserTypingCityRef = useRef(false);
@@ -670,24 +673,24 @@ const HomeScreen = () => {
 
     const faqData = [
         {
-            q: "What is NeoParlour?",
-            a: "NeoParlour is your complete beauty ecosystem designed to bring premium salon discovery, inventory optimization, and direct appointment management into one simple platform."
+            q: t('home.faq.q1', "What is NeoParlour?"),
+            a: t('home.faq.a1', "NeoParlour is your complete beauty ecosystem designed to bring premium salon discovery, inventory optimization, and direct appointment management into one simple platform.")
         },
         {
-            q: "Is NeoParlour free to use?",
-            a: "Listing your basic salon profile and exploring local beauty businesses is completely free. We also offer premium growth tools for inventory and staff optimization."
+            q: t('home.faq.q2', "Is NeoParlour free to use?"),
+            a: t('home.faq.a2', "Listing your basic salon profile and exploring local beauty businesses is completely free. We also offer premium growth tools for inventory and staff optimization.")
         },
         {
-            q: "Who can use NeoParlour?",
-            a: "Both beauty customers looking to book appointments and salon owners managing operations can seamlessly use our unified ecosystem."
+            q: t('home.faq.q3', "Who can use NeoParlour?"),
+            a: t('home.faq.a3', "Both beauty customers looking to book appointments and salon owners managing operations can seamlessly use our unified ecosystem.")
         },
         {
-            q: "How does the appointment system work?",
-            a: "Customers pick a service, preferred date, and localized time window. The appointment updates the salon calendar automatically in real time."
+            q: t('home.faq.q4', "How does the appointment system work?"),
+            a: t('home.faq.a4', "Customers pick a service, preferred date, and localized time window. The appointment updates the salon calendar automatically in real time.")
         },
         {
-            q: "How does inventory management help my salon?",
-            a: "It maps stock levels against actual product consumption during services, alerting you before critical items drop below operational limits."
+            q: t('home.faq.q5', "How does inventory management help my salon?"),
+            a: t('home.faq.a5', "It maps stock levels against actual product consumption during services, alerting you before critical items drop below operational limits.")
         }
     ];
 
@@ -751,15 +754,15 @@ const HomeScreen = () => {
 
                 <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
                     <div className="text-gray-900 text-sm md:text-base font-black uppercase tracking-wider mb-4">
-                        List your salon free
+                        {t('home.list_your_salon_free', 'List your salon free')}
                     </div>
 
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-6 text-gray-900 tracking-tight leading-tight">
-                        Everything For <span className="text-[#FF2A14]">Salon</span>
+                        {t('home.hero_title_prefix', 'Everything For')} <span className="text-[#FF2A14]">{t('home.hero_title_accent', 'Salon')}</span>
                     </h1>
 
                     <p className="max-w-2xl mx-auto text-gray-600 mb-10 font-medium text-sm md:text-base leading-relaxed">
-                        Not Just A Salon Platform, Your Complete Beauty Ecosystem. Explore Services, Manage Appointments, And Unlock Exclusive Deals, All Under One Roof.
+                        {t('home.hero_subtitle', 'Not Just A Salon Platform, Your Complete Beauty Ecosystem. Explore Services, Manage Appointments, And Unlock Exclusive Deals, All Under One Roof.')}
                     </p>
 
 
@@ -769,7 +772,7 @@ const HomeScreen = () => {
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
-                                    placeholder={isDetectingLocation ? "DETECTING..." : "SELECT CITY"}
+                                    placeholder={isDetectingLocation ? t('home.detecting_location', 'DETECTING...') : t('home.select_city', 'SELECT CITY')}
                                     value={searchData.cityName}
                                     onChange={(e) => {
                                         isUserTypingCityRef.current = true;
@@ -827,7 +830,7 @@ const HomeScreen = () => {
                                     <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
                                     <input
                                         type="text"
-                                        placeholder="SELECT AREA"
+                                        placeholder={t('home.select_area', 'SELECT AREA')}
                                         value={searchData.areaName}
                                         onChange={(e) => {
                                             isUserTypingAreaRef.current = true;
@@ -845,7 +848,7 @@ const HomeScreen = () => {
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
                                 {showAreaDropdown && searchData.areaName && (
-                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-[#ffffff] border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
                                         {isLoadingAreas ? (
                                             <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
                                                 <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
@@ -886,16 +889,16 @@ const HomeScreen = () => {
                                         }}
                                         className="w-full outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer appearance-none"
                                     >
-                                        <option value="">SELECT SERVICE</option>
-                                        <option value="Hair Services">Hair Services</option>
-                                        <option value="Skin Care">Skin Care</option>
-                                        <option value="Hair Removal">Hair Removal</option>
-                                        <option value="Nail Care">Nail Care</option>
-                                        <option value="Makeup">Makeup</option>
-                                        <option value="Grooming">Grooming</option>
-                                        <option value="Spa & Massage">Spa & Massage</option>
-                                        <option value="Bridal Packages">Bridal Packages</option>
-                                        <option value="Hair Treatment">Hair Treatment</option>
+                                        <option value="">{t('home.select_service', 'SELECT SERVICE')}</option>
+                                        <option value="Hair Services">{t('home.services_grid.hair_services', 'Hair Services')}</option>
+                                        <option value="Skin Care">{t('home.services_grid.skin_care', 'Skin Care')}</option>
+                                        <option value="Hair Removal">{t('home.services_grid.hair_removal', 'Hair Removal')}</option>
+                                        <option value="Nail Care">{t('home.services_grid.nail_care', 'Nail Care')}</option>
+                                        <option value="Makeup">{t('home.services_grid.makeup', 'Makeup')}</option>
+                                        <option value="Grooming">{t('home.services_grid.grooming', 'Grooming')}</option>
+                                        <option value="Spa & Massage">{t('home.services_grid.spa_massage', 'Spa & Massage')}</option>
+                                        <option value="Bridal Packages">{t('home.services_grid.bridal_packages', 'Bridal Packages')}</option>
+                                        <option value="Hair Treatment">{t('home.services_grid.hair_treatment', 'Hair Treatment')}</option>
                                     </select>
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 pointer-events-none" />
@@ -905,7 +908,7 @@ const HomeScreen = () => {
                                 onClick={handleLocationSearch}
                                 className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
                             >
-                                {searchDropdownLoading ? 'SEARCHING...' : 'SEARCH'}
+                                {searchDropdownLoading ? t('buttons.searching', 'SEARCHING...') : t('buttons.search', 'SEARCH')}
                             </button>
                         </div>
 
@@ -983,13 +986,13 @@ const HomeScreen = () => {
                             <div className="flex-1 text-center md:text-left">
                                 <div className="inline-flex items-center gap-1.5 bg-amber-500/15 border border-amber-500/20 text-amber-400 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest mb-3">
                                     <Zap className="w-3 h-3" />
-                                    Quick Book
+                                    {t('home.quick_book.badge', 'Quick Book')}
                                 </div>
                                 <h3 className="text-lg md:text-xl font-black text-white tracking-tight leading-snug">
-                                    Ready for your next look?
+                                    {t('home.quick_book.title', 'Ready for your next look?')}
                                 </h3>
                                 <p className="text-sm text-gray-400 font-medium mt-1.5 max-w-md">
-                                    Book your slot at <span className="text-amber-400 font-bold">{defaultSalon.salonName}</span> in just 2 clicks!
+                                    {t('home.quick_book.subtitle', 'Book your slot at {{salonName}} in just 2 clicks!', { salonName: defaultSalon.salonName })}
                                 </p>
                             </div>
                             <button
@@ -1005,7 +1008,7 @@ const HomeScreen = () => {
                                 }}
                                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff0b01] to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
                             >
-                                Book Now
+                                {t('buttons.book_now', 'Book Now')}
                                 <Zap className="w-4 h-4" />
                             </button>
                         </div>
@@ -1018,10 +1021,10 @@ const HomeScreen = () => {
             <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-4 px-6">
                     {[
-                        { label: "REVIEWS", value: "1.14k", img: reviewIcon },
-                        { label: "SALONS", value: "10k", img: salonIcon },
-                        { label: "CITIES", value: "20k", img: citiesIcon },
-                        { label: "APP DOWNLOAD", value: "20000+", img: appDownloadIcon }
+                        { label: t('labels.reviews', 'REVIEWS'), value: "1.14k", img: reviewIcon },
+                        { label: t('labels.salons', 'SALONS'), value: "10k", img: salonIcon },
+                        { label: t('labels.cities', 'CITIES'), value: "20k", img: citiesIcon },
+                        { label: t('labels.app_download', 'APP DOWNLOAD'), value: "20000+", img: appDownloadIcon }
                     ].map((stat, idx) => (
                         <div key={idx} className="flex items-center gap-3 text-left">
                             <img src={stat.img} alt={stat.label} className="w-12 h-12 object-contain" />
@@ -1038,12 +1041,12 @@ const HomeScreen = () => {
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto" data-aos="fade-up">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
                     <div>
-                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Premium Salons Nearby</h3>
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{t('home.premium_salons.title', 'Premium Salons Nearby')}</h3>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
                             {isLocationChanged
-                                ? "Showing salons according to your typed city and area name"
-                                : "Showing salons of your current location"
+                                ? t('home.premium_salons.showing_typed', 'Showing salons according to your typed city and area name')
+                                : t('home.premium_salons.showing_current', 'Showing salons of your current location')
                             }
                         </p>
                     </div>
@@ -1051,7 +1054,7 @@ const HomeScreen = () => {
                         onClick={() => navigate('/customer/salons')}
                         className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
                     >
-                        See More
+                        {t('buttons.see_more', 'See More')}
                         <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
@@ -1098,14 +1101,14 @@ const HomeScreen = () => {
                 </div>
                 {(!isPageLoading && recommendedList.length === 0) && (
                     <div className="text-center py-10 bg-gray-55 rounded-2xl border border-dashed border-gray-200 mt-4">
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">No salons found nearby</p>
+                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">{t('home.premium_salons.no_salons', 'No salons found nearby')}</p>
                     </div>
                 )}
             </section>
 
             {/* 5. SERVICES GRID */}
             <section className="pt-6 pb-12 px-6 max-w-7xl mx-auto" data-aos="fade-up">
-                <h3 className="text-2xl font-bold mb-4">Services</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('home.services_grid.title', 'Services')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {servicesData.map((service) => (
                         <div
@@ -1115,7 +1118,7 @@ const HomeScreen = () => {
                         >
                             <img src={service.img} alt={service.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-                            <div className="absolute bottom-6 left-6 text-white text-xl font-bold z-10">{service.name}</div>
+                            <div className="absolute bottom-6 left-6 text-white text-xl font-bold z-10">{translateServiceName(service.name, t)}</div>
                         </div>
                     ))}
                 </div>
@@ -1141,48 +1144,45 @@ const HomeScreen = () => {
                         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
-                                MANAGE INVENTORY & STAFF
+                                {t('home.inventory_section.title', 'MANAGE INVENTORY & STAFF')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'maximize' and 'profit.' */}
                             <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
-                                Control your stock. <br />
-                                <span className="text-[#FF2A14]">maximize</span> your <span className="text-[#FF2A14]">profit.</span>
+                                {t('home.inventory_section.sub_title', 'Control your stock. maximize your profit.')}
                             </h3>
 
                             {/* Paragraph Description */}
                             <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
-                                Never run out of essentials or overstock products again. Track usage, get
-                                low-stock alerts, and manage everything from a single dashboard
-                                whether it's shampoos, colors, or retail products.
+                                {t('home.inventory_section.desc', "Never run out of essentials or overstock products again. Track usage, get low-stock alerts, and manage everything from a single dashboard whether it's shampoos, colors, or retail products.")}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">Key Points</h4>
+                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Left-Aligned Red Circle Checks */}
                             <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-start">
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Real-Time Stock Tracking Across Services & Products</span>
+                                    <span>{t('home.inventory_section.point1', 'Real-Time Stock Tracking Across Services & Products')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Smart Low-Stock Alerts Before You Run Out</span>
+                                    <span>{t('home.inventory_section.point2', 'Smart Low-Stock Alerts Before You Run Out')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Product Usage Insights Per Service</span>
+                                    <span>{t('home.inventory_section.point3', 'Product Usage Insights Per Service')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Reduce Wastage & Increase Margins</span>
+                                    <span>{t('home.inventory_section.point4', 'Reduce Wastage & Increase Margins')}</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
                             <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
-                                MANAGE SMARTER →
+                                {t('buttons.manage_smarter', 'MANAGE SMARTER →')}
                             </button>
                         </div>
                     </div>
@@ -1204,47 +1204,45 @@ const HomeScreen = () => {
                         <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
-                                EASY APPOINTMENTS
+                                {t('home.appointments_section.title', 'EASY APPOINTMENTS')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'calendar,' */}
                             <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
-                                Fill your <span className="text-[#FF2A14]">calendar,</span> <br />
-                                <span className="text-gray-400">not your waiting area</span>
+                                {t('home.appointments_section.sub_title', 'Fill your calendar, not your waiting area')}
                             </h3>
 
                             {/* Paragraph Description */}
                             <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
-                                Let your customers book instantly, anytime. No calls, no confusion just
-                                smooth, automated scheduling that keeps your chairs occupied all day.
+                                {t('home.appointments_section.desc', 'Let your customers book instantly, anytime. No calls, no confusion just smooth, automated scheduling that keeps your chairs occupied all day.')}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">Key Points</h4>
+                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Right-Aligned Red Circle Checks */}
                             <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-end">
                                 <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
-                                    <span>Real-Time Stock Tracking Across Services & Products</span>
+                                    <span>{t('home.appointments_section.point1', 'Real-Time Sync of Online & Walk-in Appointments')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
-                                    <span>Smart Low-Stock Alerts Before You Run Out</span>
+                                    <span>{t('home.appointments_section.point2', 'Automated WhatsApp Reminders')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
-                                    <span>Product Usage Insights Per Service</span>
+                                    <span>{t('home.appointments_section.point3', 'Live Tracking of Staff Schedule & Slots')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
-                                    <span>Reduce Wastage & Increase Margins</span>
+                                    <span>{t('home.appointments_section.point4', 'Dramatically Reduce Client No-Shows')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
                             <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
-                                START BOOKING →
+                                {t('buttons.start_booking', 'START BOOKING →')}
                             </button>
                         </div>
                     </div>
@@ -1266,47 +1264,45 @@ const HomeScreen = () => {
                         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
                             <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
-                                NEOPARLOUR LEAD MAGNET
+                                {t('home.lead_magnet_section.title', 'NEOPARLOUR LEAD MAGNET')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'paying clients' */}
                             <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
-                                Turn searches into <br />
-                                <span className="text-[#FF2A14]">paying clients.</span>
+                                {t('home.lead_magnet_section.sub_title', 'Turn searches into paying clients.')}
                             </h3>
 
                             {/* Paragraph Description */}
                             <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
-                                Get discovered by people actively looking for salon services near them.
-                                NeoParlour brings high-intent customers directly to your business.
+                                {t('home.lead_magnet_section.desc', 'Get discovered by people actively looking for salon services near them. NeoParlour brings high-intent customers directly to your business.')}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">Key Points</h4>
+                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Left-Aligned Red Circle Checks */}
                             <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-start">
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Appear In Local Search Results Instantly</span>
+                                    <span>{t('home.lead_magnet_section.point1', 'Appear In Local Search Results Instantly')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Get Verified Leads, Not Random Traffic</span>
+                                    <span>{t('home.lead_magnet_section.point2', 'Get Verified Leads, Not Random Traffic')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Boost Visibility Without Extra Marketing Cost</span>
+                                    <span>{t('home.lead_magnet_section.point3', 'Boost Visibility Without Extra Marketing Cost')}</span>
                                 </li>
                                 <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
                                     <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
-                                    <span>Convert Walk-Ins Into Loyal Customers</span>
+                                    <span>{t('home.lead_magnet_section.point4', 'Convert Walk-Ins Into Loyal Customers')}</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
                             <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
-                                GET MORE CLIENTS →
+                                {t('buttons.get_more_clients', 'GET MORE CLIENTS →')}
                             </button>
                         </div>
                     </div>
@@ -1356,12 +1352,12 @@ const HomeScreen = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Assistant</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_assistant', 'AI Assistant')}</span>
                                 </div>
 
                                 {/* Top Right - Haircut Suggestions */}
                                 <div className="hidden md:flex absolute top-4 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3.5s' }}>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Haircut Suggestions</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.haircut_suggestions', 'Haircut Suggestions')}</span>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
@@ -1377,14 +1373,13 @@ const HomeScreen = () => {
                                         </svg>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase block">Beard</span>
-                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase block">Suggestions</span>
+                                        <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase block">{t('home.ai_badges.beard_suggestions', 'Beard Suggestions')}</span>
                                     </div>
                                 </div>
 
                                 {/* Middle Right - Chatbot */}
                                 <div className="hidden md:flex absolute top-[40%] -right-2 md:-right-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3.2s' }}>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Chatbot</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_chatbot', 'Chatbot')}</span>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
@@ -1394,7 +1389,7 @@ const HomeScreen = () => {
 
                                 {/* Bottom Right - WhatsApp Booking */}
                                 <div className="hidden md:flex absolute bottom-8 -right-2 md:-right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '2.5s' }}>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Booking</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.whatsapp_booking', 'WhatsApp Booking')}</span>
                                     <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
                                         <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -1419,7 +1414,7 @@ const HomeScreen = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Assistant</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_assistant', 'AI Assistant')}</span>
                                 </div>
 
                                 {/* Haircut Suggestions */}
@@ -1429,7 +1424,7 @@ const HomeScreen = () => {
                                             <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase font-sans">Haircut Suggests</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase font-sans">{t('home.ai_badges.haircut_suggestions', 'Haircut Suggests')}</span>
                                 </div>
 
                                 {/* Beard Suggestions */}
@@ -1439,7 +1434,7 @@ const HomeScreen = () => {
                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Beard Suggests</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.beard_suggestions', 'Beard Suggests')}</span>
                                 </div>
 
                                 {/* Chatbot */}
@@ -1449,7 +1444,7 @@ const HomeScreen = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">AI Chatbot</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_chatbot', 'AI Chatbot')}</span>
                                 </div>
 
                                 {/* WhatsApp Booking */}
@@ -1459,7 +1454,7 @@ const HomeScreen = () => {
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">WhatsApp Book</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.whatsapp_booking', 'WhatsApp Book')}</span>
                                 </div>
 
                                 {/* Style Matcher */}
@@ -1469,7 +1464,7 @@ const HomeScreen = () => {
                                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">Style Matcher</span>
+                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.style_matcher', 'Style Matcher')}</span>
                                 </div>
                             </div>
                         </div>
@@ -1632,7 +1627,7 @@ const HomeScreen = () => {
 
             {/* 9. FAQ SECTION */}
             <section className="py-16 px-6 max-w-4xl mx-auto">
-                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">Frequently Asked Questions</h2>
+                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">{t('home.faq.header', 'FREQUENTLY ASKED QUESTIONS')}</h2>
                 <div className="space-y-4">
                     {faqData.map((item, i) => (
                         <div key={i} className="border-b border-gray-100 pb-4">
@@ -1655,7 +1650,7 @@ const HomeScreen = () => {
 
             {/* 10. TESTIMONIALS */}
             <section className="py-16 px-6 bg-white overflow-hidden">
-                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">Testimonials</h2>
+                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">{t('home.testimonials.header', 'WHAT OUR USERS SAY')}</h2>
                 <div className="w-full overflow-hidden">
                     <Marquee
                         gradient={false}

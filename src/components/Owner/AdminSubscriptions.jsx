@@ -99,7 +99,7 @@ export default function AdminSubscriptions() {
 
       // Handle both paginated (Page<>) and flat list responses
       if (data?.content !== undefined) {
-        setSubscriptions(data.content);
+        setSubscriptions(Array.isArray(data.content) ? data.content : []);
         // Spring Data REST wraps metadata under data.page; standard Page<T> puts it at root level
         const meta = data.page ?? data;
         setTotalPages(meta.totalPages ?? 1);
@@ -109,6 +109,10 @@ export default function AdminSubscriptions() {
         setSubscriptions(data);
         setTotalPages(1);
         setTotalElements(data.length);
+      } else {
+        setSubscriptions([]);
+        setTotalPages(1);
+        setTotalElements(0);
       }
     } catch (err) {
       console.error("Failed to fetch subscriptions:", err);
@@ -474,24 +478,26 @@ export default function AdminSubscriptions() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Contracts</p>
-              <p className="text-2xl font-black text-gray-900 mt-1">{subscriptions.length}</p>
+              <p className="text-2xl font-black text-gray-900 mt-1">
+                {Array.isArray(subscriptions) ? subscriptions.length : 0}
+              </p>
             </div>
             <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Active Plans</p>
               <p className="text-2xl font-black text-green-600 mt-1">
-                {subscriptions.filter(s => s.status?.toLowerCase() === 'active').length}
+                {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'active').length : 0}
               </p>
             </div>
             <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Pending Orders</p>
               <p className="text-2xl font-black text-amber-500 mt-1">
-                {subscriptions.filter(s => s.status?.toLowerCase() === 'pending').length}
+                {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'pending').length : 0}
               </p>
             </div>
             <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Expired Contracts</p>
               <p className="text-2xl font-black text-gray-400 mt-1">
-                {subscriptions.filter(s => s.status?.toLowerCase() === 'expired').length}
+                {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'expired').length : 0}
               </p>
             </div>
           </div>
