@@ -105,7 +105,7 @@ const Navbar = () => {
             } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'}`}>
                 
                 {/* Logo Section */}
-                <div onClick={() => navigate('/customer/home')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
+                <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
                     <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
                     <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
                 </div>
@@ -140,10 +140,12 @@ const Navbar = () => {
                                 ? 'translate-x-5 sm:translate-x-6 md:translate-x-7 bg-yellow-400'
                                 : 'translate-x-0 bg-white'
                         }`}>
-                            {isDark
-                                ? <Sun className="w-3 h-3 text-yellow-800" />
-                                : <Moon className="w-3 h-3 text-gray-500" />
-                            }
+                            <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+                            }`} />
+                            <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                            }`} />
                         </span>
                     </button>
 
@@ -245,8 +247,8 @@ const Navbar = () => {
                 onProfileClick={() => setIsProfileOpen(true)}
                 onChangePasswordClick={() => setIsPasswordResetOpen(true)}
                 setCurrentView={(view) => {
-                    if (view === 'about') navigate('/customer/about');
-                    if (view === 'home') navigate('/customer/home');
+                    if (view === 'about') navigate('/about');
+                    if (view === 'home') navigate('/');
                 }} 
             />
 

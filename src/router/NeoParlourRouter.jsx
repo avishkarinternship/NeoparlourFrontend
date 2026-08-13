@@ -62,6 +62,7 @@ import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
+import Offers from '../components/Customer/Offers'
 
 // Import Staff Components
 import StaffDashboard from '../components/StaffDashboard'
@@ -215,14 +216,7 @@ export let routes = createBrowserRouter([
                 path: '/buy-subscription',
                 element: <PublicSubscriptionPlans />
             },
-            {
-                path: '/customer/terms-and-conditions',
-                element: <CustomerTermsAndConditions />
-            },
-            {
-                path: '/customer/privacy-policy',
-                element: <PrivacyPolicy />
-            },
+
             {
                 path: '/owner/terms-and-conditions',
                 element: <OwnerTermsAndConditions />
@@ -232,28 +226,62 @@ export let routes = createBrowserRouter([
                 element: <PrivacyPolicyScreen />
             },
 
+            {
+                path: '/customer/cart',
+                element: <Navigate to="/cart" replace />
+            },
+            {
+                path: '/customer/appointments',
+                element: <Navigate to="/appointments" replace />
+            },
+            {
+                path: '/customer/my-orders',
+                element: <Navigate to="/my-orders" replace />
+            },
+            {
+                path: '/customer/my-salons',
+                element: <Navigate to="/my-salons" replace />
+            },
+            {
+                path: '/customer/favourites',
+                element: <Navigate to="/favourites" replace />
+            },
+            {
+                path: '/customer/salon',
+                element: <Navigate to="/salon" replace />
+            },
+            {
+                path: '/customer/book-service',
+                element: <Navigate to="/book-service" replace />
+            },
+
             // Customer Layout wrapper routes
             {
                 element: <CustomerLayout />,
                 children: [
                     {
+                        path: 'customer/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
                         path: '/',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
+
                     {
-                        path: '/customer/home',
-                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
-                    },
-                    {
-                        path: '/customer/features',
+                        path: '/features',
                         element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/about',
+                        path: '/about',
                         element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/support',
+                        path: '/support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
                     },
                     {
@@ -261,11 +289,11 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/partner-with-us',
+                        path: '/partner-with-us',
                         element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/salons',
+                        path: '/salons',
                         element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
                     },
                     {
@@ -273,55 +301,59 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/blogs',
+                        path: '/blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/leadership',
+                        path: '/leadership',
                         element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/videos',
+                        path: '/videos',
                         element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/security',
+                        path: '/security',
                         element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/services',
+                        path: '/services',
                         element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/client-testimonials',
+                        path: '/client-testimonials',
                         element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/sitemap',
+                        path: '/sitemap',
                         element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/updates',
+                        path: '/updates',
                         element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
                     },
+                    {
+                        path: '/customer/offers',
+                        element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
+                    },
                      {
-                        path: '/customer/case-studies',
+                        path: '/case-studies',
                         element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/my-salons',
+                        path: '/my-salons',
                         element: <CustomerRouteGuard><MySalons /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/favourites',
+                        path: '/favourites',
                         element: <CustomerRouteGuard><Favourites /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/appointments',
+                        path: '/appointments',
                         element: <CustomerRouteGuard><Appointments /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/salon',
+                        path: 'salon',
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },
                     {
@@ -341,11 +373,15 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
                     },
                     {
+                        path: ':cityName/:serviceSlug',
+                        element: <CustomerRouteGuard isPublic={true}><SEOSalons /></CustomerRouteGuard>
+                    },
+                    {
                         path: 'salon/:salonSlug',
                         element: <CustomerRouteGuard isPublic={true}><SalonPage /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/book-service',
+                        path: 'book-service',
                         element: <CustomerRouteGuard isPublic={true}><SelectService /></CustomerRouteGuard>
                     },
                     {
@@ -369,11 +405,11 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard><OrderSuccess /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/my-orders',
+                        path: 'my-orders',
                         element: <CustomerRouteGuard><MyOrders /></CustomerRouteGuard>
                     },
                     {
-                        path: 'customer/cart',
+                        path: 'cart',
                         element: <CustomerRouteGuard><Cart /></CustomerRouteGuard>
                     }
                 ]

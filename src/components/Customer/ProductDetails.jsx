@@ -274,7 +274,7 @@ const ProductDetails = () => {
       <main className="max-w-7xl w-full mx-auto px-4 md:px-12 py-8 flex-1">
         {/* Breadcrumbs Navigation Route Map */}
         <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium mb-8">
-          <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/home')}>Home</span>
+          <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
           <span>&gt;</span>
           <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/product-search')}>Products</span>
           <span>&gt;</span>

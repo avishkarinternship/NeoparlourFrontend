@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import SEOFooter from '../common/SEOFooter';
 
 // Helper toast style
 const toastStyle = {
@@ -135,31 +136,6 @@ export default function Cart() {
   const totalAmount = cart?.totalAmount || 0;
   const hasOutOfStockItems = items.some(item => !item.inStock);
 
-  if (items.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] font-sans flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-neutral-100 shadow-sm text-center space-y-6">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto border border-red-100">
-            <ShoppingCart className="w-10 h-10 text-[#FF0B01]" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black uppercase tracking-wider text-[#131313]">Your Cart is Empty</h2>
-            <p className="text-sm font-semibold text-neutral-400">
-              Browse our salon's premium beauty formulations and add them to your cart.
-            </p>
-          </div>
-          <button 
-            onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
-            className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Continue Browsing
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-neutral-800 antialiased flex flex-col">
       <main className="max-w-6xl w-full mx-auto px-4 md:px-8 py-12 flex-1">
@@ -167,7 +143,7 @@ export default function Cart() {
         {/* Breadcrumbs */}
         <div className="mb-8 space-y-2">
           <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium">
-            <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/home')}>Home</span>
+            <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
             <ChevronRight className="w-3 h-3" />
             <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/product-search')}>Products</span>
             <ChevronRight className="w-3 h-3" />
@@ -181,17 +157,38 @@ export default function Cart() {
           </h1>
         </div>
 
-        {hasOutOfStockItems && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div className="text-xs font-semibold leading-relaxed">
-              <p className="font-extrabold text-sm uppercase tracking-wide mb-0.5">Out of Stock Alert</p>
-              Some items in your cart are currently unavailable. Please remove them to proceed to checkout.
+        {items.length === 0 ? (
+          <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-neutral-100 shadow-sm text-center space-y-6 mx-auto my-12">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto border border-red-100">
+              <ShoppingCart className="w-10 h-10 text-[#FF0B01]" />
             </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-wider text-[#131313]">Your Cart is Empty</h2>
+              <p className="text-sm font-semibold text-neutral-400">
+                Browse our salon's premium beauty formulations and add them to your cart.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
+              className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Continue Browsing
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            {hasOutOfStockItems && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="text-xs font-semibold leading-relaxed">
+                  <p className="font-extrabold text-sm uppercase tracking-wide mb-0.5">Out of Stock Alert</p>
+                  Some items in your cart are currently unavailable. Please remove them to proceed to checkout.
+                </div>
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
@@ -348,7 +345,7 @@ export default function Cart() {
 
               <button 
                 type="button"
-                onClick={() => navigate('/customer/salons', { state: { purpose: 'products' } })}
+                onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
                 className="w-full py-3.5 mt-3 border border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-extrabold text-[13px] tracking-wider rounded-2xl shadow-xs transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4 text-neutral-400" />
@@ -357,8 +354,13 @@ export default function Cart() {
             </div>
           </div>
         </div>
+        </>
+        )}
 
       </main>
+      <div className="mt-12 md:mt-20">
+        <SEOFooter />
+      </div>
     </div>
   );
 }

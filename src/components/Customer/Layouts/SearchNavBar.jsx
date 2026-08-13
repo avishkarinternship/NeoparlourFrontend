@@ -17,7 +17,7 @@ const SearchNavBar = () => {
   useEffect(() => {
       setMounted(true);
   }, []);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const SearchNavBar = () => {
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
       {/* Brand Vector Identity Block */}
-      <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/customer/home')}>
+      <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
         <div className="text-[#EF3E23] flex items-center justify-center flex-shrink-0">
           <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fillRule="evenodd" clipRule="evenodd" d="M50.8159 0.709961C51.5247 5.9279 50.2046 10.2438 46.635 13.6787C42.6288 17.5384 38.4736 21.2409 34.4058 25.0377C33.8973 25.5096 33.6303 25.5411 33.1526 25.0167C31.9918 23.7423 30.8002 22.4994 29.5573 21.3143C28.9769 20.7584 29.0797 20.4699 29.619 19.9822C36.0392 14.1665 42.4388 8.32455 48.8435 2.4878C49.4393 1.94765 50.0352 1.41793 50.821 0.71521L50.8159 0.709961Z" fill="#878787"/>
@@ -110,7 +110,7 @@ const SearchNavBar = () => {
           />
         </div>
         
-        <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-600 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}>
+        <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
           <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
           <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
           <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
@@ -148,10 +148,12 @@ const SearchNavBar = () => {
               ? 'translate-x-5 sm:translate-x-6 md:translate-x-7 bg-yellow-400'
               : 'translate-x-0 bg-white'
           }`}>
-            {isDark
-              ? <Sun className="w-3 h-3 text-yellow-800" />
-              : <Moon className="w-3 h-3 text-gray-500" />
-            }
+            <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+            }`} />
+            <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+            }`} />
           </span>
         </button>
 
@@ -237,6 +239,8 @@ const SearchNavBar = () => {
         )}
       </div>
 
+      </header>
+
       {/* Slide-out Panel Overlay */}
       <Drawer 
         isOpen={isDrawerOpen} 
@@ -244,8 +248,8 @@ const SearchNavBar = () => {
         onProfileClick={() => setIsProfileOpen(true)}
         onChangePasswordClick={() => setIsPasswordResetOpen(true)}
         setCurrentView={(view) => {
-          if (view === 'about') navigate('/customer/about');
-          if (view === 'home') navigate('/customer/home');
+          if (view === 'about') navigate('/about');
+          if (view === 'home') navigate('/');
         }} 
       />
 
@@ -264,8 +268,10 @@ const SearchNavBar = () => {
           isOpen={isPasswordResetOpen} 
           onClose={() => setIsPasswordResetOpen(false)} 
       />
-    </header>
+    </>
   );
 };
 
 export default SearchNavBar;
+
+

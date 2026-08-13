@@ -199,7 +199,7 @@ export default function SalonsSEO() {
     localStorage.setItem('activeSalonName', salonName);
 
     if (!token) {
-      navigate('/customer/salon');
+      navigate('/salon');
       return;
     }
 
@@ -208,10 +208,10 @@ export default function SalonsSEO() {
       .unwrap()
       .then(() => {
         toast.success(`Switched to ${salonName}`);
-        navigate('/customer/salon');
+        navigate('/salon');
       })
       .catch(() => {
-        navigate('/customer/salon');
+        navigate('/salon');
       });
   };
 
@@ -228,7 +228,7 @@ export default function SalonsSEO() {
   ];
 
   const nearbyAreas = {
-    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman Nagar', 'Kalyani Nagar', 'Koregaon Park', 'Bavdhan'],
+    pune: ['Baner', 'Wakad', 'Kothrud', 'Aundh', 'Hinjewadi', 'Viman N   agar', 'Kalyani Nagar', 'Koregaon Park', 'Bavdhan'],
     mumbai: ['Bandra', 'Andheri', 'Juhu', 'Colaba', 'Worli', 'Borivali', 'Thane', 'Navi Mumbai'],
     bangalore: ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'Marathahalli', 'Yelahanka', 'JP Nagar'],
     chennai: ['Adyar', 'Velachery', 'T Nagar', 'Nungambakkam', 'Anna Nagar', 'Mylapore', 'OMR', 'Tambaram'],
@@ -374,7 +374,7 @@ export default function SalonsSEO() {
                   We currently do not have any registered salons matching your specific location details. Please try searching in a broader city or nearby area.
                 </p>
                 <Link
-                  to="/customer/salons"
+                  to="/salons"
                   className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-2xl text-sm transition-all shadow-sm"
                 >
                   Explore All Salons

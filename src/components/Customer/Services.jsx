@@ -1,36 +1,39 @@
 import React from 'react';
 import SEOFooter from '../common/SEOFooter';
+import serviceOne from '../../assets/Services/serviceOne.jpg';
+import serviceTwo from '../../assets/Services/serviceTwo.jpg';
+import serviceThree from '../../assets/Services/serviiceThree.jpg';
 
 const services = [
   {
     id: 1,
     title: 'Salon',
-    image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=600',
+    image: serviceOne,
   },
   {
     id: 2,
     title: 'Wellness & Spa',
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600',
+    image: serviceTwo,
   },
   {
     id: 3,
     title: 'Nail & Lashes',
-    image: 'https://images.unsplash.com/photo-1604654894610-df4906bf1a2a?auto=format&fit=crop&q=80&w=600',
+    image: serviceThree,
   },
   {
     id: 4,
     title: 'Spa',
-    image: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?auto=format&fit=crop&q=80&w=600',
+    image: serviceOne,
   },
   {
     id: 5,
     title: 'Nail Salon',
-    image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&q=80&w=600',
+    image: serviceTwo,
   },
   {
     id: 6,
     title: 'Skin Clinic',
-    image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=600',
+    image: serviceThree,
   },
 ];
 
@@ -90,3 +93,4 @@ export default function ServicesGrid() {
     </div>
   );
 }
+

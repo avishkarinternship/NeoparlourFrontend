@@ -3,11 +3,11 @@ import SEOFooter from "../common/SEOFooter";
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-gray-100 antialiased font-sans text-gray-700 flex flex-col justify-between">
+    <div className="min-h-screen bg-gray-100 dark:bg-black antialiased font-sans text-gray-700 dark:text-gray-300 flex flex-col justify-between">
       
       {/* Main Content Card Wrapper */}
       <div className="py-12 px-4 flex-grow">
-        <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden">
+        <div className="max-w-5xl mx-auto bg-white dark:bg-black dark:border dark:border-gray-800 shadow-lg rounded-2xl overflow-hidden">
 
           {/* Header */}
           <div className="bg-black text-white p-6">
@@ -25,7 +25,7 @@ const PrivacyPolicy = () => {
           </div>
 
           {/* Body */}
-          <div className="p-6 space-y-8 text-gray-700">
+          <div className="p-6 space-y-8 text-gray-700 dark:text-gray-300">
 
             {/* Introduction */}
             <Section title="1. INTRODUCTION">
@@ -311,7 +311,7 @@ const PrivacyPolicy = () => {
                 For any privacy-related queries:
               </p>
 
-              <div className="bg-gray-100 p-4 rounded-xl mt-4">
+              <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl mt-4">
                 <p>
                   <span className="font-semibold">Email:</span>{" "}
                   support@neopaceinfotech.com
@@ -344,7 +344,7 @@ const PrivacyPolicy = () => {
       </div>
 
       {/* --- GLOBAL SEO FOOTER CONTAINER --- */}
-      <div className="w-full bg-white border-t border-gray-200">
+      <div className="w-full bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
         <SEOFooter />
       </div>
 
@@ -355,7 +355,7 @@ const PrivacyPolicy = () => {
 // Helper Components
 const Section = ({ title, children }) => (
   <div className="pt-4">
-    <h2 className="text-2xl font-bold text-black mb-4">
+    <h2 className="text-2xl font-bold text-black dark:text-white mb-4">
       {title}
     </h2>
     <div className="space-y-3">
@@ -365,8 +365,8 @@ const Section = ({ title, children }) => (
 );
 
 const Card = ({ title, children }) => (
-  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 my-3">
-    <h3 className="text-lg font-semibold mb-3 text-black">
+  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 my-3">
+    <h3 className="text-lg font-semibold mb-3 text-black dark:text-white">
       {title}
     </h3>
     {children}
@@ -377,7 +377,7 @@ const BulletList = ({ items }) => (
   <ul className="space-y-2">
     {items.map((item, index) => (
       <li key={index} className="flex items-start gap-2">
-        <span className="text-black mt-1">•</span>
+        <span className="text-black dark:text-gray-400 mt-1">•</span>
         <span>{item}</span>
       </li>
     ))}

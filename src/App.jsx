@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -19,6 +19,10 @@ const App = () => {
     });
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
     <div className="app-container overflow-x-hidden font-sans">
       <Toaster position="top-right" />
@@ -35,4 +39,3 @@ const App = () => {
 }
 
 export default App;
-

@@ -38,7 +38,7 @@ const CustomerDashboard = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div 
-              onClick={() => navigate('/customer/appointments')}
+              onClick={() => navigate('/appointments')}
               className="p-6 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all duration-300" 
               data-aos="fade-up" 
               data-aos-delay="100"

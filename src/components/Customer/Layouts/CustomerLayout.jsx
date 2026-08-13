@@ -13,12 +13,12 @@ function CustomerLayoutInner() {
     '/customer/product-search',
     '/customer/product-details',
     '/customer/product-payment',
-    '/customer/salon',
-    '/customer/book-service',
+    '/salon',
+    '/book-service',
     '/customer/appointment-success',
     '/customer/order-success',
-    '/customer/my-orders',
-    '/customer/cart'
+    '/my-orders',
+    '/cart'
   ];
 
   const isSearchRoute = searchRoutes.some(route =>
@@ -26,7 +26,7 @@ function CustomerLayoutInner() {
   );
 
   return (
-    <div className={`w-full min-h-screen font-sans overflow-x-hidden antialiased flex flex-col justify-between transition-colors duration-300 ${isDark ? 'dark-mode bg-black text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`w-full min-h-screen font-sans overflow-x-hidden antialiased flex flex-col justify-between transition-colors duration-300 ${isDark ? 'dark dark-mode bg-black text-white' : 'bg-white text-gray-900'}`}>
       <div>
         {isSearchRoute ? <SearchNavBar /> : <Navbar />}
         <Outlet />

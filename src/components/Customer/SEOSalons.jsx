@@ -23,16 +23,40 @@ export default function SEOSalons() {
   const [pricesMap, setPricesMap] = useState({});
   const [servicesMap, setServicesMap] = useState({});
 
-  const { cityName: paramCity, areaName: paramArea, serviceName: paramService } = useParams();
+  const { cityName: paramCity, areaName: paramArea, serviceName: paramService, serviceSlug } = useParams();
+
+  const parseSlug = (str) => str ? str.replace(/-/g, ' ') : '';
 
   // Parse URL parameters (supporting both pretty route params and query parameters)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const urlCity = paramCity || queryParams.get('cityName') || '';
-    const urlArea = paramArea || queryParams.get('areaName') || '';
-    const urlService = paramService || queryParams.get('serviceName') || queryParams.get('category') || '';
+    let urlCity = parseSlug(paramCity || queryParams.get('cityName') || '');
+    let urlArea = parseSlug(paramArea || queryParams.get('areaName') || '');
+    let urlService = parseSlug(paramService || queryParams.get('serviceName') || queryParams.get('category') || '');
 
-    if (!stateData.salons && (urlCity || urlArea || urlService)) {
+    // Support new route format: /:cityName/:serviceSlug (where serviceSlug is Best-service-in-area)
+    if (serviceSlug) {
+      const match = serviceSlug.match(/^Best-(.+)-in-(.+)$/i);
+      if (match) {
+        urlService = parseSlug(match[1]);
+        urlArea = parseSlug(match[2]);
+      }
+    } else if (urlService.toLowerCase().startsWith('best ') && urlArea) {
+      // Fallback for old route structure
+      const suffix = ` in ${urlArea.toLowerCase()}`;
+      if (urlService.toLowerCase().endsWith(suffix)) {
+        urlService = urlService.substring(5, urlService.length - suffix.length).trim();
+      }
+    }
+
+    if (location.state && location.state.salons) {
+      setCityName(location.state.cityName || urlCity);
+      setAreaName(location.state.areaName || urlArea);
+      setServiceName(location.state.serviceName || urlService);
+      setSalons(location.state.salons);
+      setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (urlCity || urlArea || urlService) {
       setCityName(urlCity);
       setAreaName(urlArea);
       setServiceName(urlService);
@@ -59,8 +83,9 @@ export default function SEOSalons() {
         }
       };
       fetchSalons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [location.search, paramCity, paramArea, paramService, stateData.salons]);
+  }, [location.state, location.search, paramCity, paramArea, paramService]);
 
   // Update dynamic document title and meta description for Google/SEO indexation
   useEffect(() => {
@@ -100,10 +125,34 @@ export default function SEOSalons() {
               params: { salonId }
             });
             const serviceList = res.data || [];
-            services[salonId] = serviceList.slice(0, 4).map((s) => s.name || s.serviceName);
+            
+            let names = serviceList.map((s) => s.name || s.serviceName);
+            if (serviceName) {
+              const matchingService = names.find(n => n.toLowerCase() === serviceName.toLowerCase());
+              if (matchingService) {
+                names = [matchingService, ...names.filter(n => n !== matchingService)];
+              } else {
+                names = [serviceName, ...names]; // Fallback if API returned it but name differs slightly
+              }
+            }
+            
+            services[salonId] = names.slice(0, 4);
+
             if (serviceList.length > 0) {
-              const minPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
-              prices[salonId] = minPrice;
+              let displayPrice = 299;
+              
+              if (serviceName) {
+                const targetService = serviceList.find(s => (s.name || s.serviceName).toLowerCase() === serviceName.toLowerCase());
+                if (targetService && targetService.price) {
+                  displayPrice = parseFloat(targetService.price);
+                } else {
+                  displayPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
+                }
+              } else {
+                displayPrice = Math.min(...serviceList.map((s) => parseFloat(s.price) || 299));
+              }
+              
+              prices[salonId] = displayPrice;
             } else {
               prices[salonId] = 299;
             }
@@ -127,7 +176,7 @@ export default function SEOSalons() {
     localStorage.setItem('activeSalonName', salonName);
 
     if (!token) {
-      navigate('/customer/salon');
+      navigate('/salon');
       return;
     }
 
@@ -136,10 +185,10 @@ export default function SEOSalons() {
       .unwrap()
       .then(() => {
         toast.success(`Switched to ${salonName}`);
-        navigate('/customer/salon');
+        navigate('/salon');
       })
       .catch(() => {
-        navigate('/customer/salon');
+        navigate('/salon');
       });
   };
 
@@ -183,9 +232,9 @@ export default function SEOSalons() {
         <div className="bg-white rounded-[32px] border border-gray-100 p-8 md:p-12 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
           <div className="relative space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
+            {/* <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
               <Sparkles className="w-3.5 h-3.5" /> Premium SEO Directories
-            </div>
+            </div> */}
             <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-none">
               {displayTitle}
             </h1>
@@ -218,7 +267,7 @@ export default function SEOSalons() {
                 We currently don't have registered salons matching "{serviceName}" in {areaName ? `${areaName}, ${cityName}` : cityName}. Explore other areas or try another city name in the footer below.
               </p>
               <Link
-                to="/customer/salons"
+                to="/salons"
                 className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-2xl text-sm transition-all shadow-sm"
               >
                 Browse All Salons

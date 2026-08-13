@@ -1,12 +1,13 @@
 import React from 'react';
 import SEOFooter from '../common/SEOFooter';
+import leaderImage1 from '../../assets/Leadership/image1.jpg';
 
 const directors = [
   {
     id: 1,
     name: 'Santosh Mhaske',
     role: 'Managing Director | Founder',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400', 
+    image: leaderImage1, 
   },
   { id: 2, name: 'Sagar Bamgude', role: 'Managing Director | Founder', image: null },
   { id: 3, name: 'Jeevan Joshi', role: 'Managing Director | Founder', image: null },
@@ -32,17 +33,17 @@ const bottomTeamRow = [
 export default function TeamPage() {
   // Helper component for the individual profile badges
   const TeamCard = ({ member }) => (
-    <div className="flex-shrink-0 w-[280px] bg-white rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-gray-100 p-4 flex items-center space-x-4">
-      <div className="w-11 h-11 bg-gray-300 rounded-full flex-shrink-0" />
+    <div className="flex-shrink-0 w-[280px] bg-white dark:bg-gray-900 rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-800 p-4 flex items-center space-x-4">
+      <div className="w-11 h-11 bg-gray-300 dark:bg-gray-700 rounded-full flex-shrink-0" />
       <div className="text-left overflow-hidden">
-        <h4 className="font-bold text-sm text-gray-900 truncate">{member.name}</h4>
+        <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">{member.name}</h4>
         <p className="text-xs text-gray-500 font-medium mt-0.5 truncate">{member.role}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full min-h-screen bg-white font-sans antialiased text-gray-900 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-white dark:bg-black font-sans antialiased text-gray-900 dark:text-gray-300 overflow-x-hidden">
       
       {/* Injecting keyframes for infinite marquee loops */}
       <style>{`
@@ -76,8 +77,8 @@ export default function TeamPage() {
       {/* --- LEADERSHIP / BOARD OF DIRECTORS SECTION --- */}
       <section className="max-w-7xl mx-auto px-4 py-16 text-center">
         <span className="text-xs font-bold tracking-widest text-red-500 uppercase block mb-2">- Leadership -</span>
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">BOARD OF DIRECTORS</h2>
-        <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto mb-12">
+        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white">BOARD OF DIRECTORS</h2>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-12">
           Meet the team leading us into the future of AI-driven business solutions.
         </p>
 
@@ -97,9 +98,9 @@ export default function TeamPage() {
       </section>
 
       {/* --- MEET OUR TEAM SECTION (SCROLLABLE ROWS) --- */}
-      <section className="w-full bg-gradient-to-b from-[#f2f4f7] to-[#f9fafb] py-16 overflow-hidden">
+      <section className="w-full bg-gradient-to-b from-[#f2f4f7] to-[#f9fafb] dark:from-black dark:to-gray-900 py-16 overflow-hidden">
         <div className="text-center w-full">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-12 text-gray-900 uppercase">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-12 text-gray-900 dark:text-white uppercase">
             Meet Our Team
           </h2>
 

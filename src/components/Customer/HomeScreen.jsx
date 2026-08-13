@@ -111,10 +111,10 @@ const partners = [
 ];
 
 const recommendedSalons = [
-    { name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
-    { name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
-    { name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
-    { name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
+    { id: 1, name: "Enrich Salon", location: "Mukund Nagar", img: salonOneIcon, rating: "4.6" },
+    { id: 2, name: "Habibs Salon", location: "Kothrud", img: salonTwoIcon, rating: "4.8" },
+    { id: 3, name: "Bodycraft", location: "Viman Nagar", img: salonThreeIcon, rating: "4.5" },
+    { id: 4, name: "Lakme Salon", location: "Aundh", img: salonFourIcon, rating: "4.7" },
 ];
 
 const HomeScreen = () => {
@@ -426,13 +426,7 @@ const HomeScreen = () => {
     }, []);
 
     const handleRecommendedCardClick = (salon) => {
-        if (locationPermission !== 'granted') {
-            requestLocationAndFetchSalons(true);
-        } else if (salon.isApiSalon) {
-            handleSalonSelect(salon.originalSalon);
-        } else {
-            requestLocationAndFetchSalons(true);
-        }
+        handleSalonSelect(salon.originalSalon || salon);
     };
 
     const handleServiceCardClick = (service) => {
@@ -513,7 +507,7 @@ const HomeScreen = () => {
         localStorage.setItem('activeSalonName', salonName);
 
         const hasCategory = !!searchData.category;
-        const targetPath = hasCategory ? '/customer/book-service' : '/customer/salon';
+        const targetPath = hasCategory ? '/book-service' : '/salon';
         const navState = hasCategory ? { state: { selectedCategory: searchData.category } } : undefined;
 
         if (!token) {
@@ -766,8 +760,8 @@ const HomeScreen = () => {
                     </p>
 
 
-                    <div className="relative w-full max-w-4xl z-50 animate-fade-in" ref={searchDropdownRef} data-aos="fade-up" data-aos-delay="200">
-                        <div className="bg-white p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border border-gray-100">
+                    <div className="relative w-full max-w-4xl z-50" ref={searchDropdownRef}>
+                        <div className={`p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border ${isDark ? 'bg-[#1A1A1A] border-gray-500' : 'bg-white border-gray-100'}`}>
                             <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
@@ -785,7 +779,7 @@ const HomeScreen = () => {
                                         setShowSearchDropdown(false);
                                     }}
                                     onFocus={() => setShowCityDropdown(true)}
-                                    className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent" />
+                                    className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`} />
                                 <button
                                     type="button"
                                     onClick={handleDetectLocation}
@@ -843,7 +837,7 @@ const HomeScreen = () => {
                                             setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
-                                        className="w-full outline-none text-sm font-medium text-gray-700 placeholder-gray-400 bg-transparent"
+                                        className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
                                     />
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
@@ -876,7 +870,7 @@ const HomeScreen = () => {
 
                             {/* Category/Service Select Dropdown */}
                             <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
-                                <div className="flex items-center gap-3 w-full">
+                                <div className="flex items-center gap-3 w-full pointer-events-none">
                                     <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />
                                     <select
                                         value={searchData.category}
@@ -901,7 +895,30 @@ const HomeScreen = () => {
                                         <option value="Hair Treatment">{t('home.services_grid.hair_treatment', 'Hair Treatment')}</option>
                                     </select>
                                 </div>
-                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60 pointer-events-none" />
+                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain opacity-60 pointer-events-none" />
+                                
+                                <select
+                                    value={searchData.category}
+                                    onChange={(e) => {
+                                        setSearchData((prev) => ({
+                                            ...prev,
+                                            category: e.target.value,
+                                        }));
+                                        setShowSearchDropdown(false);
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                    <option value="">SELECT SERVICE</option>
+                                    <option value="Hair Services">Hair Services</option>
+                                    <option value="Skin Care">Skin Care</option>
+                                    <option value="Hair Removal">Hair Removal</option>
+                                    <option value="Nail Care">Nail Care</option>
+                                    <option value="Makeup">Makeup</option>
+                                    <option value="Grooming">Grooming</option>
+                                    <option value="Spa & Massage">Spa & Massage</option>
+                                    <option value="Bridal Packages">Bridal Packages</option>
+                                    <option value="Hair Treatment">Hair Treatment</option>
+                                </select>
                             </div>
 
                             <button
@@ -1003,8 +1020,8 @@ const HomeScreen = () => {
                                     localStorage.setItem('activeSalonName', salonName);
                                     dispatch(switchTenant({ token, salonId, salonName }))
                                         .unwrap()
-                                        .then(() => navigate('/customer/salon'))
-                                        .catch(() => navigate('/customer/salon'));
+                                        .then(() => navigate('/salon'))
+                                        .catch(() => navigate('/salon'));
                                 }}
                                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#ff0b01] to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.03] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
                             >
@@ -1018,7 +1035,7 @@ const HomeScreen = () => {
 
 
             {/* 3. FIXED STATS SECTION */}
-            <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
+            {/* <section id="stats-section" className="pt-16 pb-12 border-b" data-aos="fade-up">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-4 px-6">
                     {[
                         { label: t('labels.reviews', 'REVIEWS'), value: "1.14k", img: reviewIcon },
@@ -1035,7 +1052,7 @@ const HomeScreen = () => {
                         </div>
                     ))}
                 </div>
-            </section>
+            </section> */}
 
             {/* 4. PREMIUM SALONS NEARBY SECTION */}
             <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto" data-aos="fade-up">
@@ -1051,7 +1068,7 @@ const HomeScreen = () => {
                         </p>
                     </div>
                     <button
-                        onClick={() => navigate('/customer/salons')}
+                        onClick={() => navigate('/salons')}
                         className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
                     >
                         {t('buttons.see_more', 'See More')}
