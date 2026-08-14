@@ -172,13 +172,13 @@ const Favourites = () => {
             {/* Content Container */}
             <div className="max-w-[1200px] w-full mx-auto px-6 pb-16 flex-1">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={i} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[24px] overflow-hidden p-5 space-y-4 shadow-xs">
-                                <div className="h-40 bg-slate-200 dark:bg-gray-800 rounded-2xl"></div>
+                                <div className="h-40 yt-skeleton rounded-2xl"></div>
                                 <div className="space-y-2">
-                                    <div className="h-5 bg-slate-200 dark:bg-gray-800 rounded w-44"></div>
-                                    <div className="h-4 bg-slate-200 dark:bg-gray-800 rounded w-28"></div>
+                                    <div className="h-5 yt-skeleton rounded w-44"></div>
+                                    <div className="h-4 yt-skeleton rounded w-28"></div>
                                 </div>
                             </div>
                         ))}

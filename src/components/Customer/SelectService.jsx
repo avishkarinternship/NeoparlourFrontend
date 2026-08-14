@@ -1149,28 +1149,28 @@ const SelectService = () => {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
                 <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
-                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 flex items-center gap-1.5 font-bold uppercase tracking-widest animate-pulse">
-                        <div className="h-3 bg-slate-200 rounded w-16"></div>
+                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                        <div className="h-3 yt-skeleton rounded w-16"></div>
                         <span>&gt;</span>
-                        <div className="h-3 bg-slate-200 rounded w-24"></div>
+                        <div className="h-3 yt-skeleton rounded w-24"></div>
                         <span>&gt;</span>
-                        <div className="h-3 bg-slate-300 rounded w-20"></div>
+                        <div className="h-3 yt-skeleton rounded w-20"></div>
                     </div>
                 </nav>
-                <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 animate-pulse space-y-8">
+                <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8">
                     {/* Header Card Skeleton */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row justify-between items-start gap-6">
                         <div className="space-y-3 flex-1 w-full">
-                            <div className="h-8 bg-slate-200 rounded-2xl w-64"></div>
-                            <div className="h-4 bg-slate-200 rounded-lg w-48"></div>
+                            <div className="h-8 yt-skeleton rounded-2xl w-64"></div>
+                            <div className="h-4 yt-skeleton rounded-lg w-48"></div>
                             <div className="flex gap-2">
-                                <div className="h-6 bg-slate-200 rounded-xl w-24"></div>
-                                <div className="h-6 bg-slate-200 rounded-xl w-20"></div>
+                                <div className="h-6 yt-skeleton rounded-xl w-24"></div>
+                                <div className="h-6 yt-skeleton rounded-xl w-20"></div>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <div className="w-10 h-10 bg-slate-200 rounded-2xl"></div>
-                            <div className="w-10 h-10 bg-slate-200 rounded-2xl"></div>
+                            <div className="w-10 h-10 yt-skeleton rounded-2xl"></div>
+                            <div className="w-10 h-10 yt-skeleton rounded-2xl"></div>
                         </div>
                     </div>
 
@@ -1179,28 +1179,28 @@ const SelectService = () => {
                         <div className="w-full lg:w-[60%] shrink-0 space-y-6">
                             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
                                 <div className="flex gap-3 overflow-x-auto pb-2">
-                                    <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
-                                    <div className="h-9 w-28 bg-slate-200 rounded-xl shrink-0"></div>
-                                    <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
-                                    <div className="h-9 w-32 bg-slate-200 rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-28 yt-skeleton rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-32 yt-skeleton rounded-xl shrink-0"></div>
                                 </div>
                                 <div className="space-y-4">
                                     {[1, 2, 3, 4].map(i => (
                                         <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
                                             <div className="space-y-2">
-                                                <div className="h-5 bg-slate-200 rounded-lg w-44"></div>
-                                                <div className="h-4 bg-slate-200 rounded-lg w-28"></div>
+                                                <div className="h-5 yt-skeleton rounded-lg w-44"></div>
+                                                <div className="h-4 yt-skeleton rounded-lg w-28"></div>
                                             </div>
-                                            <div className="h-9 w-20 bg-slate-200 rounded-xl"></div>
+                                            <div className="h-9 w-20 yt-skeleton rounded-xl"></div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
                         <div className="w-full lg:w-[40%] bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                            <div className="h-6 bg-slate-200 rounded-xl w-36"></div>
-                            <div className="h-28 bg-slate-100 rounded-2xl"></div>
-                            <div className="h-12 bg-slate-200 rounded-2xl w-full"></div>
+                            <div className="h-6 yt-skeleton rounded-xl w-36"></div>
+                            <div className="h-28 yt-skeleton rounded-2xl"></div>
+                            <div className="h-12 yt-skeleton rounded-2xl w-full"></div>
                         </div>
                     </div>
                 </main>
@@ -1291,21 +1291,21 @@ const SelectService = () => {
                         {/* Services Picker Section */}
                         <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
                             {!servicesLoaded ? (
-                                <div className="animate-pulse space-y-6">
+                                <div className="space-y-6">
                                     <div className="flex gap-3 overflow-x-auto pb-2">
-                                        <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
-                                        <div className="h-9 w-28 bg-slate-200 rounded-xl shrink-0"></div>
-                                        <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
-                                        <div className="h-9 w-32 bg-slate-200 rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-28 yt-skeleton rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-32 yt-skeleton rounded-xl shrink-0"></div>
                                     </div>
                                     <div className="space-y-4">
                                         {[1, 2, 3, 4].map(i => (
                                             <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
                                                 <div className="space-y-2">
-                                                    <div className="h-5 bg-slate-200 rounded-lg w-44"></div>
-                                                    <div className="h-4 bg-slate-200 rounded-lg w-28"></div>
+                                                    <div className="h-5 yt-skeleton rounded-lg w-44"></div>
+                                                    <div className="h-4 yt-skeleton rounded-lg w-28"></div>
                                                 </div>
-                                                <div className="h-9 w-20 bg-slate-200 rounded-xl"></div>
+                                                <div className="h-9 w-20 yt-skeleton rounded-xl"></div>
                                             </div>
                                         ))}
                                     </div>
@@ -1582,9 +1582,9 @@ const SelectService = () => {
 
                             {/* Time Slots grid */}
                             {slotsLoading ? (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5 animate-pulse">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
-                                        <div key={i} className="h-16 bg-slate-100 rounded-xl"></div>
+                                        <div key={i} className="h-14 yt-skeleton rounded-xl"></div>
                                     ))}
                                 </div>
                             ) : displayedSlots.length === 0 ? (
@@ -1861,17 +1861,17 @@ const SelectService = () => {
                                 <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_expert', 'Select Expert')}
                             </h3>
                             {(firstSelected === 'slot' && availableStaffLoading) || !staffLoaded ? (
-                                <div className="space-y-3 animate-pulse">
+                                <div className="space-y-3">
                                     {[1, 2, 3].map(i => (
                                         <div key={i} className="p-3 border border-slate-100 rounded-2xl flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-slate-200 rounded-full"></div>
+                                                <div className="w-10 h-10 yt-skeleton rounded-full"></div>
                                                 <div className="space-y-1.5">
-                                                    <div className="h-4 bg-slate-200 rounded w-28"></div>
-                                                    <div className="h-3 bg-slate-200 rounded w-16"></div>
+                                                    <div className="h-4 yt-skeleton rounded w-28"></div>
+                                                    <div className="h-3 yt-skeleton rounded w-16"></div>
                                                 </div>
                                             </div>
-                                            <div className="h-8 w-16 bg-slate-200 rounded-xl"></div>
+                                            <div className="h-8 w-16 yt-skeleton rounded-xl"></div>
                                         </div>
                                     ))}
                                 </div>

@@ -1080,11 +1080,11 @@ const HomeScreen = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {isPageLoading ? (
                         Array.from({ length: 4 }).map((_, idx) => (
-                            <div key={idx} className="rounded-xl overflow-hidden border shadow-sm bg-white animate-pulse">
-                                <div className="h-48 bg-slate-200" />
+                            <div key={idx} className="rounded-xl overflow-hidden border shadow-sm bg-white">
+                                <div className="h-48 yt-skeleton" />
                                 <div className="p-4 space-y-3">
-                                    <div className="h-4 bg-slate-200 rounded w-3/4" />
-                                    <div className="h-3 bg-slate-200 rounded w-1/2" />
+                                    <div className="h-4 yt-skeleton rounded w-3/4" />
+                                    <div className="h-3 yt-skeleton rounded w-1/2" />
                                 </div>
                             </div>
                         ))

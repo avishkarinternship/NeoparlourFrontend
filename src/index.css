@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* YouTube Style Skeleton Shimmer Reflecting Animation */
+@keyframes youtube-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.yt-skeleton {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 0%,
+    #f8fafc 20%,
+    #ffffff 40%,
+    #f8fafc 60%,
+    #e2e8f0 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: youtube-shimmer 1.5s infinite linear !important;
+}
+
+.dark .yt-skeleton,
+.dark-mode .yt-skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #334155 20%,
+    #475569 40%,
+    #334155 60%,
+    #1e293b 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: youtube-shimmer 1.5s infinite linear !important;
+}
+
 /* Global Typography System */
 *, *::before, *::after {
   font-family: 'Outfit', 'Jost', system-ui, -apple-system, sans-serif;

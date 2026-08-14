@@ -123,30 +123,30 @@ export default function Cart() {
   if (loading && !cart) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] font-sans text-neutral-800 antialiased flex flex-col">
-        <main className="max-w-6xl w-full mx-auto px-4 md:px-8 py-12 flex-1 animate-pulse space-y-8">
+        <main className="max-w-6xl w-full mx-auto px-4 md:px-8 py-12 flex-1 space-y-8">
           <div className="space-y-3">
-            <div className="h-4 bg-slate-200 rounded w-36"></div>
-            <div className="h-8 bg-slate-200 rounded-xl w-64"></div>
+            <div className="h-4 yt-skeleton rounded w-36"></div>
+            <div className="h-8 yt-skeleton rounded-xl w-64"></div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {[1, 2, 3].map(i => (
                 <div key={i} className="bg-white rounded-2xl p-5 border border-neutral-100 flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-slate-200 rounded-xl"></div>
+                    <div className="w-20 h-20 yt-skeleton rounded-xl"></div>
                     <div className="space-y-2">
-                      <div className="h-5 bg-slate-200 rounded w-44"></div>
-                      <div className="h-4 bg-slate-200 rounded w-24"></div>
+                      <div className="h-5 yt-skeleton rounded w-44"></div>
+                      <div className="h-4 yt-skeleton rounded w-24"></div>
                     </div>
                   </div>
-                  <div className="h-9 w-28 bg-slate-200 rounded-xl"></div>
+                  <div className="h-9 w-28 yt-skeleton rounded-xl"></div>
                 </div>
               ))}
             </div>
             <div className="bg-white rounded-3xl border border-neutral-100 p-6 space-y-6">
-              <div className="h-6 bg-slate-200 rounded w-36"></div>
-              <div className="h-20 bg-slate-100 rounded-xl"></div>
-              <div className="h-12 bg-slate-200 rounded-2xl"></div>
+              <div className="h-6 yt-skeleton rounded w-36"></div>
+              <div className="h-20 yt-skeleton rounded-xl"></div>
+              <div className="h-12 yt-skeleton rounded-2xl"></div>
             </div>
           </div>
         </main>
