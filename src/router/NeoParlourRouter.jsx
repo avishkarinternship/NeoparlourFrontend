@@ -264,7 +264,31 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
+                        path: 'terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: ':lang/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/:lang/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
                         path: 'customer/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: ':lang/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/:lang/privacy-policy',
                         element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
                     },
                     {
