@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
@@ -7,6 +8,7 @@ import toast from 'react-hot-toast';
 import { CheckCircle2, Tag, Zap, ArrowRight, Check, Crown, Sparkles, ShieldCheck, X } from 'lucide-react';
 
 const SubscriptionPlans = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -344,9 +346,9 @@ const SubscriptionPlans = () => {
       {/* Top Bar Actions */}
       <div className="w-full max-w-[1200px] flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-[12px] font-black text-gray-400 tracking-[0.4em] uppercase">Membership Plans</h2>
+          <h2 className="text-[12px] font-black text-gray-400 tracking-[0.4em] uppercase">{t('subscriptions_page.membership_plans', 'MEMBERSHIP PLANS')}</h2>
           <div className="relative mt-2">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">SUBSCRIPTION PLAN</h1>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{t('subscriptions_page.title', 'SUBSCRIPTION PLANS')}</h1>
             <div className="absolute -bottom-2.5 left-0 w-24 h-1 bg-[#ff0b01] rounded-full" />
           </div>
         </div>
@@ -355,7 +357,7 @@ const SubscriptionPlans = () => {
           onClick={handleSkip}
           className="px-6 py-3 text-sm font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-100 shadow-[0_4px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl transition-all duration-300 transform active:scale-95 cursor-pointer"
         >
-          Skip for now
+          {t('subscriptions_page.skip_button', 'Skip for now')}
         </button>
       </div>
 
@@ -364,7 +366,7 @@ const SubscriptionPlans = () => {
         {loading ? (
           <div className="flex flex-col items-center gap-4 py-24">
             <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Loading Premium Plans</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">{t('subscriptions_page.loading_plans', 'Loading Live Plans...')}</p>
           </div>
         ) : plans.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full items-stretch">

@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
@@ -24,6 +25,7 @@ const toastStyle = {
 };
 
 const Subscription = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
@@ -127,12 +129,12 @@ const Subscription = () => {
                     <div className="space-y-6 max-w-5xl mx-auto">
                         <div className="inline-block border-b-2 border-red-600 pb-1">
                             <span className={`text-[12px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Subscription Plans
+                                {t('subscriptions_page.title', 'SUBSCRIPTION PLANS')}
                             </span>
                         </div>
 
                         {loadingPlans ? (
-                            <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading plans...</div>
+                            <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>{t('subscriptions_page.loading_plans', 'Loading Live Plans...')}</div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {subscriptionPlans.map((plan) => {
@@ -168,21 +170,20 @@ const Subscription = () => {
                                                     </span>
                                                     <span className={`text-[11px] font-medium ml-0.5 ${isCurrent ? 'text-white/80' : isDarkMode ? 'text-zinc-400' : 'text-gray-400'
                                                         }`}>
-                                                        / {plan.durationMonths ? `${plan.durationMonths} Months` : 'Lifetime'}
+                                                        / {plan.durationMonths ? `${plan.durationMonths} ${t('subscriptions_page.months', 'Months')}` : 'Lifetime'}
                                                     </span>
                                                 </div>
 
                                                 <div className="space-y-2.5 mb-6 max-w-md mx-auto">
                                                     <div className={`text-[11px] font-bold tracking-wide ${isCurrent ? 'text-white' : isDarkMode ? 'text-zinc-200' : 'text-gray-900'
                                                         }`}>
-                                                        What You Get
+                                                        {t('subscriptions_page.what_you_get', 'What You Can Get?')}
                                                     </div>
                                                     <ul className="space-y-2 pl-0.5 text-[11px]">
                                                         <li className="flex items-center space-x-2.5">
                                                             <span className={`font-bold flex-shrink-0 ${isCurrent ? 'text-white' : 'text-[#FF0B01]'}`}>✓</span>
                                                             <span>Full Access to All Features</span>
                                                         </li>
-                                                        {/* Add more dynamic features if available in DTO */}
                                                     </ul>
                                                 </div>
                                             </div>
@@ -194,7 +195,7 @@ const Subscription = () => {
                                                         : 'bg-[#FF0B01] text-white hover:bg-red-700'
                                                     }`}
                                             >
-                                                {isCurrent ? 'Current Plan' : 'Subscribe Now'}
+                                                {isCurrent ? t('subscriptions_page.current_plan', 'Current Plan') : t('subscriptions_page.subscribe_now', 'Subscribe Now')}
                                             </button>
                                         </div>
                                     );
@@ -207,16 +208,16 @@ const Subscription = () => {
                     <div className={`max-w-5xl mx-auto space-y-4 pt-4 border-t border-dashed ${isDarkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-4">
                             <span className={`text-[12px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Billing History
+                                {t('subscriptions_page.billing_history', 'Billing History')}
                             </span>
                         </div>
 
                         <div className={`px-6 py-3 rounded-lg grid grid-cols-5 gap-4 text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-[#F8F9FA] text-gray-400'}`}>
-                            <div>Invoice</div>
-                            <div>Plan</div>
-                            <div>Amount</div>
-                            <div>Status</div>
-                            <div className="text-right pr-14">Billing Date</div>
+                            <div>{t('subscriptions_page.invoice', 'Invoice')}</div>
+                            <div>{t('subscriptions_page.plan', 'Plan')}</div>
+                            <div>{t('subscriptions_page.amount', 'Amount')}</div>
+                            <div>{t('subscriptions_page.status', 'Status')}</div>
+                            <div className="text-right pr-14">{t('subscriptions_page.billing_date', 'Billing Date')}</div>
                         </div>
 
                         <div className={`divide-y px-2 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
@@ -261,7 +262,7 @@ const Subscription = () => {
                                                     {isActive ? (
                                                         <div className="space-y-0.5">
                                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-800'}`}>
-                                                                Currently In Use
+                                                                {t('subscriptions_page.currently_in_use', 'Currently In Use')}
                                                             </span>
                                                             {totalMonths && (
                                                                 <div className={`text-[10px] font-semibold leading-tight ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
@@ -274,15 +275,15 @@ const Subscription = () => {
                                                         </div>
                                                     ) : isPending ? (
                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-yellow-900/40 text-yellow-400' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                            Pending
+                                                            {t('subscriptions_page.pending', 'Pending')}
                                                         </span>
                                                     ) : isEnded ? (
                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-800'}`}>
-                                                            Ended
+                                                            {t('subscriptions_page.ended', 'Ended')}
                                                         </span>
                                                     ) : (
                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-800'}`}>
-                                                            {sub.status || 'Inactive'}
+                                                            {sub.status || t('subscriptions_page.inactive', 'Inactive')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -304,7 +305,7 @@ const Subscription = () => {
                                     })
                             ) : (
                                 <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
-                                    No billing history available
+                                    {t('subscriptions_page.no_billing_history', 'No billing history available')}
                                 </div>
                             )}
                         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import axiosInstance from '../api/axiosInstance';
@@ -39,6 +40,7 @@ const decodeJwt = (token) => {
 };
 
 const PublicSubscriptionPlans = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -389,13 +391,13 @@ const PublicSubscriptionPlans = () => {
         {/* Title & Badge */}
         <div className="text-center max-w-2xl mb-12 space-y-4">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ff0b01]/10 border border-[#ff0b01]/25 text-[#ff0b01] text-[10px] font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Premium Access Pass
+            <Sparkles className="w-3.5 h-3.5" /> {t('subscriptions_page.premium_access_pass', 'Premium Access Pass')}
           </span>
           <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white leading-none">
-            Choose Your <span className="bg-gradient-to-r from-red-500 to-[#ff0b01] bg-clip-text text-transparent">Power Plan</span>
+            {t('subscriptions_page.power_plan_title', 'Choose Your Power Plan')}
           </h1>
           <p className="text-sm text-gray-400 font-medium">
-            Select a subscription plan below to unlock your salon's management suite. Tap any option to continue securely to payment checkout.
+            {t('subscriptions_page.power_plan_desc', "Select a subscription plan below to unlock your salon's management suite. Tap any option to continue securely to payment checkout.")}
           </p>
         </div>
 
@@ -407,7 +409,7 @@ const PublicSubscriptionPlans = () => {
           {loading ? (
             <div className="flex flex-col items-center gap-4 py-24">
               <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Loading Live Plans...</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">{t('subscriptions_page.loading_plans', 'Loading Live Plans...')}</p>
             </div>
           ) : filteredPlans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full items-stretch mb-20">
@@ -453,17 +455,17 @@ const PublicSubscriptionPlans = () => {
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-4xl font-black text-white">₹{amountInRupees.toLocaleString()}</span>
                           <span className="text-xs font-semibold text-gray-500">
-                            / {plan.durationMonths} {plan.durationMonths === 1 ? 'Month' : 'Months'}
+                            / {plan.durationMonths} {plan.durationMonths === 1 ? t('subscriptions_page.month', 'Month') : t('subscriptions_page.months', 'Months')}
                           </span>
                         </div>
                         {plan.durationMonths > 1 && (
                           <p className="text-xs text-[#ff0b01] font-black">
-                            Equivalent to ₹{monthlyCost.toLocaleString()} / month
+                            {t('subscriptions_page.equivalent_to', 'Equivalent to')} ₹{monthlyCost.toLocaleString()} / {t('subscriptions_page.per_month', 'month')}
                           </p>
                         )}
                         {plan.gst > 0 && (
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                            Includes {plan.gst}% GST (₹{plan.gstAmount})
+                            {t('subscriptions_page.includes_gst', 'Includes {{gst}}% GST (₹{{amount}})', { gst: plan.gst, amount: plan.gstAmount })}
                           </p>
                         )}
                       </div>
@@ -473,7 +475,7 @@ const PublicSubscriptionPlans = () => {
                       {/* Feature List */}
                       <div className="space-y-4">
                         <span className="text-[10px] font-black tracking-widest uppercase text-gray-500">
-                          Included Modules
+                          {t('subscriptions_page.included_modules', 'Included Modules')}
                         </span>
                         <ul className="space-y-3">
                           {features.map((feature, i) => (
@@ -500,11 +502,11 @@ const PublicSubscriptionPlans = () => {
                         {payingPlanCode === plan.planCode ? (
                           <div className="flex items-center justify-center gap-2">
                             <div className="h-4 w-4 border-2 rounded-full animate-spin border-white/25 border-t-white" />
-                            Processing...
+                            {t('subscriptions_page.processing', 'Processing...')}
                           </div>
                         ) : (
                           <>
-                            Subscribe Now <ArrowRight className="w-4 h-4" />
+                            {t('subscriptions_page.subscribe_now', 'Subscribe Now')} <ArrowRight className="w-4 h-4" />
                           </>
                         )}
                       </button>
@@ -515,7 +517,7 @@ const PublicSubscriptionPlans = () => {
             </div>
           ) : (
             <div className="bg-[#121215]/80 rounded-[32px] p-16 text-center shadow-lg border border-neutral-850 max-w-lg">
-              <p className="text-gray-400 font-medium">No active subscription plans are currently available. Please contact support.</p>
+              <p className="text-gray-400 font-medium">{t('subscriptions_page.no_plans', 'No active subscription plans are currently available. Please contact support.')}</p>
             </div>
           )}
         </div>
@@ -527,15 +529,15 @@ const PublicSubscriptionPlans = () => {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider">Secure Payment Processing</h4>
-              <p className="text-xs text-gray-400 font-medium">Subscription setup and auto-renewal mandates are safely processed via Razorpay 256-bit SSL gateway.</p>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider">{t('subscriptions_page.secure_payment_title', 'Secure Payment Processing')}</h4>
+              <p className="text-xs text-gray-400 font-medium">{t('subscriptions_page.secure_payment_desc', 'Subscription setup and auto-renewal mandates are safely processed via Razorpay 256-bit SSL gateway.')}</p>
             </div>
           </div>
           <button
             onClick={() => window.open('https://wa.me/919999999999', '_blank')}
             className="flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl transition-colors shrink-0"
           >
-            <MessageSquare className="w-4 h-4" /> Live Support Chat
+            <MessageSquare className="w-4 h-4" /> {t('subscriptions_page.live_support_chat', 'Live Support Chat')}
           </button>
         </div>
 
@@ -561,13 +563,13 @@ const PublicSubscriptionPlans = () => {
                 <Crown className="w-6 h-6" />
               </span>
               <div>
-                <h2 className="text-lg font-black text-white tracking-tight uppercase">Select Renewal Mode</h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Choose how you want to buy your subscription</p>
+                <h2 className="text-lg font-black text-white tracking-tight uppercase">{t('subscriptions_page.select_renewal_mode', 'Select Renewal Mode')}</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{t('subscriptions_page.choose_buy_desc', 'Choose how you want to buy your subscription')}</p>
               </div>
             </div>
 
             <p className="text-xs text-gray-400 mb-6 font-medium leading-relaxed">
-              You are subscribing to <strong className="text-white font-bold">{selectedPlanForCheckout.planName}</strong> for a duration of <strong className="text-white font-bold">{selectedPlanForCheckout.durationMonths} {selectedPlanForCheckout.durationMonths === 1 ? 'Month' : 'Months'}</strong>. Please select your preferred payment mode:
+              {t('subscriptions_page.subscribing_to', 'You are subscribing to')} <strong className="text-white font-bold">{selectedPlanForCheckout.planName}</strong> {t('subscriptions_page.duration_of', 'for a duration of')} <strong className="text-white font-bold">{selectedPlanForCheckout.durationMonths} {selectedPlanForCheckout.durationMonths === 1 ? t('subscriptions_page.month', 'Month') : t('subscriptions_page.months', 'Months')}</strong>.
             </p>
 
             {/* Options Cards */}
@@ -586,7 +588,7 @@ const PublicSubscriptionPlans = () => {
                     <h3 className={`text-sm font-black uppercase tracking-wider transition-colors ${
                       paymentMode === 'once' ? 'text-white' : 'text-gray-300'
                     }`}>
-                      Pay Once
+                      {t('subscriptions_page.pay_once', 'Pay Once')}
                     </h3>
                     {paymentMode === 'once' && (
                       <span className="w-5 h-5 rounded-full bg-[#ff0b01] flex items-center justify-center">
@@ -595,13 +597,13 @@ const PublicSubscriptionPlans = () => {
                     )}
                   </div>
                   <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                    Set up a single, non-recurring payment. Your active subscription access will end naturally after {selectedPlanForCheckout.durationMonths} months.
+                    {t('subscriptions_page.pay_once_desc', 'Set up a single, non-recurring payment. Your active subscription access will end naturally after {{months}} months.', { months: selectedPlanForCheckout.durationMonths })}
                   </p>
                 </div>
                 <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
                   paymentMode === 'once' ? 'text-[#ff0b01]' : 'text-gray-500'
                 }`}>
-                  One-Time Payment
+                  {t('subscriptions_page.one_time_payment', 'One-Time Payment')}
                 </div>
               </div>
 
@@ -620,10 +622,10 @@ const PublicSubscriptionPlans = () => {
                       <h3 className={`text-sm font-black uppercase tracking-wider transition-colors ${
                         paymentMode === 'autopay' ? 'text-white' : 'text-gray-300'
                       }`}>
-                        Auto-Pay
+                        {t('subscriptions_page.autopay', 'Auto-Pay')}
                       </h3>
                       <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                        Seamless
+                        {t('subscriptions_page.seamless', 'Seamless')}
                       </span>
                     </div>
                     {paymentMode === 'autopay' && (
@@ -633,13 +635,13 @@ const PublicSubscriptionPlans = () => {
                     )}
                   </div>
                   <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
-                    Automate your renewals. Your payment method will be auto-debited at the end of each cycle. Cancel this mandate anytime from your settings.
+                    {t('subscriptions_page.autopay_desc', 'Automate your renewals. Your payment method will be auto-debited at the end of each cycle. Cancel this mandate anytime from your settings.')}
                   </p>
                 </div>
                 <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
                   paymentMode === 'autopay' ? 'text-[#ff0b01]' : 'text-gray-500'
                 }`}>
-                  Recurring Mandate
+                  {t('subscriptions_page.recurring_mandate', 'Recurring Mandate')}
                 </div>
               </div>
             </div>
@@ -648,7 +650,7 @@ const PublicSubscriptionPlans = () => {
             {paymentMode === 'once' && (
               <div className="mb-6 space-y-2 animate-[fadeIn_0.2s_ease-out]">
                 <label className="text-[10px] text-gray-400 font-black uppercase tracking-wider block">
-                  Have a Coupon Code?
+                  {t('subscriptions_page.coupon_label', 'Have a Coupon Code?')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
@@ -658,7 +660,7 @@ const PublicSubscriptionPlans = () => {
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="ENTER COUPON CODE"
+                    placeholder={t('subscriptions_page.coupon_placeholder', 'ENTER COUPON CODE')}
                     className="w-full pl-11 pr-4 py-3 bg-neutral-950/60 border border-neutral-800 focus:border-[#ff0b01] focus:ring-1 focus:ring-[#ff0b01]/30 rounded-2xl text-sm font-bold uppercase tracking-wider text-white placeholder-gray-600 outline-none transition"
                   />
                 </div>
@@ -678,11 +680,11 @@ const PublicSubscriptionPlans = () => {
               >
                 {paymentMode === 'autopay' ? (
                   <>
-                    Set Up Auto-Pay Mandate <Zap className="w-4 h-4" />
+                    {t('subscriptions_page.setup_autopay_mandate', 'Set Up Auto-Pay Mandate')} <Zap className="w-4 h-4" />
                   </>
                 ) : (
                   <>
-                    Proceed to Payment <ArrowRight className="w-4 h-4" />
+                    {t('subscriptions_page.proceed_to_payment', 'Proceed to Payment')} <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
@@ -694,7 +696,7 @@ const PublicSubscriptionPlans = () => {
                 onClick={() => setSelectedPlanForCheckout(null)}
                 className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-400 transition-colors"
               >
-                Cancel & Go Back
+                {t('subscriptions_page.cancel_go_back', 'Cancel & Go Back')}
               </button>
             </div>
 
@@ -717,14 +719,14 @@ const PublicSubscriptionPlans = () => {
             </div>
 
             <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">
-              Subscription Activated!
+              {t('subscriptions_page.activated_title', 'Subscription Activated!')}
             </h2>
 
             <p className="text-sm text-gray-500 mb-2 leading-relaxed">
-              Your <span className="font-bold text-[#ff0b01]">{successPlanName}</span> is now active.
+              {t('subscriptions_page.activated_desc', 'Your {{planName}} is now active.', { planName: successPlanName })}
             </p>
             <p className="text-xs text-gray-400 mb-8">
-              Thank you for subscribing. Your salon subscription is now active. Please return to the mobile app to continue.
+              {t('subscriptions_page.thank_you_desc', 'Thank you for subscribing. Your salon subscription is now active. Please return to the app or dashboard to continue.')}
             </p>
 
             <div className="w-16 h-[3px] bg-gradient-to-r from-transparent via-[#ff0b01]/30 to-transparent rounded-full mb-8" />
@@ -733,7 +735,7 @@ const PublicSubscriptionPlans = () => {
               onClick={handleSuccessClose}
               className="w-full py-4 bg-[#ff0b01] hover:bg-[#d80800] text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_10px_25px_rgba(255,11,1,0.2)] hover:shadow-[0_15px_35px_rgba(255,11,1,0.3)] active:scale-95 cursor-pointer"
             >
-              {isMobile ? 'Return to App' : 'Go to Dashboard'}
+              {isMobile ? t('subscriptions_page.return_to_app', 'Return to App') : t('subscriptions_page.go_to_dashboard', 'Go to Dashboard')}
             </button>
           </div>
         </div>
