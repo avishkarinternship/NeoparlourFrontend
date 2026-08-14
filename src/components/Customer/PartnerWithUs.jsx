@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import partnerUs1 from '../../assets/HomePage/Partner/partner_us_1.png';
 import partnerUs2 from '../../assets/HomePage/Partner/partner_us_2.png';
@@ -20,77 +21,55 @@ import {
 import SEOFooter from '../common/SEOFooter';
 
 const PartnerWithUs = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
-    // const stats = [
-    //     {
-    //         value: "1.14k",
-    //         label: "REVIEWS",
-    //         icon: <Star className="w-5 h-5 text-[#FF2A14]" />
-    //     },
-    //     {
-    //         value: "10k",
-    //         label: "SALONS",
-    //         icon: <Home className="w-5 h-5 text-[#FF2A14]" />
-    //     },
-    //     {
-    //         value: "20k",
-    //         label: "CITIES",
-    //         icon: <MapPin className="w-5 h-5 text-[#FF2A14]" />
-    //     },
-    //     {
-    //         value: "20000+",
-    //         label: "APP DOWNLOADS",
-    //         icon: <Download className="w-5 h-5 text-[#FF2A14]" />
-    //     }
-    // ];
-
     const benefitsLeft = [
-        { id: 1, text: "More Appointments" },
-        { id: 2, text: "Online Presence" },
-        { id: 3, text: "Customer Management" },
-        { id: 4, text: "Staff Management" }
+        { id: 1, text: t('partner_page.b1', 'More Appointments') },
+        { id: 2, text: t('partner_page.b2', 'Online Presence') },
+        { id: 3, text: t('partner_page.b3', 'Customer Management') },
+        { id: 4, text: t('partner_page.b4', 'Staff Management') }
     ];
 
     const benefitsRight = [
-        { id: 5, text: "Automated Reminders" },
-        { id: 6, text: "Payment Tracking" },
-        { id: 7, text: "Reports & Analytics" },
-        { id: 8, text: "Marketing Support" }
+        { id: 5, text: t('partner_page.b5', 'Automated Reminders') },
+        { id: 6, text: t('partner_page.b6', 'Payment Tracking') },
+        { id: 7, text: t('partner_page.b7', 'Reports & Analytics') },
+        { id: 8, text: t('partner_page.b8', 'Marketing Support') }
     ];
 
     const steps = [
-        { id: 1, title: "Register Your Salon", desc: "Sign up on our platform and complete your business profile information." },
-        { id: 2, title: "Setup Services & Staff", desc: "Configure your service list, catalog pricing, and stylist availability timetables." },
-        { id: 3, title: "Start Receiving Bookings", desc: "Go live instantly and accept online bookings from local customers 24/7." },
-        { id: 4, title: "Manage Everything From CRM", desc: "Track appointments, verify invoice details, monitor staff, and view growth analytics." }
+        { id: 1, title: t('partner_page.s1_title', 'Register Your Salon'), desc: t('partner_page.s1_desc', 'Sign up on our platform and complete your business profile information.') },
+        { id: 2, title: t('partner_page.s2_title', 'Setup Services & Staff'), desc: t('partner_page.s2_desc', 'Configure your service list, catalog pricing, and stylist availability timetables.') },
+        { id: 3, title: t('partner_page.s3_title', 'Start Receiving Bookings'), desc: t('partner_page.s3_desc', 'Go live instantly and accept online bookings from local customers 24/7.') },
+        { id: 4, title: t('partner_page.s4_title', 'Manage Everything From CRM'), desc: t('partner_page.s4_desc', 'Track appointments, verify invoice details, monitor staff, and view growth analytics.') }
     ];
 
     const faqs = [
         {
-            q: "How do I join?",
-            a: "Simply click on the 'Become a Partner' button, complete the salon registration form with your business and contact details, and our partner support team will guide you through the quick onboarding process."
+            q: t('partner_page.faq1_q', 'How do I join?'),
+            a: t('partner_page.faq1_a', "Simply click on the 'Become a Partner' button, complete the salon registration form with your business and contact details, and our partner support team will guide you through the quick onboarding process.")
         },
         {
-            q: "Is there setup support?",
-            a: "Yes! We provide dedicated setup support to help you configure your service catalog, team timetables, and pricing lists so you can start receiving online bookings immediately."
+            q: t('partner_page.faq2_q', 'Is there setup support?'),
+            a: t('partner_page.faq2_a', 'Yes! We provide dedicated setup support to help you configure your service catalog, team timetables, and pricing lists so you can start receiving online bookings immediately.')
         },
         {
-            q: "Can I manage multiple branches?",
-            a: "Absolutely. Our platform is built with multi-location management capabilities, enabling you to coordinate and monitor multiple salon branches from a single unified CRM dashboard."
+            q: t('partner_page.faq3_q', 'Can I manage multiple branches?'),
+            a: t('partner_page.faq3_a', 'Absolutely. Our platform is built with multi-location management capabilities, enabling you to coordinate and monitor multiple salon branches from a single unified CRM dashboard.')
         },
         {
-            q: "Is training provided?",
-            a: "Yes, we offer comprehensive training sessions, video tutorials, and documentation guides for you and your staff to ensure you get the absolute most out of our CRM utility features."
+            q: t('partner_page.faq4_q', 'Is training provided?'),
+            a: t('partner_page.faq4_a', 'Yes, we offer comprehensive training sessions, video tutorials, and documentation guides for you and your staff to ensure you get the absolute most out of our CRM utility features.')
         },
         {
-            q: "Is there a mobile app?",
-            a: "Yes, we offer dedicated mobile applications for both customer bookings and salon owners/staff members, enabling you to coordinate appointments and manage salon operations on the go."
+            q: t('partner_page.faq5_q', 'Is there a mobile app?'),
+            a: t('partner_page.faq5_a', 'Yes, we offer dedicated mobile applications for both customer bookings and salon owners/staff members, enabling you to coordinate appointments and manage salon operations on the go.')
         },
         {
-            q: "What are the charges?",
-            a: "Listing your salon on the NeoParlour search directory is completely free. We offer competitive, transparent subscription tiers for automated marketing campaigns and advanced CRM tools."
+            q: t('partner_page.faq6_q', 'What are the charges?'),
+            a: t('partner_page.faq6_a', 'Listing your salon on the NeoParlour search directory is completely free. We offer competitive, transparent subscription tiers for automated marketing campaigns and advanced CRM tools.')
         }
     ];
 
@@ -110,20 +89,20 @@ const PartnerWithUs = () => {
                     {/* Left Details */}
                     <div className="flex-1 space-y-6 lg:max-w-xl">
                         <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" /> B2B Partner Portal
+                            <Sparkles className="w-3.5 h-3.5" /> {t('partner_page.tag', 'B2B Partner Portal')}
                         </span>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-none text-gray-900">
-                            Grow Your Salon Business With <span className="text-[#FF2A14]">NeoParlour</span>
+                            {t('partner_page.hero_title', 'Grow Your Salon Business With NeoParlour')}
                         </h1>
                         <p className="text-gray-400 font-semibold text-sm leading-relaxed max-w-lg">
-                            Get Online Bookings, Manage Customers, Staff, Payments, And Grow Revenue With Our Smart CRM.
+                            {t('partner_page.hero_desc', 'Get Online Bookings, Manage Customers, Staff, Payments, And Grow Revenue With Our Smart CRM.')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4">
                             <button 
                                 onClick={() => navigate('/owner/register')}
                                 className="px-6 py-4 bg-[#FF2A14] hover:bg-[#E01E0A] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/25 transition duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                Become a Partner 
+                                {t('partner_page.become_partner', 'Become a Partner')} 
                                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                             </button>
                             <button 
@@ -133,7 +112,7 @@ const PartnerWithUs = () => {
                                 }}
                                 className="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs uppercase tracking-widest rounded-2xl transition duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                Book Demo 
+                                {t('partner_page.book_demo', 'Book Demo')} 
                                 <ArrowUpRight className="w-4 h-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                             </button>
                         </div>
@@ -163,61 +142,37 @@ const PartnerWithUs = () => {
                     </div>
                 </section>
 
-                {/* Stats Bar */}
-                {/* <section className="w-full border-y border-gray-100 bg-gray-50/50 py-10">
-                    <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="flex flex-col sm:flex-row items-center gap-3.5 text-center sm:text-left justify-center">
-                                <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
-                                    {stat.icon}
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-gray-900 leading-none">{stat.value}</h3>
-                                    <p className="text-[10px] font-black text-gray-400 tracking-wider uppercase mt-1">{stat.label}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section> */}
-
                 {/* Why Partner With Us Section */}
                 <section className="max-w-7xl mx-auto px-6 md:px-12 py-20 lg:py-28">
                     <div className="text-center max-w-xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight uppercase mb-4">
-                            Why Partner With Us
+                            {t('partner_page.why_partner', 'Why Partner With Us')}
                         </h2>
                         <div className="w-12 h-1 bg-[#FF2A14] mx-auto rounded-full" />
                     </div>
 
-                    {/* Desktop View Circular Layout with SVG Connecting Lines & Arc Tracks */}
+                    {/* Desktop View Circular Layout */}
                     <div className="relative w-full max-w-5xl mx-auto h-[600px] hidden lg:block select-none">
                         
-                        {/* Background SVG Arcs & Dotted Connecting Lines */}
                         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            {/* Dotted red connecting lines radiating from center (500, 300) to each number position */}
-                            {/* Left Column lines */}
                             <line x1="500" y1="300" x2="320" y2="150" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="270" y2="250" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="270" y2="350" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="320" y2="450" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
 
-                            {/* Right Column lines */}
                             <line x1="500" y1="300" x2="680" y2="150" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="730" y2="250" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="730" y2="350" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
                             <line x1="500" y1="300" x2="680" y2="450" stroke="#FF2A14" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4" />
 
-                            {/* Circular concentric track arcs centered at (500, 300) */}
-                            {/* Inner concentric tracks (radius 195) */}
                             <path d="M 402.5 127 A 195 195 0 0 0 402.5 473" fill="none" stroke="#E5E7EB" strokeWidth="2" />
                             <path d="M 597.5 127 A 195 195 0 0 1 597.5 473" fill="none" stroke="#E5E7EB" strokeWidth="2" />
 
-                            {/* Outer concentric tracks (radius 235) */}
                             <path d="M 382.5 97 A 235 235 0 0 0 382.5 503" fill="none" stroke="#E5E7EB" strokeWidth="1.5" />
                             <path d="M 617.5 97 A 235 235 0 0 1 617.5 503" fill="none" stroke="#E5E7EB" strokeWidth="1.5" />
                         </svg>
 
-                        {/* Central Decorative Circular Avatar */}
+                        {/* Central Avatar */}
                         <div 
                             className="absolute w-[280px] h-[280px] rounded-full bg-white p-3 border-2 border-dashed border-red-100 shadow-2xl flex items-center justify-center z-10"
                             style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
@@ -231,70 +186,68 @@ const PartnerWithUs = () => {
                             </div>
                         </div>
 
-                        {/* absolutely positioned benefit markers */}
-                        {/* LEFT COLUMN - Numbers 1 to 4 */}
+                        {/* LEFT COLUMN */}
                         <div className="absolute flex items-center justify-end" style={{ left: '32%', top: '25%', transform: 'translate(-50%, -50%)' }}>
                             <div className="absolute right-12 whitespace-nowrap text-right pr-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">More Appointments</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b1', 'More Appointments')}</span>
                             </div>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">1</span>
                         </div>
 
                         <div className="absolute flex items-center justify-end" style={{ left: '27%', top: '41.7%', transform: 'translate(-50%, -50%)' }}>
                             <div className="absolute right-12 whitespace-nowrap text-right pr-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Online Presence</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b2', 'Online Presence')}</span>
                             </div>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">2</span>
                         </div>
 
                         <div className="absolute flex items-center justify-end" style={{ left: '27%', top: '58.3%', transform: 'translate(-50%, -50%)' }}>
                             <div className="absolute right-12 whitespace-nowrap text-right pr-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Customer Management</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b3', 'Customer Management')}</span>
                             </div>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">3</span>
                         </div>
 
                         <div className="absolute flex items-center justify-end" style={{ left: '32%', top: '75%', transform: 'translate(-50%, -50%)' }}>
                             <div className="absolute right-12 whitespace-nowrap text-right pr-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Staff Management</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b4', 'Staff Management')}</span>
                             </div>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">4</span>
                         </div>
 
-                        {/* RIGHT COLUMN - Numbers 5 to 8 */}
+                        {/* RIGHT COLUMN */}
                         <div className="absolute flex items-center justify-start" style={{ left: '68%', top: '25%', transform: 'translate(-50%, -50%)' }}>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">5</span>
                             <div className="absolute left-12 whitespace-nowrap text-left pl-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Automated Reminders</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b5', 'Automated Reminders')}</span>
                             </div>
                         </div>
 
                         <div className="absolute flex items-center justify-start" style={{ left: '73%', top: '41.7%', transform: 'translate(-50%, -50%)' }}>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">6</span>
                             <div className="absolute left-12 whitespace-nowrap text-left pl-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Payment Tracking</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b6', 'Payment Tracking')}</span>
                             </div>
                         </div>
 
                         <div className="absolute flex items-center justify-start" style={{ left: '73%', top: '58.3%', transform: 'translate(-50%, -50%)' }}>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">7</span>
                             <div className="absolute left-12 whitespace-nowrap text-left pl-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Reports & Analytics</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b7', 'Reports & Analytics')}</span>
                             </div>
                         </div>
 
                         <div className="absolute flex items-center justify-start" style={{ left: '68%', top: '75%', transform: 'translate(-50%, -50%)' }}>
                             <span className="w-10 h-10 rounded-full bg-[#FF2A14] text-white font-black flex items-center justify-center text-sm shadow-lg shadow-red-500/20 shrink-0">8</span>
                             <div className="absolute left-12 whitespace-nowrap text-left pl-2">
-                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">Marketing Support</span>
+                                <span className="text-gray-900 font-extrabold text-[15px] tracking-tight hover:text-[#FF2A14] transition-colors duration-200">{t('partner_page.b8', 'Marketing Support')}</span>
                             </div>
                         </div>
 
                     </div>
 
-                    {/* Mobile View Stacked List Layout */}
+                    {/* Mobile View */}
                     <div className="block lg:hidden px-4">
-                        {/* Center Decorative Circular Avatar */}
                         <div className="flex justify-center mb-12">
                             <div className="relative p-4 rounded-full border-2 border-dashed border-red-100 bg-[#FF2A14]/5 shadow-inner">
                                 <div className="absolute inset-3 rounded-full bg-white -z-10" />
@@ -308,7 +261,6 @@ const PartnerWithUs = () => {
                             </div>
                         </div>
 
-                        {/* Benefits Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {[...benefitsLeft, ...benefitsRight].map((item) => (
                                 <div 
@@ -331,14 +283,11 @@ const PartnerWithUs = () => {
                 <section className="w-full bg-gray-50/50 dark:bg-black border-y border-gray-100 dark:border-gray-800 py-20 lg:py-28">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
                         
-                        {/* Left Column Graphic */}
                         <div className="lg:col-span-5 flex justify-center">
                             <div className="relative">
-                                {/* Floating Location Icon Callout */}
                                 <div className="absolute -top-6 -right-6 w-12 h-12 rounded-2xl bg-[#FF2A14] text-white flex items-center justify-center shadow-lg shadow-red-500/20 z-10 animate-bounce">
                                     <Store className="w-5 h-5" />
                                 </div>
-                                {/* Floating Chat Icon Callout */}
                                 <div className="absolute bottom-6 -left-6 w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 text-[#FF2A14] border border-gray-100 dark:border-gray-700 flex items-center justify-center shadow-xl z-10">
                                     <MessageCircle className="w-5 h-5" />
                                 </div>
@@ -355,12 +304,11 @@ const PartnerWithUs = () => {
                             </div>
                         </div>
 
-                        {/* Right Onboarding Steps */}
                         <div className="lg:col-span-7 space-y-10">
                             <div>
-                                <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">Simple Setup</span>
+                                <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">{t('partner_page.simple_setup', 'Simple Setup')}</span>
                                 <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                                    How It Works?
+                                    {t('partner_page.how_it_works', 'How It Works?')}
                                 </h2>
                             </div>
 
@@ -385,9 +333,9 @@ const PartnerWithUs = () => {
                 <section id="faq-section" className="w-full dark:bg-black py-20 lg:py-28">
                   <div className="max-w-3xl mx-auto px-6">
                     <div className="text-center mb-16">
-                        <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">Common Queries</span>
+                        <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 block">{t('partner_page.common_queries', 'Common Queries')}</span>
                         <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
-                            Frequently Asked Questions
+                            {t('partner_page.faq_title', 'Frequently Asked Questions')}
                         </h2>
                     </div>
 
@@ -411,7 +359,6 @@ const PartnerWithUs = () => {
                                         )}
                                     </button>
                                     
-                                    {/* Accordion Panel Content */}
                                     <div 
                                         className={`transition-all duration-300 ease-in-out overflow-hidden ${
                                             isOpen ? 'max-h-52 opacity-100 border-t border-gray-100/50 dark:border-gray-800' : 'max-h-0 opacity-0'
@@ -430,7 +377,6 @@ const PartnerWithUs = () => {
             </main>
             <SEOFooter />
         </div>
-        
     );
 };
 

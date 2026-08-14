@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Scissors,
     Search,
@@ -28,12 +29,12 @@ import supportIcon from '../../assets/Customer/AboutUs/247_support.svg';
 import SEOFooter from '../common/SEOFooter';
 
 const AboutUs = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const currentPath = location.pathname;
     const dispatch = useDispatch();
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
-    // Inline navbar states and display variables removed since shared Navbar handles them internally.
 
     return (
         <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-white selection:bg-red-500 selection:text-white">
@@ -45,25 +46,18 @@ const AboutUs = () => {
                         {/* Left Content Column */}
                         <div className="space-y-3 lg:col-span-7">
                             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl lg:leading-[1.15]">
-                                Redefining Beauty <br />
-                                <span className="text-gray-900 dark:text-white">Through Technology</span>
+                                {t('about_page.hero_title', 'Redefining Beauty Through Technology')}
                             </h1>
                             
                             <p className="max-w-xl text-base leading-relaxed text-gray-500 dark:text-gray-300 sm:text-lg">
-                                NeoParlour Connects Customers With Trusted Salons And Empowers Salon Owners To Grow Their Business Effortlessly.
+                                {t('about_page.hero_desc', 'NeoParlour Connects Customers With Trusted Salons And Empowers Salon Owners To Grow Their Business Effortlessly.')}
                             </p>
-                            {/* <div className="pt-2">
-                                <button className="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-red-200 transition-all hover:bg-red-600 hover:shadow-xl hover:shadow-red-200">
-                                    <span>LIST YOUR SALON</span>
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-red-500 font-bold text-sm">+</span>
-                                </button>
-                            </div> */}
                             <div className="pt-2">
                                 <button
                                     onClick={() => navigate("/owner/register")}
                                     className="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-red-200 transition-all hover:bg-red-600 hover:shadow-xl hover:shadow-red-200"
                                 >
-                                    <span>LIST YOUR SALON</span>
+                                    <span>{t('about_page.list_salon_btn', 'LIST YOUR SALON')}</span>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-red-500 font-bold text-sm">
                                         +
                                     </span>
@@ -73,7 +67,6 @@ const AboutUs = () => {
 
                         {/* Right Media Column */}
                         <div className="relative lg:col-span-5">
-                            {/* Floating Abstract Scissors & Hairdryer effects can be implied here */}
                             <div className="relative overflow-hidden rounded-3xl shadow-2xl shadow-gray-200">
                                 <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800">
                                     <img
@@ -85,8 +78,8 @@ const AboutUs = () => {
 
                                 {/* Overlay Floating Card */}
                                 <div className="absolute bottom-6 right-6 rounded-2xl bg-white dark:bg-black p-5 shadow-xl shadow-black/5 ring-1 ring-black/5">
-                                    <p className="text-2xl font-extrabold text-red-500">10K+ Salons</p>
-                                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-0.5">Trust NeoParlour</p>
+                                    <p className="text-2xl font-extrabold text-red-500">{t('about_page.trust_count', '10K+ Salons')}</p>
+                                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-0.5">{t('about_page.trust_text', 'Trust NeoParlour')}</p>
                                 </div>
                             </div>
                         </div>
@@ -99,9 +92,9 @@ const AboutUs = () => {
             <section className="bg-gray-50/50 dark:bg-black py-10 lg:py-14">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">The Problem We Solve</h2>
+                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('about_page.problem_title', 'The Problem We Solve')}</h2>
                         <p className="mx-w-2xl mx-auto mt-3 text-sm text-gray-400 dark:text-gray-300">
-                            We Understand The Challenges Faced By Both Customers And Salon Owner.
+                            {t('about_page.problem_subtitle', 'We Understand The Challenges Faced By Both Customers And Salon Owner.')}
                         </p>
                     </div>
 
@@ -112,12 +105,12 @@ const AboutUs = () => {
                                 <User className="h-6 w-6" />
                             </div>
                             <div className="space-y-4 w-full">
-                                <h3 className="text-lg font-bold text-gray-700 dark:text-white">For Customer</h3>
+                                <h3 className="text-lg font-bold text-gray-700 dark:text-white">{t('about_page.for_customer', 'For Customer')}</h3>
                                 <ul className="space-y-3">
                                     {[
-                                        "Hard To Find Trusted And Verified Salons.",
-                                        "No Clarity On Pricing And Availability.",
-                                        "Long Waiting Times And Poor Experience."
+                                        t('about_page.cust_p1', 'Hard To Find Trusted And Verified Salons.'),
+                                        t('about_page.cust_p2', 'No Clarity On Pricing And Availability.'),
+                                        t('about_page.cust_p3', 'Long Waiting Times And Poor Experience.')
                                     ].map((text, idx) => (
                                         <li key={idx} className="flex items-start gap-2.5 text-sm font-medium text-gray-800 dark:text-gray-300">
                                             <XCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
@@ -134,12 +127,12 @@ const AboutUs = () => {
                                 <Store className="h-6 w-6" />
                             </div>
                             <div className="space-y-4 w-full">
-                                <h3 className="text-lg font-bold text-gray-700 dark:text-white">For Owner</h3>
+                                <h3 className="text-lg font-bold text-gray-700 dark:text-white">{t('about_page.for_owner', 'For Owner')}</h3>
                                 <ul className="space-y-3">
                                     {[
-                                        "Irregular Bookings And Empty Slots.",
-                                        "No-Shows & Last Minute Cancellation.",
-                                        "Lack Of Tools To Manage And Grow Activities."
+                                        t('about_page.owner_p1', 'Irregular Bookings And Empty Slots.'),
+                                        t('about_page.owner_p2', 'No-Shows & Last Minute Cancellation.'),
+                                        t('about_page.owner_p3', 'Lack Of Tools To Manage And Grow Activities.')
                                     ].map((text, idx) => (
                                         <li key={idx} className="flex items-start gap-2.5 text-sm font-medium text-gray-800 dark:text-gray-300">
                                             <XCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
@@ -157,24 +150,24 @@ const AboutUs = () => {
             <section className="py-10 lg:py-14 bg-white dark:bg-black">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Our Solution</h2>
+                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">{t('about_page.solution_title', 'Our Solution')}</h2>
                         <p className="mx-w-2xl mx-auto mt-2 text-sm text-gray-400 dark:text-gray-300">
-                            Simple Steps For A Better Salon Experience And Business Growth.
+                            {t('about_page.solution_subtitle', 'Simple Steps For A Better Salon Experience And Business Growth.')}
                         </p>
-                        <h3 className="mt-6 text-xl font-bold tracking-tight text-gray-900 dark:text-white">How It Works</h3>
+                        <h3 className="mt-6 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{t('about_page.how_it_works', 'How It Works')}</h3>
                     </div>
 
                     <div className="mt-6 flex flex-col items-center justify-center gap-6 lg:flex-row lg:gap-4">
 
                         {/* Steps For Customer */}
                         <div className="w-full max-w-sm space-y-3">
-                            <h4 className="text-center lg:text-left text-lg font-bold text-gray-900 dark:text-white mb-2">For Customer</h4>
+                            <h4 className="text-center lg:text-left text-lg font-bold text-gray-900 dark:text-white mb-2">{t('about_page.for_customer', 'For Customer')}</h4>
                             {[
-                                { step: "1", title: "Search", desc: "Search Salon, Services And Expert" },
-                                { step: "2", title: "Choose", desc: "Search The Best Salon For You" },
-                                { step: "3", title: "Book", desc: "Pick Date, Time & Book Instantly" },
-                                { step: "4", title: "Visit", desc: "Get Your Service And Enjoy" },
-                                { step: "5", title: "Review", desc: "Share Your Experience And Review" },
+                                { step: "1", title: t('about_page.c_step1_title', 'Search'), desc: t('about_page.c_step1_desc', 'Search Salon, Services And Expert') },
+                                { step: "2", title: t('about_page.c_step2_title', 'Choose'), desc: t('about_page.c_step2_desc', 'Search The Best Salon For You') },
+                                { step: "3", title: t('about_page.c_step3_title', 'Book'), desc: t('about_page.c_step3_desc', 'Pick Date, Time & Book Instantly') },
+                                { step: "4", title: t('about_page.c_step4_title', 'Visit'), desc: t('about_page.c_step4_desc', 'Get Your Service And Enjoy') },
+                                { step: "5", title: t('about_page.c_step5_title', 'Review'), desc: t('about_page.c_step5_desc', 'Share Your Experience And Review') },
                             ].map((item, index) => (
                                 <div key={index} className="flex items-start gap-4">
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-sm font-bold text-white">
@@ -214,13 +207,13 @@ const AboutUs = () => {
 
                         {/* Steps For Salon Owners */}
                         <div className="w-full max-w-sm space-y-3">
-                            <h4 className="text-center lg:text-left text-lg font-bold text-gray-900 dark:text-white mb-2">For Salon Owners</h4>
+                            <h4 className="text-center lg:text-left text-lg font-bold text-gray-900 dark:text-white mb-2">{t('about_page.for_salon_owners', 'For Salon Owners')}</h4>
                             {[
-                                { step: "1", title: "Register", desc: "List Your Salon On Neoparlour" },
-                                { step: "2", title: "Manage", desc: "Manage Staff, Services & Slots" },
-                                { step: "3", title: "Get Bookings", desc: "Receive Real-Time Bookings" },
-                                { step: "4", title: "Engage", desc: "Build Customer Relationships" },
-                                { step: "5", title: "Grow", desc: "Increase Revenue And Scale Fast" },
+                                { step: "1", title: t('about_page.o_step1_title', 'Register'), desc: t('about_page.o_step1_desc', 'List Your Salon On Neoparlour') },
+                                { step: "2", title: t('about_page.o_step2_title', 'Manage'), desc: t('about_page.o_step2_desc', 'Manage Staff, Services & Slots') },
+                                { step: "3", title: t('about_page.o_step3_title', 'Get Bookings'), desc: t('about_page.o_step3_desc', 'Receive Real-Time Bookings') },
+                                { step: "4", title: t('about_page.o_step4_title', 'Engage'), desc: t('about_page.o_step4_desc', 'Build Customer Relationships') },
+                                { step: "5", title: t('about_page.o_step5_title', 'Grow'), desc: t('about_page.o_step5_desc', 'Increase Revenue And Scale Fast') },
                             ].map((item, index) => (
                                 <div key={index} className="flex items-start gap-4 lg:flex-row">
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-sm font-bold text-white">
@@ -243,19 +236,17 @@ const AboutUs = () => {
             {/* 5. WHY CHOOSE NEOPARLOUR */}
             <section id="features" className="py-10 lg:py-14 bg-white dark:bg-black">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    {/* ... Header remains the same ... */}
 
                     <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                         {[
-                            { icon: verifiedIcon, title: "Verified Salons", desc: "All Salons Are Verified For Your Safety" },
-                            { icon: bookingIcon, title: "Real-Time Bookings", desc: "Instant Booking With Live Availability" },
-                            { icon: managementIcon, title: "Smart Management", desc: "Powerful Tools For Salon Owners" },
-                            { icon: paymentIcon, title: "Secure Payments", desc: "Safe And Secure Transactions" },
-                            { icon: supportIcon, title: "24/7 Support", desc: "We're Here To Help You Anytime" },
+                            { icon: verifiedIcon, title: t('about_page.feat1_title', 'Verified Salons'), desc: t('about_page.feat1_desc', 'All Salons Are Verified For Your Safety') },
+                            { icon: bookingIcon, title: t('about_page.feat2_title', 'Real-Time Bookings'), desc: t('about_page.feat2_desc', 'Instant Booking With Live Availability') },
+                            { icon: managementIcon, title: t('about_page.feat3_title', 'Smart Management'), desc: t('about_page.feat3_desc', 'Powerful Tools For Salon Owners') },
+                            { icon: paymentIcon, title: t('about_page.feat4_title', 'Secure Payments'), desc: t('about_page.feat4_desc', 'Safe And Secure Transactions') },
+                            { icon: supportIcon, title: t('about_page.feat5_title', '24/7 Support'), desc: t('about_page.feat5_desc', "We're Here To Help You Anytime") },
                         ].map((feature, idx) => (
                             <div key={idx} className="rounded-xl border border-gray-100 bg-white dark:bg-black dark:border-gray-800 p-6 text-center shadow-sm transition-all hover:shadow-md">
                                 <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 ring-4 ring-gray-50/50 dark:bg-gray-800 dark:ring-gray-800/50">
-                                    {/* Render as an <img> tag */}
                                     <img src={feature.icon} alt={feature.title} className="h-6 w-6 object-contain" />
                                 </div> 
                                 <h4 className="text-sm font-bold text-gray-900 dark:text-white">{feature.title}</h4>
@@ -282,19 +273,17 @@ const AboutUs = () => {
                             </div>
                         </div>
 
-                       
- 
                         {/* Content Story text */}
                         <div className="space-y-5">
-                            <span className="text-xs font-bold uppercase tracking-wider text-red-500">our story</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-red-500">{t('about_page.our_story_tag', 'OUR STORY')}</span>
                             <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                                BUILT WITH PASSION TO <br />EMPOWER THE BEAUTY INDUSTRY
+                                {t('about_page.story_title', 'BUILT WITH PASSION TO EMPOWER THE BEAUTY INDUSTRY')}
                             </h2>
                             <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-300">
-                                neoparlour was born with a simple idea - to make salon booking effortless for customer and growth simple for salon owners.
+                                {t('about_page.story_desc1', 'neoparlour was born with a simple idea - to make salon booking effortless for customer and growth simple for salon owners.')}
                             </p>
                             <p className="text-sm font-semibold leading-relaxed text-gray-700 dark:text-gray-300">
-                                today, we are india's leading salon growth platform, trusted by thousands of salons and loved by millions of customers
+                                {t('about_page.story_desc2', "today, we are india's leading salon growth platform, trusted by thousands of salons and loved by millions of customers")}
                             </p>
                         </div>
 
@@ -307,7 +296,7 @@ const AboutUs = () => {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-center gap-4">
                         <span className="h-px w-12 bg-gray-200 dark:bg-gray-700"></span>
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">Testimonials</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white uppercase">{t('about_page.testimonials_title', 'Testimonials')}</h2>
                         <span className="h-px w-12 bg-gray-200 dark:bg-gray-700"></span>
                     </div>
 
@@ -317,19 +306,17 @@ const AboutUs = () => {
                             {[1, 2, 3, 4].map((item) => (
                                 <div key={item} className="rounded-2xl bg-gray-50 dark:bg-black p-6 flex flex-col justify-between ring-1 ring-gray-100 dark:ring-gray-800">
                                     <div>
-                                        {/* Stars */}
                                         <div className="flex gap-1 text-amber-400">
                                             {"★".repeat(5).split("").map((star, i) => (
                                                 <span key={i} className="text-lg">{star}</span>
                                             ))}
                                         </div>
-                                        <h4 className="mt-4 text-sm font-bold text-gray-900 dark:text-white">The Best Booking System</h4>
+                                        <h4 className="mt-4 text-sm font-bold text-gray-900 dark:text-white">{t('about_page.test1_title', 'The Best Booking System')}</h4>
                                         <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-300">
-                                            Great Experience, Easy To Book, Paying For Treatments Is So Convenient - No Cash Or Cards Needed!
+                                            {t('about_page.test1_desc', 'Great Experience, Easy To Book, Paying For Treatments Is So Convenient - No Cash Or Cards Needed!')}
                                         </p>
                                     </div>
 
-                                    {/* Profile Block */}
                                     <div className="mt-6 flex items-center gap-3">
                                         <div className="h-9 w-9 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                                             <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avishkar profile" className="h-full w-full object-cover" />
@@ -343,7 +330,6 @@ const AboutUs = () => {
                             ))}
                         </div>
 
-                        {/* Next arrow slide action mock */}
                         <button className="absolute -right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-lg ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                             <ArrowRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                         </button>
@@ -352,8 +338,6 @@ const AboutUs = () => {
             </section>
 
             <SEOFooter />
-            {/* 8. FOOTER */}
-
         </div>
     );
 }

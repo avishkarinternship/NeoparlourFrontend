@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
@@ -29,6 +30,7 @@ const staticSalons = [
 ];
 
 const SalonsListing = () => {
+    const { t } = useTranslation();
     const { isDark } = useDarkMode();
     const navigate = useNavigate();
     const location = useLocation();
@@ -444,16 +446,16 @@ const SalonsListing = () => {
                     <div className="text-center mb-10">
                         <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-3 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {isFromProducts ? (
-                                <>Select a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2A14] to-[#FF6B5A]">Salon</span> to Browse Products</>
+                                <>{t('salons_page.select_salon_products', 'Select a Salon to Browse Products')}</>
                             ) : (
-                                <>Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF2A14] to-[#FF6B5A]">Salons</span> Near You</>
+                                <>{t('salons_page.page_title', 'Discover Salons Near You')}</>
                             )}
                         </h1>
                         <p className={`text-sm sm:text-base max-w-xl mx-auto font-medium transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {isFromProducts ? (
-                                "Select one of our partner salons below to view their premium beauty formulations and place orders."
+                                t('salons_page.select_partner_desc', 'Select one of our partner salons below to view their premium beauty formulations and place orders.')
                             ) : (
-                                "Find and book the best salons in your city. Premium experiences, trusted professionals."
+                                t('salons_page.find_best_desc', 'Find and book the best salons in your city. Premium experiences, trusted professionals.')
                             )}
                         </p>
                     </div>
@@ -467,7 +469,7 @@ const SalonsListing = () => {
                                 <input
                                     id="salon-city-search"
                                     type="text"
-                                    placeholder={isDetectingLocation ? "DETECTING..." : "Search city..."}
+                                    placeholder={isDetectingLocation ? t('salons_page.detecting', 'DETECTING...') : t('salons_page.city_placeholder', 'Search city...')}
                                     value={cityName}
                                     onChange={(e) => {
                                         isUserTypingCityRef.current = true;
