@@ -5,10 +5,6 @@ import partnerUs1 from '../../assets/HomePage/Partner/partner_us_1.png';
 import partnerUs2 from '../../assets/HomePage/Partner/partner_us_2.png';
 import partnerUs3 from '../../assets/HomePage/Partner/partner_us_3.png';
 import { 
-    Star, 
-    Home, 
-    MapPin, 
-    Download, 
     Play, 
     ArrowUpRight, 
     Plus, 

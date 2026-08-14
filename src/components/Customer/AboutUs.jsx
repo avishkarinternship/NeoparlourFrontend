@@ -1,26 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Scissors,
-    Search,
-    CheckCircle,
-    Calendar,
-    Sliders,
-    CreditCard,
-    Headphones,
     ArrowRight, 
-    Smartphone,
     User,
     Store,
-    XCircle,
-    Menu,
-    MousePointerClick
+    XCircle
 } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchCustomerProfile } from '../../redux/slices/customerSlice';
+import { useNavigate } from 'react-router-dom';
 import ourStoryImage from '../../assets/Customer/AboutUs/our_story.jpg';
-// Add these to your imports
 import verifiedIcon from '../../assets/Customer/AboutUs/verified_salon.svg';
 import bookingIcon from '../../assets/Customer/AboutUs/real_time_booking.svg';
 import managementIcon from '../../assets/Customer/AboutUs/smart_management.svg';
@@ -31,10 +19,6 @@ import SEOFooter from '../common/SEOFooter';
 const AboutUs = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const location = useLocation();
-    const currentPath = location.pathname;
-    const dispatch = useDispatch();
-    const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
 
     return (
         <div className="min-h-screen bg-white dark:bg-black font-sans text-gray-900 dark:text-white selection:bg-red-500 selection:text-white">
