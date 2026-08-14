@@ -848,9 +848,63 @@ const SalonPage = () => {
 
     if (loading) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center py-32">
-                <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.syncing', 'Syncing Salon Portal...')}</p>
+            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
+                <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
+                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                        <div className="h-3 yt-skeleton rounded w-16"></div>
+                        <span>&gt;</span>
+                        <div className="h-3 yt-skeleton rounded w-28"></div>
+                    </div>
+                </nav>
+                <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8">
+                    {/* Salon Header Hero Card Skeleton */}
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                        <div className="h-64 sm:h-80 w-full yt-skeleton rounded-2xl"></div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                            <div className="space-y-3 w-full">
+                                <div className="h-8 yt-skeleton rounded-2xl w-64"></div>
+                                <div className="h-4 yt-skeleton rounded-lg w-48"></div>
+                                <div className="flex gap-2">
+                                    <div className="h-6 yt-skeleton rounded-xl w-24"></div>
+                                    <div className="h-6 yt-skeleton rounded-xl w-20"></div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                <div className="w-10 h-10 yt-skeleton rounded-2xl"></div>
+                                <div className="w-10 h-10 yt-skeleton rounded-2xl"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2-Column Content Skeleton */}
+                    <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+                        <div className="w-full lg:w-[60%] shrink-0 space-y-6">
+                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                    <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-28 yt-skeleton rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
+                                </div>
+                                <div className="space-y-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
+                                            <div className="space-y-2">
+                                                <div className="h-5 yt-skeleton rounded-lg w-44"></div>
+                                                <div className="h-4 yt-skeleton rounded-lg w-28"></div>
+                                            </div>
+                                            <div className="h-9 w-20 yt-skeleton rounded-xl"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-full lg:w-[40%] bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                            <div className="h-6 yt-skeleton rounded-xl w-36"></div>
+                            <div className="h-32 yt-skeleton rounded-2xl"></div>
+                            <div className="h-12 yt-skeleton rounded-2xl w-full"></div>
+                        </div>
+                    </div>
+                </main>
             </div>
         );
     }
