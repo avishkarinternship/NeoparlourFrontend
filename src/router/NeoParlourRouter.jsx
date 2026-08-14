@@ -222,7 +222,15 @@ export let routes = createBrowserRouter([
                 element: <OwnerTermsAndConditions />
             },
             {
+                path: '/owner/:lang/terms-and-conditions',
+                element: <OwnerTermsAndConditions />
+            },
+            {
                 path: '/owner/privacy-policy',
+                element: <PrivacyPolicyScreen />
+            },
+            {
+                path: '/owner/:lang/privacy-policy',
                 element: <PrivacyPolicyScreen />
             },
 
