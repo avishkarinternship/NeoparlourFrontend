@@ -528,15 +528,15 @@ const SalonPage = () => {
             }
         };
 
-        fetchSalonDetails();
-        fetchActiveOffers();
-        checkFavStatus();
-        fetchHomeServiceCharges();
-        fetchServices();
-        fetchProducts();
-        if (isAuthenticated) {
-            fetchPackages();
-        }
+        Promise.allSettled([
+            fetchSalonDetails(),
+            fetchActiveOffers(),
+            checkFavStatus(),
+            fetchHomeServiceCharges(),
+            fetchServices(),
+            fetchProducts(),
+            isAuthenticated ? fetchPackages() : Promise.resolve()
+        ]);
     }, [resolvedSalonId, navigate, isAuthenticated]);
 
 

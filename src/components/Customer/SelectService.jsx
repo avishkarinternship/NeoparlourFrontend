@@ -418,9 +418,11 @@ const SelectService = () => {
             }
         };
 
-        fetchSalonDetails();
-        checkFavStatus();
-        fetchHomeServiceCharges();
+        Promise.allSettled([
+            fetchSalonDetails(),
+            checkFavStatus(),
+            fetchHomeServiceCharges()
+        ]);
     }, [activeSalonId, navigate, isAuthenticated]);
 
     const handleToggleFavourite = async () => {
