@@ -303,73 +303,165 @@ export let routes = createBrowserRouter([
                         path: '/',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
+                    {
+                        path: 'customer/home',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/dashboard',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
 
                     {
-                        path: '/features',
+                        path: 'features',
                         element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
                     },
                     {
-                        path: '/about',
+                        path: 'customer/features',
+                        element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'about',
                         element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/support',
+                        path: 'customer/about',
+                        element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
                     },
                     {
-                        path: '/delete-account',
+                        path: 'customer/support',
+                        element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'delete-account',
                         element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
                     },
                     {
-                        path: '/partner-with-us',
+                        path: 'customer/delete-account',
+                        element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'partner-with-us',
                         element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/salons',
+                        path: 'customer/partner-with-us',
+                        element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'salons',
                         element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/influencer-program', 
+                        path: 'customer/salons',
+                        element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'influencer-program',
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
                     },
                     {
-                        path: '/blogs',
+                        path: 'customer/influencer-program',
+                        element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/leadership',
+                        path: 'customer/blogs',
+                        element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'leadership',
                         element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
                     },
                     {
-                        path: '/videos',
+                        path: 'customer/leadership',
+                        element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'videos',
                         element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
                     },
                     {
-                        path: '/security',
+                        path: 'customer/videos',
+                        element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'security',
                         element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
                     },
                     {
-                        path: '/services',
+                        path: 'customer/security',
+                        element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'services',
                         element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
                     },
                     {
-                        path: '/client-testimonials',
+                        path: 'customer/services',
+                        element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'client-testimonials',
                         element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
                     },
                     {
-                        path: '/sitemap',
+                        path: 'customer/client-testimonials',
+                        element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'sitemap',
                         element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
                     },
                     {
-                        path: '/updates',
+                        path: 'customer/sitemap',
+                        element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'updates',
                         element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/offers',
+                        path: 'customer/updates',
+                        element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'offers',
                         element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
                     },
-                     {
-                        path: '/case-studies',
+                    {
+                        path: 'customer/offers',
+                        element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'case-studies',
+                        element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/case-studies',
                         element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {
