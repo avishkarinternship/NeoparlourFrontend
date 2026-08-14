@@ -1147,9 +1147,63 @@ const SelectService = () => {
 
     if (loading) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center py-32">
-                <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.syncing', 'Syncing Booking Portal...')}</p>
+            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
+                <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
+                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 flex items-center gap-1.5 font-bold uppercase tracking-widest animate-pulse">
+                        <div className="h-3 bg-slate-200 rounded w-16"></div>
+                        <span>&gt;</span>
+                        <div className="h-3 bg-slate-200 rounded w-24"></div>
+                        <span>&gt;</span>
+                        <div className="h-3 bg-slate-300 rounded w-20"></div>
+                    </div>
+                </nav>
+                <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 animate-pulse space-y-8">
+                    {/* Header Card Skeleton */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row justify-between items-start gap-6">
+                        <div className="space-y-3 flex-1 w-full">
+                            <div className="h-8 bg-slate-200 rounded-2xl w-64"></div>
+                            <div className="h-4 bg-slate-200 rounded-lg w-48"></div>
+                            <div className="flex gap-2">
+                                <div className="h-6 bg-slate-200 rounded-xl w-24"></div>
+                                <div className="h-6 bg-slate-200 rounded-xl w-20"></div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="w-10 h-10 bg-slate-200 rounded-2xl"></div>
+                            <div className="w-10 h-10 bg-slate-200 rounded-2xl"></div>
+                        </div>
+                    </div>
+
+                    {/* Content Columns Skeleton */}
+                    <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+                        <div className="w-full lg:w-[60%] shrink-0 space-y-6">
+                            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                    <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-28 bg-slate-200 rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
+                                    <div className="h-9 w-32 bg-slate-200 rounded-xl shrink-0"></div>
+                                </div>
+                                <div className="space-y-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
+                                            <div className="space-y-2">
+                                                <div className="h-5 bg-slate-200 rounded-lg w-44"></div>
+                                                <div className="h-4 bg-slate-200 rounded-lg w-28"></div>
+                                            </div>
+                                            <div className="h-9 w-20 bg-slate-200 rounded-xl"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-full lg:w-[40%] bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                            <div className="h-6 bg-slate-200 rounded-xl w-36"></div>
+                            <div className="h-28 bg-slate-100 rounded-2xl"></div>
+                            <div className="h-12 bg-slate-200 rounded-2xl w-full"></div>
+                        </div>
+                    </div>
+                </main>
             </div>
         );
     }
@@ -1237,9 +1291,24 @@ const SelectService = () => {
                         {/* Services Picker Section */}
                         <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
                             {!servicesLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-12">
-                                    <div className="animate-spin h-8 w-8 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_catalog', 'Loading catalog...')}</p>
+                                <div className="animate-pulse space-y-6">
+                                    <div className="flex gap-3 overflow-x-auto pb-2">
+                                        <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-28 bg-slate-200 rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-24 bg-slate-200 rounded-xl shrink-0"></div>
+                                        <div className="h-9 w-32 bg-slate-200 rounded-xl shrink-0"></div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {[1, 2, 3, 4].map(i => (
+                                            <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
+                                                <div className="space-y-2">
+                                                    <div className="h-5 bg-slate-200 rounded-lg w-44"></div>
+                                                    <div className="h-4 bg-slate-200 rounded-lg w-28"></div>
+                                                </div>
+                                                <div className="h-9 w-20 bg-slate-200 rounded-xl"></div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             ) : (
                                 <>
@@ -1513,9 +1582,10 @@ const SelectService = () => {
 
                             {/* Time Slots grid */}
                             {slotsLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8 mt-5">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_slots', 'Loading available slots...')}</p>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5 animate-pulse">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                                        <div key={i} className="h-16 bg-slate-100 rounded-xl"></div>
+                                    ))}
                                 </div>
                             ) : displayedSlots.length === 0 ? (
                                 <div className="text-center py-8 mt-5">
@@ -1716,10 +1786,7 @@ const SelectService = () => {
                                         </div>
 
                                         {fetchingHomeCharges && (
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pl-1">
-                                                <span className="w-3 h-3 border-2 border-[#FF0B01] border-t-transparent rounded-full animate-spin"></span>
-                                                {t('book_service.fetching_home_charges', 'Fetching home charges...')}
-                                            </div>
+                                            <div className="h-4 bg-slate-200 rounded-md w-36 animate-pulse my-1"></div>
                                         )}
 
                                         {homeService && !fetchingHomeCharges && (
@@ -1733,11 +1800,11 @@ const SelectService = () => {
                                                 <div className="flex flex-col gap-1">
                                                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">{t('book_service.delivery_address', 'Delivery Address')} <span className="text-[#FF0B01] font-black">*</span></label>
                                                     <textarea
-                                                        value={customerAddress}
-                                                        onChange={(e) => setCustomerAddress(e.target.value)}
+                                                        rows={2}
+                                                        value={homeAddress}
+                                                        onChange={(e) => setHomeAddress(e.target.value)}
                                                         placeholder={t('book_service.address_placeholder', 'Enter complete home address')}
-                                                        rows="2"
-                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-slate-700 resize-none"
+                                                        className="w-full text-xs font-semibold p-3 border border-slate-200 rounded-xl outline-none focus:border-[#FF0B01] transition-all bg-slate-50"
                                                     />
                                                 </div>
                                             </div>
@@ -1793,15 +1860,20 @@ const SelectService = () => {
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
                                 <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_expert', 'Select Expert')}
                             </h3>
-                            {firstSelected === 'slot' && availableStaffLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.finding_stylists', 'Finding available stylists...')}</p>
-                                </div>
-                            ) : !staffLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('book_service.loading_roster', 'Loading roster...')}</p>
+                            {(firstSelected === 'slot' && availableStaffLoading) || !staffLoaded ? (
+                                <div className="space-y-3 animate-pulse">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="p-3 border border-slate-100 rounded-2xl flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-slate-200 rounded-full"></div>
+                                                <div className="space-y-1.5">
+                                                    <div className="h-4 bg-slate-200 rounded w-28"></div>
+                                                    <div className="h-3 bg-slate-200 rounded w-16"></div>
+                                                </div>
+                                            </div>
+                                            <div className="h-8 w-16 bg-slate-200 rounded-xl"></div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <div className="space-y-4">

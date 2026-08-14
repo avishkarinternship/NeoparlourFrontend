@@ -552,9 +552,20 @@ const Appointments = () => {
           <div className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
             
             {loading ? (
-              <div className="flex flex-col items-center py-24 gap-4">
-                <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
-                <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Retrieving Bookings</p>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800 animate-pulse">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-gray-800 shrink-0"></div>
+                      <div className="space-y-2.5">
+                        <div className="h-5 bg-slate-200 dark:bg-gray-800 rounded-lg w-40"></div>
+                        <div className="h-3.5 bg-slate-200 dark:bg-gray-800 rounded-lg w-28"></div>
+                        <div className="h-4 bg-slate-200 dark:bg-gray-800 rounded-lg w-52"></div>
+                      </div>
+                    </div>
+                    <div className="h-11 w-36 bg-slate-200 dark:bg-gray-800 rounded-xl"></div>
+                  </div>
+                ))}
               </div>
             ) : filteredAppointments.length > 0 ? (
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -682,9 +693,10 @@ const Appointments = () => {
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block">Select New Time</label>
                   {rescheduleSlotsLoading ? (
-                    <div className="flex items-center justify-center py-4 bg-[#fafafa] border border-gray-100 rounded-xl">
-                      <div className="animate-spin h-5 w-5 border-2 border-[#ff0b01] border-t-transparent rounded-full mr-2"></div>
-                      <span className="text-xs text-gray-400 font-bold uppercase">Loading slots...</span>
+                    <div className="grid grid-cols-3 gap-2 p-2 bg-[#fafafa] border border-gray-100 rounded-xl animate-pulse">
+                      {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="h-9 bg-slate-200 rounded-lg"></div>
+                      ))}
                     </div>
                   ) : rescheduleSlots.length === 0 ? (
                     <div className="text-center py-4 bg-[#fafafa] border border-gray-100 rounded-xl text-xs text-gray-400 font-bold uppercase">

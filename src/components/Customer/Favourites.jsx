@@ -172,9 +172,16 @@ const Favourites = () => {
             {/* Content Container */}
             <div className="max-w-[1200px] w-full mx-auto px-6 pb-16 flex-1">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-24">
-                        <div className="animate-spin h-9 w-9 border-[3px] border-[#ff0b01] border-t-transparent rounded-full mb-4" />
-                        <p className="text-xs text-gray-400 font-semibold animate-pulse">Loading saved salons...</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[24px] overflow-hidden p-5 space-y-4 shadow-xs">
+                                <div className="h-40 bg-slate-200 dark:bg-gray-800 rounded-2xl"></div>
+                                <div className="space-y-2">
+                                    <div className="h-5 bg-slate-200 dark:bg-gray-800 rounded w-44"></div>
+                                    <div className="h-4 bg-slate-200 dark:bg-gray-800 rounded w-28"></div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : favourites.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 text-center">
