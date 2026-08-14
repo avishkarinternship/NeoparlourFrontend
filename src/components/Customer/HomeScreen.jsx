@@ -694,6 +694,65 @@ const HomeScreen = () => {
 
     // Drawer and profile view states removed since shared Navbar handles them internally.
 
+    if (isPageLoading) {
+        return (
+            <div className={`min-h-screen font-sans overflow-x-hidden ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
+                {/* 1. Hero Section Skeleton */}
+                <section className="relative min-h-[500px] w-full flex flex-col items-center justify-center py-20 px-6 text-center bg-[#f4f4f4] dark:bg-gray-900 space-y-6">
+                    <div className="h-12 w-3/4 max-w-2xl yt-skeleton rounded-2xl mx-auto"></div>
+                    <div className="h-5 w-1/2 max-w-lg yt-skeleton rounded-lg mx-auto"></div>
+                    {/* Search Bar Skeleton */}
+                    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg flex flex-col md:flex-row items-center gap-3 mt-6">
+                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-36"></div>
+                    </div>
+                </section>
+
+                {/* 2. Categories Carousel Skeleton */}
+                <section className="max-w-7xl mx-auto px-6 py-12 space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div className="h-7 w-48 yt-skeleton rounded-xl"></div>
+                        <div className="h-5 w-20 yt-skeleton rounded-lg"></div>
+                    </div>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                            <div key={i} className="flex flex-col items-center space-y-2">
+                                <div className="w-16 h-16 rounded-full yt-skeleton"></div>
+                                <div className="h-3 w-12 rounded yt-skeleton"></div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* 3. Recommended Salons Grid Skeleton */}
+                <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div className="h-7 w-56 yt-skeleton rounded-xl"></div>
+                        <div className="h-5 w-24 yt-skeleton rounded-lg"></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4 space-y-4 bg-white dark:bg-gray-900 shadow-sm">
+                                <div className="h-44 rounded-xl yt-skeleton"></div>
+                                <div className="space-y-2">
+                                    <div className="h-5 rounded-lg yt-skeleton w-3/4"></div>
+                                    <div className="h-4 rounded-lg yt-skeleton w-1/2"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* 4. Promotional Banner Skeleton */}
+                <section className="max-w-7xl mx-auto px-6 py-8">
+                    <div className="h-44 rounded-3xl yt-skeleton w-full"></div>
+                </section>
+            </div>
+        );
+    }
+
     return (
         <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
 
