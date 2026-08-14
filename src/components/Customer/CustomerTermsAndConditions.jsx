@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import SEOFooter from '../common/SEOFooter';
 
 const CustomerTermsAndConditions = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black antialiased font-sans text-gray-800 dark:text-gray-300 flex flex-col justify-between">
       
@@ -10,22 +13,22 @@ const CustomerTermsAndConditions = () => {
         <div className="max-w-4xl mx-auto bg-white dark:bg-black dark:border dark:border-gray-800 shadow-lg rounded-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-8 text-center">
-            <h1 className="text-4xl font-bold mb-2">SALON BOOKING PLATFORM</h1>
-            <h2 className="text-2xl font-semibold">Terms &amp; Conditions for Customers</h2>
+            <h1 className="text-4xl font-bold mb-2">{t('terms.title', 'SALON BOOKING PLATFORM')}</h1>
+            <h2 className="text-2xl font-semibold">{t('terms.subtitle', 'Terms & Conditions for Customers')}</h2>
             <div className="mt-6 text-sm opacity-90 flex justify-center gap-8">
-              <p><strong>Version 1.0</strong></p>
-              <p><strong>Effective Date: 27/05/26</strong></p>
-              <p><strong>Governed by Indian Law</strong></p>
+              <p><strong>{t('terms.version', 'Version 1.0')}</strong></p>
+              <p><strong>{t('terms.effective_date', 'Effective Date: 27/05/26')}</strong></p>
+              <p><strong>{t('terms.governed_by', 'Governed by Indian Law')}</strong></p>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div className="border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-8 py-4">
             <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-medium text-purple-700 dark:text-purple-400">
-              <a href="#booking-rules" className="hover:underline">Booking Rules</a>
-              <a href="#cancellation-policy" className="hover:underline">Cancellation Policy</a>
-              <a href="#your-safety" className="hover:underline">Your Safety</a>
-              <a href="#ratings-reviews" className="hover:underline">Ratings &amp; Reviews</a>
+              <a href="#booking-rules" className="hover:underline">{t('terms.booking_rules', 'Booking Rules')}</a>
+              <a href="#cancellation-policy" className="hover:underline">{t('terms.cancellation_policy', 'Cancellation Policy')}</a>
+              <a href="#your-safety" className="hover:underline">{t('terms.your_safety', 'Your Safety')}</a>
+              <a href="#ratings-reviews" className="hover:underline">{t('terms.ratings_reviews', 'Ratings & Reviews')}</a>
             </div>
           </div>
 
@@ -33,14 +36,13 @@ const CustomerTermsAndConditions = () => {
             {/* Important Notice */}
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 p-6 rounded-lg">
               <p className="font-semibold text-amber-800 dark:text-amber-200 text-center text-lg">
-                IMPORTANT: These Terms form a legally binding agreement between you and the Platform. 
-                By creating an account or making a booking, you accept these Terms in full.
+                {t('terms.important_notice', 'IMPORTANT: These Terms form a legally binding agreement between you and the Platform. By creating an account or making a booking, you accept these Terms in full.')}
               </p>
             </div>
 
             {/* Section 1 */}
             <section id="who-we-are">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. WHO WE ARE &amp; WHAT WE DO</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('terms.sec1_title', '1. WHO WE ARE & WHAT WE DO')}</h2>
               <p className="leading-relaxed">
                 [Neoparlour ] (&apos;Platform&apos;, &apos;We&apos;, &apos;Us&apos;) is a technology-based salon booking marketplace. We connect customers with independently operated salons (&apos;Salon Partners&apos;) through our mobile application and website.
               </p>

@@ -1,7 +1,10 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import SEOFooter from "../common/SEOFooter";
 
 const PrivacyPolicy = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black antialiased font-sans text-gray-700 dark:text-gray-300 flex flex-col justify-between">
       
@@ -12,15 +15,15 @@ const PrivacyPolicy = () => {
           {/* Header */}
           <div className="bg-black text-white p-6">
             <h1 className="text-3xl font-bold">
-              Privacy Policy
+              {t('privacy.title', 'Privacy Policy')}
             </h1>
 
             <p className="text-gray-300 mt-2">
-              Neoparlour Customer App
+              {t('privacy.subtitle', 'Neoparlour Customer App')}
             </p>
 
             <p className="text-sm text-gray-400 mt-1">
-              Effective Date: 27 May 2026
+              {t('privacy.effective_date', 'Effective Date: 27 May 2026')}
             </p>
           </div>
 
@@ -28,7 +31,7 @@ const PrivacyPolicy = () => {
           <div className="p-6 space-y-8 text-gray-700 dark:text-gray-300">
 
             {/* Introduction */}
-            <Section title="1. INTRODUCTION">
+            <Section title={t('privacy.sec1_title', '1. INTRODUCTION')}>
               <p>
                 Neoparlour ("Platform", "we", "our", "us") is a salon booking marketplace that connects customers with independent salon partners.
               </p>
@@ -43,7 +46,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Information */}
-            <Section title="2. INFORMATION WE COLLECT">
+            <Section title={t('privacy.sec2_title', '2. INFORMATION WE COLLECT')}>
 
               <p>
                 We collect the following types of information:
@@ -93,7 +96,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Use */}
-            <Section title="3. HOW WE USE YOUR INFORMATION">
+            <Section title={t('privacy.sec3_title', '3. HOW WE USE YOUR INFORMATION')}>
               <p>We use your data to:</p>
 
               <BulletList
@@ -110,7 +113,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Sharing */}
-            <Section title="4. SHARING OF INFORMATION">
+            <Section title={t('privacy.sec4_title', '4. SHARING OF INFORMATION')}>
 
               <p className="font-medium">
                 We do NOT sell your personal data.
@@ -148,7 +151,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Payments */}
-            <Section title="5. PAYMENTS">
+            <Section title={t('privacy.sec5_title', '5. PAYMENTS')}>
               <BulletList
                 items={[
                   "All payments are made directly to the salon",
@@ -159,7 +162,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Notifications */}
-            <Section title="6. PUSH NOTIFICATIONS">
+            <Section title={t('privacy.sec6_title', '6. PUSH NOTIFICATIONS')}>
 
               <p>
                 By using the Platform, you consent to receive:
@@ -180,7 +183,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Retention */}
-            <Section title="7. DATA RETENTION">
+            <Section title={t('privacy.sec7_title', '7. DATA RETENTION')}>
 
               <p>
                 We retain your data:
@@ -196,7 +199,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Deletion */}
-            <Section title="8. ACCOUNT DELETION">
+            <Section title={t('privacy.sec8_title', '8. ACCOUNT DELETION')}>
 
               <p>
                 You may request account deletion by:
@@ -223,7 +226,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Security */}
-            <Section title="9. DATA SECURITY">
+            <Section title={t('privacy.sec9_title', '9. DATA SECURITY')}>
 
               <p>
                 We implement reasonable security measures to protect your data from:
@@ -243,7 +246,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Rights */}
-            <Section title="10. YOUR RIGHTS">
+            <Section title={t('privacy.sec10_title', '10. YOUR RIGHTS')}>
 
               <p>
                 Under applicable Indian laws (including DPDP Act, 2023), you have the right to:
@@ -260,7 +263,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Third Party */}
-            <Section title="11. THIRD-PARTY SERVICES">
+            <Section title={t('privacy.sec11_title', '11. THIRD-PARTY SERVICES')}>
 
               <p>
                 The app may use third-party services such as:
@@ -279,7 +282,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Children */}
-            <Section title="12. CHILDREN’S PRIVACY">
+            <Section title={t('privacy.sec12_title', '12. CHILDREN’S PRIVACY')}>
 
               <BulletList
                 items={[
@@ -290,7 +293,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Changes */}
-            <Section title="13. CHANGES TO THIS POLICY">
+            <Section title={t('privacy.sec13_title', '13. CHANGES TO THIS POLICY')}>
 
               <p>
                 We may update this Privacy Policy from time to time.
@@ -305,7 +308,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Contact */}
-            <Section title="14. CONTACT US">
+            <Section title={t('privacy.sec14_title', '14. CONTACT US')}>
 
               <p>
                 For any privacy-related queries:
@@ -325,7 +328,7 @@ const PrivacyPolicy = () => {
             </Section>
 
             {/* Consent */}
-            <Section title="15. CONSENT">
+            <Section title={t('privacy.sec15_title', '15. CONSENT')}>
 
               <p>
                 By using the Platform, you:
