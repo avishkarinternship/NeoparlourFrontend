@@ -12,6 +12,7 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
     const { user, profile, loading, isAuthenticated } = useSelector((state) => state.customer);
 
     const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -142,6 +143,7 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
             }
         };
 
+        setSaving(true);
         dispatch(updateCustomerProfile(payload))
             .unwrap()
             .then(() => {
@@ -151,6 +153,9 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
             })
             .catch((err) => {
                 toast.error(err || "Failed to update profile");
+            })
+            .finally(() => {
+                setSaving(false);
             });
     };
 
