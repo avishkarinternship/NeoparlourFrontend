@@ -193,7 +193,7 @@ const PrivacyPolicy = () => {
       ]
     },
     hi: {
-      title: "गोपनीयता नीति",
+      title: "प्राइवेसी पॉलिसी",
       subtitle: "नियोपार्लर ग्राहक ऐप",
       effectiveDate: "प्रभावी तिथि: 27 मई 2026",
 
@@ -351,7 +351,7 @@ const PrivacyPolicy = () => {
       ]
     },
     mr: {
-      title: "गोपनीयता धोरण",
+      title: "प्रायव्हसी पॉलिसी",
       subtitle: "नियोपार्लर ग्राहक ॲप",
       effectiveDate: "प्रभावी तारीख: 27 मे 2026",
 
