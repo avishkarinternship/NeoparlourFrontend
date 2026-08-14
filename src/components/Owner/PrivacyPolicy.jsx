@@ -181,8 +181,8 @@ const PrivacyPolicyScreen = () => {
       ]
     },
     hi: {
-      title: "गोपनीयता नीति",
-      subtitle: "नियोपार्लर सलून (मालिक) ऐप",
+      title: "प्राइवेसी पॉलिसी",
+      subtitle: "नियोपार्लर सलून (ओनर) ऐप",
       effectiveDate: "प्रभावी तिथि: 27 मई 2026",
 
       sec1Title: "1. परिचय",
@@ -326,8 +326,8 @@ const PrivacyPolicyScreen = () => {
       ]
     },
     mr: {
-      title: "गोपनीयता धोरण",
-      subtitle: "नियोपार्लर सलून (मालक) ॲप",
+      title: "प्रायव्हसी पॉलिसी",
+      subtitle: "नियोपार्लर सलून (ओनर) ॲप",
       effectiveDate: "प्रभावी तारीख: 27 मे 2026",
 
       sec1Title: "1. परिचय",
