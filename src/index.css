@@ -58,18 +58,39 @@ html[lang="mr"] *::after {
   font-family: 'Inknut Antiqua', serif !important;
 }
 
-/* Inknut Antiqua Spacing & Line Height Rules to Prevent Matra Overlap & Keep Word Spacing */
-html[lang="hi"] h1, html[lang="hi"] h2, html[lang="hi"] h3, html[lang="hi"] h4, html[lang="hi"] h5, html[lang="hi"] h6,
-html[lang="mr"] h1, html[lang="mr"] h2, html[lang="mr"] h3, html[lang="mr"] h4, html[lang="mr"] h5, html[lang="mr"] h6 {
-  line-height: 1.95 !important;
-  word-spacing: 0.15em !important;
+/* Inknut Antiqua Medium Heading Font Sizes & Spacing Rules */
+html[lang="hi"] h1, html[lang="mr"] h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem) !important;
+  line-height: 1.6 !important;
+  word-spacing: 0.1em !important;
   letter-spacing: 0.01em !important;
+}
+
+html[lang="hi"] h2, html[lang="mr"] h2 {
+  font-size: clamp(1.4rem, 3.2vw, 2.0rem) !important;
+  line-height: 1.6 !important;
+  word-spacing: 0.1em !important;
+  letter-spacing: 0.01em !important;
+}
+
+html[lang="hi"] h3, html[lang="mr"] h3 {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem) !important;
+  line-height: 1.6 !important;
+  word-spacing: 0.08em !important;
+}
+
+html[lang="hi"] h4, html[lang="mr"] h4,
+html[lang="hi"] h5, html[lang="mr"] h5,
+html[lang="hi"] h6, html[lang="mr"] h6 {
+  font-size: clamp(1.0rem, 2vw, 1.3rem) !important;
+  line-height: 1.5 !important;
+  word-spacing: 0.08em !important;
 }
 
 html[lang="hi"] p, html[lang="hi"] span, html[lang="hi"] div, html[lang="hi"] button, html[lang="hi"] a, html[lang="hi"] li,
 html[lang="mr"] p, html[lang="mr"] span, html[lang="mr"] div, html[lang="mr"] a, html[lang="mr"] button, html[lang="mr"] li {
-  line-height: 1.85 !important;
-  word-spacing: 0.12em !important;
+  line-height: 1.65 !important;
+  word-spacing: 0.08em !important;
   letter-spacing: 0.01em !important;
 }
 
