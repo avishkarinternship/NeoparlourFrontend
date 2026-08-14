@@ -28,7 +28,7 @@ const Features = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Hero Typography Context Column */}
           <div className="lg:col-span-6 flex flex-col items-start space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-black tracking-tight text-gray-900 leading-[1.15]">
+            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-black tracking-tight text-gray-900 leading-snug">
               {t('features_page.hero_title', 'Take Control Of Your Day With Advanced Scheduling')}
             </h1>
             <p className="text-sm sm:text-base text-gray-400 max-w-xl font-medium leading-relaxed">

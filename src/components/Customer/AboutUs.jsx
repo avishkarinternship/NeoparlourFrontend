@@ -45,7 +45,7 @@ const AboutUs = () => {
 
                         {/* Left Content Column */}
                         <div className="space-y-3 lg:col-span-7">
-                            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl lg:leading-[1.15]">
+                            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl leading-snug">
                                 {t('about_page.hero_title', 'Redefining Beauty Through Technology')}
                             </h1>
                             

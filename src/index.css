@@ -44,18 +44,32 @@
   font-family: 'Outfit', 'Jost', system-ui, -apple-system, sans-serif;
 }
 
-/* Hindi (Devanagari) Typography — Inknut Antiqua & Noto Sans Devanagari */
+/* Hindi (Devanagari) Typography — Noto Sans Devanagari & Poppins */
 html[lang="hi"] *, 
 html[lang="hi"] *::before, 
 html[lang="hi"] *::after {
-  font-family: 'Inknut Antiqua', 'Noto Sans Devanagari', 'Poppins', 'Outfit', sans-serif !important;
+  font-family: 'Noto Sans Devanagari', 'Poppins', 'Outfit', system-ui, -apple-system, sans-serif !important;
 }
 
-/* Marathi (Devanagari) Typography — Inknut Antiqua & Noto Sans Devanagari */
+/* Marathi (Devanagari) Typography — Noto Sans Devanagari & Poppins */
 html[lang="mr"] *, 
 html[lang="mr"] *::before, 
 html[lang="mr"] *::after {
-  font-family: 'Inknut Antiqua', 'Noto Sans Devanagari', 'Poppins', 'Outfit', sans-serif !important;
+  font-family: 'Noto Sans Devanagari', 'Poppins', 'Outfit', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Devanagari (Hindi & Marathi) Line Height & Letter Spacing Fixes to Prevent Matra Overlaps */
+html[lang="hi"] h1, html[lang="hi"] h2, html[lang="hi"] h3, html[lang="hi"] h4, html[lang="hi"] h5, html[lang="hi"] h6,
+html[lang="mr"] h1, html[lang="mr"] h2, html[lang="mr"] h3, html[lang="mr"] h4, html[lang="mr"] h5, html[lang="mr"] h6 {
+  line-height: 1.45 !important;
+  letter-spacing: 0em !important;
+  word-spacing: 0.02em !important;
+}
+
+html[lang="hi"] p, html[lang="hi"] span, html[lang="hi"] div, html[lang="hi"] button, html[lang="hi"] a, html[lang="hi"] li,
+html[lang="mr"] p, html[lang="mr"] span, html[lang="mr"] div, html[lang="mr"] a, html[lang="mr"] button, html[lang="mr"] li {
+  line-height: 1.6 !important;
+  letter-spacing: 0em !important;
 }
 
 html {

@@ -91,7 +91,7 @@ const PartnerWithUs = () => {
                         <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" /> {t('partner_page.tag', 'B2B Partner Portal')}
                         </span>
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-none text-gray-900">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-snug text-gray-900">
                             {t('partner_page.hero_title', 'Grow Your Salon Business With NeoParlour')}
                         </h1>
                         <p className="text-gray-400 font-semibold text-sm leading-relaxed max-w-lg">
