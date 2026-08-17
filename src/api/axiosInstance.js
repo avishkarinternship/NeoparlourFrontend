@@ -14,19 +14,21 @@ const axiosInstance = axios.create({
   baseURL,
 });
 
-// Request Interceptor to attach tokens automatically
+// Request Interceptor to attach tokens dynamically
 axiosInstance.interceptors.request.use(
   (config) => {
-    // If request has explicitly opted out of attaching stale tokens after a 401 retry
+    // If request has explicitly opted out of attaching stale tokens
     if (config.skipTokenAttach) {
+      delete config.headers.Authorization;
+      delete config.headers.authorization;
       return config;
     }
 
     const customerToken = localStorage.getItem('customerToken');
     let ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    const genericToken = localStorage.getItem('token') || sessionStorage.getItem('token');
 
-    // Robust fallback: if owner token isn't in localStorage yet (e.g. on first page load/mount race condition),
-    // extract it directly from the URL search parameters.
+    // Robust fallback: if owner token isn't in localStorage yet, extract it from URL params
     if (!ownerToken && typeof window !== 'undefined' && window.location?.search) {
       const queryParams = new URLSearchParams(window.location.search);
       const urlToken = queryParams.get('token');
@@ -44,11 +46,15 @@ axiosInstance.interceptors.request.use(
       config.url.includes('/staff-inventory')
     );
     const token = isOwnerOrStaffRequest
-      ? (ownerToken || customerToken) 
-      : (customerToken || ownerToken);
+      ? (ownerToken || customerToken || genericToken) 
+      : (customerToken || ownerToken || genericToken);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Explicitly delete headers if token no longer exists in storage
+      delete config.headers.Authorization;
+      delete config.headers.authorization;
     }
 
     // Attach salonId / tenant headers if available in localStorage
@@ -57,6 +63,10 @@ axiosInstance.interceptors.request.use(
       config.headers['X-Salon-Id'] = activeSalonId;
       config.headers['salonId'] = activeSalonId;
       config.headers['X-Tenant-ID'] = activeSalonId;
+    } else {
+      delete config.headers['X-Salon-Id'];
+      delete config.headers['salonId'];
+      delete config.headers['X-Tenant-ID'];
     }
 
     return config;
@@ -97,37 +107,28 @@ axiosInstance.interceptors.response.use(
       );
     }
 
-    // Handle 401 Unauthorized globally for stale tokens
+    // Handle 401 Unauthorized globally for stale or expired tokens
     if (error.response?.status === 401) {
-      // Prevent infinite retry loops
-      if (error.config?._retry) {
-        return Promise.reject(error);
-      }
+      const isLoginOrPublic = error.config?.url?.includes('/login') || 
+                              error.config?.url?.includes('/send-otp') || 
+                              error.config?.url?.includes('/register');
 
-      const hasAuthHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
-      const isLoginRequest = error.config?.url?.includes('/login');
+      if (!isLoginOrPublic) {
+        console.warn("[axiosInstance] 401 Unauthorized detected. Clearing stale session state.");
+        localStorage.clear();
+        sessionStorage.clear();
+        delete axios.defaults.headers.common['Authorization'];
+        delete axios.defaults.headers.common['authorization'];
 
-      if (hasAuthHeader && !isLoginRequest) {
-        console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request ONCE...");
-        error.config._retry = true;
-        error.config.skipTokenAttach = true;
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const targetLogin = (currentPath.includes('/owner') || currentPath.includes('/staff') || currentPath.includes('/admin'))
+          ? '/owner/login'
+          : '/customer/login';
 
-        localStorage.removeItem('customerToken');
-        localStorage.removeItem('customerUser');
-        localStorage.removeItem('customerProfile');
-        localStorage.removeItem('ownerStaffToken');
-        localStorage.removeItem('ownerStaffUser');
-
-        // Remove authorization header
-        if (error.config.headers) {
-          delete error.config.headers.Authorization;
-          delete error.config.headers.authorization;
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = targetLogin;
+          return Promise.reject(error);
         }
-
-        // Retry the request ONCE without token
-        return axiosInstance(error.config);
-      } else {
-        console.error("[axiosInstance] Received 401 for request without stale token (or login request). URL:", error.config?.url);
       }
     }
 

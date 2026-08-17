@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
-import { updateSEOMetadata, injectJSONLD } from '../../utils/seoHelper';
+import { updateSEOMetadata, injectJSONLD, generateSalonSlug } from '../../utils/seoHelper';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
 
@@ -386,15 +386,27 @@ const SalonPage = () => {
                 const salonData = salonRes.data;
                 setSalon(salonData);
 
-                // Dynamically update SEO metadata
-                const salonName = salonData.salonName || salonData.name;
-                const cityStr = salonData.cityName || '';
+                // Dynamically update SEO metadata with exact salon name & location
+                const salonName = salonData.salonName || salonData.name || 'Salon';
+                const cityStr = salonData.cityName || salonData.city || '';
+                const areaStr = salonData.areaName || salonData.area || '';
                 const servicesStr = salonData.services ? salonData.services.join(', ') : 'Hair Spa, Facial & Bridal Makeup';
+
+                const seoTitle = `${salonName}${cityStr ? ' (' + cityStr + ')' : ''} | Hair Spa, Facial & Bridal Makeup | NeoParlour`;
+                const seoDesc = `Book appointment online at ${salonName} in ${areaStr ? areaStr + ', ' : ''}${cityStr}. Read customer reviews, check price list, opening hours and get exclusive discounts on NeoParlour.`;
+                const seoKeywords = `${salonName.toLowerCase()}, ${salonName.toLowerCase()} ${cityStr.toLowerCase()}, beauty parlour ${cityStr.toLowerCase()}, hair salon ${cityStr.toLowerCase()}, book ${salonName.toLowerCase()} online`;
+
                 updateSEOMetadata({
-                    title: `${salonName} ${cityStr} | Hair Spa, Facial & Bridal Makeup | NeoParlour`,
-                    description: `Book appointment at ${salonName} in ${salonData.areaName || ''}, ${cityStr}. Read reviews, check pricing, opening hours and get exclusive discounts on NeoParlour.`,
-                    keywords: `${salonName.toLowerCase()}, salon ${cityStr.toLowerCase()}, beauty parlour ${cityStr.toLowerCase()}, hair salon ${cityStr.toLowerCase()}`
+                    title: seoTitle,
+                    description: seoDesc,
+                    keywords: seoKeywords
                 });
+
+                // If accessed via generic /salon URL, update browser address bar seamlessly to /salon/:slug for SEO
+                const slug = generateSalonSlug(salonName, cityStr);
+                if (!salonSlug && slug && window.history.replaceState) {
+                    window.history.replaceState(null, '', `/salon/${slug}`);
+                }
 
                 // Inject dynamic Schema.org JSON-LD structured data
                 const reviewsCount = (((salonData.salonId || salonData.id || 0) * 17) % 80) + 40;
@@ -848,9 +860,9 @@ const SalonPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
-                <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
-                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+            <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col font-sans antialiased text-slate-800 dark:text-zinc-100">
+                <nav className="bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 py-3.5 shadow-sm">
+                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-300 dark:text-zinc-600 flex items-center gap-1.5 font-bold uppercase tracking-widest">
                         <div className="h-3 yt-skeleton rounded w-16"></div>
                         <span>&gt;</span>
                         <div className="h-3 yt-skeleton rounded w-28"></div>
@@ -858,7 +870,7 @@ const SalonPage = () => {
                 </nav>
                 <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8">
                     {/* Salon Header Hero Card Skeleton */}
-                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                    <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm space-y-6">
                         <div className="h-64 sm:h-80 w-full yt-skeleton rounded-2xl"></div>
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                             <div className="space-y-3 w-full">
@@ -879,7 +891,7 @@ const SalonPage = () => {
                     {/* 2-Column Content Skeleton */}
                     <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
                         <div className="w-full lg:w-[60%] shrink-0 space-y-6">
-                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm space-y-6">
                                 <div className="flex gap-3 overflow-x-auto pb-2">
                                     <div className="h-9 w-24 yt-skeleton rounded-xl shrink-0"></div>
                                     <div className="h-9 w-28 yt-skeleton rounded-xl shrink-0"></div>
@@ -887,7 +899,7 @@ const SalonPage = () => {
                                 </div>
                                 <div className="space-y-4">
                                     {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="p-4 border border-slate-100 rounded-2xl flex justify-between items-center">
+                                        <div key={i} className="p-4 border border-slate-100 dark:border-zinc-800 rounded-2xl flex justify-between items-center">
                                             <div className="space-y-2">
                                                 <div className="h-5 yt-skeleton rounded-lg w-44"></div>
                                                 <div className="h-4 yt-skeleton rounded-lg w-28"></div>
@@ -898,7 +910,7 @@ const SalonPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="w-full lg:w-[40%] bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                        <div className="w-full lg:w-[40%] bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm space-y-6">
                             <div className="h-6 yt-skeleton rounded-xl w-36"></div>
                             <div className="h-32 yt-skeleton rounded-2xl"></div>
                             <div className="h-12 yt-skeleton rounded-2xl w-full"></div>
@@ -912,14 +924,14 @@ const SalonPage = () => {
     const mainImageToShow = galleryImages[0] || null;
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
+        <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col font-sans antialiased text-slate-800 dark:text-zinc-100">
 
             {/* ==================== BREADCRUMBS ==================== */}
-            <nav className="bg-white border-b border-slate-100 py-3.5 shadow-sm">
-                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
-                    <span className="cursor-pointer hover:text-slate-900 transition-colors" onClick={() => navigate('/customer/salons')}>{t('salon_page.search', 'Search')}</span>
+            <nav className="bg-white dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 py-3.5 shadow-sm">
+                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] text-slate-400 dark:text-zinc-400 flex items-center gap-1.5 font-bold uppercase tracking-widest">
+                    <span className="cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors" onClick={() => navigate('/customer/salons')}>{t('salon_page.search', 'Search')}</span>
                     <span>&gt;</span>
-                    <span className="text-slate-900 font-black">{t('salon_page.salon_description', 'Salon Description')}</span>
+                    <span className="text-slate-900 dark:text-zinc-100 font-black">{t('salon_page.salon_description', 'Salon Description')}</span>
                 </div>
             </nav>
 
@@ -927,33 +939,33 @@ const SalonPage = () => {
             <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
 
                 {/* Salon Headline Block */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                     <div className="min-w-0 flex-1 space-y-2.5">
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 tracking-tight uppercase truncate">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 dark:text-white tracking-tight uppercase truncate">
                             {salon?.name || salon?.salonName || 'Salon Details'}
                         </h1>
-                        <p className="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1.5 uppercase">
+                        <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-400 font-bold flex items-center gap-1.5 uppercase">
                             <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
                             <span className="truncate">{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-2 pt-0.5">
                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${
                                 isSalonOpenNow()
-                                    ? 'bg-green-50 border border-green-200 text-green-700'
-                                    : 'bg-red-50 border border-red-200 text-red-600'
+                                    ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                                    : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
                             }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSalonOpenNow() ? 'bg-green-500 animate-ping' : 'bg-red-500'}`}></span>
                                 <span className="whitespace-nowrap">{isSalonOpenNow() ? t('salon_page.open', 'Open') : t('salon_page.closed', 'Closed')}</span>
-                                <span className="text-slate-300">|</span>
+                                <span className="text-slate-300 dark:text-zinc-600">|</span>
                                 <span className="whitespace-nowrap">{salon?.openingTime ? formatTimeStr(salon.openingTime) : '10:00 AM'} - {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10:00 PM'}</span>
                             </div>
                             {salon?.salonCode && (
-                                <span className="text-[9px] font-bold bg-slate-50 text-slate-450 border border-slate-150/60 px-2.5 py-1.5 rounded uppercase tracking-widest">
+                                <span className="text-[9px] font-bold bg-slate-50 dark:bg-zinc-800 text-slate-450 dark:text-zinc-300 border border-slate-150/60 dark:border-zinc-700 px-2.5 py-1.5 rounded uppercase tracking-widest">
                                     {t('salon_page.code', 'Code: {{code}}', { code: salon.salonCode })}
                                 </span>
                             )}
                             {homeServiceCharges > 0 && (
-                                <span className="text-[9px] font-bold bg-red-50 text-[#FF0B01] border border-red-200 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
+                                <span className="text-[9px] font-bold bg-red-50 dark:bg-red-950/30 text-[#FF0B01] dark:text-red-400 border border-red-200 dark:border-red-800 px-2.5 py-1.5 rounded-xl uppercase tracking-widest shadow-sm">
                                     {t('salon_page.home_service', 'Home Service: ₹{{amount}}', { amount: homeServiceCharges })}
                                 </span>
                             )}
@@ -970,7 +982,7 @@ const SalonPage = () => {
                         <button
                             type="button"
                             onClick={handleShare}
-                            className="p-2.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-605 transition shadow-sm cursor-pointer"
+                            className="p-2.5 border border-slate-200 dark:border-zinc-700 rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition shadow-sm cursor-pointer"
                             title="Share Salon"
                         >
                             <Share2 className="w-4.5 h-4.5" />
@@ -980,12 +992,12 @@ const SalonPage = () => {
                             onClick={handleToggleFavourite}
                             className={`p-2.5 border rounded-2xl transition shadow-sm cursor-pointer ${
                                 isFavourite 
-                                    ? 'bg-red-50 border-red-200 text-[#ff0b01]' 
-                                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                                    ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-[#ff0b01]' 
+                                    : 'border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300'
                             }`}
                             title={isFavourite ? "Remove from Favourites" : "Mark as Favourite"}
                         >
-                            <Heart className={`w-4.5 h-4.5 ${isFavourite ? 'fill-[#ff0b01] text-[#ff0b01]' : 'text-slate-600'}`} />
+                            <Heart className={`w-4.5 h-4.5 ${isFavourite ? 'fill-[#ff0b01] text-[#ff0b01]' : 'text-slate-600 dark:text-zinc-300'}`} />
                         </button>
                     </div>
                 </div>
@@ -999,7 +1011,7 @@ const SalonPage = () => {
                         {/* Salon Images Grid Layout */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4" data-aos="fade-up">
                             {/* Large Image (Left) */}
-                            <div className="md:col-span-2 h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white">
+                            <div className="md:col-span-2 h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                                 {mainImageToShow ? (
                                     <img
                                         src={getSalonImageSrc(mainImageToShow)}
@@ -1007,8 +1019,8 @@ const SalonPage = () => {
                                         className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-                                        <Scissors className="w-10 h-10 text-slate-350 mb-2 animate-bounce" />
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500">
+                                        <Scissors className="w-10 h-10 text-slate-350 dark:text-zinc-600 mb-2 animate-bounce" />
                                         <span className="text-xs font-bold uppercase tracking-widest">{t('salon_page.no_image', 'No Image Available')}</span>
                                     </div>
                                 )}
@@ -1018,7 +1030,7 @@ const SalonPage = () => {
                             <div className="flex flex-row md:flex-col gap-3 sm:gap-4 h-[140px] sm:h-[180px] md:h-[400px]">
                                 <div
                                     onClick={() => galleryImages[1] && swapGalleryImage(1)}
-                                    className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
+                                    className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 dark:border-zinc-800 bg-white dark:bg-zinc-900 cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
                                     title="Click to swap with main image"
                                 >
                                     {galleryImages[1] ? (
@@ -1028,15 +1040,15 @@ const SalonPage = () => {
                                             className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-                                            <Scissors className="w-6 h-6 text-slate-350 mb-1" />
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500">
+                                            <Scissors className="w-6 h-6 text-slate-350 dark:text-zinc-600 mb-1" />
                                             <span className="text-[10px] font-bold uppercase">{t('salon_page.no_image_short', 'No Image')}</span>
                                         </div>
                                     )}
                                 </div>
                                 <div
                                     onClick={() => galleryImages[2] && swapGalleryImage(2)}
-                                    className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 bg-white cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
+                                    className="flex-1 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-150 dark:border-zinc-800 bg-white dark:bg-zinc-900 cursor-pointer hover:opacity-90 hover:scale-[1.01] transition-all"
                                     title="Click to swap with main image"
                                 >
                                     {galleryImages[2] ? (
@@ -1046,8 +1058,8 @@ const SalonPage = () => {
                                             className="w-full h-full object-cover hover:scale-105 transition duration-500"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-                                            <Scissors className="w-6 h-6 text-slate-350 mb-1" />
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500">
+                                            <Scissors className="w-6 h-6 text-slate-350 dark:text-zinc-600 mb-1" />
                                             <span className="text-[10px] font-bold uppercase">{t('salon_page.no_image_short', 'No Image')}</span>
                                         </div>
                                     )}
@@ -1057,12 +1069,12 @@ const SalonPage = () => {
                         
                         {/* Photos Gallery Section (placed directly below header images) */}
                         {galleryImages.filter(Boolean).length > 0 && (
-                            <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                            <section className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                                         <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.photos_gallery', 'Photos Gallery')}
                                     </h3>
-                                    <span className="bg-red-50 text-[#ff0b01] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                    <span className="bg-red-50 dark:bg-red-950/30 text-[#ff0b01] dark:text-red-400 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-transparent dark:border-red-900/50">
                                         {t('salon_page.photos_count', '{{count}} photos', { count: galleryImages.filter(Boolean).length })}
                                     </span>
                                 </div>
@@ -1077,7 +1089,7 @@ const SalonPage = () => {
                                                 className={`h-16 sm:h-20 rounded-xl overflow-hidden shadow-xs border transition-all duration-300 relative group ${
                                                     isMain
                                                         ? 'border-[#ff0b01] ring-2 ring-red-500/10 scale-[0.98]'
-                                                        : 'border-slate-100 hover:border-red-300 hover:scale-105 cursor-pointer'
+                                                        : 'border-slate-100 dark:border-zinc-800 hover:border-red-300 dark:hover:border-red-500 hover:scale-105 cursor-pointer'
                                                 }`}
                                                 title={isMain ? "Currently active main image" : "Click to view as main image"}
                                             >
@@ -1102,16 +1114,16 @@ const SalonPage = () => {
                             </section>
                         )}
 
-                        {/* Offers Available For You (Redesigned with attractive, premium styling) */}
+                        {/* Offers Available For You */}
                         {offers.length > 0 && (
-                            <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-visible relative" data-aos="fade-up">
-                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                            <section className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm overflow-visible relative" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-4 sm:mb-5 flex items-center gap-2">
                                     <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.exclusive_offers', 'Exclusive Offers for You')}
                                 </h3>
                                 {offersLoading ? (
                                     <div className="flex flex-col items-center justify-center py-6">
                                         <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full mb-2"></div>
-                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t('salon_page.syncing_deals', 'Syncing Exclusive Deals...')}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t('salon_page.syncing_deals', 'Syncing Exclusive Deals...')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1124,42 +1136,42 @@ const SalonPage = () => {
                                             return (
                                                 <div
                                                     key={offer.id}
-                                                    className="flex flex-row relative bg-white border border-red-100 hover:border-red-300 hover:shadow-[0_15px_30px_-10px_rgba(255,11,1,0.14)] hover:-translate-y-0.5 rounded-2xl transition-all duration-300 group"
+                                                    className="flex flex-row relative bg-white dark:bg-zinc-900 border border-red-100 dark:border-zinc-800 hover:border-red-300 dark:hover:border-red-500 hover:shadow-lg rounded-2xl transition-all duration-300 group"
                                                 >
                                                     {/* Left Side (Voucher Value Card) */}
-                                                    <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 bg-gradient-to-br from-red-50/70 via-red-50/30 to-white flex flex-col items-center justify-center p-3 rounded-l-2xl relative border-r border-dashed border-red-100/60 overflow-hidden">
+                                                    <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 bg-gradient-to-br from-red-50/70 via-red-50/30 to-white dark:from-red-950/20 dark:via-zinc-900 dark:to-zinc-900 flex flex-col items-center justify-center p-3 rounded-l-2xl relative border-r border-dashed border-red-100/60 dark:border-zinc-800 overflow-hidden">
                                                         {formatDiscountText(discountText)}
-                                                        <span className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">{offText}</span>
+                                                        <span className="text-[8px] sm:text-[9px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest mt-1">{offText}</span>
                                                         <span className="text-red-500/5 select-none font-black text-5xl absolute -left-1 -bottom-2 pointer-events-none group-hover:scale-110 transition-transform duration-500">%</span>
                                                     </div>
      
                                                     {/* Tear Notch Cutouts */}
-                                                    <div className="absolute -top-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.02)]"></div>
-                                                    <div className="absolute -bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 border border-red-100/60 z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"></div>
+                                                    <div className="absolute -top-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 dark:bg-zinc-950 border border-red-100/60 dark:border-zinc-800 z-10"></div>
+                                                    <div className="absolute -bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] -translate-x-1/2 w-5 h-5 rounded-full bg-slate-50 dark:bg-zinc-950 border border-red-100/60 dark:border-zinc-800 z-10"></div>
                                                     
                                                     {/* Dashed Separator Line */}
-                                                    <div className="absolute top-2.5 bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] border-l border-dashed border-red-150 -translate-x-[0.5px] pointer-events-none z-10"></div>
+                                                    <div className="absolute top-2.5 bottom-2.5 left-[96px] sm:left-[112px] md:left-[128px] border-l border-dashed border-red-150 dark:border-zinc-800 -translate-x-[0.5px] pointer-events-none z-10"></div>
      
                                                     {/* Right Side (Voucher Details) */}
-                                                    <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0 bg-white rounded-r-2xl">
+                                                    <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0 bg-white dark:bg-zinc-900 rounded-r-2xl">
                                                         <div>
-                                                            <h4 className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-tight truncate group-hover:text-[#ff0b01] transition-colors">{offer.name}</h4>
-                                                            <p className="text-[11px] sm:text-xs text-slate-500 mt-1.5 font-semibold leading-relaxed line-clamp-2">
+                                                            <h4 className="text-xs sm:text-sm font-black text-slate-950 dark:text-white uppercase tracking-tight truncate group-hover:text-[#ff0b01] transition-colors">{offer.name}</h4>
+                                                            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-1.5 font-semibold leading-relaxed line-clamp-2">
                                                                 {offer.description || `Get ${discountText} off on ${offer.services?.map(s => s.name).join(', ') || 'selected services'}.`}
                                                             </p>
                                                         </div>
      
-                                                        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50 mt-4">
+                                                        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50 dark:border-zinc-800/80 mt-4">
                                                             <div className="min-w-0">
                                                                 {offer.validTo ? (
                                                                     <>
-                                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.expires_on', 'Expires on')}</span>
-                                                                        <span className="text-[11px] font-black text-slate-800 mt-1 block truncate">
+                                                                        <span className="text-[8px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.expires_on', 'Expires on')}</span>
+                                                                        <span className="text-[11px] font-black text-slate-800 dark:text-zinc-200 mt-1 block truncate">
                                                                             {new Date(offer.validTo).toLocaleDateString()}
                                                                         </span>
                                                                     </>
                                                                 ) : (
-                                                                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">{t('salon_page.valid_today', 'Valid Today')}</span>
+                                                                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t('salon_page.valid_today', 'Valid Today')}</span>
                                                                 )}
                                                             </div>
                                                             <button
@@ -1181,14 +1193,14 @@ const SalonPage = () => {
 
                         {/* Services Categories icons list */}
                         {categories.length > 0 && (
-                            <section ref={servicesSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                            <section ref={servicesSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-4 sm:mb-5 flex items-center gap-2">
                                     <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> {t('salon_page.services_categories', 'SERVICES CATEGORIES')}
                                 </h3>
                                 {!servicesLoaded ? (
                                     <div className="flex flex-col items-center justify-center py-6">
                                         <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.loading_categories', 'Loading Categories...')}</p>
+                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t('salon_page.loading_categories', 'Loading Categories...')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-3 sm:gap-4">
@@ -1198,14 +1210,14 @@ const SalonPage = () => {
                                                 <div
                                                     key={catName}
                                                     onClick={() => navigate('/customer/book-service', { state: { selectedCategory: catName } })}
-                                                    className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all transform hover:scale-105 active:scale-95"
+                                                    className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/60 min-w-0 sm:min-w-[84px] h-[76px] sm:h-[84px] shadow-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 hover:border-slate-200 dark:hover:border-zinc-700 transition-all transform hover:scale-105 active:scale-95"
                                                 >
                                                     <img
                                                         src={catIcon}
                                                         alt={catName}
                                                         className="w-7 h-7 object-contain mb-1.5"
                                                     />
-                                                    <span className="text-[10px] font-black tracking-tight uppercase text-slate-700">{translateServiceName(catName, t)}</span>
+                                                    <span className="text-[10px] font-black tracking-tight uppercase text-slate-700 dark:text-zinc-200">{translateServiceName(catName, t)}</span>
                                                 </div>
                                             );
                                         })}
@@ -1214,10 +1226,10 @@ const SalonPage = () => {
                             </section>
                         )}
 
-                        {/* Packages Section (Redesigned with attractive, premium styling) */}
+                        {/* Packages Section */}
                         {isAuthenticated && packages.length > 0 && (
-                            <section className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm relative" data-aos="fade-up">
-                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                            <section className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm relative" data-aos="fade-up">
+                                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-4 sm:mb-5 flex items-center gap-2">
                                     <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#ff0b01]" /> {t('salon_page.special_packages', 'Special Packages')}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1226,28 +1238,28 @@ const SalonPage = () => {
                                         return (
                                             <div
                                                 key={pkg.id}
-                                                className="bg-white border border-slate-200 border-l-4 border-l-[#ff0b01] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                                                className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 border-l-4 border-l-[#ff0b01] dark:border-l-[#ff0b01] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
                                             >
                                                 <div>
                                                     <div className="flex justify-between items-start gap-3">
-                                                        <h4 className="font-extrabold text-sm text-slate-950 uppercase tracking-tight line-clamp-1">{pkg.name}</h4>
+                                                        <h4 className="font-extrabold text-sm text-slate-950 dark:text-white uppercase tracking-tight line-clamp-1">{pkg.name}</h4>
                                                         {savings > 0 && (
-                                                            <span className="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
+                                                            <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
                                                                 {t('salon_page.save', 'Save ₹{{amount}}', { amount: savings })}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-[11px] sm:text-xs text-slate-500 mt-2 font-semibold leading-relaxed line-clamp-2">
+                                                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-2 font-semibold leading-relaxed line-clamp-2">
                                                         {pkg.description || "No description provided."}
                                                     </p>
                                                     
                                                     {/* Services included list */}
                                                     {pkg.services && pkg.services.length > 0 && (
                                                         <div className="mt-4">
-                                                            <span className="text-[8px] font-bold text-slate-400 tracking-wider uppercase block mb-1.5">{t('salon_page.services_included', 'Services Included:')}</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 dark:text-zinc-500 tracking-wider uppercase block mb-1.5">{t('salon_page.services_included', 'Services Included:')}</span>
                                                             <div className="flex flex-wrap gap-1">
                                                                 {pkg.services.map(service => (
-                                                                    <span key={service.id} className="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-50 text-slate-650 border border-slate-100">
+                                                                    <span key={service.id} className="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-50 dark:bg-zinc-800 text-slate-650 dark:text-zinc-300 border border-slate-100 dark:border-zinc-700">
                                                                         {translateServiceName(service.name, t)}
                                                                     </span>
                                                                 ))}
@@ -1256,9 +1268,9 @@ const SalonPage = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50 mt-4">
+                                                <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50 dark:border-zinc-800 mt-4">
                                                     <div>
-                                                        <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.price', 'Price')}</span>
+                                                        <span className="text-[8px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase tracking-wider block leading-none">{t('salon_page.price', 'Price')}</span>
                                                         <span className="text-sm font-black text-[#ff0b01] mt-1.5 block">₹{pkg.packagePrice}</span>
                                                     </div>
                                                     <button
@@ -1276,11 +1288,9 @@ const SalonPage = () => {
                             </section>
                         )}
 
-
-
                         {/* Opening Times */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 mb-4 sm:mb-5 flex items-center gap-2">
+                        <section className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-4 sm:mb-5 flex items-center gap-2">
                                 <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> {t('salon_page.opening_times', 'Opening Times')}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
@@ -1293,17 +1303,17 @@ const SalonPage = () => {
                                         <div
                                             key={day}
                                             className={`flex justify-between items-center text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all ${isToday
-                                                ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 shadow-sm'
-                                                : 'hover:bg-slate-50'
+                                                ? 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-zinc-800 border border-red-100 dark:border-zinc-800 shadow-sm'
+                                                : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'
                                                 }`}
                                         >
-                                            <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500'
+                                            <span className={`uppercase tracking-tight flex items-center gap-1.5 ${isToday ? 'text-[#FF0B01] font-black' : 'text-slate-500 dark:text-zinc-400'
                                                 }`}>
                                                 {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] animate-pulse shrink-0"></span>}
                                                 {t('days.' + day.toLowerCase(), day)}
                                                 {isToday && <span className="text-[6px] sm:text-[7px] bg-[#FF0B01] text-white px-1 sm:px-1.5 py-0.5 rounded-md font-black tracking-widest">{t('salon_page.today', 'TODAY')}</span>}
                                             </span>
-                                            <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 font-black' : 'text-slate-700'
+                                            <span className={`uppercase tracking-tight text-[10px] sm:text-xs ${isOff ? 'text-red-500' : isToday ? 'text-slate-900 dark:text-white font-black' : 'text-slate-700 dark:text-zinc-300'
                                                 }`}>
                                                 {isOff ? t('salon_page.closed', 'Closed') : operatingHours}
                                             </span>
@@ -1314,10 +1324,10 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Top Experts (Staff) ── */}
-                        <section ref={staffSectionRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm overflow-hidden" data-aos="fade-up">
+                        <section ref={staffSectionRef} className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm overflow-hidden" data-aos="fade-up">
                             {/* Section Header */}
                             <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
-                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                                     <Users className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.our_experts', 'Our Experts')}
                                 </h3>
                                 <span
@@ -1331,12 +1341,12 @@ const SalonPage = () => {
                             {!staffLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6">
                                     <div className="animate-spin h-8 w-8 border-[3px] border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('salon_page.loading_experts', 'Loading top experts...')}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">{t('salon_page.loading_experts', 'Loading top experts...')}</p>
                                 </div>
                             ) : staffList.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6">
-                                    <Users className="w-10 h-10 text-slate-200 mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('salon_page.no_experts', 'No experts currently listed')}</p>
+                                    <Users className="w-10 h-10 text-slate-200 dark:text-zinc-700 mb-2" />
+                                    <p className="text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">{t('salon_page.no_experts', 'No experts currently listed')}</p>
                                 </div>
                             ) : (
                                 <div className="px-4 sm:px-6 pb-4 sm:pb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -1347,57 +1357,23 @@ const SalonPage = () => {
                                         return (
                                             <div
                                                 key={staff.id}
-                                                onClick={() => {
-                                                    setSelectedExpert(staff.id);
-                                                    localStorage.setItem('bookingSelectedExpert', staff.id);
-                                                    localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
-                                                    if (selectedTime) localStorage.setItem('bookingSelectedTime', selectedTime);
-                                                    if (selectedSlot) localStorage.setItem('bookingSelectedSlot', JSON.stringify(selectedSlot));
-                                                    navigate('/customer/book-service', {
-                                                        state: {
-                                                            selectedExpert: staff.id,
-                                                            selectedDateObj: selectedDateObj,
-                                                            selectedTime: selectedTime
-                                                        }
-                                                    });
-                                                }}
-                                                className={`relative group rounded-xl sm:rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer ${
-                                                    selectedExpert === staff.id
-                                                        ? 'border-[#FF0B01] bg-red-50/20 shadow-md ring-2 ring-[#FF0B01]'
-                                                        : isTopRated
-                                                        ? 'border-amber-200 bg-gradient-to-b from-amber-50/60 via-white to-white shadow-md'
-                                                        : 'border-slate-100 bg-slate-50/50 shadow-sm hover:border-slate-200'
-                                                    }`}
+                                                className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 text-center flex flex-col items-center justify-between group relative overflow-hidden"
                                             >
-                                                {/* Top Rated Badge */}
-                                                {isTopRated && (
-                                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                                                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                                                            <Award className="w-3 h-3" /> {t('salon_page.top_rated', 'Top Rated')}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                <div className="p-5 flex flex-col items-center text-center">
+                                                <div className="flex flex-col items-center w-full">
                                                     {/* Avatar */}
-                                                    <div className={`w-20 h-20 rounded-full overflow-hidden mb-4 relative flex items-center justify-center ring-[3px] ring-offset-2 ${isTopRated ? 'ring-amber-300' : 'ring-slate-200'
-                                                        }`}>
-                                                        {staff.imageUrl || staff.imagePath ? (
-                                                            <img 
-                                                                src={staff.imageUrl || staff.imagePath} 
-                                                                alt={staff.name} 
-                                                                className="w-full h-full object-cover" 
-                                                                onError={(e) => {
-                                                                    e.target.src = staff.gender === 'FEMALE' 
-                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                                                }}
+                                                    <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-red-50 dark:border-zinc-800 shadow-sm bg-slate-50 dark:bg-zinc-800 shrink-0">
+                                                        {staff.imagePath ? (
+                                                            <AsyncImage
+                                                                imagePath={staff.imagePath}
+                                                                alt={staff.name}
+                                                                className="w-full h-full object-cover"
+                                                                fallbackText={staff.name ? staff.name.charAt(0) : 'S'}
                                                             />
                                                         ) : (
                                                             <img 
-                                                                src={staff.gender === 'FEMALE' 
-                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                                src={staff.avatar 
+                                                                    ? staff.avatar 
+                                                                    : getExpertImg(index)} 
                                                                 alt={staff.name} 
                                                                 className="w-full h-full object-cover" 
                                                             />
@@ -1405,10 +1381,10 @@ const SalonPage = () => {
                                                     </div>
 
                                                     {/* Name */}
-                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight">{staff.name}</h4>
+                                                    <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight">{staff.name}</h4>
 
                                                     {/* Role */}
-                                                    <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">{role}</p>
+                                                    <p className="text-[10px] text-slate-400 dark:text-zinc-400 mt-1 font-bold uppercase tracking-wider">{role}</p>
 
                                                     {/* Rating */}
                                                     {rating && (
@@ -1419,25 +1395,25 @@ const SalonPage = () => {
                                                                         key={i}
                                                                         className={`w-3.5 h-3.5 ${i < Math.round(parseFloat(rating))
                                                                             ? 'text-amber-400 fill-amber-400'
-                                                                            : 'text-slate-200'
+                                                                            : 'text-slate-200 dark:text-zinc-700'
                                                                             }`}
                                                                     />
                                                                 ))}
                                                             </div>
-                                                            <span className="text-xs font-black text-slate-700">{rating}</span>
+                                                            <span className="text-xs font-black text-slate-700 dark:text-zinc-300">{rating}</span>
                                                         </div>
                                                     )}
 
                                                     {/* Contact Info */}
                                                     {(staff.phone || staff.email) && (
-                                                        <div className="mt-3 pt-3 border-t border-slate-100 w-full space-y-1">
+                                                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800 w-full space-y-1">
                                                             {staff.phone && (
-                                                                <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
+                                                                <p className="text-[10px] text-slate-400 dark:text-zinc-400 font-semibold flex items-center justify-center gap-1 truncate">
                                                                     <Phone className="w-3 h-3 shrink-0" /> {staff.phone}
                                                                 </p>
                                                             )}
                                                             {staff.email && (
-                                                                <p className="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1 truncate">
+                                                                <p className="text-[10px] text-slate-400 dark:text-zinc-400 font-semibold flex items-center justify-center gap-1 truncate">
                                                                     <Mail className="w-3 h-3 shrink-0" /> {staff.email}
                                                                 </p>
                                                             )}
@@ -1461,25 +1437,6 @@ const SalonPage = () => {
                                                     >
                                                         {t('salon_page.book_now', 'Book Now')}
                                                     </button>
-
-                                                    {/* Availability badge */}
-                                                    {selectedSlot && (
-                                                        <div className="mt-2 text-center">
-                                                            {availableStaffLoading ? (
-                                                                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">{t('salon_page.checking', 'Checking...')}</span>
-                                                            ) : availableStaffIds.has(staff.id) ? (
-                                                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-green-600">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                    {t('salon_page.available_at', 'Available at {{time}}', { time: selectedTime })}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-slate-400">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                                    {t('salon_page.unavailable_at', 'Unavailable at {{time}}', { time: selectedTime })}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -1489,21 +1446,21 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Quick Book — Date & Time Slots ── */}
-                        <section ref={quickBookSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
+                        <section ref={quickBookSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-5 flex items-center gap-2">
                                 <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.available_slots', 'Available Slots')}
                             </h3>
 
                             {/* Month/Year Header */}
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700">
-                                <span className="uppercase text-slate-900">{selectedDateObj?.month || 'Date'}</span>
-                                <span className="bg-red-50 text-[#FF0B01] text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-4 mb-5 text-xs font-black tracking-wider text-slate-700 dark:text-zinc-300">
+                                <span className="uppercase text-slate-900 dark:text-white">{selectedDateObj?.month || 'Date'}</span>
+                                <span className="bg-red-50 dark:bg-red-950/30 text-[#FF0B01] dark:text-red-400 text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
                                     {t('salon_page.year', 'Year {{year}}', { year: selectedDateObj?.year || '2026' })}
                                 </span>
                             </div>
 
                             {/* Date Picker Scroller */}
-                            <div className="flex gap-2.5 overflow-x-auto pb-4 border-b border-slate-100 scrollbar-none">
+                            <div className="flex gap-2.5 overflow-x-auto pb-4 border-b border-slate-100 dark:border-zinc-800 scrollbar-none">
                                 {nextDays.map((d, idx) => {
                                     const isSelectedDate = selectedDateObj?.fullDate === d.fullDate;
                                     return (
@@ -1519,7 +1476,7 @@ const SalonPage = () => {
                                             }}
                                             className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedDate
                                                 ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
-                                                : 'text-slate-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
+                                                : 'text-slate-400 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-800/60 border border-slate-100 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-200 hover:shadow-sm'
                                                 }`}
                                         >
                                             <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
@@ -1533,12 +1490,12 @@ const SalonPage = () => {
                             {slotsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 mt-5">
                                     <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t('salon_page.loading_slots', 'Loading available slots...')}</p>
+                                    <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">{t('salon_page.loading_slots', 'Loading available slots...')}</p>
                                 </div>
                             ) : salonSlots.length === 0 ? (
                                 <div className="text-center py-8 mt-5">
-                                    <Clock className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('salon_page.no_slots', 'No slots available for this day')}</p>
+                                    <Clock className="w-8 h-8 text-slate-200 dark:text-zinc-700 mx-auto mb-2" />
+                                    <p className="text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">{t('salon_page.no_slots', 'No slots available for this day')}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 mt-5">
@@ -1562,7 +1519,7 @@ const SalonPage = () => {
                                                 }}
                                                 className={`py-3 rounded-xl border text-center text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isSelected
                                                     ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10'
-                                                    : 'border-slate-100 text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300'
+                                                    : 'border-slate-100 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 bg-slate-50 dark:bg-zinc-800 hover:bg-white dark:hover:bg-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600'
                                                     }`}
                                             >
                                                 {slot.displayTime}
@@ -1574,7 +1531,7 @@ const SalonPage = () => {
 
                             {/* CTA to full booking page */}
                             {selectedSlot && (
-                                <div className="mt-6 pt-4 border-t border-slate-100">
+                                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-800">
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -1598,9 +1555,9 @@ const SalonPage = () => {
 
                         {/* Products Grid */}
                         {products.length > 0 && (
-                            <section ref={productsSectionRef} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
+                            <section ref={productsSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-5">
-                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                                         <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.specialized_products', 'Products')}
                                     </h3>
                                     <span
@@ -1613,30 +1570,30 @@ const SalonPage = () => {
                                 {!productsLoaded ? (
                                     <div className="flex flex-col items-center justify-center py-6">
                                         <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Loading catalog...</p>
+                                        <p className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">Loading catalog...</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {products.map((product, index) => (
-                                            <div key={product.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                                            <div key={product.id} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                                                 <div>
-                                                    <div className="aspect-video bg-slate-50 rounded-xl overflow-hidden mb-3.5 relative">
+                                                    <div className="aspect-video bg-slate-50 dark:bg-zinc-800 rounded-xl overflow-hidden mb-3.5 relative">
                                                         <img
                                                             src={getProductImg(product, index)}
                                                             alt={product.name}
                                                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out"
                                                         />
                                                     </div>
-                                                    <span className="text-[9px] font-black text-[#FF0B01] uppercase tracking-wider bg-red-50 px-2 py-1 rounded-md">
+                                                    <span className="text-[9px] font-black text-[#FF0B01] uppercase tracking-wider bg-red-50 dark:bg-red-950/30 px-2 py-1 rounded-md">
                                                         {product.category || 'Shampoo'}
                                                     </span>
-                                                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 mt-2.5 line-clamp-1 uppercase">{product.name}</h4>
-                                                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{product.description || 'Premium salon-grade styling product for daily use.'}</p>
+                                                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-2.5 line-clamp-1 uppercase">{product.name}</h4>
+                                                    <p className="text-[10px] text-slate-400 dark:text-zinc-400 mt-1 line-clamp-2 leading-relaxed">{product.description || 'Premium salon-grade styling product for daily use.'}</p>
                                                 </div>
-                                                <div className="mt-4 pt-3.5 border-t border-slate-55 flex items-center justify-between">
+                                                <div className="mt-4 pt-3.5 border-t border-slate-150 dark:border-zinc-800 flex items-center justify-between">
                                                     <div>
-                                                        <span className="text-[9px] text-slate-450 font-bold block leading-none uppercase">{t('salon_page.price', 'Price')}</span>
-                                                        <span className="text-sm font-extrabold text-slate-900 mt-1.5 block">₹{product.price}</span>
+                                                        <span className="text-[9px] text-slate-450 dark:text-zinc-500 font-bold block leading-none uppercase">{t('salon_page.price', 'Price')}</span>
+                                                        <span className="text-sm font-extrabold text-slate-900 dark:text-white mt-1.5 block">₹{product.price}</span>
                                                     </div>
                                                     <button
                                                         type="button"
@@ -1654,8 +1611,8 @@ const SalonPage = () => {
                         )}
 
                         {/* Customer Reviews */}
-                        <section className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm" data-aos="fade-up">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
+                        <section className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-5 flex items-center gap-2">
                                 <Star className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.reviews_rating', 'Customer Reviews')}
                             </h3>
                             <div className="space-y-4">
@@ -1666,21 +1623,21 @@ const SalonPage = () => {
                                 ].map((rev, index) => {
                                     const initials = rev.name.split(' ').map(n => n[0]).join('');
                                     return (
-                                        <div key={index} className="p-3 sm:p-4 bg-slate-50/50 rounded-xl sm:rounded-2xl border border-slate-50 flex gap-3 sm:gap-4 transition hover:bg-slate-50/80">
-                                            <div className="w-10 h-10 rounded-full bg-red-100 text-[#FF0B01] font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
+                                        <div key={index} className="p-3 sm:p-4 bg-slate-50/50 dark:bg-zinc-800/40 rounded-xl sm:rounded-2xl border border-slate-50 dark:border-zinc-800/80 flex gap-3 sm:gap-4 transition hover:bg-slate-50/80 dark:hover:bg-zinc-800/60">
+                                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 text-[#FF0B01] dark:text-red-400 font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
                                                 {initials}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
-                                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">{rev.name}</h4>
-                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">{rev.date}</span>
+                                                    <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{rev.name}</h4>
+                                                    <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-bold uppercase">{rev.date}</span>
                                                 </div>
                                                 <div className="flex items-center text-amber-400 mt-1">
                                                     {[...Array(5)].map((_, i) => (
-                                                        <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200'}`} />
+                                                        <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-slate-200 dark:text-zinc-700'}`} />
                                                     ))}
                                                 </div>
-                                                <p className="text-xs text-slate-650 mt-2 leading-relaxed">{rev.comment}</p>
+                                                <p className="text-xs text-slate-650 dark:text-zinc-300 mt-2 leading-relaxed">{rev.comment}</p>
                                             </div>
                                         </div>
                                     );

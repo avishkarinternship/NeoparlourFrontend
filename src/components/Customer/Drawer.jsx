@@ -6,6 +6,7 @@ import { logoutCustomerApi } from '../../redux/slices/customerSlice';
 import toast from 'react-hot-toast';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
+import { performCleanLogout } from '../../utils/auth';
 
 import { MousePointerClick, LogIn, UserPlus, User } from 'lucide-react';
 
@@ -54,16 +55,9 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
     const isProfileIncomplete = isLoggedIn && completion < 1;
 
     const handleLogout = () => {
-        dispatch(logoutCustomerApi())
-            .unwrap()
-            .then(() => {
-                toast.success("Logged out successfully");
-                onClose();
-                navigate('/');
-            })
-            .catch((err) => {
-                toast.error(err || "Logout failed");
-            });
+        toast.success("Logged out successfully");
+        onClose();
+        performCleanLogout('/customer/login');
     };
 
     // icon colour adapts to mode

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Phone, Calendar, LogOut, User, Edit2, Save, Sparkles, Mail, MapPin } from 'lucide-react';
 import { fetchCustomerProfile, logoutCustomerApi, updateCustomerProfile } from '../../redux/slices/customerSlice';
+import { performCleanLogout } from '../../utils/auth';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -76,16 +77,9 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
     if (!isOpen) return null;
 
     const handleLogout = () => {
-        dispatch(logoutCustomerApi())
-            .unwrap()
-            .then(() => {
-                toast.success("Logged out successfully");
-                onClose();
-                navigate('/');
-            })
-            .catch((err) => {
-                toast.error(err || "Logout failed");
-            });
+        toast.success("Logged out successfully");
+        onClose();
+        performCleanLogout('/customer/login');
     };
 
     const handleInputChange = (e) => {

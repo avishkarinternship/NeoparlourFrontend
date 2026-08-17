@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Package, UserPlus, LogOut, Lock, CheckCircle2, LogIn, Sparkles, FileText, Scissors, Moon, Sun, TrendingUp } from 'lucide-react';
 import { staffApi } from '../services/staffApi';
 import toast from 'react-hot-toast';
+import { performCleanLogout } from '../utils/auth';
 
 // Sub components
 import Schedule from './Owner/Manage/Schedule';
@@ -118,8 +119,7 @@ export default function StaffDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = '/login';
+    performCleanLogout('/owner/login');
   };
 
   const isCheckedIn = todayAttendance && todayAttendance.checkInTime && !todayAttendance.checkOutTime;

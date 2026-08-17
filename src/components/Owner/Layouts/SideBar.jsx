@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { performCleanLogout } from '../../../utils/auth';
 
 import homeIcon from '../../../assets/Owner/Dashboard/SideBar/home_icon.svg';
 import manageIcon from '../../../assets/Owner/Dashboard/SideBar/manage_icon.svg';
@@ -10,8 +12,6 @@ import helpIcon from '../../../assets/Owner/Dashboard/SideBar/help_icon.svg';
 import settingIcon from '../../../assets/Owner/Dashboard/SideBar/setting_icon.svg';
 import logoutIcon from '../../../assets/Owner/Dashboard/SideBar/logout_icon.svg';
 import attendanceIcon from '../../../assets/Owner/Attendance/total_attendance.svg'
-
-import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
   const navigate = useNavigate();
@@ -45,28 +45,17 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
     }
   };
 
-  const handleLogout = async (e) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.post('/auth/logout', {});
-    } catch (err) {
-      console.error("Server logout request failed:", err);
-    } finally {
-      localStorage.removeItem('ownerStaffToken');
-      localStorage.removeItem('ownerStaffUser');
-      localStorage.removeItem('customerToken');
-      localStorage.removeItem('customerUser');
-
-      toast.success('Successfully logged out!', {
-        style: {
-          background: '#1a1a1a',
-          color: '#fff',
-          borderRadius: '12px',
-          fontWeight: '600'
-        }
-      });
-      navigate('/owner/login');
-    }
+  const handleLogout = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    toast.success('Successfully logged out!', {
+      style: {
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: '12px',
+        fontWeight: '600'
+      }
+    });
+    performCleanLogout('/owner/login');
   };
 
   const renderSidebarContent = (isMobile = false) => {
