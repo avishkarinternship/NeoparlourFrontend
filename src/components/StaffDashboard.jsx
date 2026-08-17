@@ -337,7 +337,12 @@ export default function StaffDashboard() {
         )}
 
         {activeTab === 'walkin' && (
-          <WalkInBooking onBookingSuccess={() => setActiveTab('appointments')} isDarkMode={isDarkMode} />
+          <WalkInBooking 
+            onBookingSuccess={() => setActiveTab('appointments')} 
+            isDarkMode={isDarkMode}
+            isStaffPortal={true}
+            staffOnlyId={staffId}
+          />
         )}
 
         {activeTab === 'attendance' && (

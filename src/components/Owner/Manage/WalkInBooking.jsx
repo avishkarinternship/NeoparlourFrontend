@@ -147,13 +147,16 @@ const getNextDays = () => {
     return days;
 };
 
-const WalkInBooking = ({ onBookingSuccess }) => {
+const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPortal, staffOnlyId }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
-    const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
+    const isDarkMode = isDarkModeProp !== undefined ? isDarkModeProp : (outletContext.isDarkMode || document.documentElement.classList.contains('dark'));
     const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
     const ownerStaffToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+
+    const currentStaffId = staffOnlyId || (isStaffPortal ? (localStorage.getItem('staff_id') || localStorage.getItem('user_id')) : null);
+    const isStaffMode = !!isStaffPortal || (!!currentStaffId && !location.pathname.startsWith('/owner'));
 
     // --- STATE ---
     const [salon, setSalon] = useState(null);
@@ -211,8 +214,15 @@ const WalkInBooking = ({ onBookingSuccess }) => {
     const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
 
     const [selectedExpert, setSelectedExpert] = useState(() => {
+        if (currentStaffId) return String(currentStaffId);
         return location.state?.selectedExpert || 'any';
     });
+
+    useEffect(() => {
+        if (isStaffMode && currentStaffId) {
+            setSelectedExpert(String(currentStaffId));
+        }
+    }, [isStaffMode, currentStaffId]);
 
     const [firstSelected, setFirstSelected] = useState(() => {
         if (location.state?.selectedSlot) {
@@ -1595,189 +1605,191 @@ const WalkInBooking = ({ onBookingSuccess }) => {
                         </div>
                         */ }
 
-                        {/* Select Expert Section */}
-                        <section ref={staffSectionRef} className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
-                            <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
-                                isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
-                            }`}>
-                                <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Expert
-                            </h3>
-                            {firstSelected === 'slot' && availableStaffLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Finding available stylists...</p>
-                                </div>
-                            ) : !staffLoaded ? (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Loading roster...</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {displayedStaffList.length === 0 ? (
-                                        <div className="text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50/50 rounded-2xl border border-red-100 p-4">
-                                            No stylists available for the selected slot. Please select a different slot.
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {/* Auto-Assign slot */}
-                                            <div 
-                                                onClick={() => {
-                                                    setSelectedExpert('any');
-                                                    setStaffSlots([]);
-                                                }}
-                                                className={`relative border-2 rounded-2xl p-4 shadow-sm flex items-center gap-4 cursor-pointer transition-all duration-300 ${
-                                                    selectedExpert === 'any' 
-                                                        ? 'border-[#FF0B01] bg-red-50/[0.01]' 
-                                                        : isDarkMode 
-                                                          ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
-                                                          : 'bg-white border-slate-100 hover:border-slate-200'
-                                                }`}
-                                            >
-                                                <div className={`w-20 h-24 rounded-xl flex flex-col items-center justify-center border-2 transition-all shrink-0 ${
-                                                    selectedExpert === 'any' 
-                                                        ? (isDarkMode ? 'border-[#FF0B01] bg-red-950/40 text-red-400' : 'border-[#FF0B01] bg-red-50 text-[#FF0B01]') 
-                                                        : (isDarkMode ? 'border-dashed border-zinc-700 bg-zinc-850 text-zinc-500' : 'border-dashed border-slate-300 bg-slate-50 text-zinc-400')
-                                                }`}>
-                                                    <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-zinc-400'}`} />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className={`text-xs font-black uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>No Preference</h4>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
-                                                    <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                                                        Instant
-                                                    </span>
-                                                    <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
-                                                        selectedExpert === 'any' 
-                                                            ? 'bg-[#FF0B01] text-white shadow-sm' 
-                                                            : isDarkMode 
-                                                              ? 'bg-zinc-800 text-zinc-350 hover:bg-zinc-700' 
-                                                              : 'bg-slate-100 text-slate-600 hover:bg-slate-250'
-                                                    }`}>
-                                                        {selectedExpert === 'any' ? 'Selected' : 'Select'}
-                                                    </span>
-                                                </div>
+                        {/* Select Expert Section - Hidden for Staff */}
+                        {!isStaffMode && (
+                            <section ref={staffSectionRef} className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
+                                <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
+                                    isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
+                                }`}>
+                                    <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Expert
+                                </h3>
+                                {firstSelected === 'slot' && availableStaffLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-8">
+                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Finding available stylists...</p>
+                                    </div>
+                                ) : !staffLoaded ? (
+                                    <div className="flex flex-col items-center justify-center py-8">
+                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Loading roster...</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {displayedStaffList.length === 0 ? (
+                                            <div className="text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50/50 rounded-2xl border border-red-100 p-4">
+                                                No stylists available for the selected slot. Please select a different slot.
                                             </div>
-
-                                            {/* Stylists roster list */}
-                                            {displayedStaffList.map((staff, index) => {
-                                                const isSelectedExp = selectedExpert === staff.id;
-                                                const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
-                                                return (
-                                                    <div 
-                                                        key={staff.id} 
-                                                        className={`relative rounded-2xl p-4 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all duration-300 border ${
-                                                            isSelectedExp 
-                                                                ? 'ring-1 ring-[#FF0B01]/30 border-[#FF0B01]/50 bg-red-500/[0.01]' 
+                                        ) : (
+                                            <>
+                                                {/* Auto-Assign slot */}
+                                                <div 
+                                                    onClick={() => {
+                                                        setSelectedExpert('any');
+                                                        setStaffSlots([]);
+                                                    }}
+                                                    className={`relative border-2 rounded-2xl p-4 shadow-sm flex items-center gap-4 cursor-pointer transition-all duration-300 ${
+                                                        selectedExpert === 'any' 
+                                                            ? 'border-[#FF0B01] bg-red-50/[0.01]' 
+                                                            : isDarkMode 
+                                                              ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
+                                                              : 'bg-white border-slate-100 hover:border-slate-200'
+                                                    }`}
+                                                >
+                                                    <div className={`w-20 h-24 rounded-xl flex flex-col items-center justify-center border-2 transition-all shrink-0 ${
+                                                        selectedExpert === 'any' 
+                                                            ? (isDarkMode ? 'border-[#FF0B01] bg-red-950/40 text-red-400' : 'border-[#FF0B01] bg-red-50 text-[#FF0B01]') 
+                                                            : (isDarkMode ? 'border-dashed border-zinc-700 bg-zinc-850 text-zinc-500' : 'border-dashed border-slate-300 bg-slate-50 text-zinc-400')
+                                                    }`}>
+                                                        <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-zinc-400'}`} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className={`text-xs font-black uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>No Preference</h4>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
+                                                        <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                                            Instant
+                                                        </span>
+                                                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
+                                                            selectedExpert === 'any' 
+                                                                ? 'bg-[#FF0B01] text-white shadow-sm' 
                                                                 : isDarkMode 
-                                                                  ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
-                                                                  : 'bg-white border-slate-100 hover:border-slate-200'
-                                                        }`}
-                                                    >
-                                                        {/* Stylist Image left block */}
-                                                        <div className={`w-20 h-24 rounded-xl overflow-hidden relative shrink-0 ${
-                                                            isDarkMode ? 'bg-zinc-805' : 'bg-slate-50'
+                                                                  ? 'bg-zinc-800 text-zinc-350 hover:bg-zinc-700' 
+                                                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-250'
                                                         }`}>
-                                                            {staff.imageUrl || staff.imagePath ? (
-                                                                <img 
-                                                                    src={staff.imageUrl || staff.imagePath} 
-                                                                    alt={staff.name} 
-                                                                    className="w-full h-full object-cover" 
-                                                                    onError={(e) => {
-                                                                        e.target.src = staff.gender === 'FEMALE' 
+                                                            {selectedExpert === 'any' ? 'Selected' : 'Select'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Stylists roster list */}
+                                                {displayedStaffList.map((staff, index) => {
+                                                    const isSelectedExp = selectedExpert === staff.id;
+                                                    const role = staff.speciality || ['Hair Stylist', 'Skin Specialist', 'Makeup Artist', 'General Expert'][index % 4];
+                                                    return (
+                                                        <div 
+                                                            key={staff.id} 
+                                                            className={`relative rounded-2xl p-4 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all duration-300 border ${
+                                                                isSelectedExp 
+                                                                    ? 'ring-1 ring-[#FF0B01]/30 border-[#FF0B01]/50 bg-red-500/[0.01]' 
+                                                                    : isDarkMode 
+                                                                      ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
+                                                                      : 'bg-white border-slate-100 hover:border-slate-200'
+                                                            }`}
+                                                        >
+                                                            {/* Stylist Image left block */}
+                                                            <div className={`w-20 h-24 rounded-xl overflow-hidden relative shrink-0 ${
+                                                                isDarkMode ? 'bg-zinc-805' : 'bg-slate-50'
+                                                            }`}>
+                                                                {staff.imageUrl || staff.imagePath ? (
+                                                                    <img 
+                                                                        src={staff.imageUrl || staff.imagePath} 
+                                                                        alt={staff.name} 
+                                                                        className="w-full h-full object-cover" 
+                                                                        onError={(e) => {
+                                                                            e.target.src = staff.gender === 'FEMALE' 
+                                                                                ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                                                                : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <img 
+                                                                        src={staff.gender === 'FEMALE' 
                                                                             ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <img 
-                                                                    src={staff.gender === 'FEMALE' 
-                                                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
-                                                                    alt={staff.name} 
-                                                                    className="w-full h-full object-cover" 
-                                                                />
-                                                            )}
-                                                            {/* bottom name overlay inside image */}
-                                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 text-center">
-                                                                <span className="text-[9px] font-bold text-white block truncate">{staff.name}</span>
-                                                                <span className="text-[7px] text-slate-350 block truncate leading-none mt-0.5">{role}</span>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {/* Center details */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <h4 className={`text-xs font-black uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{staff.name}</h4>
-                                                            <p className={`text-[10px] mt-0.5 font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-400'}`}>{role}</p>
-                                                            
-                                                            {/* Star Rating - use actual rating */}
-                                                            {staff.rating != null && (
-                                                                <div className="flex items-center gap-1 mt-1.5">
-                                                                    <div className="flex items-center">
-                                                                        {[...Array(5)].map((_, i) => (
-                                                                            <Star key={i} className={`w-3 h-3 ${
-                                                                                i < Math.round(parseFloat(staff.rating))
-                                                                                    ? 'text-amber-400 fill-amber-400'
-                                                                                    : isDarkMode ? 'text-zinc-800' : 'text-zinc-200'
-                                                                            }`} />
-                                                                        ))}
-                                                                    </div>
-                                                                    <span className={`text-[10px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>{parseFloat(staff.rating).toFixed(1)}</span>
+                                                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                                                                        alt={staff.name} 
+                                                                        className="w-full h-full object-cover" 
+                                                                    />
+                                                                )}
+                                                                {/* bottom name overlay inside image */}
+                                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 text-center">
+                                                                    <span className="text-[9px] font-bold text-white block truncate">{staff.name}</span>
+                                                                    <span className="text-[7px] text-slate-350 block truncate leading-none mt-0.5">{role}</span>
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        {/* Right selection button */}
-                                                        <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
-                                                            {/* Dynamic Availability status */}
-                                                            {availableStaffLoading ? (
-                                                                <span className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-400">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></span>
-                                                                    Checking...
-                                                                </span>
-                                                            ) : selectedSlot && availableStaffList.length > 0 ? (
-                                                                availableStaffIds.has(staff.id) ? (
+                                                            </div>
+                                                            
+                                                            {/* Center details */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className={`text-xs font-black uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{staff.name}</h4>
+                                                                <p className={`text-[10px] mt-0.5 font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-400'}`}>{role}</p>
+                                                                
+                                                                {/* Star Rating - use actual rating */}
+                                                                {staff.rating != null && (
+                                                                    <div className="flex items-center gap-1 mt-1.5">
+                                                                        <div className="flex items-center">
+                                                                            {[...Array(5)].map((_, i) => (
+                                                                                <Star key={i} className={`w-3 h-3 ${
+                                                                                    i < Math.round(parseFloat(staff.rating))
+                                                                                        ? 'text-amber-400 fill-amber-400'
+                                                                                        : isDarkMode ? 'text-zinc-800' : 'text-zinc-200'
+                                                                                }`} />
+                                                                            ))}
+                                                                        </div>
+                                                                        <span className={`text-[10px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>{parseFloat(staff.rating).toFixed(1)}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Right selection button */}
+                                                            <div className="flex flex-col items-end gap-3 self-stretch justify-between shrink-0">
+                                                                {/* Dynamic Availability status */}
+                                                                {availableStaffLoading ? (
+                                                                    <span className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-400">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse"></span>
+                                                                        Checking...
+                                                                    </span>
+                                                                ) : selectedSlot && availableStaffList.length > 0 ? (
+                                                                    availableStaffIds.has(staff.id) ? (
+                                                                        <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                            Available
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-400">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                                                            Unavailable
+                                                                        </span>
+                                                                    )
+                                                                ) : (
                                                                     <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
                                                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                                                                         Available
                                                                     </span>
-                                                                ) : (
-                                                                    <span className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-400">
-                                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                                                        Unavailable
-                                                                    </span>
-                                                                )
-                                                            ) : (
-                                                                <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-600">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                                                    Available
-                                                                </span>
-                                                            )}
-                                                            
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setSelectedExpert(staff.id)}
-                                                                className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all duration-300 w-16 shadow-sm ${
-                                                                    isSelectedExp
-                                                                        ? 'bg-[#FF0B01] text-white hover:bg-red-700'
-                                                                        : isDarkMode 
-                                                                          ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' 
-                                                                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                                }`}
-                                                            >
-                                                                {isSelectedExp ? 'Added' : 'Add'}
-                                                            </button>
+                                                                )}
+                                                                
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setSelectedExpert(staff.id)}
+                                                                    className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all duration-300 w-16 shadow-sm ${
+                                                                        isSelectedExp
+                                                                            ? 'bg-[#FF0B01] text-white hover:bg-red-700'
+                                                                            : isDarkMode 
+                                                                              ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' 
+                                                                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    }`}
+                                                                >
+                                                                    {isSelectedExp ? 'Added' : 'Add'}
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </section>
+                                                    );
+                                                })}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                     </div>
                 </div>

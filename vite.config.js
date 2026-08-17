@@ -5,11 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5174, // You can change this port to any number (e.g. 5174, 3000, 8080)
+    port: 5173, // You can change this port to any number (e.g. 5174, 3000, 8080)
     host: true,
   },
   preview: {
-    port: 5174, // Port for vite preview
+    port: 5173, // Port for vite preview
     host: true,
   },
   build: {
