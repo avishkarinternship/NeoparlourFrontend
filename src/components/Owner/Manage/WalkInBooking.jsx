@@ -287,14 +287,21 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
         const date = new Date(dateInput);
         if (isNaN(date.getTime())) return dateInput;
         
-        const istTime = new Date(date.getTime() + (330 * 60000));
-        const year = istTime.getUTCFullYear();
-        const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(istTime.getUTCDate()).padStart(2, '0');
-        const hours = String(istTime.getUTCHours()).padStart(2, '0');
-        const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
-        const seconds = String(istTime.getUTCSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000+05:30`;
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(date);
+        const getPart = (type) => parts.find(p => p.type === type)?.value;
+        let hourVal = getPart('hour');
+        if (hourVal === '24') hourVal = '00';
+        return `${getPart('year')}-${getPart('month')}-${getPart('day')}T${hourVal}:${getPart('minute')}:${getPart('second')}.000+05:30`;
     };
 
     // Helper to get the set of available staff IDs for quick lookup

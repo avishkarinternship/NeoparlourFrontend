@@ -78,26 +78,23 @@ const formatAppointmentTime = (dateString) => {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return dateString;
 
-        const today = new Date();
-        const isTodayVal = date.getDate() === today.getDate() &&
-                           date.getMonth() === today.getMonth() &&
-                           date.getFullYear() === today.getFullYear();
+        const todayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' });
+        const dateStrIST = todayFormatter.format(date);
+        const todayStrIST = todayFormatter.format(new Date());
 
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        const isTomorrowVal = date.getDate() === tomorrow.getDate() &&
-                              date.getMonth() === tomorrow.getMonth() &&
-                              date.getFullYear() === tomorrow.getFullYear();
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrowStrIST = todayFormatter.format(tomorrowDate);
 
-        const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
 
-        if (isTodayVal) {
+        if (dateStrIST === todayStrIST) {
             return `Today, ${timeStr}`;
-        } else if (isTomorrowVal) {
+        } else if (dateStrIST === tomorrowStrIST) {
             return `Tomorrow, ${timeStr}`;
         } else {
-            const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-            return `${dateStr}, ${timeStr}`;
+            const dateDisplayStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
+            return `${dateDisplayStr}, ${timeStr}`;
         }
     } catch {
         return dateString;

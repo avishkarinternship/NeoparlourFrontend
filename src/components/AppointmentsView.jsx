@@ -222,7 +222,7 @@ export default function AppointmentsView({ staffId, salonId }) {
                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 pt-1">
                   <span className="flex items-center gap-1.5 font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
                     <Clock className="w-3.5 h-3.5 text-[#FF0B01]" />
-                    {app.appointmentAt ? new Date(app.appointmentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                    {app.appointmentAt ? new Date(app.appointmentAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : 'N/A'}
                     <span className="text-slate-400 font-medium">({app.serviceDuration || 30} mins)</span>
                   </span>
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -101,8 +101,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
     const formattedElapsed = `${String(elapsedMinutes).padStart(2, '0')}:${String(elapsedSeconds).padStart(2, '0')}`;
 
-    const istEnd = new Date(end.getTime() + 5.5 * 60 * 60 * 1000);
-    const formattedEstimatedEnd = istEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formattedEstimatedEnd = end.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
 
     const isOverdue = currentTime > end.getTime();
     const overdueMs = isOverdue ? (currentTime - end.getTime()) : 0;
@@ -393,17 +392,20 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
     if (!utcDateStr) return { date: '', time: '' };
 
     const date = new Date(utcDateStr);
-    const istDate = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+    if (isNaN(date.getTime())) return { date: '', time: '' };
 
-    const formattedDate = istDate.toLocaleDateString('en-GB', {
+    const formattedDate = date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata'
     });
 
-    const formattedTime = istDate.toLocaleTimeString([], {
+    const formattedTime = date.toLocaleTimeString('en-IN', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata'
     });
 
     return { date: formattedDate, time: formattedTime };

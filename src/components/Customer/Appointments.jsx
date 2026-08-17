@@ -213,9 +213,10 @@ const Appointments = () => {
     setSelectedAppointment(appointment);
     // Preset current date & time if available
     const appDate = new Date(appointment.appointmentAt);
-    const istAppDate = new Date(appDate.getTime() + (330 * 60000));
-    const dateStr = istAppDate.toISOString().split('T')[0];
-    const timeStr = istAppDate.toISOString().split('T')[1].slice(0, 5);
+    const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' });
+    const formatterTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' });
+    const dateStr = formatterDate.format(appDate);
+    const timeStr = formatterTime.format(appDate);
     setRescheduleData({ date: dateStr, time: timeStr });
     setRescheduleReasonType('');
     setCustomRescheduleReason('');
@@ -311,13 +312,11 @@ const Appointments = () => {
   const formatDateTime = (isoString) => {
     if (!isoString) return { date: 'N/A', time: 'N/A' };
     const dateObj = new Date(isoString);
+    if (isNaN(dateObj.getTime())) return { date: 'N/A', time: 'N/A' };
     
-    const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
-    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-
     return {
-      date: dateObj.toLocaleDateString('en-US', dateOptions),
-      time: dateObj.toLocaleTimeString('en-US', timeOptions)
+      date: dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }),
+      time: dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
     };
   };
 
@@ -708,8 +707,8 @@ const Appointments = () => {
                         let timeValue = "";
                         try {
                           const dateObj = new Date(slot.startTime);
-                          const istDate = new Date(dateObj.getTime() + (330 * 60000));
-                          timeValue = istDate.toISOString().split('T')[1].slice(0, 5);
+                          const formatterTime = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' });
+                          timeValue = formatterTime.format(dateObj);
                         } catch (e) {
                           const match = slot.startTime?.match(/T(\d{2}:\d{2})/);
                           timeValue = match ? match[1] : "";
