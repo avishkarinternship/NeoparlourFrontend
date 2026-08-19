@@ -60,6 +60,11 @@ import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
+import BlogListingPage from '../components/Customer/BlogListingPage'
+import BlogPostDetailPage from '../components/Customer/BlogPostDetailPage'
+import TestimonialsComponent from '../components/Customer/TestimonialsComponent'
+import AdminBlogManager from '../components/Owner/AdminBlogManager'
+import AdminTestimonialManager from '../components/Owner/AdminTestimonialManager'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
 import Offers from '../components/Customer/Offers'
@@ -383,6 +388,18 @@ export let routes = createBrowserRouter([
                         path: 'customer/blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
                     },
+                    {
+                        path: 'blogs/:slug',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'blog/:id',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'testimonials',
+                        element: <CustomerRouteGuard isPublic={true}><TestimonialsComponent isStandalone={true} showHeader={true} /></CustomerRouteGuard>
+                    },
 
                     {
                         path: 'leadership',
@@ -606,6 +623,22 @@ export let routes = createBrowserRouter([
                     {
                         path: '/admin/maintenance',
                         element: <OwnerRouteGuard><MaintenanceAdminPage /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/blogs',
+                        element: <OwnerRouteGuard><AdminBlogManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/blogs',
+                        element: <OwnerRouteGuard><AdminBlogManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/testimonials',
+                        element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/testimonials',
+                        element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

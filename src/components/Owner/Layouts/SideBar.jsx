@@ -237,6 +237,64 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
               </svg>
               <span>System Maintenance</span>
             </button>
+
+            {/* Blog Manager */}
+            <button
+              onClick={() => {
+                navigate('/owner/blogs');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/blogs' || location.pathname === '/admin/blogs'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {(location.pathname === '/owner/blogs' || location.pathname === '/admin/blogs') && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg 
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/blogs' || location.pathname === '/admin/blogs' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                }`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+              <span>Blog Manager</span>
+            </button>
+
+            {/* Testimonials Manager */}
+            <button
+              onClick={() => {
+                navigate('/owner/testimonials');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+                ${location.pathname === '/owner/testimonials' || location.pathname === '/admin/testimonials'
+                  ? 'text-red-600 bg-red-50'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              {(location.pathname === '/owner/testimonials' || location.pathname === '/admin/testimonials') && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></span>
+              )}
+              <svg 
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/owner/testimonials' || location.pathname === '/admin/testimonials' ? 'active-icon-glow text-red-600' : 'opacity-60'
+                }`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <span>Testimonials Manager</span>
+            </button>
           </div>
 
           {/* Bottom Admin Utility Actions Group */}
