@@ -68,6 +68,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [lastActionTime, setLastActionTime] = useState(0);
 
@@ -308,8 +309,8 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
           axiosInstance.get(`/appointments/search/advanced?${paramsBooked.toString()}`).catch(() => ({ data: { content: [] } }))
         ]);
 
-        const listInProgress = resInProgress.data?.content || resInProgress.data || [];
-        const listBooked = resBooked.data?.content || resBooked.data || [];
+        const listInProgress = resInProgress.data?.content || (Array.isArray(resInProgress.data) ? resInProgress.data : []);
+        const listBooked = resBooked.data?.content || (Array.isArray(resBooked.data) ? resBooked.data : []);
 
         const combinedMap = new Map();
         [...listInProgress, ...listBooked].forEach(item => {
@@ -318,7 +319,18 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
         const combinedList = Array.from(combinedMap.values());
         setAppointments(combinedList);
-        setTotalPages(1);
+
+        // Dynamically compute totalPages and totalElements from API response
+        const bookedPages = resBooked.data?.page?.totalPages ?? resBooked.data?.totalPages ?? 1;
+        const inProgressPages = resInProgress.data?.page?.totalPages ?? resInProgress.data?.totalPages ?? 1;
+        const maxPages = Math.max(bookedPages, inProgressPages, 1);
+
+        const bookedElements = resBooked.data?.page?.totalElements ?? resBooked.data?.totalElements ?? listBooked.length;
+        const inProgressElements = resInProgress.data?.page?.totalElements ?? resInProgress.data?.totalElements ?? listInProgress.length;
+        const totalElems = bookedElements + inProgressElements;
+
+        setTotalPages(maxPages);
+        setTotalElements(totalElems);
         setCurrentPage(page);
       } else {
         const status = currentSubTab === 'Past Appointments' ? 'booked'
@@ -337,13 +349,20 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
         const response = await axiosInstance.get(`/appointments/search/advanced?${params.toString()}`);
         const data = response.data;
-        setAppointments(data?.content || []);
-        setTotalPages(data?.page?.totalPages || 1);
+        const contentList = data?.content || (Array.isArray(data) ? data : []);
+        const computedPages = data?.page?.totalPages ?? data?.totalPages ?? 1;
+        const computedElements = data?.page?.totalElements ?? data?.totalElements ?? contentList.length;
+
+        setAppointments(contentList);
+        setTotalPages(computedPages);
+        setTotalElements(computedElements);
         setCurrentPage(page);
       }
     } catch (error) {
       toast.error('Failed to load appointments', toastStyle);
       setAppointments([]);
+      setTotalPages(1);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
@@ -1150,11 +1169,119 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
           )}
 
           {/* Pagination */}
-          <div className="flex justify-center gap-4 mt-10">
-            <button onClick={() => fetchAppointments(currentPage - 1)} disabled={currentPage === 0 || loading} className="px-6 py-2 border rounded-xl disabled:opacity-50">Previous</button>
-            <span className="px-6 py-2 font-medium">Page {currentPage + 1} of {totalPages}</span>
-            <button onClick={() => fetchAppointments(currentPage + 1)} disabled={currentPage >= totalPages - 1 || loading} className="px-6 py-2 border rounded-xl disabled:opacity-50">Next</button>
-          </div>
+          {totalPages > 1 && (
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t ${
+              isDarkMode ? 'border-zinc-800 text-zinc-300' : 'border-gray-200 text-gray-600'
+            }`}>
+              <div className="text-xs font-semibold">
+                Showing page <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentPage + 1}</span> of <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{totalPages}</span>
+                {totalElements > 0 && <span className="ml-1">({totalElements.toLocaleString()} total appointments)</span>}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {/* Previous Button */}
+                <button
+                  type="button"
+                  onClick={() => fetchAppointments(currentPage - 1)}
+                  disabled={currentPage === 0 || loading}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    currentPage === 0 || loading
+                      ? 'opacity-40 cursor-not-allowed border-gray-200 text-gray-400'
+                      : isDarkMode
+                        ? 'border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
+                        : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700 shadow-2xs'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {/* Page Number Buttons */}
+                {(() => {
+                  const pages = [];
+                  const maxVisible = 5;
+                  let startPage = Math.max(0, currentPage - 2);
+                  let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+                  if (endPage - startPage + 1 < maxVisible) {
+                    startPage = Math.max(0, endPage - maxVisible + 1);
+                  }
+
+                  if (startPage > 0) {
+                    pages.push(
+                      <button
+                        key={0}
+                        type="button"
+                        onClick={() => fetchAppointments(0)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          isDarkMode ? 'border-zinc-800 hover:bg-zinc-800 text-zinc-300' : 'border-gray-200 hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 1) {
+                      pages.push(<span key="dots-start" className="px-1 text-xs text-gray-400">...</span>);
+                    }
+                  }
+
+                  for (let p = startPage; p <= endPage; p++) {
+                    const isActive = p === currentPage;
+                    pages.push(
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => fetchAppointments(p)}
+                        disabled={loading}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-[#FF0B01] text-white font-black shadow-md shadow-red-500/20 border-transparent'
+                            : isDarkMode
+                              ? 'border border-zinc-800 hover:bg-zinc-800 text-zinc-300'
+                              : 'border border-gray-200 hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {p + 1}
+                      </button>
+                    );
+                  }
+
+                  if (endPage < totalPages - 1) {
+                    if (endPage < totalPages - 2) {
+                      pages.push(<span key="dots-end" className="px-1 text-xs text-gray-400">...</span>);
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages - 1}
+                        type="button"
+                        onClick={() => fetchAppointments(totalPages - 1)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          isDarkMode ? 'border-zinc-800 hover:bg-zinc-800 text-zinc-300' : 'border-gray-200 hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+                  return pages;
+                })()}
+
+                {/* Next Button */}
+                <button
+                  type="button"
+                  onClick={() => fetchAppointments(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1 || loading}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    currentPage >= totalPages - 1 || loading
+                      ? 'opacity-40 cursor-not-allowed border-gray-200 text-gray-400'
+                      : isDarkMode
+                        ? 'border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
+                        : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700 shadow-2xs'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </main>
 
       {/* Cancel Modal */}
