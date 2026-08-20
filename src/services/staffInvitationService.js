@@ -7,10 +7,11 @@ export const staffInvitationService = {
   sendInvitation: (invitationData) =>
     axiosInstance.post('/staff/invite', invitationData),
 
-  // 2. Fetch All Invitations Sent by Salon Owner
+  // 2. Fetch All Invitations Sent for Salon Owner using query params directly
   getOwnerInvitations: (salonId) => {
-    const query = salonId ? `?salonId=${salonId}` : '';
-    return axiosInstance.get(`/staff/invitations/salon/${salonId || ''}`.replace(/\/$/, '') + query);
+    const params = new URLSearchParams();
+    if (salonId) params.append('salonId', salonId);
+    return axiosInstance.get(`/staff/invitations?${params.toString()}`);
   },
 
   // 3. Resend Invitation SMS/WhatsApp
@@ -23,10 +24,13 @@ export const staffInvitationService = {
 
   // ==================== STAFF MEMBER APIS ====================
 
-  // 1. Fetch Pending Invitations for Logged-In Staff
-  getPendingInvitationsForStaff: (mobile) => {
-    const query = mobile ? `?mobile=${encodeURIComponent(mobile)}` : '';
-    return axiosInstance.get(`/staff/invitations/pending${query}`);
+  // 1. Fetch Invitations for Staff Member using query params directly (no path concatenation like /pending)
+  getPendingInvitationsForStaff: (mobile, staffId, status) => {
+    const params = new URLSearchParams();
+    if (mobile) params.append('customerPhone', mobile);
+    if (staffId) params.append('staffId', staffId);
+    if (status) params.append('status', status);
+    return axiosInstance.get(`/staff/invitations?${params.toString()}`);
   },
 
   // 2. Accept Invitation
@@ -38,7 +42,7 @@ export const staffInvitationService = {
     axiosInstance.post(`/staff/invitations/${invitationId}/reject`, {}),
 
   // 4. Fetch Paginated Staff Referral Invitations with Search & Filters
-  // Exact mapping for @GetMapping("/api/staff/invitations")
+  // Directly passes query params to @GetMapping("/api/staff/invitations")
   getPaginatedStaffInvitations: (filterParams = {}) => {
     const params = new URLSearchParams();
 
