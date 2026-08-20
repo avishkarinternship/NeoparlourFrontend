@@ -4,11 +4,10 @@ import { Search, Filter, RotateCcw, Calendar, User, Gift, X } from 'lucide-react
 const STATUS_OPTIONS = [
   { label: 'All', value: 'ALL' },
   { label: '🟡 Sent', value: 'SENT' },
-  { label: '🔵 Link Clicked', value: 'LINK_CLICKED' },
-  { label: '🟣 App Installed', value: 'APP_INSTALLED' },
+  { label: '🔵 Clicked', value: 'CLICKED' },
+  { label: '🟣 Installed', value: 'INSTALLED' },
   { label: '🟢 Registered', value: 'REGISTERED' },
-  { label: '❇️ Booked', value: 'BOOKED' },
-  { label: '🔴 Expired', value: 'EXPIRED' }
+  { label: '❇️ Booked', value: 'BOOKED' }
 ];
 
 const InvitationFilterBar = ({

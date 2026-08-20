@@ -33,7 +33,7 @@ const SAMPLE_REFERRAL_INVITATIONS = [
     staffId: 2,
     staffName: "Avishkar Sharma",
     inviteCode: "STAFF-2-AMT",
-    status: "APP_INSTALLED",
+    status: "INSTALLED",
     rewardGiven: false,
     rewardAmount: 0,
     createdAt: "2026-08-17T11:00:00Z"
@@ -45,7 +45,7 @@ const SAMPLE_REFERRAL_INVITATIONS = [
     staffId: 2,
     staffName: "Avishkar Sharma",
     inviteCode: "STAFF-2-SNH",
-    status: "LINK_CLICKED",
+    status: "CLICKED",
     rewardGiven: false,
     rewardAmount: 0,
     createdAt: "2026-08-16T15:45:00Z"
