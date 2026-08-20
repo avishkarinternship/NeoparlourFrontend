@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { staffInvitationService } from '../services/staffInvitationService';
 
 const SAMPLE_REFERRAL_INVITATIONS = [
@@ -65,10 +66,20 @@ const SAMPLE_REFERRAL_INVITATIONS = [
 ];
 
 export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') => {
+  // Read salonId from Redux state (ownerStaff slice or customer slice)
+  const reduxSalonId = useSelector((state) => 
+    state.ownerStaff?.user?.salonId || 
+    state.ownerStaff?.user?.tenantId || 
+    state.ownerStaff?.user?.activeSalonId || 
+    state.customer?.user?.salonId || ''
+  );
+
+  const effectiveSalonId = initialSalonId || reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
+
   const [data, setData] = useState({ content: [], totalPages: 1, totalElements: 0 });
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    salonId: initialSalonId,
+    salonId: effectiveSalonId,
     staffId: initialStaffId,
     status: 'ALL',
     search: '',
@@ -80,6 +91,13 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
     sortBy: 'createdAt',
     sortDir: 'desc'
   });
+
+  // Sync Redux salonId if filters.salonId is empty
+  useEffect(() => {
+    if (effectiveSalonId && (!filters.salonId || filters.salonId !== effectiveSalonId)) {
+      setFilters(prev => ({ ...prev, salonId: effectiveSalonId }));
+    }
+  }, [effectiveSalonId]);
 
   const fetchInvitations = useCallback(async () => {
     setLoading(true);
@@ -160,7 +178,7 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
 
   const resetFilters = () => {
     setFilters({
-      salonId: initialSalonId,
+      salonId: effectiveSalonId,
       staffId: initialStaffId,
       status: 'ALL',
       search: '',

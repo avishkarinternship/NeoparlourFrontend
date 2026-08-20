@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Building2, CheckCircle2, XCircle, Clock, MapPin, Phone, UserCheck, ShieldCheck, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { staffInvitationService } from '../services/staffInvitationService';
@@ -33,6 +34,13 @@ const SAMPLE_STAFF_INVITATIONS = [
 ];
 
 const StaffInvitations = ({ isStandalone = true }) => {
+  // Read salonId and user details from Redux state
+  const reduxSalonId = useSelector((state) => 
+    state.ownerStaff?.user?.salonId || 
+    state.ownerStaff?.user?.tenantId || 
+    state.ownerStaff?.user?.activeSalonId || ''
+  );
+
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSalon, setActiveSalon] = useState(null);
@@ -41,10 +49,10 @@ const StaffInvitations = ({ isStandalone = true }) => {
   useEffect(() => {
     fetchStaffInvitations();
     checkActiveSalon();
-  }, []);
+  }, [reduxSalonId]);
 
   const checkActiveSalon = () => {
-    const activeId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+    const activeId = reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
     const activeName = localStorage.getItem('activeSalonName') || localStorage.getItem('salon_name') || "Sagar Men's Parlour";
     if (activeId || activeName) {
       setActiveSalon({ id: activeId || '3', name: activeName, city: 'Pune' });
@@ -55,7 +63,10 @@ const StaffInvitations = ({ isStandalone = true }) => {
     try {
       setLoading(true);
       const staffMobile = localStorage.getItem('staff_mobile') || localStorage.getItem('user_mobile') || '';
-      const res = await staffInvitationService.getPendingInvitationsForStaff(staffMobile);
+      const res = await staffInvitationService.getPendingInvitationsForStaff({
+        salonId: reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id'),
+        mobile: staffMobile
+      });
       const fetched = res.data?.content || res.data || [];
       if (Array.isArray(fetched) && fetched.length > 0) {
         setInvitations(fetched);
