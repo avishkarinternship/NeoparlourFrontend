@@ -72,6 +72,8 @@ import Offers from '../components/Customer/Offers'
 // Import Staff Components
 import StaffDashboard from '../components/StaffDashboard'
 import StaffRegister from '../staff/StaffRegister'
+import StaffInvitations from '../components/StaffInvitations'
+import OwnerStaffInvitations from '../components/Owner/OwnerStaffInvitations'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -204,6 +206,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/staff/dashboard',
                 element: <StaffRouteGuard><StaffDashboard /></StaffRouteGuard>
+            },
+            {
+                path: '/staff/invitations',
+                element: <StaffRouteGuard><StaffInvitations isStandalone={true} /></StaffRouteGuard>
             },
             {
                 path: '/staff/login',
@@ -639,6 +645,14 @@ export let routes = createBrowserRouter([
                     {
                         path: '/admin/testimonials',
                         element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/staff-invitations',
+                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/manage/invitations',
+                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

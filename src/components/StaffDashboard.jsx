@@ -11,6 +11,7 @@ import StaffProfileView from './StaffProfileView';
 import StaffInventoryView from './StaffInventoryView';
 import StaffReferralStatsView from './StaffReferralStatsView';
 import WalkInBooking from './Owner/Manage/WalkInBooking';
+import StaffInvitations from './StaffInvitations';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -318,6 +319,17 @@ export default function StaffDashboard() {
           </button>
 
           <button
+            onClick={() => setActiveTab('invitations')}
+            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'invitations'
+                ? 'border-[#FF0B01] text-[#FF0B01]'
+                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <UserPlus className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Salon Invitations
+          </button>
+
+          <button
             onClick={() => setActiveTab('profile')}
             className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'profile'
@@ -355,6 +367,10 @@ export default function StaffDashboard() {
 
         {activeTab === 'referrals' && (
           <StaffReferralStatsView staffId={staffId} isDarkMode={isDarkMode} />
+        )}
+
+        {activeTab === 'invitations' && (
+          <StaffInvitations isStandalone={false} />
         )}
 
         {activeTab === 'profile' && (

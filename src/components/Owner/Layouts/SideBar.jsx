@@ -30,6 +30,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
     { label: 'Service', path: '/owner/manage/services' },
     { label: 'Inventory', path: '/owner/manage/inventory' },
     { label: 'Staff', path: '/owner/manage/staff' },
+    { label: 'Staff Invitations', path: '/owner/staff-invitations' },
     { label: 'Feedback', path: '/owner/manage/feedback' },
     { label: 'Home Services', path: '/owner/manage/home-services' },
     { label: 'Subscription', path: '/owner/manage/subscription' },
