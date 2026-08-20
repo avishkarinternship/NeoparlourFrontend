@@ -38,17 +38,43 @@ export const staffInvitationService = {
     axiosInstance.post(`/staff/invitations/${invitationId}/reject`, {}),
 
   // 4. Fetch Paginated Staff Referral Invitations with Search & Filters
+  // Exact mapping for @GetMapping("/api/staff/invitations")
   getPaginatedStaffInvitations: (filterParams = {}) => {
     const params = new URLSearchParams();
+
     if (filterParams.salonId) params.append('salonId', filterParams.salonId);
     if (filterParams.staffId) params.append('staffId', filterParams.staffId);
-    if (filterParams.status && filterParams.status !== 'ALL') params.append('status', filterParams.status);
+    
+    if (filterParams.status && filterParams.status !== 'ALL') {
+      params.append('status', filterParams.status);
+    }
+    
+    if (filterParams.statuses && Array.isArray(filterParams.statuses) && filterParams.statuses.length > 0) {
+      filterParams.statuses.forEach(s => params.append('statuses', s));
+    }
+
+    if (filterParams.customerPhone) params.append('customerPhone', filterParams.customerPhone);
+    if (filterParams.customerName) params.append('customerName', filterParams.customerName);
     if (filterParams.search) params.append('search', filterParams.search);
+
     if (filterParams.rewardGiven !== undefined && filterParams.rewardGiven !== null && filterParams.rewardGiven !== '') {
       params.append('rewardGiven', filterParams.rewardGiven);
     }
-    if (filterParams.startDate) params.append('startDate', filterParams.startDate);
-    if (filterParams.endDate) params.append('endDate', filterParams.endDate);
+
+    // Format ISO Date Time for Instant parsing
+    if (filterParams.startDate) {
+      const startIso = filterParams.startDate.includes('T')
+        ? filterParams.startDate
+        : `${filterParams.startDate}T00:00:00Z`;
+      params.append('startDate', startIso);
+    }
+
+    if (filterParams.endDate) {
+      const endIso = filterParams.endDate.includes('T')
+        ? filterParams.endDate
+        : `${filterParams.endDate}T23:59:59Z`;
+      params.append('endDate', endIso);
+    }
 
     params.append('page', filterParams.page || 0);
     params.append('size', filterParams.size || 10);
