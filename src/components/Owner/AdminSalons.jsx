@@ -25,6 +25,8 @@ import {
   Sparkles,
   Award
 } from 'lucide-react';
+import BanSalonModal from './Modals/BanSalonModal';
+import adminSalonService from '../../services/adminSalonService';
 
 const toastStyle = {
   style: {
@@ -55,6 +57,10 @@ export default function AdminSalons() {
   });
   
   const [showFilters, setShowFilters] = useState(false);
+
+  // Ban Modal State
+  const [banModalOpen, setBanModalOpen] = useState(false);
+  const [selectedSalonForBan, setSelectedSalonForBan] = useState(null);
 
   // Expanded Row IDs
   const [expandedSalonId, setExpandedSalonId] = useState(null);
@@ -136,19 +142,25 @@ export default function AdminSalons() {
   const startEntry = totalElements === 0 ? 0 : currentPage * pageSize + 1;
   const endEntry = Math.min((currentPage + 1) * pageSize, totalElements);
 
-  const toggleBanSalon = async (salonId, isBanned) => {
-    const action = isBanned ? 'unban' : 'ban';
+  const handleOpenBanModal = (salon) => {
+    setSelectedSalonForBan({
+      id: salon.salonId || salon.id,
+      name: salon.salonName || salon.name || `Salon #${salon.salonId || salon.id}`
+    });
+    setBanModalOpen(true);
+  };
+
+  const handleUnbanSalon = async (salonId) => {
     try {
-      const response = await axiosInstance.put(`/v1/maintenance/salon/${salonId}/${action}`);
-      toast.success(response.data || `Salon ${action}ned successfully!`, toastStyle);
+      await adminSalonService.unbanSalon(salonId);
+      toast.success('Salon unbanned successfully!', toastStyle);
       fetchSalons(currentPage);
-      // Refresh KYC panel details if expanded
       if (expandedSalonId === salonId) {
         fetchKycDetails(salonId);
       }
     } catch (err) {
-      console.error(`Failed to ${action} salon:`, err);
-      toast.error(err.response?.data || `Failed to ${action} salon`, toastStyle);
+      console.error('Failed to unban salon:', err);
+      toast.error(err.response?.data?.message || err.response?.data || 'Failed to unban salon', toastStyle);
     }
   };
 
@@ -440,15 +452,15 @@ export default function AdminSalons() {
                           <div className="flex items-center justify-end gap-2">
                             {salon.banned ? (
                               <button
-                                onClick={() => toggleBanSalon(salon.salonId, true)}
-                                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-[10px] transition-all shadow-xs flex items-center gap-1"
+                                onClick={() => handleUnbanSalon(salon.salonId || salon.id)}
+                                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-[10px] transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                               >
                                 <Unlock className="w-3 h-3" /> Unban Access
                               </button>
                             ) : (
                               <button
-                                onClick={() => toggleBanSalon(salon.salonId, false)}
-                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-bold text-[10px] transition-all border border-red-100 flex items-center gap-1"
+                                onClick={() => handleOpenBanModal(salon)}
+                                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-bold text-[10px] transition-all border border-red-100 flex items-center gap-1 cursor-pointer"
                               >
                                 <Lock className="w-3 h-3" /> Ban Salon
                               </button>
@@ -669,6 +681,14 @@ export default function AdminSalons() {
           </div>
         )}
       </div>
+
+      {/* Ban Salon Modal */}
+      <BanSalonModal
+        isOpen={banModalOpen}
+        onClose={() => setBanModalOpen(false)}
+        salon={selectedSalonForBan}
+        onSuccess={() => fetchSalons(currentPage)}
+      />
     </main>
   );
 }

@@ -34,11 +34,17 @@ const SAMPLE_STAFF_INVITATIONS = [
 ];
 
 const StaffInvitations = ({ isStandalone = true }) => {
-  // Read salonId and user details from Redux state
+  // Read salonId and staffId from Redux state
   const reduxSalonId = useSelector((state) => 
     state.ownerStaff?.user?.salonId || 
     state.ownerStaff?.user?.tenantId || 
     state.ownerStaff?.user?.activeSalonId || ''
+  );
+
+  const reduxStaffId = useSelector((state) => 
+    state.ownerStaff?.user?.staffId || 
+    state.ownerStaff?.user?.id || 
+    state.ownerStaff?.user?.userId || ''
   );
 
   const [invitations, setInvitations] = useState([]);
@@ -46,13 +52,16 @@ const StaffInvitations = ({ isStandalone = true }) => {
   const [activeSalon, setActiveSalon] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
 
+  const effectiveStaffId = reduxStaffId || localStorage.getItem('staff_id') || localStorage.getItem('user_id') || '';
+  const effectiveSalonId = reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
+
   useEffect(() => {
     fetchStaffInvitations();
     checkActiveSalon();
-  }, [reduxSalonId]);
+  }, [effectiveSalonId, effectiveStaffId]);
 
   const checkActiveSalon = () => {
-    const activeId = reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+    const activeId = effectiveSalonId;
     const activeName = localStorage.getItem('activeSalonName') || localStorage.getItem('salon_name') || "Sagar Men's Parlour";
     if (activeId || activeName) {
       setActiveSalon({ id: activeId || '3', name: activeName, city: 'Pune' });
@@ -64,18 +73,15 @@ const StaffInvitations = ({ isStandalone = true }) => {
       setLoading(true);
       const staffMobile = localStorage.getItem('staff_mobile') || localStorage.getItem('user_mobile') || '';
       const res = await staffInvitationService.getPendingInvitationsForStaff({
-        salonId: reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id'),
+        salonId: effectiveSalonId ? Number(effectiveSalonId) : null,
+        staffId: effectiveStaffId ? Number(effectiveStaffId) : null,
         mobile: staffMobile
       });
-      const fetched = res.data?.content || res.data || [];
-      if (Array.isArray(fetched) && fetched.length > 0) {
-        setInvitations(fetched);
-      } else {
-        setInvitations(SAMPLE_STAFF_INVITATIONS);
-      }
+      const fetched = Array.isArray(res.data?.content) ? res.data.content : (Array.isArray(res.data) ? res.data : []);
+      setInvitations(fetched);
     } catch (err) {
-      console.warn("Using sample pending staff invitations:", err.message);
-      setInvitations(SAMPLE_STAFF_INVITATIONS);
+      console.error("Failed to fetch staff invitations:", err.message);
+      setInvitations([]);
     } finally {
       setLoading(false);
     }

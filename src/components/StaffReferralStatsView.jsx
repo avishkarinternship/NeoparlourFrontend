@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import axiosInstance from '../api/axiosInstance';
 import toast from 'react-hot-toast';
+import staffInvitationService from '../services/staffInvitationService';
 import useStaffInvitations from '../hooks/useStaffInvitations';
 import InvitationFilterBar from './common/InvitationFilterBar';
 import StaffInvitationsTable from './common/StaffInvitationsTable';
@@ -43,7 +44,7 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
   const fetchReferralStats = async (id) => {
     setLoadingStats(true);
     try {
-      const response = await axiosInstance.get(`/staff/${id}/referral-stats`);
+      const response = await staffInvitationService.getStaffStats(id);
       const resData = response.data?.content || response.data || null;
       setStats(resData);
     } catch (err) {

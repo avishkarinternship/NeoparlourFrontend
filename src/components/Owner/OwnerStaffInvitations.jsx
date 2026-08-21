@@ -69,16 +69,11 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
     try {
       setLoading(true);
       const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
-      const res = await staffInvitationService.getOwnerInvitations(activeSalonId);
-      const fetched = res.data?.content || res.data || [];
-      if (Array.isArray(fetched) && fetched.length > 0) {
-        setInvitations(fetched);
-      } else {
-        setInvitations(SAMPLE_INVITATIONS);
-      }
+      const fetched = Array.isArray(res.data?.content) ? res.data.content : (Array.isArray(res.data) ? res.data : []);
+      setInvitations(fetched);
     } catch (err) {
-      console.warn("Using fallback owner invitations:", err.message);
-      setInvitations(SAMPLE_INVITATIONS);
+      console.error("Failed to fetch owner invitations:", err.message);
+      setInvitations([]);
     } finally {
       setLoading(false);
     }

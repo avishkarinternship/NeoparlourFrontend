@@ -21,7 +21,9 @@ import {
     Info,
     CheckCircle2,
     Map,
-    Heart
+    Heart,
+    Lock,
+    AlertTriangle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../../api/axiosInstance';
@@ -273,6 +275,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
     const [walkInPhone, setWalkInPhone] = useState('');
     const [bookingLoading, setBookingLoading] = useState(false);
     const [showDiscardOfferModal, setShowDiscardOfferModal] = useState(false);
+    const [showBanWarningModal, setShowBanWarningModal] = useState(false);
 
     // --- HELPERS ---
     // Convert dateObj {day, num, month, year, fullDate:'06-06-2026'} → ISO Instant string
@@ -735,6 +738,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
         if (!ownerStaffToken) {
             toast.error('Authentication expired. Please log in.');
             navigate('/owner/login');
+            return;
+        }
+        if (salon?.banned || salon?.isBanned) {
+            setShowBanWarningModal(true);
             return;
         }
         setIsWalkInPopupOpen(true);
@@ -1972,6 +1979,38 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Walk-In Booking Blocked Modal */}
+            {showBanWarningModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className={`relative w-full max-w-md rounded-3xl border shadow-2xl p-6 sm:p-7 text-center space-y-4 transition-all ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-100 text-slate-900'
+                    }`}>
+                        <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mx-auto">
+                            <Lock className="w-7 h-7" />
+                        </div>
+                        <div>
+                            <h4 className="text-base font-black uppercase tracking-tight">Cannot Create Walk-In Booking</h4>
+                            <p className="text-xs font-semibold text-slate-400 dark:text-zinc-400 mt-1">
+                                Your salon has been banned by Admin.
+                            </p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800 text-left border border-slate-200 dark:border-zinc-700 text-xs space-y-1">
+                            <span className="font-extrabold text-red-500 uppercase tracking-wider block">Ban Reason:</span>
+                            <p className="font-semibold text-slate-800 dark:text-zinc-200 leading-relaxed">
+                                {salon?.banReason || salon?.reason || "Violation of Terms of Service"}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowBanWarningModal(false)}
+                            className="w-full py-3 rounded-xl bg-slate-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             )}

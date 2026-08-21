@@ -18,7 +18,8 @@ import {
     Phone,
     Mail,
     Calendar,
-    Heart
+    Heart,
+    Lock
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -938,6 +939,23 @@ const SalonPage = () => {
             {/* ==================== MAIN CONTENT ==================== */}
             <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
 
+                {/* Salon Banned Warning Banner */}
+                {(salon?.banned || salon?.isBanned) && (
+                    <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-l-amber-500 border border-amber-200 dark:border-amber-900/50 flex items-start gap-3.5 text-amber-900 dark:text-amber-200 shadow-sm" data-aos="fade-down">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 mt-0.5">
+                            <Lock className="w-5.5 h-5.5" />
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <h3 className="text-sm font-black uppercase tracking-tight text-amber-800 dark:text-amber-300">
+                                Online Bookings Temporarily Unavailable
+                            </h3>
+                            <p className="font-semibold text-amber-700 dark:text-amber-400">
+                                This salon is temporarily unavailable for online bookings.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Salon Headline Block */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-6 sm:mb-8 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                     <div className="min-w-0 flex-1 space-y-2.5">
@@ -972,13 +990,23 @@ const SalonPage = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 self-end sm:self-center">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/customer/book-service')}
-                            className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
-                        >
-                            {t('salon_page.book_services', 'Book Services')}
-                        </button>
+                        {(salon?.banned || salon?.isBanned) ? (
+                            <button
+                                type="button"
+                                disabled
+                                className="bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 font-bold text-xs uppercase tracking-widest px-5 py-3 rounded-xl cursor-not-allowed flex items-center gap-1.5 border border-slate-300 dark:border-zinc-700"
+                            >
+                                <Lock className="w-3.5 h-3.5" /> Bookings Disabled
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => navigate('/customer/book-service')}
+                                className="bg-[#FF0B01] hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-md transform hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                                {t('salon_page.book_services', 'Book Services')}
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={handleShare}
