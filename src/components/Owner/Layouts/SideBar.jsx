@@ -123,6 +123,32 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
               <span>Salons & KYC</span>
             </button>
 
+            {/* KYC Verification Queue (Admin) */}
+            <button
+              onClick={() => {
+                navigate('/admin/kyc-requests');
+                if (isMobile && onClose) onClose();
+              }}
+              className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                location.pathname === '/admin/kyc-requests' || location.pathname === '/admin/kyc'
+                  ? 'bg-red-50 text-[#FF0B01] border-r-4 border-[#FF0B01]'
+                  : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <svg
+                className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                  location.pathname === '/admin/kyc-requests' || location.pathname === '/admin/kyc' ? 'active-icon-glow text-red-600' : 'opacity-65'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>KYC Queue</span>
+            </button>
+
             {/* Subscriptions */}
             <button
               onClick={() => {
