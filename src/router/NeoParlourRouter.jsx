@@ -74,6 +74,7 @@ import StaffDashboard from '../components/StaffDashboard'
 import StaffRegister from '../staff/StaffRegister'
 import StaffInvitations from '../components/StaffInvitations'
 import OwnerStaffInvitations from '../components/Owner/OwnerStaffInvitations'
+import OwnerKyc from '../components/Owner/KYC/OwnerKyc'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -653,6 +654,14 @@ export let routes = createBrowserRouter([
                     {
                         path: '/owner/manage/invitations',
                         element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/kyc',
+                        element: <OwnerRouteGuard><OwnerKyc /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/manage/kyc',
+                        element: <OwnerRouteGuard><OwnerKyc /></OwnerRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

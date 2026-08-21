@@ -100,11 +100,11 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
             {/* Salons & KYC */}
             <button
               onClick={() => {
-                navigate('/owner/salons');
+                navigate(isAdmin ? '/admin/salons' : '/owner/kyc');
                 if (isMobile && onClose) onClose();
               }}
               className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
-                location.pathname === '/owner/salons'
+                location.pathname === '/owner/kyc' || location.pathname === '/admin/salons' || location.pathname === '/owner/salons'
                   ? 'bg-red-50 text-[#FF0B01] border-r-4 border-[#FF0B01]'
                   : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-gray-600 hover:bg-gray-50'
               }`}
@@ -528,6 +528,35 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
             <span>Attendance</span>
           </button>
 
+          {/* KYC Verification */}
+          <button
+            onClick={() => {
+              navigate('/owner/kyc');
+              if (isMobile && onClose) onClose();
+            }}
+            className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn
+              ${location.pathname === '/owner/kyc'
+                ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+          >
+            {location.pathname === '/owner/kyc' && (
+              <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+            )}
+
+            <svg
+              className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${
+                location.pathname === '/owner/kyc' ? 'active-icon-glow text-red-600' : 'opacity-70'
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>KYC Verification</span>
+          </button>
 
         </div>
 

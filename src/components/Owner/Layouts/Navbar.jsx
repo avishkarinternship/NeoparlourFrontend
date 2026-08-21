@@ -215,7 +215,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   }, [query]);
 
   return (
-    <header className={`h-16 flex items-center justify-between sticky top-0 z-50 transition-colors duration-300 border-b ${
+    <header className={`h-16 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 border-b ${
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
@@ -708,7 +708,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
          {/* User Identity Profile Block */}
         {isAdmin ? (
           <div 
-            className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-full cursor-pointer transition-all border ${
+            className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-full cursor-pointer transition-all border shrink-0 ${
               isDarkMode 
                 ? 'bg-red-950/40 border-red-900/60 hover:bg-red-950/60' 
                 : 'bg-red-50/80 border-red-100 hover:bg-red-100/60'
@@ -716,14 +716,14 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             onClick={() => navigate('/owner/settings')}
             title="Admin Settings"
           >
-            <div className={`h-7 w-7 rounded-full flex items-center justify-center p-1 border shadow-2xs ${
+            <div className={`h-7 w-7 rounded-full flex items-center justify-center p-1 border shadow-2xs shrink-0 ${
               isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-red-200'
             }`}>
               <img src={logoIcon} alt="NeoParlour Logo" className="h-full w-full object-contain" />
             </div>
-            <div className="hidden sm:flex flex-col">
-              <span className={`text-xs font-black leading-tight ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>NeoParlour Admin</span>
-              <span className="text-[9px] font-bold text-[#FF1100] uppercase tracking-wider">System Administrator</span>
+            <div className="hidden sm:flex flex-col min-w-0">
+              <span className={`text-xs font-black leading-tight whitespace-nowrap ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>NeoParlour Admin</span>
+              <span className="text-[9px] font-bold text-[#FF1100] uppercase tracking-wider whitespace-nowrap">System Administrator</span>
             </div>
           </div>
         ) : (

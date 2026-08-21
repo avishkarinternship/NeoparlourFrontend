@@ -295,18 +295,18 @@ const AdminBlogManager = () => {
 
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-zinc-800">
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 {editingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-800 dark:hover:text-white">
+              <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} noValidate className="space-y-4">
               <div>
                 <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Title *</label>
                 <input
@@ -417,7 +417,7 @@ const AdminBlogManager = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-900 max-w-md w-full rounded-3xl p-6 border border-slate-100 dark:border-zinc-800 shadow-2xl text-center space-y-4">
             <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Confirm Deletion</h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400 font-semibold leading-relaxed">
