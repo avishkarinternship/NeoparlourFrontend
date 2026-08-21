@@ -1,21 +1,24 @@
 import axiosInstance from '../api/axiosInstance';
 
 export const kycOwnerService = {
-  // Fetch KYC documents for logged in owner
-  // GET /api/kyc-documents/my-documents (with fallback to /auth/kyc-documents)
+  // Get My KYC Documents
+  // GET /api/auth/kyc-documents/my-documents (relative path: /auth/kyc-documents/my-documents)
   getMyKycDocuments: async (salonId) => {
     try {
-      return await axiosInstance.get('/api/kyc-documents/my-documents');
+      return await axiosInstance.get('/auth/kyc-documents/my-documents');
     } catch (err) {
-      // Fallback
-      return await axiosInstance.get('/auth/kyc-documents', {
-        params: salonId ? { salonId: Number(salonId) } : {}
-      });
+      try {
+        return await axiosInstance.get('/api/kyc-documents/my-documents');
+      } catch (err2) {
+        return await axiosInstance.get('/auth/kyc-documents', {
+          params: salonId ? { salonId: Number(salonId) } : {}
+        });
+      }
     }
   },
 
-  // Resubmit KYC document
-  // POST /api/kyc-documents/resubmit (with fallback to /api/kyc/resubmit & /auth/kyc-documents/resubmit)
+  // Resubmit KYC Document
+  // POST /api/auth/kyc-documents/resubmit (relative path: /auth/kyc-documents/resubmit)
   resubmitDocument: async (file, documentType, onProgress) => {
     if (!file) throw new Error("Please select a file to upload");
     if (!documentType) throw new Error("Document type is required");
@@ -37,14 +40,21 @@ export const kycOwnerService = {
     };
 
     try {
-      return await axiosInstance.post('/api/kyc-documents/resubmit', formData, config);
+      return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
     } catch (err) {
       try {
-        return await axiosInstance.post('/api/kyc/resubmit', formData, config);
+        return await axiosInstance.post('/api/kyc-documents/resubmit', formData, config);
       } catch (err2) {
-        return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
+        return await axiosInstance.post('/api/kyc/resubmit', formData, config);
       }
     }
+  },
+
+  // Get File Download / Preview URL or blob
+  // GET /api/auth/kyc-documents/{id}/file
+  getFileUrl: (documentId) => {
+    if (!documentId) return '';
+    return `${axiosInstance.defaults.baseURL}/auth/kyc-documents/${documentId}/file`;
   }
 };
 

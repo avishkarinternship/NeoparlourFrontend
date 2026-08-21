@@ -43,7 +43,8 @@ axiosInstance.interceptors.request.use(
       config.url.includes('/staff') ||
       config.url.includes('/appointments/salon') ||
       config.url.includes('/staff-attendance') ||
-      config.url.includes('/staff-inventory')
+      config.url.includes('/staff-inventory') ||
+      config.url.includes('/kyc')
     );
     const token = isOwnerOrStaffRequest
       ? (ownerToken || customerToken || genericToken) 

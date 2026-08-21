@@ -1,10 +1,12 @@
 import React from 'react';
 import { X, ExternalLink, Download, FileText } from 'lucide-react';
+import kycAdminService from '../../../services/kycAdminService';
 
 const KycPreviewModal = ({ isOpen, onClose, document, isDarkMode = false }) => {
   if (!isOpen || !document) return null;
 
-  const fileUrl = document.filePath || document.fileUrl || document.url || '';
+  const docId = document.id || document.documentId;
+  const fileUrl = document.filePath || document.fileUrl || document.url || (docId ? kycAdminService.getDocumentFileUrl(docId) : '');
   const fileName = document.fileName || 'KYC Document';
   const isPdf = fileUrl.toLowerCase().endsWith('.pdf') || document.contentType?.includes('pdf');
 
