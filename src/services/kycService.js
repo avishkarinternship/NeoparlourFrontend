@@ -11,7 +11,7 @@ export const kycService = {
   },
 
   // Resubmit KYC Document
-  // POST /api/kyc/resubmit (with fallback to /auth/kyc-documents/resubmit)
+  // POST /api/auth/kyc-documents/resubmit (relative path: /auth/kyc-documents/resubmit)
   resubmitKycDocument: async ({ file, documentType, salonId }, onUploadProgress) => {
     if (!file) throw new Error("Please select a file to upload");
     if (!documentType) throw new Error("Document type is required");
@@ -35,12 +35,7 @@ export const kycService = {
       }
     };
 
-    try {
-      return await axiosInstance.post('/kyc/resubmit', formData, config);
-    } catch (err) {
-      // Fallback to /auth/kyc-documents/resubmit
-      return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
-    }
+    return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
   }
 };
 

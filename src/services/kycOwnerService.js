@@ -39,15 +39,7 @@ export const kycOwnerService = {
       }
     };
 
-    try {
-      return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
-    } catch (err) {
-      try {
-        return await axiosInstance.post('/api/kyc-documents/resubmit', formData, config);
-      } catch (err2) {
-        return await axiosInstance.post('/api/kyc/resubmit', formData, config);
-      }
-    }
+    return await axiosInstance.post('/auth/kyc-documents/resubmit', formData, config);
   },
 
   // Get File Download / Preview URL or blob
