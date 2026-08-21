@@ -1,7 +1,12 @@
 import React from 'react';
-import { FileText, AlertCircle, Clock, CheckCircle2, UploadCloud, Eye } from 'lucide-react';
+import { FileText, AlertCircle, Clock, CheckCircle2, UploadCloud, Eye, FileMinus } from 'lucide-react';
 
 const STATUS_CONFIG = {
+  NOT_SUBMITTED: {
+    label: 'Not Uploaded Yet',
+    badgeClass: 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-700',
+    icon: FileMinus
+  },
   REJECTED: {
     label: 'Document Rejected by Admin',
     badgeClass: 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50',
@@ -33,13 +38,19 @@ const KycDocumentCard = ({
 }) => {
   const docType = document.documentType || 'DOCUMENT';
   const label = DOCUMENT_TYPE_LABELS[docType] || document.label || docType;
-  const statusKey = (document.status || 'PENDING').toUpperCase();
-  const config = STATUS_CONFIG[statusKey] || STATUS_CONFIG.PENDING;
+  
+  const hasFile = !!(document.fileName || document.uploadedAt || document.filePath);
+  const rawStatus = (document.status || '').toUpperCase();
+  const effectiveStatus = (!hasFile && rawStatus !== 'APPROVED' && rawStatus !== 'REJECTED')
+    ? 'NOT_SUBMITTED'
+    : (rawStatus || 'NOT_SUBMITTED');
+
+  const config = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.NOT_SUBMITTED;
   const StatusIcon = config.icon;
 
   const uploadedDateStr = document.uploadedAt || document.createdAt
     ? new Date(document.uploadedAt || document.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
-    : 'N/A';
+    : null;
 
   return (
     <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 shadow-xs ${
@@ -50,11 +61,13 @@ const KycDocumentCard = ({
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-center gap-3">
           <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
-            statusKey === 'REJECTED'
+            effectiveStatus === 'REJECTED'
               ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-              : statusKey === 'APPROVED'
+              : effectiveStatus === 'APPROVED'
                 ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                : effectiveStatus === 'PENDING'
+                  ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 border border-slate-200 dark:border-zinc-700'
           }`}>
             <FileText className="w-5.5 h-5.5" />
           </div>
@@ -64,7 +77,14 @@ const KycDocumentCard = ({
               {label}
             </h4>
             <p className="text-[11px] font-semibold text-slate-400 dark:text-zinc-400 mt-0.5">
-              {document.fileName || 'Uploaded File'} • <span className="font-mono">{uploadedDateStr}</span>
+              {hasFile ? (
+                <>
+                  <span className="font-bold text-slate-700 dark:text-zinc-200">{document.fileName}</span>
+                  {uploadedDateStr && <> • <span className="font-mono">{uploadedDateStr}</span></>}
+                </>
+              ) : (
+                <span className="italic text-slate-400">File Not Uploaded Yet</span>
+              )}
             </p>
           </div>
         </div>
@@ -76,8 +96,24 @@ const KycDocumentCard = ({
         </span>
       </div>
 
+      {/* NOT SUBMITTED BANNER */}
+      {effectiveStatus === 'NOT_SUBMITTED' && (
+        <div className="mt-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-dashed border-slate-300 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="text-xs text-slate-600 dark:text-zinc-400 font-medium">
+            <span>Please upload your <strong className="text-slate-900 dark:text-white">{label}</strong> file to complete your salon KYC verification.</span>
+          </div>
+          <button
+            onClick={() => onOpenUploadModal(docType, label)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md shadow-red-500/20 flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <UploadCloud className="w-3.5 h-3.5" />
+            Upload File
+          </button>
+        </div>
+      )}
+
       {/* REJECTED ALERT BANNER */}
-      {statusKey === 'REJECTED' && (
+      {effectiveStatus === 'REJECTED' && (
         <div className="mt-3.5 p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border-l-4 border-l-red-500 border border-red-200 dark:border-red-900/50 space-y-2">
           <div className="flex items-center gap-2 text-xs font-black text-red-800 dark:text-red-300 uppercase tracking-tight">
             <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
@@ -103,7 +139,7 @@ const KycDocumentCard = ({
       )}
 
       {/* PENDING INFO */}
-      {statusKey === 'PENDING' && (
+      {effectiveStatus === 'PENDING' && (
         <div className="mt-3 p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 text-xs text-amber-700 dark:text-amber-400 font-semibold flex items-center justify-between">
           <span>Your resubmitted document is undergoing Admin review.</span>
           <button
@@ -116,7 +152,7 @@ const KycDocumentCard = ({
       )}
 
       {/* APPROVED INFO */}
-      {statusKey === 'APPROVED' && (
+      {effectiveStatus === 'APPROVED' && (
         <div className="mt-3 p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/30 text-xs text-emerald-700 dark:text-emerald-400 font-semibold flex items-center justify-between">
           <span>Document verified and approved by System Administrator.</span>
           {document.filePath && (

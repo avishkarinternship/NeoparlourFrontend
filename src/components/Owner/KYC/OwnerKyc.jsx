@@ -7,10 +7,10 @@ import KycDocumentCard from './KycDocumentCard';
 import KycUploadModal from './KycUploadModal';
 
 const DEFAULT_DOCUMENTS = [
-  { documentType: 'AADHAAR_OR_GOVERNMENT_ID', label: 'Aadhaar / Government ID Proof', status: 'PENDING' },
-  { documentType: 'PAN_CARD', label: 'Owner PAN Card', status: 'PENDING' },
-  { documentType: 'SHOP_ESTABLISHMENT_LICENSE', label: 'Shop Act / Establishment License', status: 'PENDING' },
-  { documentType: 'BANK_ACCOUNT_PROOF', label: 'Bank Account / Cancelled Cheque Proof', status: 'PENDING' }
+  { documentType: 'AADHAAR_OR_GOVERNMENT_ID', label: 'Aadhaar / Government ID Proof', status: 'NOT_SUBMITTED' },
+  { documentType: 'PAN_CARD', label: 'Owner PAN Card', status: 'NOT_SUBMITTED' },
+  { documentType: 'SHOP_ESTABLISHMENT_LICENSE', label: 'Shop Act / Establishment License', status: 'NOT_SUBMITTED' },
+  { documentType: 'BANK_ACCOUNT_PROOF', label: 'Bank Account / Cancelled Cheque Proof', status: 'NOT_SUBMITTED' }
 ];
 
 const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
@@ -89,9 +89,18 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
     setModalOpen(true);
   };
 
-  const rejectedCount = documents.filter(d => (d.status || '').toUpperCase() === 'REJECTED').length;
-  const pendingCount = documents.filter(d => (d.status || '').toUpperCase() === 'PENDING').length;
   const approvedCount = documents.filter(d => (d.status || '').toUpperCase() === 'APPROVED').length;
+  const pendingCount = documents.filter(d => {
+    const status = (d.status || '').toUpperCase();
+    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath);
+    return status === 'PENDING' && hasFile;
+  }).length;
+  const rejectedCount = documents.filter(d => (d.status || '').toUpperCase() === 'REJECTED').length;
+  const actionRequiredCount = documents.filter(d => {
+    const status = (d.status || '').toUpperCase();
+    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath);
+    return status === 'REJECTED' || status === 'NOT_SUBMITTED' || (!hasFile && status !== 'APPROVED');
+  }).length;
 
   return (
     <div className={`space-y-6 transition-colors duration-300 ${
@@ -181,8 +190,8 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Requires Resubmission</span>
-            <span className="text-xl font-black text-red-600 dark:text-red-400">{rejectedCount} Rejected</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Action Required</span>
+            <span className="text-xl font-black text-red-600 dark:text-red-400">{actionRequiredCount} Action Required</span>
           </div>
         </div>
       </div>
