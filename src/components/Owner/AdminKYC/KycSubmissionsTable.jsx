@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, CheckCircle, XCircle, FileText, ChevronLeft, ChevronRight, AlertCircle, Clock } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, FileText, ChevronLeft, ChevronRight, AlertCircle, Clock, MapPin, Phone, Mail, User, Store, Calendar, FileCheck, FileCode } from 'lucide-react';
 import KycPreviewModal from './KycPreviewModal';
 import KycVerifyActionModal from './KycVerifyActionModal';
 
@@ -7,6 +7,13 @@ const STATUS_BADGES = {
   PENDING: { label: '🟡 Pending Review', class: 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300' },
   APPROVED: { label: '🟢 Approved', class: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300' },
   REJECTED: { label: '🔴 Rejected', class: 'bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-300' }
+};
+
+const DOCUMENT_TYPE_LABELS = {
+  AADHAAR_OR_GOVERNMENT_ID: 'Aadhaar / Government ID Proof',
+  PAN_CARD: 'Owner PAN Card',
+  SHOP_ESTABLISHMENT_LICENSE: 'Shop Act / Establishment License',
+  BANK_ACCOUNT_PROOF: 'Bank Account / Cancelled Cheque Proof'
 };
 
 const KycSubmissionsTable = ({
@@ -23,151 +30,251 @@ const KycSubmissionsTable = ({
   const [verifyDoc, setVerifyDoc] = useState(null);
   const [verifyStatus, setVerifyStatus] = useState('APPROVED');
 
-  const handleOpenVerify = (doc, status) => {
-    setVerifyDoc(doc);
+  const handleOpenVerify = (doc, status, salonInfo = {}) => {
+    setVerifyDoc({
+      ...doc,
+      salonName: salonInfo.salonName || doc.salonName,
+      ownerName: salonInfo.ownerName || doc.ownerName
+    });
     setVerifyStatus(status);
   };
 
+  // Flatten submissions if items contain nested `kycDocuments` array, or handle direct document rows
+  const salonOwners = Array.isArray(submissions) ? submissions : [];
+
   return (
-    <div className={`rounded-3xl border shadow-sm overflow-hidden ${
-      isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-150'
-    }`}>
+    <div className="space-y-6">
       
-      {/* Table Container */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className={`border-b text-[11px] font-black uppercase tracking-wider ${
-              isDarkMode ? 'bg-zinc-800/50 border-zinc-800 text-zinc-400' : 'bg-slate-50 border-slate-100 text-slate-400'
-            }`}>
-              <th className="py-4 px-5">Salon & Owner</th>
-              <th className="py-4 px-4">Document Type</th>
-              <th className="py-4 px-4">Uploaded File</th>
-              <th className="py-4 px-4">Submitted At</th>
-              <th className="py-4 px-4">Status</th>
-              <th className="py-4 px-5 text-right">Actions</th>
-            </tr>
-          </thead>
+      {loading ? (
+        <div className={`p-12 text-center rounded-3xl border ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-slate-150 text-slate-500'
+        }`}>
+          <div className="w-8 h-8 border-4 border-[#FF2A14] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-bold">Loading KYC verification submissions...</p>
+        </div>
+      ) : salonOwners.length === 0 ? (
+        <div className={`p-12 text-center rounded-3xl border ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-slate-150 text-slate-500'
+        }`}>
+          <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-zinc-600" />
+          <h3 className="text-sm font-black uppercase tracking-tight text-slate-700 dark:text-zinc-300">
+            No KYC Document Submissions Found
+          </h3>
+          <p className="text-xs mt-1">There are no salon compliance documents matching your active filter criteria.</p>
+        </div>
+      ) : (
+        salonOwners.map((item, salonIdx) => {
+          // Determine if item is a Salon Owner container or a standalone Document
+          const isOwnerContainer = Array.isArray(item.kycDocuments);
+          const documentsList = isOwnerContainer ? item.kycDocuments : [item];
 
-          <tbody className={`divide-y text-xs font-semibold ${
-            isDarkMode ? 'divide-zinc-800 text-zinc-200' : 'divide-slate-100 text-slate-800'
-          }`}>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="py-12 text-center text-slate-400">
-                  <div className="w-7 h-7 border-3 border-[#FF2A14] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  Loading KYC submission queue...
-                </td>
-              </tr>
-            ) : submissions.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="py-12 text-center text-slate-400">
-                  <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-zinc-600" />
-                  No KYC document submissions match your filter.
-                </td>
-              </tr>
-            ) : (
-              submissions.map((doc, idx) => {
-                const statusKey = (doc.status || 'PENDING').toUpperCase();
-                const badge = STATUS_BADGES[statusKey] || STATUS_BADGES.PENDING;
-                const submittedDate = doc.uploadedAt || doc.createdAt
-                  ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                  : 'N/A';
+          const ownerName = item.ownerName || item.salonName || 'Salon Owner';
+          const ownerMobile = item.ownerMobile || item.ownerPhone || 'N/A';
+          const ownerEmail = item.ownerEmail || 'N/A';
+          const salonName = item.salonName || 'Salon #' + (item.salonId || 'N/A');
+          const locationStr = [item.cityName, item.areaName].filter(Boolean).join(', ') || 'Location Unspecified';
+          const registeredAt = item.ownerCreatedAt
+            ? new Date(item.ownerCreatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })
+            : null;
 
-                return (
-                  <tr key={doc.id || idx} className={`transition-colors ${
-                    isDarkMode ? 'hover:bg-zinc-800/40' : 'hover:bg-slate-50/60'
-                  }`}>
-                    
-                    {/* Salon & Owner */}
-                    <td className="py-4 px-5">
-                      <div className="font-black text-slate-900 dark:text-white">
-                        {doc.salonName || 'Salon #' + (doc.salonId || 'N/A')}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-zinc-400">
-                        {doc.ownerName || 'Owner'} {doc.ownerPhone ? `• ${doc.ownerPhone}` : ''}
-                      </div>
-                    </td>
+          return (
+            <div
+              key={item.ownerId || item.salonId || item.id || salonIdx}
+              className={`rounded-3xl border overflow-hidden shadow-sm transition-all duration-200 ${
+                isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-150'
+              }`}
+            >
+              
+              {/* Salon & Owner Identity Header */}
+              <div className={`p-5 sm:p-6 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50/80 border-slate-100'
+              }`}>
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FF2A14]/10 text-[#FF2A14] flex items-center justify-center shrink-0 border border-[#FF2A14]/20">
+                    <Store className="w-6 h-6" />
+                  </div>
 
-                    {/* Document Type */}
-                    <td className="py-4 px-4 font-mono font-bold text-[11px] text-[#FF2A14]">
-                      {doc.documentType || 'KYC_FILE'}
-                    </td>
-
-                    {/* File Name */}
-                    <td className="py-4 px-4">
-                      <div className="truncate max-w-[180px] font-medium" title={doc.fileName}>
-                        {doc.fileName || 'document.pdf'}
-                      </div>
-                    </td>
-
-                    {/* Submitted At */}
-                    <td className="py-4 px-4 text-slate-500 dark:text-zinc-400 text-[11px] font-mono">
-                      {submittedDate}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-4 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${badge.class}`}>
-                        {badge.label}
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+                        {salonName}
+                      </h3>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-zinc-400 bg-slate-200/60 dark:bg-zinc-700 px-2.5 py-0.5 rounded-full">
+                        <MapPin className="w-3 h-3 text-[#FF2A14]" />
+                        {locationStr}
                       </span>
+                    </div>
 
-                      {statusKey === 'REJECTED' && doc.rejectionReason && (
-                        <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 truncate max-w-[160px]" title={doc.rejectionReason}>
-                          Reason: {doc.rejectionReason}
-                        </p>
+                    <div className="flex items-center gap-4 mt-2 text-xs font-semibold text-slate-500 dark:text-zinc-400 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        <strong className="text-slate-700 dark:text-zinc-200">{ownerName}</strong>
+                      </span>
+                      <span className="flex items-center gap-1 font-mono">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        {ownerMobile}
+                      </span>
+                      {ownerEmail !== 'N/A' && (
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          {ownerEmail}
+                        </span>
                       )}
-                    </td>
+                      {registeredAt && (
+                        <span className="flex items-center gap-1 text-[11px] font-mono text-slate-400">
+                          <Calendar className="w-3.5 h-3.5" />
+                          Joined {registeredAt}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                    {/* Actions */}
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        
-                        {/* Preview */}
-                        <button
-                          onClick={() => setPreviewDoc(doc)}
-                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition"
-                          title="Preview Document File"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-slate-500" /> Preview
-                        </button>
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 bg-slate-100 dark:bg-zinc-800 px-3 py-1 rounded-xl">
+                  {documentsList.length} {documentsList.length === 1 ? 'KYC File' : 'KYC Files'}
+                </span>
+              </div>
 
-                        {/* Approve */}
-                        <button
-                          onClick={() => handleOpenVerify(doc, 'APPROVED')}
-                          disabled={statusKey === 'APPROVED'}
-                          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-xs"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5" /> Approve
-                        </button>
+              {/* Nested KYC Documents Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className={`border-b text-[10px] font-black uppercase tracking-widest ${
+                      isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-slate-100 text-slate-400'
+                    }`}>
+                      <th className="py-3 px-5">Document Type</th>
+                      <th className="py-3 px-4">Uploaded File</th>
+                      <th className="py-3 px-4">Format</th>
+                      <th className="py-3 px-4">Submitted At</th>
+                      <th className="py-3 px-4">Verification Status</th>
+                      <th className="py-3 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
 
-                        {/* Reject */}
-                        <button
-                          onClick={() => handleOpenVerify(doc, 'REJECTED')}
-                          disabled={statusKey === 'REJECTED'}
-                          className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-xs"
-                        >
-                          <XCircle className="w-3.5 h-3.5" /> Reject
-                        </button>
+                  <tbody className={`divide-y text-xs font-semibold ${
+                    isDarkMode ? 'divide-zinc-800/60 text-zinc-200' : 'divide-slate-100 text-slate-800'
+                  }`}>
+                    {documentsList.map((doc, docIdx) => {
+                      const docTypeKey = doc.documentType || 'DOCUMENT';
+                      const docLabel = DOCUMENT_TYPE_LABELS[docTypeKey] || docTypeKey;
+                      const statusKey = (doc.status || 'PENDING').toUpperCase();
+                      const badge = STATUS_BADGES[statusKey] || STATUS_BADGES.PENDING;
+                      const uploadedDate = doc.uploadedAt || doc.createdAt
+                        ? new Date(doc.uploadedAt || doc.createdAt).toLocaleDateString('en-IN', {
+                            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                          })
+                        : 'N/A';
 
-                      </div>
-                    </td>
+                      const formatBadge = doc.contentType
+                        ? doc.contentType.includes('pdf') ? 'PDF Document' : doc.contentType.includes('png') ? 'PNG Image' : 'JPEG Image'
+                        : doc.fileName?.endsWith('.pdf') ? 'PDF Document' : 'Image File';
 
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      return (
+                        <tr key={doc.id || docIdx} className={`transition-colors ${
+                          isDarkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-slate-50/50'
+                        }`}>
+
+                          {/* Document Type */}
+                          <td className="py-4 px-5">
+                            <div className="font-bold text-slate-900 dark:text-white">
+                              {docLabel}
+                            </div>
+                            <div className="text-[10px] font-mono text-[#FF2A14] mt-0.5">
+                              {docTypeKey}
+                            </div>
+                          </td>
+
+                          {/* Uploaded File */}
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[200px] font-medium" title={doc.fileName}>
+                                {doc.fileName || 'KYC_Document.pdf'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Format */}
+                          <td className="py-4 px-4">
+                            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">
+                              {formatBadge}
+                            </span>
+                          </td>
+
+                          {/* Submitted At */}
+                          <td className="py-4 px-4 text-slate-500 dark:text-zinc-400 text-[11px] font-mono">
+                            {uploadedDate}
+                          </td>
+
+                          {/* Status Badge & Rejection Reason */}
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${badge.class}`}>
+                              {badge.label}
+                            </span>
+
+                            {statusKey === 'REJECTED' && doc.rejectionReason && (
+                              <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-1 font-semibold max-w-[180px]" title={doc.rejectionReason}>
+                                Reason: {doc.rejectionReason}
+                              </p>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              
+                              {/* Preview File */}
+                              <button
+                                onClick={() => setPreviewDoc(doc)}
+                                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+                                title="Preview Document File"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-slate-500" />
+                                Preview
+                              </button>
+
+                              {/* Approve */}
+                              <button
+                                onClick={() => handleOpenVerify(doc, 'APPROVED', { salonName, ownerName })}
+                                disabled={statusKey === 'APPROVED'}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Approve
+                              </button>
+
+                              {/* Reject */}
+                              <button
+                                onClick={() => handleOpenVerify(doc, 'REJECTED', { salonName, ownerName })}
+                                disabled={statusKey === 'REJECTED'}
+                                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                                Reject
+                              </button>
+
+                            </div>
+                          </td>
+
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          );
+        })
+      )}
 
       {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div className={`p-4 border-t flex items-center justify-between text-xs font-bold ${
-          isDarkMode ? 'border-zinc-800 text-zinc-400' : 'border-slate-100 text-slate-500'
+        <div className={`p-4 rounded-3xl border flex items-center justify-between text-xs font-bold ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-slate-150 text-slate-500'
         }`}>
           <div>
-            Showing Page {page + 1} of {totalPages} ({totalElements} submissions)
+            Showing Page {page + 1} of {totalPages} ({totalElements} registered salons)
           </div>
 
           <div className="flex items-center gap-2">

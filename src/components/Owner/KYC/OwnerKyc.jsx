@@ -40,13 +40,37 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
     try {
       setLoading(true);
       const res = await kycService.getKycDocuments(activeSalonId);
-      const list = res.data?.content || res.data || [];
+      const rawData = res.data?.content || res.data || [];
+      let extractedDocs = [];
 
-      if (Array.isArray(list) && list.length > 0) {
-        setDocuments(list);
-      } else {
-        setDocuments(DEFAULT_DOCUMENTS);
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        if (Array.isArray(rawData[0].kycDocuments)) {
+          extractedDocs = rawData[0].kycDocuments;
+        } else if (rawData[0].documentType) {
+          extractedDocs = rawData;
+        }
+      } else if (Array.isArray(res.data?.kycDocuments)) {
+        extractedDocs = res.data.kycDocuments;
       }
+
+      const docMap = {};
+      extractedDocs.forEach(d => {
+        if (d.documentType) {
+          docMap[d.documentType] = d;
+        }
+      });
+
+      const merged = DEFAULT_DOCUMENTS.map(def => {
+        if (docMap[def.documentType]) {
+          return {
+            ...def,
+            ...docMap[def.documentType]
+          };
+        }
+        return def;
+      });
+
+      setDocuments(merged);
     } catch (err) {
       console.warn("Using default KYC documents layout:", err.message);
       setDocuments(DEFAULT_DOCUMENTS);
