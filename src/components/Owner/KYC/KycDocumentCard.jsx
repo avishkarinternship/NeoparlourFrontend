@@ -20,11 +20,10 @@ const STATUS_CONFIG = {
 };
 
 const DOCUMENT_TYPE_LABELS = {
-  BUSINESS_LICENSE: 'Shop Act / Business License',
+  AADHAAR_OR_GOVERNMENT_ID: 'Aadhaar / Government ID Proof',
   PAN_CARD: 'Owner PAN Card',
-  GST_CERTIFICATE: 'GST Registration Certificate',
-  ID_PROOF: 'Government ID Proof (Aadhaar/Passport)',
-  OTHERS: 'Other Supporting Document'
+  SHOP_ESTABLISHMENT_LICENSE: 'Shop Act / Establishment License',
+  BANK_ACCOUNT_PROOF: 'Bank Account / Cancelled Cheque Proof'
 };
 
 const KycDocumentCard = ({

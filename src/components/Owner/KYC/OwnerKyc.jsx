@@ -7,10 +7,10 @@ import KycDocumentCard from './KycDocumentCard';
 import KycUploadModal from './KycUploadModal';
 
 const DEFAULT_DOCUMENTS = [
-  { documentType: 'BUSINESS_LICENSE', label: 'Shop Act / Business License', status: 'PENDING' },
+  { documentType: 'AADHAAR_OR_GOVERNMENT_ID', label: 'Aadhaar / Government ID Proof', status: 'PENDING' },
   { documentType: 'PAN_CARD', label: 'Owner PAN Card', status: 'PENDING' },
-  { documentType: 'GST_CERTIFICATE', label: 'GST Registration Certificate', status: 'PENDING' },
-  { documentType: 'ID_PROOF', label: 'Government ID Proof (Aadhaar/Passport)', status: 'PENDING' }
+  { documentType: 'SHOP_ESTABLISHMENT_LICENSE', label: 'Shop Act / Establishment License', status: 'PENDING' },
+  { documentType: 'BANK_ACCOUNT_PROOF', label: 'Bank Account / Cancelled Cheque Proof', status: 'PENDING' }
 ];
 
 const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {

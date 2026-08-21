@@ -10,11 +10,10 @@ const STATUS_TABS = [
 
 const DOCUMENT_TYPES = [
   { id: '', label: 'All Document Types' },
-  { id: 'BUSINESS_LICENSE', label: 'Shop Act / License' },
+  { id: 'AADHAAR_OR_GOVERNMENT_ID', label: 'Aadhaar / Government ID' },
   { id: 'PAN_CARD', label: 'PAN Card' },
-  { id: 'GST_CERTIFICATE', label: 'GST Certificate' },
-  { id: 'ID_PROOF', label: 'ID Proof (Aadhaar)' },
-  { id: 'OTHERS', label: 'Other Documents' }
+  { id: 'SHOP_ESTABLISHMENT_LICENSE', label: 'Shop / Establishment License' },
+  { id: 'BANK_ACCOUNT_PROOF', label: 'Bank Account Proof' }
 ];
 
 const KycFilterBar = ({ filters, setFilters, isDarkMode = false }) => {
