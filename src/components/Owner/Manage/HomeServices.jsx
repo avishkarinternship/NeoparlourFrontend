@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -26,7 +26,7 @@ const HomeServices = () => {
     const fetchHomeServiceCharge = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get(`salons/${salonId}/home-service-charges`);
+            const response = await axiosInstance.get(`/salons/${salonId}/home-service-charges`);
             const charge = response.data || 0.0;
             setServiceCharge(charge.toString());
             setOriginalCharge(charge.toString());
@@ -54,7 +54,7 @@ const HomeServices = () => {
         setSaving(true);
         try {
             await axiosInstance.put(
-                `salons/home-service-charges?charges=${chargeValue}`
+                `/salons/home-service-charges?charges=${chargeValue}`
             );
             toast.success('Home service charge updated successfully', toastStyle);
             setOriginalCharge(serviceCharge);

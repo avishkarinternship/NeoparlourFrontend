@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Play, CheckCircle, AlertTriangle, RefreshCw, UserCheck, Package, PlusCircle, X, Sparkles } from 'lucide-react';
 import { staffApi } from '../services/staffApi';
 import toast from 'react-hot-toast';
+import RewardPointsAnimation from './common/RewardPointsAnimation';
 
 export default function AppointmentsView({ staffId, salonId }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [rewardAnimationStatus, setRewardAnimationStatus] = useState('success');
+  const [rewardAnimationMsg, setRewardAnimationMsg] = useState('');
 
   // Active appointment for action modals
   const [activeAppointment, setActiveAppointment] = useState(null);
@@ -143,10 +147,18 @@ export default function AppointmentsView({ staffId, salonId }) {
     try {
       await staffApi.completeAppointment(activeAppointment.id, selectedProductUsages);
       setCompletionModal(false);
+      setRewardAnimationStatus('success');
+      setRewardAnimationMsg('Reward points & commission successfully collected and added to wallet.');
+      setShowRewardAnimation(true);
       toast.success('Appointment completed successfully!');
       fetchAppointments();
     } catch (err) {
-      toast.error('Error completing appointment: ' + (err.response?.data?.message || 'Server error'));
+      const errMsg = err.response?.data?.message || 'Failed to complete appointment. Please try again.';
+      setCompletionModal(false);
+      setRewardAnimationStatus('failure');
+      setRewardAnimationMsg(errMsg);
+      setShowRewardAnimation(true);
+      toast.error('Error completing appointment: ' + errMsg);
     } finally {
       setCompletionLoading(false);
     }
@@ -497,6 +509,17 @@ export default function AppointmentsView({ staffId, salonId }) {
           </div>
         </div>
       )}
+
+      {/* Reward Points Animation Overlay */}
+      <RewardPointsAnimation
+        isOpen={showRewardAnimation}
+        status={rewardAnimationStatus}
+        errorMessage={rewardAnimationMsg}
+        onClose={() => setShowRewardAnimation(false)}
+        points={50}
+        title={rewardAnimationStatus === 'success' ? "Appointment Completed!" : "Completion Failed"}
+        subtitle={rewardAnimationMsg || "Reward points successfully collected & added to wallet."}
+      />
     </div>
   );
 }

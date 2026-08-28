@@ -1,18 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axiosInstance from '../../api/axiosInstance';
-import { switchTenant, fetchCustomerProfile, searchSalonsByLocation } from '../../redux/slices/customerSlice';
+import { searchSalonsByLocation, switchTenant } from '../../redux/slices/customerSlice';
 import searchService from '../../services/searchService';
 import toast from 'react-hot-toast';
-import { Navigation, Sparkles } from 'lucide-react';
-import { useDarkMode } from '../../context/DarkModeContext';
-
-import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
-import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
-import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
-
 import logoIcon from '../../assets/Neoparlour_logo.png';
 import salonOneIcon from '../../assets/Customer/HomeScreen/Recommended/salon_one.jpg';
 import salonTwoIcon from '../../assets/Customer/HomeScreen/Recommended/salon_two.jpg';
@@ -49,10 +40,8 @@ const SalonsListing = () => {
     const [isLoadingAreas, setIsLoadingAreas] = useState(false);
     const [showCityDropdown, setShowCityDropdown] = useState(false);
     const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-    const cityDropdownRef = useRef(null);
-    const areaDropdownRef = useRef(null);
-    const isUserTypingCityRef = useRef(false);
-    const isUserTypingAreaRef = useRef(false);
+    const [isUserTypingCity, setIsUserTypingCity] = useState(false);
+    const [isUserTypingArea, setIsUserTypingArea] = useState(false);
 
     // Salon data state
     const [salons, setSalons] = useState([]);
@@ -141,10 +130,10 @@ const SalonsListing = () => {
     // Click outside dropdowns
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            if (!event.target.closest('.city-dropdown-container')) {
                 setShowCityDropdown(false);
             }
-            if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+            if (!event.target.closest('.area-dropdown-container')) {
                 setShowAreaDropdown(false);
             }
         };
@@ -154,7 +143,7 @@ const SalonsListing = () => {
 
     // City autocomplete debouncing
     useEffect(() => {
-        if (!isUserTypingCityRef.current) return;
+        if (!isUserTypingCity) return;
         if (!cityName || cityName.trim().length < 2) {
             setCitySuggestions([]);
             return;
@@ -171,11 +160,11 @@ const SalonsListing = () => {
             }
         }, 400);
         return () => clearTimeout(delayDebounce);
-    }, [cityName]);
+    }, [cityName, isUserTypingCity]);
 
     // Area autocomplete debouncing (scoped by city)
     useEffect(() => {
-        if (!isUserTypingAreaRef.current) return;
+        if (!isUserTypingArea) return;
         if (!areaName || areaName.trim().length < 2) {
             setAreaSuggestions([]);
             return;
@@ -192,7 +181,7 @@ const SalonsListing = () => {
             }
         }, 400);
         return () => clearTimeout(delayDebounce);
-    }, [areaName]);
+    }, [areaName, cityName, isUserTypingArea]);
 
     // Fetch salons by city and area
     const fetchSalons = async (city, area = '', pageNum = 0, cat = '') => {
@@ -228,10 +217,10 @@ const SalonsListing = () => {
         const initialCategory = location.state?.selectedCategory || location.state?.category || '';
         
         if (storedCity) {
-            isUserTypingCityRef.current = false;
+            setIsUserTypingCity(false);
             setCityName(storedCity);
             if (storedArea) {
-                isUserTypingAreaRef.current = false;
+                setIsUserTypingArea(false);
                 setAreaName(storedArea);
             }
             fetchSalons(storedCity, storedArea, 0, initialCategory);
@@ -246,10 +235,10 @@ const SalonsListing = () => {
                             if (geo.area) {
                                 localStorage.setItem('customerArea', geo.area);
                             }
-                            isUserTypingCityRef.current = false;
+                            setIsUserTypingCity(false);
                             setCityName(geo.city);
                             if (geo.area) {
-                                isUserTypingAreaRef.current = false;
+                                setIsUserTypingArea(false);
                                 setAreaName(geo.area);
                             }
                             fetchSalons(geo.city, geo.area || '', 0, initialCategory);
@@ -296,8 +285,8 @@ const SalonsListing = () => {
                 try {
                     const result = await searchService.reverseGeocode(latitude, longitude);
                     if (result.city) {
-                        isUserTypingCityRef.current = false;
-                        isUserTypingAreaRef.current = false;
+                        setIsUserTypingCity(false);
+                        setIsUserTypingArea(false);
                         setCityName(result.city);
                         setAreaName(result.area || '');
                         localStorage.setItem('customerCity', result.city);
@@ -347,10 +336,10 @@ const SalonsListing = () => {
                                 if (geo.area) {
                                     localStorage.setItem('customerArea', geo.area);
                                 }
-                                isUserTypingCityRef.current = false;
+                                setIsUserTypingCity(false);
                                 setCityName(geo.city);
                                 if (geo.area) {
-                                    isUserTypingAreaRef.current = false;
+                                    setIsUserTypingArea(false);
                                     setAreaName(geo.area);
                                 }
                                 fetchSalons(geo.city, geo.area || '', 0, category);
@@ -464,7 +453,7 @@ const SalonsListing = () => {
                     <div className="max-w-4xl mx-auto">
                         <div className={`p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border transition-colors duration-300 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
                             {/* City Input */}
-                            <div className={`relative flex items-center gap-3 px-4 py-2 w-full md:border-r transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-200'}`} ref={cityDropdownRef}>
+                            <div className={`relative city-dropdown-container flex items-center gap-3 px-4 py-2 w-full md:border-r transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
                                     id="salon-city-search"
@@ -472,7 +461,7 @@ const SalonsListing = () => {
                                     placeholder={isDetectingLocation ? t('salons_page.detecting', 'DETECTING...') : t('salons_page.city_placeholder', 'Search city...')}
                                     value={cityName}
                                     onChange={(e) => {
-                                        isUserTypingCityRef.current = true;
+                                        setIsUserTypingCity(true);
                                         setCityName(e.target.value);
                                         setShowCityDropdown(true);
                                     }}
@@ -512,8 +501,8 @@ const SalonsListing = () => {
                                         ) : citySuggestions.length > 0 ? (
                                             citySuggestions.map((city, idx) => (
                                                 <div key={idx} onClick={() => {
-                                                    isUserTypingCityRef.current = false;
-                                                    isUserTypingAreaRef.current = false;
+                                                    setIsUserTypingCity(false);
+                                                    setIsUserTypingArea(false);
                                                     setCityName(city.name);
                                                     setAreaName('');
                                                     setShowCityDropdown(false);
@@ -527,7 +516,7 @@ const SalonsListing = () => {
                             </div>
 
                             {/* Area Input */}
-                            <div className={`relative flex items-center justify-between px-4 py-2 w-full md:border-r gap-2 transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-200'}`} ref={areaDropdownRef}>
+                            <div className={`relative area-dropdown-container flex items-center justify-between px-4 py-2 w-full md:border-r gap-2 transition-colors duration-300 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                                 <div className="flex items-center gap-3 w-full">
                                     <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
                                     <input
@@ -536,13 +525,13 @@ const SalonsListing = () => {
                                         placeholder="Search area (optional)..."
                                         value={areaName}
                                         onChange={(e) => {
-                                            isUserTypingAreaRef.current = true;
+                                            setIsUserTypingArea(true);
                                             setAreaName(e.target.value);
                                             setShowAreaDropdown(true);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                        className={`w-full outline-none text-sm font-medium bg-transparent text-left transition-colors duration-300 ${isDark ? 'text-white placeholder-gray-500' : 'text-gray-700 placeholder-gray-400'}`}
+                                        className={`w-full outline-none text-sm font-medium bg-transparent text-left transition-colors duration-300 ${isDark ? 'text-[#fff]' : 'text-gray-700'}`}
                                     />
                                     {areaName && (
                                         <button onClick={() => { setAreaName(''); setAreaSuggestions([]); }} className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0">
@@ -563,8 +552,8 @@ const SalonsListing = () => {
                                         ) : areaSuggestions.length > 0 ? (
                                             areaSuggestions.map((area, idx) => (
                                                 <div key={idx} onClick={() => {
-                                                    isUserTypingCityRef.current = false;
-                                                    isUserTypingAreaRef.current = false;
+                                                    setIsUserTypingCity(false);
+                                                    setIsUserTypingArea(false);
                                                     setAreaName(area.name);
                                                     setShowAreaDropdown(false);
                                                 }} className={`px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-sm text-left ${isDark ? 'text-gray-250' : 'text-gray-700'}`}>

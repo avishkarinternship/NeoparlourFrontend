@@ -1,32 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration, loginOwner } from '../../redux/slices/ownerStaffSlice';
+import { sendRegisterOtp, registerWithOtp, loginOwner, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, Building, MapPin, Clock, ShieldCheck, Sparkles, Navigation, Upload, X } from 'lucide-react';
-
+import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation, Eye, EyeOff, Camera, UploadCloud, X, FileText, Store, Building, Clock, Upload, Compass } from 'lucide-react';
 import searchService from '../../services/searchService';
+import { compressImage } from '../../utils/imageCompressor';
+import { GstStateInput, StateSelector, GstinInput } from '../common/GstStateInput';
+import { getStateFromCityName, getStateDisplayName } from '../../constants/indianStates';
 
 // Using existing assets
 import logoIcon from '../../assets/Neoparlour_logo.png';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 
-const convertToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = (error) => reject(error);
-  });
-};
-
 const getISTString = (date = new Date()) => {
   const tzoffset = -330; // IST is UTC+5:30
   return new Date(date.getTime() - (tzoffset * 60000)).toISOString().slice(0, -1) + '+05:30';
 };
+
+const SALON_TYPES = [
+  { value: 'MALE', label: 'Male Salon' },
+  { value: 'FEMALE', label: 'Female Salon' },
+  { value: 'UNISEX', label: 'Unisex Salon' }
+];
+
+const convertToBase64 = async (file) => {
+  try {
+    // Instant client-side HTML5 Canvas compression: max 1200px dimension & 75% JPEG quality
+    return await compressImage(file, 1200, 1200, 0.75, true);
+  } catch (err) {
+    console.warn("Canvas compression fallback, using raw FileReader:", err);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  }
+};
+
+
 
 const OwnerRegister = () => {
   const dispatch = useDispatch();
@@ -40,25 +56,37 @@ const OwnerRegister = () => {
     salonName: '',
     cityName: '',
     areaName: '',
+    areaDistrict: '',
     specificAddress: '',
+    landmark: '',
     openingTime: '09:00',
     closingTime: '21:00',
     password: '',
     confirmPassword: '',
+    gstin: '',
+    state: '',
   });
+
+  const handleGstStateChange = ({ gstin, state }) => {
+    setFormData(prev => ({ ...prev, gstin, state }));
+  };
 
   const [otp, setOtp] = useState('');
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [areaSuggestions, setAreaSuggestions] = useState([]);
+  const [landmarkSuggestions, setLandmarkSuggestions] = useState([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingAreas, setIsLoadingAreas] = useState(false);
+  const [isLoadingLandmarks, setIsLoadingLandmarks] = useState(false);
 
-  const isUserTypingCityRef = useRef(false);
-  const isUserTypingAreaRef = useRef(false);
+  const [isUserTypingCity, setIsUserTypingCity] = useState(false);
+  const [isUserTypingArea, setIsUserTypingArea] = useState(false);
+  const [isUserTypingLandmark, setIsUserTypingLandmark] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const [showLandmarkDropdown, setShowLandmarkDropdown] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -174,16 +202,16 @@ const OwnerRegister = () => {
     }));
   };
 
-  const cityDropdownRef = useRef(null);
-  const areaDropdownRef = useRef(null);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.city-dropdown-container')) {
         setShowCityDropdown(false);
       }
-      if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.area-dropdown-container')) {
         setShowAreaDropdown(false);
+      }
+      if (!event.target.closest('.landmark-dropdown-container')) {
+        setShowLandmarkDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -210,8 +238,8 @@ const OwnerRegister = () => {
         try {
           const result = await searchService.reverseGeocode(latitude, longitude);
           if (result.city) {
-            isUserTypingCityRef.current = false;
-            isUserTypingAreaRef.current = false;
+            setIsUserTypingCity(false);
+            setIsUserTypingArea(false);
             setFormData(prev => ({
               ...prev,
               cityName: result.city,
@@ -221,14 +249,16 @@ const OwnerRegister = () => {
           } else {
             toast.error("Could not determine your city. Please enter it manually.");
           }
-        } catch (error) {
-          toast.error("Could not determine your city. Please enter it manually.");
+        } catch (err) {
+          console.error("Location detection error:", err);
+          toast.error("Failed to detect location. Please enter manually.");
         } finally {
           setIsDetectingLocation(false);
         }
       },
       (error) => {
-        toast.error("Location permission denied. Please enter it manually.");
+        console.error("Geolocation error:", error);
+        toast.error("Location access denied or unavailable.");
         setIsDetectingLocation(false);
       },
       { enableHighAccuracy: false, timeout: 8000 }
@@ -247,7 +277,7 @@ const OwnerRegister = () => {
 
   // Autocomplete city search
   useEffect(() => {
-    if (!isUserTypingCityRef.current) return;
+    if (!isUserTypingCity) return;
     if (!formData.cityName || formData.cityName.trim().length < 2) {
       setCitySuggestions([]);
       return;
@@ -256,7 +286,7 @@ const OwnerRegister = () => {
     setIsLoadingCities(true);
     const delayDebounce = setTimeout(async () => {
       try {
-        const results = await searchService.searchExternalLocations(formData.cityName, 'city');
+        const results = await searchService.searchExternalLocations(formData.cityName, 'city', '', formData.state);
         setCitySuggestions(results);
       } catch (err) {
         console.error("Owner Register City Search Error:", err);
@@ -266,11 +296,11 @@ const OwnerRegister = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounce);
-  }, [formData.cityName]);
+  }, [formData.cityName, formData.state, isUserTypingCity]);
 
   // Autocomplete area search
   useEffect(() => {
-    if (!isUserTypingAreaRef.current) return;
+    if (!isUserTypingArea) return;
     if (!formData.areaName || formData.areaName.trim().length < 2) {
       setAreaSuggestions([]);
       return;
@@ -279,7 +309,7 @@ const OwnerRegister = () => {
     setIsLoadingAreas(true);
     const delayDebounce = setTimeout(async () => {
       try {
-        const results = await searchService.searchExternalLocations(formData.areaName, 'area', formData.cityName);
+        const results = await searchService.searchExternalLocations(formData.areaName, 'area', formData.cityName, formData.state);
         setAreaSuggestions(results);
       } catch (err) {
         console.error("Owner Register Area Search Error:", err);
@@ -289,7 +319,36 @@ const OwnerRegister = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounce);
-  }, [formData.areaName, formData.cityName]);
+  }, [formData.areaName, formData.cityName, formData.state, isUserTypingArea]);
+
+  // Autocomplete landmark search
+  useEffect(() => {
+    if (!isUserTypingLandmark) return;
+    if (!formData.landmark || formData.landmark.trim().length < 2) {
+      setLandmarkSuggestions([]);
+      return;
+    }
+
+    setIsLoadingLandmarks(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const results = await searchService.searchLandmarks(
+          formData.landmark, 
+          formData.areaName, 
+          formData.cityName, 
+          formData.state, 
+          formData.areaDistrict
+        );
+        setLandmarkSuggestions(results);
+      } catch (err) {
+        console.error("Owner Register Landmark Search Error:", err);
+      } finally {
+        setIsLoadingLandmarks(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [formData.landmark, formData.areaName, formData.cityName, formData.state, formData.areaDistrict, isUserTypingLandmark]);
 
   const handleSendOtp = () => {
     if (!formData.phone) {
@@ -438,6 +497,8 @@ const OwnerRegister = () => {
 
     const userDTO = {
       ...formData,
+      gstin: formData.gstin ? formData.gstin.trim() : null,
+      state: formData.state || null,
       role: 'SALON_OWNER',
       openingTime: formData.openingTime + ':00',
       closingTime: formData.closingTime + ':00',
@@ -451,9 +512,17 @@ const OwnerRegister = () => {
 
     dispatch(registerWithOtp({ userDTO, otp, type: 'OWNER' })).unwrap()
       .then(() => {
+        const formattedFullAddress = [
+          formData.specificAddress ? formData.specificAddress.trim() : null,
+          formData.landmark ? `near ${formData.landmark.trim()}` : null,
+          formData.areaName ? formData.areaName.trim() : null,
+          formData.cityName ? formData.cityName.trim() : null,
+          getStateDisplayName(formData.state) || (formData.state ? formData.state : null)
+        ].filter(Boolean).join(', ');
+
         const salonDetails = {
           salonName: formData.salonName,
-          salonAddress: `${formData.specificAddress || ''}, ${formData.areaName || ''}, ${formData.cityName || ''}`,
+          salonAddress: formattedFullAddress,
           salonEmail: formData.email,
           openingTime: formData.openingTime + ':00',
           closingTime: formData.closingTime + ':00',
@@ -719,10 +788,18 @@ const OwnerRegister = () => {
                         className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                       />
                     </div>
- 
-                    {/* Cities Dropdown */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="relative" ref={cityDropdownRef}>
+
+                    {/* Row 1: State & City Name Together */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* State Custom Dropdown */}
+                      <StateSelector 
+                        state={formData.state} 
+                        onChange={(newState) => setFormData(prev => ({ ...prev, state: newState }))} 
+                        showLabel={false}
+                      />
+
+                      {/* City / District Input */}
+                      <div className="relative city-dropdown-container">
                         <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                           <MapPin className="w-5 h-5 stroke-[2]" />
                         </div>
@@ -731,12 +808,12 @@ const OwnerRegister = () => {
                           name="cityName"
                           value={formData.cityName}
                           onChange={(e) => {
-                            isUserTypingCityRef.current = true;
+                            setIsUserTypingCity(true);
                             handleInputChange(e);
                             setShowCityDropdown(true);
                           }}
                           onFocus={() => setShowCityDropdown(true)}
-                          placeholder="Select City" 
+                          placeholder="Select City / District *" 
                           required
                           className="w-full pl-14 pr-12 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                         />
@@ -756,7 +833,7 @@ const OwnerRegister = () => {
                           )}
                         </button>
                         {showCityDropdown && formData.cityName && (
-                          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                          <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
                             {isLoadingCities ? (
                               <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
@@ -767,8 +844,12 @@ const OwnerRegister = () => {
                                 <div 
                                   key={idx} 
                                   onClick={() => {
-                                    isUserTypingCityRef.current = false;
-                                    setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
+                                    setIsUserTypingCity(false);
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      cityName: city.name,
+                                      areaName: ''
+                                    }));
                                     setCitySuggestions([]);
                                     setAreaSuggestions([]);
                                     setShowCityDropdown(false);
@@ -784,9 +865,12 @@ const OwnerRegister = () => {
                           </div>
                         )}
                       </div>
- 
-                      {/* Areas Dropdown */}
-                      <div className="relative" ref={areaDropdownRef}>
+                    </div>
+
+                    {/* Row 2: Area Name & Landmark Together */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Area Name Input */}
+                      <div className="relative area-dropdown-container">
                         <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                           <MapPin className="w-5 h-5 stroke-[2]" />
                         </div>
@@ -795,17 +879,17 @@ const OwnerRegister = () => {
                           name="areaName"
                           value={formData.areaName}
                           onChange={(e) => {
-                            isUserTypingAreaRef.current = true;
+                            setIsUserTypingArea(true);
                             handleInputChange(e);
                             setShowAreaDropdown(true);
                           }}
                           onFocus={() => setShowAreaDropdown(true)}
-                          placeholder="Select Area" 
+                          placeholder="Select Area *" 
                           required
                           className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                         />
                         {showAreaDropdown && formData.areaName && (
-                          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                          <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
                             {isLoadingAreas ? (
                               <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
@@ -816,14 +900,21 @@ const OwnerRegister = () => {
                                 <div 
                                   key={idx} 
                                   onClick={() => {
-                                    isUserTypingAreaRef.current = false;
-                                    setFormData(prev => ({ ...prev, areaName: area.name }));
+                                    setIsUserTypingArea(false);
+                                    setFormData(prev => ({ 
+                                      ...prev, 
+                                      areaName: area.name,
+                                      areaDistrict: area.district || ''
+                                    }));
                                     setAreaSuggestions([]);
                                     setShowAreaDropdown(false);
                                   }}
-                                  className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                                  className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5"
                                 >
-                                  {area.name}
+                                  <span className="font-bold text-gray-900">{area.name}</span>
+                                  {area.city && (
+                                    <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
+                                  )}
                                 </div>
                               ))
                             ) : (
@@ -832,9 +923,67 @@ const OwnerRegister = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Landmark Input (Optional) */}
+                      <div className="relative landmark-dropdown-container">
+                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
+                          <Compass className="w-5 h-5 stroke-[2]" />
+                        </div>
+                        <input 
+                          type="text" 
+                          name="landmark"
+                          value={formData.landmark}
+                          onChange={(e) => {
+                            setIsUserTypingLandmark(true);
+                            handleInputChange(e);
+                            setShowLandmarkDropdown(true);
+                          }}
+                          onFocus={() => setShowLandmarkDropdown(true)}
+                          placeholder="Landmark (Optional, e.g. Siddhi Hospital)" 
+                          className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                        />
+                        {showLandmarkDropdown && formData.landmark && (
+                          <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                            {isLoadingLandmarks ? (
+                              <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                                <span>Searching landmarks...</span>
+                              </div>
+                            ) : landmarkSuggestions.length > 0 ? (
+                              landmarkSuggestions.map((lm, idx) => (
+                                <div 
+                                  key={idx} 
+                                  onClick={() => {
+                                    setIsUserTypingLandmark(false);
+                                    setFormData(prev => ({ ...prev, landmark: lm.name }));
+                                    setLandmarkSuggestions([]);
+                                    setShowLandmarkDropdown(false);
+                                  }}
+                                  className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5"
+                                >
+                                  <span className="font-bold text-gray-900">{lm.name}</span>
+                                  {lm.details && (
+                                    <span className="text-[11px] font-semibold text-gray-400">{lm.details}</span>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No landmarks found</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
- 
-                    {/* Specific Address */}
+
+                    {/* Row 3: GSTIN Number Below State, City, Area, Landmark */}
+                    <GstinInput
+                      gstin={formData.gstin}
+                      state={formData.state}
+                      onChange={handleGstStateChange}
+                      showLabel={false}
+                    />
+
+                    {/* Row 4: Shop / Building Address */}
                     <div className="relative group">
                       <div className="absolute top-4 left-5 text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
                         <MapPin className="w-5 h-5 stroke-[2]" />
@@ -843,12 +992,28 @@ const OwnerRegister = () => {
                         name="specificAddress"
                         value={formData.specificAddress}
                         onChange={handleInputChange}
-                        placeholder="Specific Address (Shop No, Building, Landmark...)" 
+                        placeholder="Shop / Building Address (e.g. Shop No. 4, ABC Complex) *" 
                         required
                         rows="2"
                         className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold resize-none" 
                       />
                     </div>
+
+                    {/* Live Formatted Address Preview */}
+                    {(formData.specificAddress || formData.landmark || formData.areaName || formData.cityName) && (
+                      <div className="p-3.5 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl text-left font-sans">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">📍 Formatted Address Preview</span>
+                        <p className="text-xs font-bold text-gray-800 leading-relaxed">
+                          {[
+                            formData.specificAddress ? formData.specificAddress.trim() : null,
+                            formData.landmark ? `near ${formData.landmark.trim()}` : null,
+                            formData.areaName ? formData.areaName.trim() : null,
+                            formData.cityName ? formData.cityName.trim() : null,
+                            getStateDisplayName(formData.state) || (formData.state ? formData.state : null)
+                          ].filter(Boolean).join(', ')}
+                        </p>
+                      </div>
+                    )}
  
                     {/* Times */}
                     <div className="flex gap-4">

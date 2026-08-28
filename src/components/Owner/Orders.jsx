@@ -4,49 +4,15 @@ import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 const LazyImage = ({ src, alt, className, isDarkMode = false }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [isInView, setIsInView] = useState(false);
-    const imgRef = React.useRef();
-
-    useEffect(() => {
-        if (!src) return;
-
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsInView(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1, rootMargin: '50px' }
-        );
-
-        if (imgRef.current) {
-            observer.observe(imgRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [src]);
-
     if (!src) return null;
 
     return (
-        <div ref={imgRef} className={`relative ${isDarkMode ? 'bg-zinc-800' : 'bg-gray-100'} overflow-hidden shrink-0 ${className}`}>
-            {isInView && (
-                <img
-                    src={src}
-                    alt={alt}
-                    loading="lazy"
-                    onLoad={() => setIsLoaded(true)}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${
-                        isLoaded ? 'opacity-100' : 'opacity-0'
-                    }`}
-                />
-            )}
-            {!isLoaded && (
-                <div className={`absolute inset-0 ${isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'} animate-pulse`} />
-            )}
-        </div>
+        <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            className={`w-full h-full object-cover shrink-0 ${className}`}
+        />
     );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -121,8 +121,8 @@ const HomeScreen = () => {
     const { t } = useTranslation();
     const { isDark } = useDarkMode();
     const dispatch = useDispatch();
-    const isUserTypingCityRef = useRef(false);
-    const isUserTypingAreaRef = useRef(false);
+    const [isUserTypingCity, setIsUserTypingCity] = useState(false);
+    const [isUserTypingArea, setIsUserTypingArea] = useState(false);
     const { token, loading, salonResults, user, isAuthenticated, profile, defaultSalon } = useSelector((state) => state.customer);
 
     useEffect(() => {
@@ -143,7 +143,7 @@ const HomeScreen = () => {
         category: '',
     });
     const [isPageLoading, setIsPageLoading] = useState(true);
-    const geoFetchedRef = useRef(false);
+    const [geoFetched, setGeoFetched] = useState(false);
 
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
@@ -151,10 +151,6 @@ const HomeScreen = () => {
     const [isLoadingAreas, setIsLoadingAreas] = useState(false);
     const [showCityDropdown, setShowCityDropdown] = useState(false);
     const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-
-    const cityDropdownRef = useRef(null);
-    const areaDropdownRef = useRef(null);
-    const searchDropdownRef = useRef(null);
 
     const navigate = useNavigate();
     const [showLoginPopup, setShowLoginPopup] = useState(false);
@@ -173,13 +169,13 @@ const HomeScreen = () => {
     // Click outside dropdowns handler
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            if (!event.target.closest('.city-dropdown-container')) {
                 setShowCityDropdown(false);
             }
-            if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+            if (!event.target.closest('.area-dropdown-container')) {
                 setShowAreaDropdown(false);
             }
-            if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target)) {
+            if (!event.target.closest('.search-dropdown-container')) {
                 setShowSearchDropdown(false);
             }
         };
@@ -189,7 +185,7 @@ const HomeScreen = () => {
 
     // OpenStreetMap City autocomplete with debouncing
     useEffect(() => {
-        if (!isUserTypingCityRef.current) return;
+        if (!isUserTypingCity) return;
         if (!searchData.cityName || searchData.cityName.trim().length < 2) {
             setCitySuggestions([]);
             return;
@@ -208,11 +204,11 @@ const HomeScreen = () => {
         }, 450);
 
         return () => clearTimeout(delayDebounce);
-    }, [searchData.cityName]);
+    }, [searchData.cityName, isUserTypingCity]);
 
     // OpenStreetMap Area autocomplete with debouncing (scoped by city if present)
     useEffect(() => {
-        if (!isUserTypingAreaRef.current) return;
+        if (!isUserTypingArea) return;
         if (!searchData.areaName || searchData.areaName.trim().length < 2) {
             setAreaSuggestions([]);
             return;
@@ -235,7 +231,7 @@ const HomeScreen = () => {
         }, 450);
 
         return () => clearTimeout(delayDebounce);
-    }, [searchData.areaName, searchData.cityName]);
+    }, [searchData.areaName, searchData.cityName, isUserTypingArea]);
 
     const handleDetectLocation = () => {
         if (!navigator.geolocation) {
@@ -398,8 +394,8 @@ const HomeScreen = () => {
 
     // Website loaded first geolocation trigger
     useEffect(() => {
-        if (geoFetchedRef.current) return;
-        geoFetchedRef.current = true;
+        if (geoFetched) return;
+        setGeoFetched(true);
 
         const storedCity = localStorage.getItem('customerCity');
         if (storedCity) {
@@ -819,16 +815,16 @@ const HomeScreen = () => {
                     </p>
 
 
-                    <div className="relative w-full max-w-4xl z-50" ref={searchDropdownRef}>
+                    <div className="relative search-dropdown-container w-full max-w-4xl z-50">
                         <div className={`p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border ${isDark ? 'bg-[#1A1A1A] border-gray-500' : 'bg-white border-gray-100'}`}>
-                            <div className="relative flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200" ref={cityDropdownRef}>
+                            <div className="relative city-dropdown-container flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200">
                                 <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
                                     placeholder={isDetectingLocation ? t('home.detecting_location', 'DETECTING...') : t('home.select_city', 'SELECT CITY')}
                                     value={searchData.cityName}
                                     onChange={(e) => {
-                                        isUserTypingCityRef.current = true;
+                                        setIsUserTypingCity(true);
                                         setSearchData((prev) => ({
                                             ...prev,
                                             cityName: e.target.value,
@@ -863,8 +859,8 @@ const HomeScreen = () => {
                                         ) : citySuggestions.length > 0 ? (
                                             citySuggestions.map((city, idx) => (
                                                 <div key={idx} onClick={() => {
-                                                    isUserTypingCityRef.current = false;
-                                                    isUserTypingAreaRef.current = false;
+                                                    setIsUserTypingCity(false);
+                                                    setIsUserTypingArea(false);
                                                     setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
                                                     setShowCityDropdown(false);
                                                     setIsLocationChanged(true);
@@ -878,7 +874,7 @@ const HomeScreen = () => {
                                 )}
                             </div>
 
-                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2" ref={areaDropdownRef}>
+                            <div className="relative area-dropdown-container flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
                                 <div className="flex items-center gap-3 w-full">
                                     <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
                                     <input
@@ -886,7 +882,7 @@ const HomeScreen = () => {
                                         placeholder={t('home.select_area', 'SELECT AREA')}
                                         value={searchData.areaName}
                                         onChange={(e) => {
-                                            isUserTypingAreaRef.current = true;
+                                            setIsUserTypingArea(true);
                                             setSearchData((prev) => ({
                                                 ...prev,
                                                 areaName: e.target.value,
@@ -910,8 +906,8 @@ const HomeScreen = () => {
                                         ) : areaSuggestions.length > 0 ? (
                                             areaSuggestions.map((area, idx) => (
                                                 <div key={idx} onClick={() => {
-                                                    isUserTypingCityRef.current = false;
-                                                    isUserTypingAreaRef.current = false;
+                                                    setIsUserTypingCity(false);
+                                                    setIsUserTypingArea(false);
                                                     setSearchData(p => ({ ...p, areaName: area.name }));
                                                     setShowAreaDropdown(false);
                                                     setIsLocationChanged(true);

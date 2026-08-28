@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -161,6 +161,10 @@ const SelectService = () => {
     const { isAuthenticated, token } = useSelector((state) => state.customer);
     const { isDark } = useDarkMode();
 
+    const servicesSectionRef = useRef(null);
+    const staffSectionRef = useRef(null);
+    const dateTimeSectionRef = useRef(null);
+
     // --- STATE ---
     const [salon, setSalon] = useState(null);
     const [services, setServices] = useState([]);
@@ -177,11 +181,6 @@ const SelectService = () => {
         // If arriving with a pre-selected slot or expert, trigger loading immediately
         return !!(location.state?.selectedSlot || (location.state?.selectedExpert && location.state.selectedExpert !== 'any'));
     });
-
-    // Refs for scrolling lazy-load
-    const servicesSectionRef = useRef(null);
-    const staffSectionRef = useRef(null);
-    const dateTimeSectionRef = useRef(null);
 
     const [selectedCategory, setSelectedCategory] = useState(location.state?.selectedCategory || '');
     const [selectedGender, setSelectedGender] = useState('All');
@@ -599,7 +598,7 @@ const SelectService = () => {
         try {
             console.log("[SelectService] Scroll down triggered: Fetching categories & active services from API...");
             const [categoriesRes, servicesRes] = await Promise.all([
-                axiosInstance.get('/service/public/categories', {
+                axiosInstance.get('/services/public/categories', {
                     params: { salonId: activeSalonId }
                 }),
                 axiosInstance.get('/services/public/active', {
@@ -1298,7 +1297,7 @@ const SelectService = () => {
                     <div className="w-full lg:w-[60%] shrink-0 space-y-8">
 
                         {/* Services Picker Section */}
-                        <section ref={servicesSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
+                        <section ref={servicesSectionRef} id="select-services-section" className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[180px]">
                             {!servicesLoaded ? (
                                 <div className="space-y-6">
                                     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -1546,7 +1545,7 @@ const SelectService = () => {
                         </section>
 
                         {/* Calendar Selector Component */}
-                        <section ref={dateTimeSectionRef} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <section ref={dateTimeSectionRef} id="select-datetime-section" className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 mb-5 flex items-center gap-2">
                                 <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_date_time', 'Select Date and Time')}
                             </h3>
@@ -1865,7 +1864,7 @@ const SelectService = () => {
                         */ }
 
                         {/* Select Expert Section */}
-                        <section ref={staffSectionRef} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                        <section ref={staffSectionRef} id="select-staff-section" className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
                                 <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('book_service.select_expert', 'Select Expert')}
                             </h3>

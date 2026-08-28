@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
@@ -35,9 +35,6 @@ const ProductSearch = () => {
 
   // Navigation Profile Menu Drawer State Toggle
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
-
-  // Refs dynamically managed for each category horizontal scroll row
-  const rowRefs = useRef({});
 
   // Specific catalog item details using your local structured image assets
   const catalogProducts = [
@@ -161,7 +158,7 @@ const ProductSearch = () => {
 
   // Horizontal click-to-scroll execution helper
   const handleScrollRight = (categoryId) => {
-    const element = rowRefs.current[categoryId];
+    const element = document.getElementById(`product-row-${categoryId}`);
     if (element) {
       element.scrollBy({ left: 400, behavior: 'smooth' });
     }
@@ -199,7 +196,7 @@ const ProductSearch = () => {
               <div className="relative group/carousel">
                 {/* Continuous Horizontal Grid Carousel */}
                 <div 
-                  ref={(el) => (rowRefs.current[groupName] = el)}
+                  id={`product-row-${groupName}`}
                   className="hide-scrollbar flex gap-5 overflow-x-auto pb-4 snap-x scroll-smooth"
                 >
                   {groupedProducts[groupName].map((product, idx) => (

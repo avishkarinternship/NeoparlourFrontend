@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import {
@@ -23,7 +23,8 @@ import {
     Map,
     Heart,
     Lock,
-    AlertTriangle
+    AlertTriangle,
+    Send
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../../api/axiosInstance';
@@ -31,6 +32,7 @@ import axiosInstance from '../../../api/axiosInstance';
 // Imported Layout Components
 import BillDetails from '../../Customer/BillDetails.jsx';
 import AppointmentBooked from '../../Customer/AppointmentBooked.jsx';
+import InviteCustomerAnimationModal from '../../common/InviteCustomerAnimationModal.jsx';
 
 // Local SVG and Image Assets from Logos and BookingScreen
 import hairLogo from '../../../assets/Logos/Hair.svg';
@@ -160,6 +162,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
     const currentStaffId = staffOnlyId || (isStaffPortal ? (localStorage.getItem('staff_id') || localStorage.getItem('user_id')) : null);
     const isStaffMode = !!isStaffPortal || (!!currentStaffId && !location.pathname.startsWith('/owner'));
 
+    const servicesSectionRef = useRef(null);
+    const staffSectionRef = useRef(null);
+    const dateTimeSectionRef = useRef(null);
+
     // --- STATE ---
     const [salon, setSalon] = useState(null);
     const [services, setServices] = useState([]);
@@ -176,11 +182,6 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
         // If arriving with a pre-selected slot or expert, trigger loading immediately
         return !!(location.state?.selectedSlot || (location.state?.selectedExpert && location.state.selectedExpert !== 'any'));
     });
-
-    // Refs for scrolling lazy-load
-    const servicesSectionRef = useRef(null);
-    const staffSectionRef = useRef(null);
-    const dateTimeSectionRef = useRef(null);
 
     const [selectedCategory, setSelectedCategory] = useState(location.state?.selectedCategory || '');
     const [selectedGender, setSelectedGender] = useState('All');
@@ -276,6 +277,30 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
     const [bookingLoading, setBookingLoading] = useState(false);
     const [showDiscardOfferModal, setShowDiscardOfferModal] = useState(false);
     const [showBanWarningModal, setShowBanWarningModal] = useState(false);
+
+    // --- INVITE ANIMATION STATES ---
+    const [inviteAnimationOpen, setInviteAnimationOpen] = useState(false);
+    const [inviteAnimationType, setInviteAnimationType] = useState('NEW_INVITE'); // 'NEW_INVITE' | 'ALREADY_REGISTERED'
+    const [inviteAnimationPoints, setInviteAnimationPoints] = useState(3);
+    const [inviteAnimationMessage, setInviteAnimationMessage] = useState('');
+
+    const handleInviteAndBook = async () => {
+        if (!walkInName.trim()) {
+            toast.error('Please enter customer name.');
+            return;
+        }
+        if (!walkInPhone.trim()) {
+            toast.error('Please enter customer mobile number.');
+            return;
+        }
+        if (walkInPhone.length !== 10 || !/^[0-9]{10}$/.test(walkInPhone)) {
+            toast.error('Mobile number must be exactly 10 digits.');
+            return;
+        }
+
+        setIsWalkInPopupOpen(false);
+        await handleConfirmBooking();
+    };
 
     // --- HELPERS ---
     // Convert dateObj {day, num, month, year, fullDate:'06-06-2026'} → ISO Instant string
@@ -480,7 +505,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
         try {
             console.log("[SelectService] Scroll down triggered: Fetching categories & active services from API...");
             const [categoriesRes, servicesRes] = await Promise.all([
-                axiosInstance.get('/service/public/categories', {
+                axiosInstance.get('/services/public/categories', {
                     params: { salonId: activeSalonId }
                 }),
                 axiosInstance.get('/services/public/active', {
@@ -940,19 +965,65 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
             }
 
             const res = await axiosInstance.post('/appointments/walk-in', bookingPayload);
-            toast.success('Walk-in appointment booked successfully!');
+            const responseData = res.data || {};
+            
+            // Backend response payload: { appointment, referralPointsClaimed, referralMessage, newCustomer }
+            const isNew = responseData.newCustomer !== undefined ? responseData.newCustomer : responseData.isNewCustomer;
+            const points = responseData.referralPointsClaimed;
+            const msg = responseData.referralMessage;
+
+            if (isNew === true && (points > 0 || (points === undefined && msg?.includes('claimed')))) {
+                // 🎁 Scenario 1: Brand New Customer -> 3 Points Claimed
+                const pts = points || 3;
+                setInviteAnimationType('NEW_INVITE');
+                setInviteAnimationPoints(pts);
+                setInviteAnimationMessage(msg || `🎉 Appointment Booked! +${pts} Referral Points credited to Staff!`);
+                setInviteAnimationOpen(true);
+                toast.success(msg || `🎉 Appointment Booked! +${pts} Referral Points credited to Staff!`, { duration: 5000 });
+            } else if (isNew === true && points === 0) {
+                // ⚠️ Scenario 2: Unregistered Customer with Existing Invite -> Re-invited, 0 Points
+                setInviteAnimationType('RE_INVITED');
+                setInviteAnimationPoints(0);
+                setInviteAnimationMessage(msg || 'An invite has already been sent to this customer. No reward points claimed.');
+                setInviteAnimationOpen(true);
+                toast(msg || 'An invite has already been sent to this customer. No reward points claimed.', {
+                    icon: '⚠️',
+                    duration: 6000
+                });
+            } else if (isNew === false) {
+                // ℹ️ Scenario 3: Already Registered Customer -> 0 Points
+                setInviteAnimationType('ALREADY_REGISTERED');
+                setInviteAnimationPoints(0);
+                setInviteAnimationMessage(msg || 'Customer is already registered. No referral points claimed.');
+                setInviteAnimationOpen(true);
+                toast(msg || 'Customer is already registered. No referral points claimed.', {
+                    icon: 'ℹ️',
+                    duration: 5000
+                });
+            } else {
+                // Fallback for response payloads without newCustomer field
+                if (msg) {
+                    toast(msg, { icon: 'ℹ️' });
+                } else {
+                    toast.success('Walk-in appointment booked successfully!');
+                }
+                setIsBookedOpen(true);
+            }
+
             setIsWalkInPopupOpen(false);
-            setIsBookedOpen(true);
         } catch (error) {
             console.error('[WalkInBooking] Error booking walk-in appointment:', error);
             const status = error.response?.status;
-            const message = String(error.response?.data?.message || error.message || '').toLowerCase();
+            const message = String(error.response?.data?.message || error.message || '');
             
-            if (status === 401 || status === 403 || message.includes('token') || message.includes('unauthorized') || message.includes('not logged in')) {
+            if (status === 401 || status === 403 || message.toLowerCase().includes('token') || message.toLowerCase().includes('unauthorized') || message.toLowerCase().includes('not logged in')) {
                 toast.error('Session expired. Please log in.');
                 navigate('/owner/login');
             } else {
-                toast.error(error.response?.data?.message || 'Failed to book walk-in appointment. Please try again.');
+                setInviteAnimationType('FAILURE');
+                setInviteAnimationMessage(message || 'Failed to book walk-in appointment. Please check details and try again.');
+                setInviteAnimationOpen(true);
+                toast.error(message || 'Failed to book walk-in appointment. Please try again.');
             }
         } finally {
             setBookingLoading(false);
@@ -1032,7 +1103,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                     <div className="w-full lg:w-[60%] shrink-0 space-y-8">
 
                         {/* Services Picker Section */}
-                        <section ref={servicesSectionRef} className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm min-h-[180px]`}>
+                        <section ref={servicesSectionRef} id="walkin-services-section" className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm min-h-[180px]`}>
                             {!servicesLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-12">
                                     <div className="animate-spin h-8 w-8 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
@@ -1280,7 +1351,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                         </section>
 
                         {/* Calendar Selector Component */}
-                        <section ref={dateTimeSectionRef} className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm`}>
+                        <section ref={dateTimeSectionRef} id="walkin-datetime-section" className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm`}>
                             <h3 className={`text-sm font-black uppercase tracking-wider mb-5 flex items-center gap-2 ${
                                 isDarkMode ? 'text-white' : 'text-slate-900'
                             }`}>
@@ -1621,7 +1692,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
                         {/* Select Expert Section - Hidden for Staff */}
                         {!isStaffMode && (
-                            <section ref={staffSectionRef} className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
+                            <section ref={staffSectionRef} id="walkin-staff-section" className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
                                 <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
                                     isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
                                 }`}>
@@ -1901,7 +1972,14 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                             </div>
 
                             {/* CTAs */}
-                            <div className="w-full space-y-3 pt-2">
+                            <div className="w-full space-y-2.5 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleInviteAndBook}
+                                    className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-2"
+                                >
+                                    <Send className="w-4 h-4" /> Invite & Book
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -1922,12 +2000,12 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                     }}
                                     className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15 cursor-pointer"
                                 >
-                                    Review Bill
+                                    Book
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsWalkInPopupOpen(false)}
-                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
+                                    className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
@@ -1936,6 +2014,21 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                     </div>
                 </div>
             )}
+
+            {/* ==================== INVITE & BOOK ANIMATION MODAL ==================== */}
+            <InviteCustomerAnimationModal
+                isOpen={inviteAnimationOpen}
+                type={inviteAnimationType}
+                phone={walkInPhone}
+                name={walkInName}
+                points={inviteAnimationPoints}
+                message={inviteAnimationMessage}
+                onClose={() => setInviteAnimationOpen(false)}
+                onProceed={() => {
+                    setInviteAnimationOpen(false);
+                    setIsBookedOpen(true);
+                }}
+            />
             {/* ==================== DISCARD OFFER CONFIRMATION MODAL ==================== */}
             {showDiscardOfferModal && (
                 <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">

@@ -1,5 +1,6 @@
 import axiosInstance from '../api/axiosInstance';
 import axios from 'axios';
+import { getStateFromStateName, getStateFromCityName, getStateDisplayName, getCitiesForState } from '../constants/indianStates';
 
 const searchService = {
   /**
@@ -60,11 +61,10 @@ const searchService = {
    * @param {string} query - The search query (e.g. Bandra, Pune)
    * @param {string} [featureClass] - 'city' or 'area' to filter results
    * @param {string} [cityName] - Optional city name to restrict area matches
+   * @param {string} [stateName] - Optional state name/enum to restrict city/area matches
    * @returns {Promise<Array>} List of locality results
    */
-  searchExternalLocations: async (query, featureClass = '', cityName = '', limit = 15) => {
-    if (!query || query.trim().length < 2) return [];
-    
+  searchExternalLocations: async (query = '', featureClass = '', cityName = '', stateName = '', limit = 15) => {
     // Normalizes common city name variants (e.g. Bangalore vs Bengaluru)
     const normalizeCity = (name) => {
       const lower = name.toLowerCase().trim();
@@ -77,8 +77,37 @@ const searchService = {
 
     try {
       let searchQuery = query;
-      if (cityName && featureClass === 'area') {
-        searchQuery = `${query} ${cityName}`;
+      const cleanState = stateName ? getStateDisplayName(stateName) : '';
+      const results = [];
+      const seen = new Set();
+
+      // Pre-fill local known cities strictly for selected state
+      if (featureClass === 'city' && stateName) {
+        const localStateCities = getCitiesForState(stateName, query);
+        for (const c of localStateCities) {
+          if (!seen.has(c.name.toLowerCase())) {
+            seen.add(c.name.toLowerCase());
+            results.push(c);
+          }
+        }
+      }
+
+      if (!query || query.trim().length < 2) {
+        return results;
+      }
+
+      if (featureClass === 'city') {
+        if (cleanState) {
+          searchQuery = `${query} ${cleanState}`;
+        }
+      } else if (featureClass === 'area') {
+        if (cityName && cleanState) {
+          searchQuery = `${query} ${cityName} ${cleanState}`;
+        } else if (cityName) {
+          searchQuery = `${query} ${cityName}`;
+        } else if (cleanState) {
+          searchQuery = `${query} ${cleanState}`;
+        }
       }
       
       const url = `https://photon.komoot.io/api`;
@@ -91,8 +120,6 @@ const searchService = {
       });
       
       const features = response.data?.features || [];
-      const results = [];
-      const seen = new Set();
       
       for (const feature of features) {
         const props = feature.properties || {};
@@ -111,6 +138,15 @@ const searchService = {
             const normCity = matchedCity.toLowerCase();
             const normQuery = query.toLowerCase().trim();
             
+            // Strictly check if city belongs to selected state
+            if (cleanState) {
+              const featureStateEnum = props.state ? getStateFromStateName(props.state) : getStateFromCityName(matchedCity);
+              const targetStateEnum = getStateFromStateName(cleanState);
+              if (featureStateEnum && targetStateEnum && featureStateEnum !== targetStateEnum) {
+                continue;
+              }
+            }
+
             // Ensure the city name itself matches the query string (prefix or substring)
             if (normCity.includes(normQuery)) {
               seen.add(matchedCity.toLowerCase());
@@ -120,16 +156,20 @@ const searchService = {
         } else if (featureClass === 'area') {
           const normSelectedCity = normalizeCity(cityName);
           
-          // Verify if result belongs to selected metropolitan boundaries (broad check across all address fields)
+          // Verify if result strictly belongs to the selected city boundaries
           const matchesCity = !cityName || [
             props.city,
             props.town,
             props.district,
             props.state_district,
             props.county,
-            props.state,
-            rawName
-          ].some(val => val && normalizeCity(val).includes(normSelectedCity));
+            props.locality,
+            props.suburb
+          ].some(val => {
+            if (!val) return false;
+            const normVal = normalizeCity(val);
+            return normVal === normSelectedCity || normVal.includes(normSelectedCity);
+          });
           
           if (matchesCity) {
             // Gather all candidate area names from the feature properties
@@ -156,10 +196,16 @@ const searchService = {
               if (!cand || cand.length < 3) continue;
 
               // Skip if suggestion matches the city name itself
-              if (cand.toLowerCase() === cityName.toLowerCase()) continue;
+              const lowerCand = cand.toLowerCase();
+              if (lowerCand === cityName.toLowerCase() || normalizeCity(cand) === normSelectedCity) continue;
+
+              // Prevent district cross-matching (e.g. don't suggest East Delhi when South Delhi is selected)
+              const delhiDistricts = ['north delhi', 'south delhi', 'east delhi', 'west delhi', 'central delhi', 'new delhi'];
+              if (delhiDistricts.includes(lowerCand) && lowerCand !== cityName.toLowerCase()) {
+                continue;
+              }
 
               // Filter out common metadata / POI words from candidates
-              const lowerCand = cand.toLowerCase();
               const isExcluded = [
                 'district', 'subdistrict', 'state', 'country', 'postcode', 'pin code', 'subdivision', 'division',
                 'station', 'junction', 'airport', 'railway', 'bus stop', 'bus stand', 'metro line', 'metro station',
@@ -168,15 +214,21 @@ const searchService = {
               ].some(k => lowerCand.includes(k));
               if (isExcluded) continue;
 
-              const subLocality = props.district || props.locality || props.suburb || '';
-              const parentCity = city && normalizeCity(city) !== normSelectedCity ? `${city}, ${cityName}` : (city || cityName);
-              const displayCity = subLocality && subLocality !== cand ? `${subLocality}, ${parentCity}` : parentCity;
+              const addressComponents = [props.locality, props.suburb, props.district, props.city].filter(
+                val => val && val.trim().length > 0 && val.toLowerCase() !== cand.toLowerCase()
+              );
+              const uniqueComponents = Array.from(new Set(addressComponents));
+              if (cityName && !uniqueComponents.some(c => c.toLowerCase() === cityName.toLowerCase())) {
+                uniqueComponents.push(cityName);
+              }
+              const displayCity = uniqueComponents.join(', ');
 
               const uniqueKey = `${cand.toLowerCase()}_${displayCity.toLowerCase()}`;
               if (!seen.has(uniqueKey)) {
                 seen.add(uniqueKey);
                 results.push({ 
                   name: cand, 
+                  district: props.district || props.suburb || props.locality || '',
                   city: displayCity, 
                   type: 'area' 
                 });
@@ -206,17 +258,10 @@ const searchService = {
         
         if (startsA && !startsB) return -1;
         if (!startsA && startsB) return 1;
-        
-        const containsA = nameA.includes(lowerQuery);
-        const containsB = nameB.includes(lowerQuery);
-        
-        if (containsA && !containsB) return -1;
-        if (!containsA && containsB) return 1;
-        
-        return 0; // Maintain original Photon relevance score ranking
+        return nameA.localeCompare(nameB);
       });
       
-      return results;
+      return results.slice(0, limit);
     } catch (error) {
       console.error('Error searching external locations via Photon:', error);
       return [];
@@ -224,21 +269,24 @@ const searchService = {
   },
 
   /**
-   * Reverse geocode coordinates to find city and area names using Komoot Photon API
+   * Reverse geocode lat/lng to get city and area details via Photon API
    * @param {number} lat - Latitude
-   * @param {number} lon - Longitude
-   * @returns {Promise<{city: string, area: string}>} Geocoded location result
+   * @param {number} lng - Longitude
+   * @returns {Promise<{city: string, area: string, stateName: string, stateEnum: string}>}
    */
-  reverseGeocode: async (lat, lon) => {
+  reverseGeocode: async (lat, lng) => {
     try {
       const url = `https://photon.komoot.io/reverse`;
       const response = await axios.get(url, {
-        params: { lat, lon }
+        params: {
+          lat: lat,
+          lon: lng
+        }
       });
       
       const features = response.data?.features || [];
       if (features.length === 0) {
-        return { city: '', area: '' };
+        return { city: '', area: '', stateName: '', stateEnum: '' };
       }
       
       const props = features[0].properties || {};
@@ -283,14 +331,126 @@ const searchService = {
       
       // Extract broader area name (prioritizing locality, suburb, or district over POI/building name)
       const area = props.locality || props.suburb || props.district || props.name || props.street || '';
+      const rawState = props.state || '';
+      const stateEnum = getStateFromStateName(rawState) || getStateFromCityName(city.trim()) || null;
       
       return {
         city: city.trim(),
-        area: area.trim()
+        area: area.trim(),
+        stateName: rawState,
+        stateEnum: stateEnum
       };
     } catch (error) {
       console.error('Error reverse geocoding via Photon:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Search for real-world POI landmarks (Hospitals, Colleges, Malls, Stations, Buildings, etc.)
+   * Uses multi-pass district-aware fallback search
+   * @param {string} query - Search term for landmark (e.g. Siddhi, Hospital)
+   * @param {string} [areaName] - Area name filter
+   * @param {string} [cityName] - City name filter
+   * @param {string} [stateName] - State name filter
+   * @param {string} [districtName] - District name associated with area
+   * @param {number} [limit=10]
+   * @returns {Promise<Array>} List of landmark objects { name, type, details }
+   */
+  searchLandmarks: async (query = '', areaName = '', cityName = '', stateName = '', districtName = '', limit = 15) => {
+    try {
+      const cleanState = stateName ? getStateDisplayName(stateName) : '';
+      if (!query || query.trim().length < 2) return [];
+
+      const url = `https://photon.komoot.io/api`;
+
+      const fetchFeatures = async (qString) => {
+        if (!qString || qString.trim().length < 2) return [];
+        try {
+          const response = await axios.get(url, {
+            params: {
+              q: qString,
+              countrycode: 'in',
+              limit: limit
+            }
+          });
+          return response.data?.features || [];
+        } catch {
+          return [];
+        }
+      };
+
+      // Construct search queries to run in parallel
+      const queriesToTry = [];
+
+      // Query 1: Full specific zone with district (Landmark + District + City + State)
+      if (districtName) {
+        queriesToTry.push([query, districtName, cityName, cleanState].filter(Boolean).join(' '));
+      }
+
+      // Query 2: Area specific zone (Landmark + Area + City + State)
+      if (areaName) {
+        queriesToTry.push([query, areaName, cityName, cleanState].filter(Boolean).join(' '));
+      }
+
+      // Query 3: City-wide search (Landmark + City + State) -> ALWAYS GUARANTEES CITY LANDMARKS ARE FOUND
+      if (cityName) {
+        queriesToTry.push([query, cityName, cleanState].filter(Boolean).join(' '));
+      } else {
+        queriesToTry.push([query, cleanState].filter(Boolean).join(' '));
+      }
+
+      // Execute queries concurrently
+      const responses = await Promise.all(queriesToTry.map(q => fetchFeatures(q)));
+      const rawFeatures = responses.flat();
+
+      const results = [];
+      const seen = new Set();
+      const normArea = areaName.toLowerCase().trim();
+      const normDistrict = districtName.toLowerCase().trim();
+
+      for (const feature of rawFeatures) {
+        const props = feature.properties || {};
+        const name = props.name || props.street || '';
+        if (!name || name.trim().length < 3) continue;
+
+        const lowerName = name.trim().toLowerCase();
+        if (seen.has(lowerName)) continue;
+
+        // Skip plain city/state/area names
+        if (cityName && lowerName === cityName.toLowerCase()) continue;
+        if (areaName && lowerName === normArea) continue;
+        if (districtName && lowerName === normDistrict) continue;
+
+        seen.add(lowerName);
+
+        const details = [props.street, props.district || props.locality || props.suburb, props.city].filter(Boolean).join(', ');
+        const lowerDetails = details.toLowerCase();
+
+        // Calculate relevance rank (give bonus if feature mentions areaName or districtName)
+        let rankScore = 0;
+        if (normDistrict && (lowerName.includes(normDistrict) || lowerDetails.includes(normDistrict))) {
+          rankScore += 10;
+        }
+        if (normArea && (lowerName.includes(normArea) || lowerDetails.includes(normArea))) {
+          rankScore += 10;
+        }
+
+        results.push({
+          name: name.trim(),
+          type: props.osm_value || props.type || 'landmark',
+          details: details,
+          rankScore: rankScore
+        });
+      }
+
+      // Sort results by rankScore descending
+      results.sort((a, b) => b.rankScore - a.rankScore);
+
+      return results.slice(0, limit);
+    } catch (error) {
+      console.error('Error searching landmarks via Photon:', error);
+      return [];
     }
   }
 };

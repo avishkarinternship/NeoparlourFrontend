@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
@@ -48,17 +48,15 @@ const CustomerRegister = () => {
   const [tncAccepted, setTncAccepted] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
 
-  const cityDropdownRef = useRef(null);
-  const areaDropdownRef = useRef(null);
-  const isUserTypingCityRef = useRef(false);
-  const isUserTypingAreaRef = useRef(false);
+  const [isUserTypingCity, setIsUserTypingCity] = useState(false);
+  const [isUserTypingArea, setIsUserTypingArea] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.city-dropdown-container')) {
         setShowCityDropdown(false);
       }
-      if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.area-dropdown-container')) {
         setShowAreaDropdown(false);
       }
     };
@@ -72,7 +70,7 @@ const CustomerRegister = () => {
 
   // Autocomplete city search
   useEffect(() => {
-    if (!isUserTypingCityRef.current) return;
+    if (!isUserTypingCity) return;
     if (!formData.cityName || formData.cityName.trim().length < 2) {
       setLocationLookup(prev => ({ ...prev, citySuggestions: [] }));
       return;
@@ -91,11 +89,11 @@ const CustomerRegister = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounce);
-  }, [formData.cityName]);
+  }, [formData.cityName, isUserTypingCity]);
 
   // Autocomplete area search
   useEffect(() => {
-    if (!isUserTypingAreaRef.current) return;
+    if (!isUserTypingArea) return;
     if (!formData.areaName || formData.areaName.trim().length < 2) {
       setLocationLookup(prev => ({ ...prev, areaSuggestions: [] }));
       return;
@@ -114,7 +112,7 @@ const CustomerRegister = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounce);
-  }, [formData.areaName, formData.cityName]);
+  }, [formData.areaName, formData.cityName, isUserTypingArea]);
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
@@ -129,8 +127,8 @@ const CustomerRegister = () => {
         try {
           const result = await searchService.reverseGeocode(latitude, longitude);
           if (result.city) {
-            isUserTypingCityRef.current = false;
-            isUserTypingAreaRef.current = false;
+            setIsUserTypingCity(false);
+            setIsUserTypingArea(false);
             setFormData(prev => ({
               ...prev,
               cityName: result.city,
@@ -140,14 +138,16 @@ const CustomerRegister = () => {
           } else {
             toast.error("Could not determine your city. Please enter it manually.");
           }
-        } catch (error) {
-          toast.error("Could not determine your city. Please enter it manually.");
+        } catch (err) {
+          console.error("Location detection error:", err);
+          toast.error("Failed to detect location. Please enter manually.");
         } finally {
           setIsDetectingLocation(false);
         }
       },
       (error) => {
-        toast.error("Location permission denied. Please enter it manually.");
+        console.error("Geolocation error:", error);
+        toast.error("Location access denied or unavailable.");
         setIsDetectingLocation(false);
       },
       { enableHighAccuracy: false, timeout: 8000 }
@@ -314,7 +314,7 @@ const CustomerRegister = () => {
                 
                 {/* Cities Dropdown */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative" ref={cityDropdownRef}>
+                  <div className="relative city-dropdown-container">
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                       <MapPin className="w-5 h-5 stroke-[2]" />
                     </div>
@@ -323,7 +323,7 @@ const CustomerRegister = () => {
                       name="cityName"
                       value={formData.cityName}
                       onChange={(e) => {
-                        isUserTypingCityRef.current = true;
+                        setIsUserTypingCity(true);
                         handleInputChange(e);
                         setShowCityDropdown(true);
                       }}
@@ -348,7 +348,7 @@ const CustomerRegister = () => {
                       )}
                     </button>
                     {showCityDropdown && formData.cityName && (
-                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                      <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
                         {isLoadingCities ? (
                           <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
@@ -359,7 +359,7 @@ const CustomerRegister = () => {
                             <div 
                               key={idx} 
                               onClick={() => {
-                                isUserTypingCityRef.current = false;
+                                setIsUserTypingCity(false);
                                 setFormData(prev => ({ ...prev, cityName: city.name, areaName: '' }));
                                 setLocationLookup(prev => ({ ...prev, citySuggestions: [], areaSuggestions: [] }));
                                 setShowCityDropdown(false);
@@ -377,7 +377,7 @@ const CustomerRegister = () => {
                   </div>
 
                   {/* Areas Dropdown */}
-                  <div className="relative" ref={areaDropdownRef}>
+                  <div className="relative area-dropdown-container">
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400">
                       <MapPin className="w-5 h-5 stroke-[2]" />
                     </div>
@@ -386,7 +386,7 @@ const CustomerRegister = () => {
                       name="areaName"
                       value={formData.areaName}
                       onChange={(e) => {
-                        isUserTypingAreaRef.current = true;
+                        setIsUserTypingArea(true);
                         handleInputChange(e);
                         setShowAreaDropdown(true);
                       }}
@@ -396,7 +396,7 @@ const CustomerRegister = () => {
                       className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
                     />
                     {showAreaDropdown && formData.areaName && (
-                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
+                      <div className="absolute top-full left-0 z-50 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 text-left">
                         {isLoadingAreas ? (
                           <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
@@ -407,14 +407,17 @@ const CustomerRegister = () => {
                             <div 
                               key={idx} 
                               onClick={() => {
-                                isUserTypingAreaRef.current = false;
+                                setIsUserTypingArea(false);
                                 setFormData(prev => ({ ...prev, areaName: area.name }));
                                 setLocationLookup(prev => ({ ...prev, areaSuggestions: [] }));
                                 setShowAreaDropdown(false);
                               }}
-                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm font-bold text-gray-700 transition-colors"
+                              className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5"
                             >
-                              {area.name}
+                              <span className="font-bold text-gray-900">{area.name}</span>
+                              {area.city && (
+                                <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
+                              )}
                             </div>
                           ))
                         ) : (

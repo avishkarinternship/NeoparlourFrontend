@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -196,11 +196,6 @@ const SalonPage = () => {
     const [packagesLoaded, setPackagesLoaded] = useState(false);
     const [packagesLoading, setPackagesLoading] = useState(false);
 
-    // Refs for scrolling lazy-load
-    const servicesSectionRef = useRef(null);
-    const staffSectionRef = useRef(null);
-    const productsSectionRef = useRef(null);
-
     // --- QUICK BOOK STATE ---
     const getNextDays = () => {
         const days = [];
@@ -286,8 +281,6 @@ const SalonPage = () => {
     const [slotsLoading, setSlotsLoading] = useState(false);
     const [availableStaffForSlot, setAvailableStaffForSlot] = useState([]);
     const [availableStaffLoading, setAvailableStaffLoading] = useState(false);
-    const quickBookSectionRef = useRef(null);
-
     const dateObjToInstant = (dateObj) => {
         if (!dateObj) return null;
         const [dd, mm, yyyy] = dateObj.fullDate.split('-');
@@ -686,7 +679,8 @@ const SalonPage = () => {
             }
         }, observerOptions);
 
-        if (staffSectionRef.current && !staffLoaded) staffObserver.observe(staffSectionRef.current);
+        const staffEl = document.getElementById('salon-staff-section');
+        if (staffEl && !staffLoaded) staffObserver.observe(staffEl);
 
         return () => {
             staffObserver.disconnect();
@@ -1221,7 +1215,7 @@ const SalonPage = () => {
 
                         {/* Services Categories icons list */}
                         {categories.length > 0 && (
-                            <section ref={servicesSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                            <section id="salon-services-section" className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-4 sm:mb-5 flex items-center gap-2">
                                     <Scissors className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#FF0B01]" /> {t('salon_page.services_categories', 'SERVICES CATEGORIES')}
                                 </h3>
@@ -1352,7 +1346,7 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Top Experts (Staff) ── */}
-                        <section ref={staffSectionRef} className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm overflow-hidden" data-aos="fade-up">
+                        <section id="salon-staff-section" className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm overflow-hidden" data-aos="fade-up">
                             {/* Section Header */}
                             <div className="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
                                 <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
@@ -1474,7 +1468,7 @@ const SalonPage = () => {
                         </section>
 
                         {/* ── Quick Book — Date & Time Slots ── */}
-                        <section ref={quickBookSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                        <section id="salon-quickbook-section" className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                             <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-5 flex items-center gap-2">
                                 <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.available_slots', 'Available Slots')}
                             </h3>
@@ -1583,7 +1577,7 @@ const SalonPage = () => {
 
                         {/* Products Grid */}
                         {products.length > 0 && (
-                            <section ref={productsSectionRef} className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
+                            <section id="salon-products-section" className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm" data-aos="fade-up">
                                 <div className="flex justify-between items-center mb-5">
                                     <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                                         <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> {t('salon_page.specialized_products', 'Products')}

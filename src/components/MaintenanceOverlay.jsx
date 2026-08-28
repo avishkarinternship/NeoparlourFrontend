@@ -22,12 +22,7 @@ export const MaintenanceOverlay = () => {
     // Check initial maintenance status on mount across Customer, Staff, and Owner modules
     const checkInitialMaintenanceStatus = async () => {
       try {
-        let res = null;
-        try {
-          res = await axiosInstance.get('/v1/maintenance/status');
-        } catch (err) {
-          res = await axios.get('https://uat.neoparlour.com/api/v1/maintenance/status');
-        }
+        const res = await axiosInstance.get('/v1/maintenance/status');
         if (res?.data && res.data.enabled === true) {
           setMaintenance(res.data);
         }
@@ -101,13 +96,7 @@ export const MaintenanceOverlay = () => {
   const handleCheckStatus = async () => {
     setChecking(true);
     try {
-      let res = null;
-      try {
-        res = await axiosInstance.get('/v1/maintenance/status');
-      } catch (err) {
-        res = await axios.get('https://uat.neoparlour.com/api/v1/maintenance/status');
-      }
-
+      const res = await axiosInstance.get('/v1/maintenance/status');
       if (res?.data && res.data.enabled === false) {
         setMaintenance(null);
         toast.success(t('status.operational'));

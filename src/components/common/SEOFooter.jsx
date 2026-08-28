@@ -8,6 +8,7 @@ import { useDarkMode } from '../../context/DarkModeContext';
 export default function SEOFooter() {
   const navigate = useNavigate();
   const { isDark } = useDarkMode();
+  const sliderRef = useRef(null);
 
   // 1. Major metropolitan and important Indian cities
   const cities = [
@@ -27,8 +28,6 @@ export default function SEOFooter() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showAllCitiesMobile, setShowAllCitiesMobile] = useState(false);
-
-  const sliderRef = useRef(null);
 
   const handleSlide = (direction) => {
     if (sliderRef.current) {
@@ -614,7 +613,8 @@ export default function SEOFooter() {
           
           {/* Responsive Horizontal Slider Container */}
           <div 
-            ref={sliderRef} 
+            ref={sliderRef}
+            id="seo-footer-slider" 
             className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none no-scrollbar gap-6 pb-6 w-full"
           >
             {serviceCategories.map((cat, index) => (

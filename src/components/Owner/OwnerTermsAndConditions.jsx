@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, FileText, Download, Scale, Search, CheckCircle } from 'lucide-react';
@@ -37,11 +37,11 @@ export default function OwnerTermsAndConditions() {
     const [accepted, setAccepted] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const contentRef = useRef(null);
 
     const handleScroll = () => {
-        if (contentRef.current) {
-            const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
+        const el = document.getElementById('tnc-content-container');
+        if (el) {
+            const { scrollTop, scrollHeight, clientHeight } = el;
             if (scrollHeight - scrollTop <= clientHeight + 15) {
                 setHasScrolledToBottom(true);
             }
@@ -488,7 +488,7 @@ export default function OwnerTermsAndConditions() {
 
                 {/* LEGAL DOCUMENTATION BODY */}
                 <div
-                    ref={contentRef}
+                    id="tnc-content-container"
                     onScroll={handleScroll}
                     className="p-6 sm:p-8 max-h-[60vh] overflow-y-auto scroll-smooth space-y-6 text-xs sm:text-[13px] leading-relaxed text-gray-600 print:max-h-none print:overflow-visible"
                 >

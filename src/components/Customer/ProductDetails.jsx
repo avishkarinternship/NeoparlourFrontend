@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
@@ -205,9 +205,6 @@ const ProductDetails = () => {
     }
   };
   
-  // Reference hook to target the horizontal slider DOM node
-  const carouselRef = useRef(null);
-
   useEffect(() => {
     if (product?.salonId) {
       setRecommendations(prev => ({ ...prev, loading: true }));

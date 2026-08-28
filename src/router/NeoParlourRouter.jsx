@@ -76,6 +76,8 @@ import StaffInvitations from '../components/StaffInvitations'
 import OwnerStaffInvitations from '../components/Owner/OwnerStaffInvitations'
 import OwnerKyc from '../components/Owner/KYC/OwnerKyc'
 import AdminKycDashboard from '../components/Owner/AdminKycDashboard'
+import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard'
+import AdminPayoutQueueDashboard from '../pages/admin/AdminPayoutQueueDashboard'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -671,6 +673,22 @@ export let routes = createBrowserRouter([
                     {
                         path: '/admin/kyc',
                         element: <OwnerRouteGuard><AdminKycDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/payout-requests',
+                        element: <OwnerRouteGuard><AdminPayoutQueueDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/payouts',
+                        element: <OwnerRouteGuard><AdminPayoutQueueDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/staff/payouts',
+                        element: <StaffRouteGuard><StaffPayoutDashboard /></StaffRouteGuard>
+                    },
+                    {
+                        path: '/staff/rewards',
+                        element: <StaffRouteGuard><StaffPayoutDashboard /></StaffRouteGuard>
                     },
                     {
                         path: '/subscription-plans',

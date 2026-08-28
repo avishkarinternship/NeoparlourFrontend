@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
+import { GstStateInput } from "../common/GstStateInput";
+import { getStateFromCityName } from "../../constants/indianStates";
 
 const Settings = () => {
     const navigate = useNavigate();
@@ -37,6 +39,8 @@ const Settings = () => {
         cityName: "",
         areaName: "",
         address: "",
+        gstin: "",
+        state: "",
         openingTime: "",
         closingTime: "",
         weeklyOffDay: "",
@@ -94,6 +98,8 @@ const Settings = () => {
             const data = response.data;
             setSalonProfile({
                 ...data,
+                gstin: data.gstin || "",
+                state: data.state || "",
                 weekdayDiscount: data.weekdayDiscount !== null && data.weekdayDiscount !== undefined ? data.weekdayDiscount : "",
                 morningDiscount: data.morningDiscount !== null && data.morningDiscount !== undefined ? data.morningDiscount : "",
                 afternoonDiscount: data.afternoonDiscount !== null && data.afternoonDiscount !== undefined ? data.afternoonDiscount : "",
@@ -194,6 +200,14 @@ const Settings = () => {
         }));
     };
 
+    const handleGstStateChange = ({ gstin, state }) => {
+        setSalonProfile((prev) => ({
+            ...prev,
+            gstin,
+            state,
+        }));
+    };
+
     const updateOwnerProfile = async () => {
         try {
             let userId = ownerProfile.id;
@@ -228,6 +242,8 @@ const Settings = () => {
         try {
             const payload = {
                 ...salonProfile,
+                gstin: salonProfile.gstin ? salonProfile.gstin.trim() : null,
+                state: salonProfile.state || null,
                 salonImages: existingSalonImages,
                 imageBase64: logoBase64 || null,
                 salonImagesBase64: newGalleryBase64s.length > 0 ? newGalleryBase64s : null
@@ -503,6 +519,17 @@ const Settings = () => {
                                                 className="w-full border rounded-xl px-4 py-3 mt-1"
                                             />
                                         </div>
+                                    </div>
+
+                                    {/* GSTIN & State Fields (Top of Salon Profile) */}
+                                    <GstStateInput
+                                        gstin={salonProfile.gstin}
+                                        state={salonProfile.state}
+                                        onChange={handleGstStateChange}
+                                        disabled={!isSalonEdit}
+                                    />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 mt-4">
                                         <div>
                                             <label className="text-sm text-gray-500">Salon Code</label>
                                             <input

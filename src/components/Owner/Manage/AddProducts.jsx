@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
@@ -42,42 +42,8 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const LazyImage = ({ src, alt, className }) => {
-    const [isIntersecting, setIsIntersecting] = useState(false);
-    const ref = React.useRef();
-
-    useEffect(() => {
-        let isMounted = true;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting && isMounted) {
-                    setIsIntersecting(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: '100px' }
-        );
-
-        if (ref.current) {
-            observer.observe(ref.current);
-        }
-
-        return () => {
-            isMounted = false;
-            observer.disconnect();
-        };
-    }, [src]);
-
-    if (!isIntersecting) {
-        return (
-            <div ref={ref} className="w-full h-full bg-gray-50 flex items-center justify-center">
-                <div className="animate-pulse w-full h-full bg-gray-150 rounded-2xl"></div>
-            </div>
-        );
-    }
-
     return (
         <img
-            ref={ref}
             src={src}
             alt={alt}
             className={className}

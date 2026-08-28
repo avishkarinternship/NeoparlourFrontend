@@ -208,7 +208,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
             Loading KYC document statuses...
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {documents.map((doc, idx) => (
               <KycDocumentCard
                 key={doc.id || doc.documentType || idx}

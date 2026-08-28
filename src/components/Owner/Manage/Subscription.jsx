@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import subscriptionIcon from '../../../assets/Owner/Manage/Subscription/subscription_icon.svg';
 import invoiceIcon from '../../../assets/Owner/Manage/Subscription/invoice_icon.svg';
 import billingIcon from '../../../assets/Owner/Manage/Subscription/billing_icon.svg';
+import { InvoiceDownloadButton } from '../../common/InvoiceDownloadButton';
 
 const toastStyle = {
     style: {
@@ -291,14 +292,12 @@ const Subscription = () => {
                                                     <span className={`text-[11px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                         {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}
                                                     </span>
-                                                    <button
-                                                        onClick={() => handleDownloadInvoice(sub.id)}
-                                                        disabled={isPending}
-                                                        className={`p-1.5 rounded-lg border ${isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-700/50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'} ${isPending ? 'opacity-30 cursor-not-allowed' : ''}`}
-                                                        title={isPending ? 'Invoice not available for pending subscription' : 'Download Invoice'}
+                                                    <InvoiceDownloadButton
+                                                        subscriptionId={sub.id}
+                                                        className={`p-1.5 rounded-lg border transition ${isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-700/50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'} ${isPending ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
                                                     >
-                                                        <img src={billingIcon} alt="Download" className="w-3.5 h-3.5" />
-                                                    </button>
+                                                        <img src={billingIcon} alt="Download Invoice" className="w-3.5 h-3.5" />
+                                                    </InvoiceDownloadButton>
                                                 </div>
                                             </div>
                                         );

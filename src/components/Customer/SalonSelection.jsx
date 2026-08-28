@@ -23,6 +23,8 @@ const SalonSelection = () => {
   // const { token, loading } = useSelector((state) => state.customer);
   const { token, loading, salonResults } = useSelector((state) => state.customer);
 
+  const html5QrCode = useRef(null);
+
   const [uiState, setUiState] = useState({
     mode: 'SEARCH', // 'SEARCH' or 'DIRECT'
     cityName: '',
@@ -44,11 +46,6 @@ const SalonSelection = () => {
 
   const { citySuggestions, areaSuggestions, isLoadingCities, isLoadingAreas } = locationSearch;
 
-  const cityDropdownRef = useRef(null);
-  const areaDropdownRef = useRef(null);
-  const scannerRef = useRef(null);
-  const html5QrCode = useRef(null);
-
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -66,10 +63,10 @@ const SalonSelection = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.city-dropdown-container')) {
         setUiState(prev => ({ ...prev, showCityDropdown: false }));
       }
-      if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.area-dropdown-container')) {
         setUiState(prev => ({ ...prev, showAreaDropdown: false }));
       }
     };
@@ -288,7 +285,7 @@ const SalonSelection = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="relative" ref={cityDropdownRef}>
+                    <div className="relative city-dropdown-container">
                       <input
                         type="text"
                         placeholder="Select City"
@@ -315,7 +312,7 @@ const SalonSelection = () => {
                       )}
                     </div>
 
-                    <div className="relative" ref={areaDropdownRef}>
+                    <div className="relative area-dropdown-container">
                       <input
                         type="text"
                         placeholder="Select Area"

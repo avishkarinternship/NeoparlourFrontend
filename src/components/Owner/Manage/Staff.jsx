@@ -117,7 +117,7 @@ const Staff = () => {
             if (filters.email) params.append('email', filters.email);
             if (filters.status) params.append('status', filters.status);
 
-            const response = await axiosInstance.get(`staff/search?${params.toString()}`);
+            const response = await axiosInstance.get(`/staff/search?${params.toString()}`);
             setStaffList(response.data?.content || []);
         } catch (error) {
             toast.error('Failed to load staff', toastStyle);
@@ -127,7 +127,10 @@ const Staff = () => {
     }, [filters]);
 
     useEffect(() => {
-        fetchStaff();
+        const handler = setTimeout(() => {
+            fetchStaff();
+        }, 300);
+        return () => clearTimeout(handler);
     }, [fetchStaff]);
 
     const handleInputChange = (e) => {
@@ -170,7 +173,7 @@ const Staff = () => {
                 payload.gender = 'OTHERS';
             }
 
-            await axiosInstance.post('auth/staff', payload);
+            await axiosInstance.post('/auth/staff', payload);
             toast.success('Staff created successfully', toastStyle);
             resetForm();
             fetchStaff();
@@ -186,7 +189,7 @@ const Staff = () => {
         setEditingStaffId(staffId);
         setIsEditModalOpen(true);
         try {
-            const response = await axiosInstance.get(`staff/${staffId}`);
+            const response = await axiosInstance.get(`/staff/${staffId}`);
             const staff = response.data;
             setEditFormData({
                 name: staff.name || '',
@@ -228,7 +231,7 @@ const Staff = () => {
                 payload.gender = 'OTHERS';
             }
 
-            await axiosInstance.put(`staff/${editingStaffId}`, payload);
+            await axiosInstance.put(`/staff/${editingStaffId}`, payload);
             toast.success('Staff updated successfully', toastStyle);
             closeEditModal();
             fetchStaff();
@@ -257,7 +260,7 @@ const Staff = () => {
 
     const handleToggleStatus = async (id, currentActive) => {
         try {
-            await axiosInstance.put(`staff/${id}/toggle?active=${!currentActive}`);
+            await axiosInstance.put(`/staff/${id}/toggle?active=${!currentActive}`);
             toast.success(`Staff ${!currentActive ? 'activated' : 'deactivated'}`, toastStyle);
             fetchStaff();
         } catch (error) {

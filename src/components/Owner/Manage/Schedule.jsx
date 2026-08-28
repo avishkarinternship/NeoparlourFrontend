@@ -3,6 +3,7 @@ import { useLocation, useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles, Clock, Hourglass, AlertTriangle, Filter, SlidersHorizontal } from 'lucide-react';
+import RewardPointsAnimation from '../../common/RewardPointsAnimation';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -70,7 +71,9 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
-  const [lastActionTime, setLastActionTime] = useState(0);
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [rewardAnimationStatus, setRewardAnimationStatus] = useState('success');
+  const [rewardAnimationMsg, setRewardAnimationMsg] = useState('');
 
   // Live Timer & Overdue State
   const [nowTime, setNowTime] = useState(Date.now());
@@ -231,12 +234,19 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
       await axiosInstance.put(`/appointments/${completionAppt.id}/complete`, {
         openedProductUsages: usagesPayload
       });
+      setRewardAnimationStatus('success');
+      setRewardAnimationMsg('Reward points & commission successfully collected and added to wallet.');
+      setShowRewardAnimation(true);
       toast.success('Appointment marked as completed!', toastStyle);
       setShowCompletionProductsModal(false);
       setCompletionAppt(null);
       fetchAppointments(currentPage);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to complete appointment', toastStyle);
+      const errMsg = error.response?.data?.message || 'Failed to complete appointment. Please try again.';
+      setRewardAnimationStatus('failure');
+      setRewardAnimationMsg(errMsg);
+      setShowRewardAnimation(true);
+      toast.error(errMsg, toastStyle);
     } finally {
       setCompletionSubmitLoading(false);
     }
@@ -568,10 +578,17 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
   const handleComplete = async (appt) => {
     try {
       await axiosInstance.put(`/appointments/${appt.id}/complete`, {});
+      setRewardAnimationStatus('success');
+      setRewardAnimationMsg('Reward points & commission successfully collected and added to wallet.');
+      setShowRewardAnimation(true);
       toast.success('Appointment marked as completed', toastStyle);
       fetchAppointments(currentPage);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to complete appointment', toastStyle);
+      const errMsg = error.response?.data?.message || 'Failed to complete appointment. Please try again.';
+      setRewardAnimationStatus('failure');
+      setRewardAnimationMsg(errMsg);
+      setShowRewardAnimation(true);
+      toast.error(errMsg, toastStyle);
     }
   };
 
@@ -2035,6 +2052,17 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
           </div>
         </div>
       )}
+
+      {/* Reward Points Animation Component */}
+      <RewardPointsAnimation
+        isOpen={showRewardAnimation}
+        status={rewardAnimationStatus}
+        errorMessage={rewardAnimationMsg}
+        onClose={() => setShowRewardAnimation(false)}
+        points={50}
+        title={rewardAnimationStatus === 'success' ? "Appointment Completed!" : "Completion Failed"}
+        subtitle={rewardAnimationMsg || "Reward points successfully collected & added to wallet."}
+      />
     </>
   );
 };

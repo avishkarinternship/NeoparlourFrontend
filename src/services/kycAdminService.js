@@ -46,6 +46,14 @@ export const kycAdminService = {
   getDocumentFileUrl: (documentId) => {
     if (!documentId) return '';
     return `${axiosInstance.defaults.baseURL}/auth/kyc-documents/${documentId}/file`;
+  },
+
+  // Fetch document blob with Authorization Bearer header
+  fetchDocumentFileBlob: async (documentId) => {
+    if (!documentId) throw new Error("Document ID is required");
+    return await axiosInstance.get(`/auth/kyc-documents/${documentId}/file`, {
+      responseType: 'blob'
+    });
   }
 };
 

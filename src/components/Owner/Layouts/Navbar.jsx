@@ -21,62 +21,42 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
       return;
     }
 
-    let isMounted = true;
-    const controller = new AbortController();
-    setLoading(true);
-    setError(false);
+    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
+      setSrc(imagePath);
+      setLoading(false);
+      return;
+    }
 
     const fetchImage = async () => {
+      setLoading(true);
+      setError(false);
       try {
         const response = await axiosInstance.get(`/images/${imagePath}`, {
           responseType: 'blob',
-          signal: controller.signal
         });
-
-        if (isMounted) {
-          const blobUrl = URL.createObjectURL(response.data);
-          setSrc(blobUrl);
-        }
+        const blobUrl = URL.createObjectURL(response.data);
+        setSrc(blobUrl);
       } catch (err) {
-        if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
-          console.error("Failed to load async image:", err);
-          if (isMounted) {
-            setError(true);
-          }
-        }
+        console.error(`Failed to load image from API: ${imagePath}`, err);
+        setError(true);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchImage();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
   }, [imagePath]);
 
-  useEffect(() => {
-    return () => {
-      if (src) {
-        URL.revokeObjectURL(src);
-      }
-    };
-  }, [src]);
-
   if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
-        <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <div className={`animate-pulse bg-slate-200 dark:bg-zinc-800 ${className}`} />;
   }
 
   if (error || !src) {
-    return <span className="font-bold text-gray-800 text-[10px]">{fallbackText}</span>;
+    return (
+      <div className={`bg-red-500 text-white flex items-center justify-center font-black uppercase text-xs shadow-inner ${className}`}>
+        {fallbackText || 'NA'}
+      </div>
+    );
   }
 
   return <img src={src} alt={alt} className={className} />;
@@ -84,6 +64,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 
 export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDarkMode }) {
   const navigate = useNavigate();
+
   const dropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);
 

@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Check } from 'lucide-react';
 
 export const LanguageSwitcher = ({ className = "" }) => {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
   const currentLang = (i18n.language || localStorage.getItem('i18nextLng') || 'en').substring(0, 2);
 
@@ -18,7 +17,7 @@ export const LanguageSwitcher = ({ className = "" }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (!event.target.closest('.language-switcher-container')) {
         setIsOpen(false);
       }
     };
@@ -33,7 +32,7 @@ export const LanguageSwitcher = ({ className = "" }) => {
   ];
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative language-switcher-container ${className}`}>
       {/* Globe Icon Trigger Button */}
       <button
         type="button"

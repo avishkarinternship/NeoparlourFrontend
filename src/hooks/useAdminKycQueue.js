@@ -33,7 +33,10 @@ export const useAdminKycQueue = (initialStatus = 'PENDING') => {
   }, [filters]);
 
   useEffect(() => {
-    fetchQueue();
+    const handler = setTimeout(() => {
+      fetchQueue();
+    }, 300);
+    return () => clearTimeout(handler);
   }, [fetchQueue]);
 
   const verifyDocument = async (documentId, status, rejectionReason) => {

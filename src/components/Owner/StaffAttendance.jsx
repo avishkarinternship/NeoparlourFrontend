@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { 
@@ -39,6 +39,7 @@ export default function StaffAttendance() {
     const isDarkMode = outletContext.isDarkMode !== undefined 
       ? outletContext.isDarkMode 
       : document.documentElement.classList.contains('dark');
+    const scrollContainerRef = useRef(null);
 
     const today = toLocalISODate(new Date());
 
@@ -53,13 +54,11 @@ export default function StaffAttendance() {
     const [leaveStatusFilter, setLeaveStatusFilter] = useState("ALL");
     const [totalStaff, setTotalStaff] = useState(0);
     const [staffList, setStaffList] = useState([]);
-    const scrollContainerRef = useRef(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            const container = scrollContainerRef.current;
-            if (container) {
-                const todayElement = container.querySelector('[data-today="true"]');
+            if (scrollContainerRef.current) {
+                const todayElement = scrollContainerRef.current.querySelector('[data-today="true"]');
                 if (todayElement) {
                     todayElement.scrollIntoView({
                         behavior: 'smooth',
@@ -93,7 +92,7 @@ export default function StaffAttendance() {
     /* ─── API calls ──────────────────────────────────────── */
     const fetchLeaveRequests = async () => {
         try {
-            const res = await axiosInstance.get('staff-attendance/leave/search', {
+            const res = await axiosInstance.get('/staff-attendance/leave/search', {
                 params: { page: 0, size: 100 }
             });
             setLeaveRequests(res.data.content || []);
@@ -425,6 +424,7 @@ export default function StaffAttendance() {
                     {/* Date bubbles */}
                     <div 
                         ref={scrollContainerRef}
+                        id="staff-attendance-scroll-container"
                         className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-hide custom-scrollbar"
                     >
                         {stripDates.map(dateStr => {
