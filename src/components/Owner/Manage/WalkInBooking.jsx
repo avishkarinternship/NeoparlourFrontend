@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
+import BillingSummaryCard from '../../common/BillingSummaryCard';
 import {
     Scissors,
     Search,
@@ -358,7 +359,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
     // Load Salon Details immediately on mount
     useEffect(() => {
-        if (!activeSalonId) {
+        if (!activeSalonId || activeSalonId === 'SYSTEM' || isNaN(Number(activeSalonId))) {
             toast.error('No active salon selected. Redirecting to dashboard.');
             navigate('/owner/dashboard');
             return;
@@ -1064,7 +1065,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                         </h1>
                         <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-zinc-400'} font-bold flex items-center gap-1.5 uppercase`}>
                             <MapPin className="w-4 h-4 text-red-500 shrink-0" />
-                            <span>{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
+                            <span>{salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-2 pt-0.5">
                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${
@@ -1645,9 +1646,15 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between text-sm font-black text-slate-950 pt-2.5 border-t border-dashed border-slate-100">
-                                            <span>Grand Total</span>
-                                            <span className="text-base text-[#FF0B01] font-black">₹{grandTotal}</span>
+                                        <div className="pt-2 border-t border-dashed border-slate-100">
+                                            <BillingSummaryCard
+                                                subtotal={serviceSubtotal}
+                                                discountAmount={discountAmount + weekdayDiscountAmount}
+                                                homeCharge={homeService ? homeServiceCharges : 0}
+                                                includeGst={Boolean(salon?.includeGstInInvoice)}
+                                                gstin={salon?.gstin || ''}
+                                                isDarkMode={isDarkMode}
+                                            />
                                         </div>
                                     </div>
                                 </div>

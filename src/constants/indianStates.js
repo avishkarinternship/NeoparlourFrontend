@@ -189,6 +189,21 @@ export const getStateDisplayName = (enumValue) => {
 };
 
 /**
+ * Helper function: Generates dynamic GST tax breakdown notice based on selected State & GSTIN
+ */
+export const getGstInvoiceNotice = (stateVal, gstinVal) => {
+  const stateName = getStateDisplayName(stateVal);
+  const isUT = ['CHANDIGARH', 'LAKSHADWEEP', 'ANDAMAN_AND_NICOBAR_ISLANDS', 'DADRA_AND_NAGAR_HAVELI_AND_DAMAN_AND_DIU', 'LADAKH'].includes(stateVal);
+  const taxBreakdown = isUT ? 'CGST (9%) + UTGST (9%)' : 'CGST (9%) + SGST (9%)';
+  const gstinPart = gstinVal ? ` and GSTIN: ${gstinVal}` : '';
+  
+  if (stateName) {
+    return `When enabled, customer invoices in ${stateName} will include ${taxBreakdown} tax breakdown${gstinPart}.`;
+  }
+  return `When enabled, customer invoices will include ${taxBreakdown} tax breakdown${gstinPart}.`;
+};
+
+/**
  * Helper function: Gets list of major cities strictly for a given state enum
  */
 export const getCitiesForState = (stateEnum, query = '') => {

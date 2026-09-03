@@ -958,7 +958,7 @@ const SalonPage = () => {
                         </h1>
                         <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-400 font-bold flex items-center gap-1.5 uppercase">
                             <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
-                            <span className="truncate">{[salon?.address, salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
+                            <span className="truncate">{salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
                         </p>
                         <div className="flex flex-wrap items-center gap-2 pt-0.5">
                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${

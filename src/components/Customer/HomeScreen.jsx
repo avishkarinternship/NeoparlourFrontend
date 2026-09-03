@@ -94,7 +94,7 @@ import subSixImg from '../../assets/Customer/HomeScreen/Review/sub_six_img.svg';
 import footerLogoIcon from '../../assets/Neoparlour_logo.png';
 
 import Marquee from 'react-fast-marquee';
-import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation, MousePointerClick, User, Zap } from 'lucide-react';
+import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation as NavigationIcon, MousePointerClick, User, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEOFooter from '../common/SEOFooter';
 
@@ -846,7 +846,7 @@ const HomeScreen = () => {
                                     {isDetectingLocation ? (
                                         <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
                                     ) : (
-                                        <Navigation className="w-4 h-4 -rotate-45" />
+                                        <NavigationIcon className="w-4 h-4 -rotate-45" />
                                     )}
                                 </button>
                                 {showCityDropdown && searchData.cityName && (

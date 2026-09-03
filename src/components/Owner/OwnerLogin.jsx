@@ -45,7 +45,9 @@ const OwnerLogin = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(loginOwner(formData)).unwrap().then((res) => {
+    const cleanedUsername = (formData.username || '').trim();
+    const loginPayload = { ...formData, username: cleanedUsername };
+    dispatch(loginOwner(loginPayload)).unwrap().then((res) => {
       // Save or clear credentials based on rememberMe status
       if (rememberMe) {
         localStorage.setItem('neoparlour_owner_remembered_username', formData.username);

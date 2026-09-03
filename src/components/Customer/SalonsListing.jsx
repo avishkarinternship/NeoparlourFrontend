@@ -10,6 +10,7 @@ import salonTwoIcon from '../../assets/Customer/HomeScreen/Recommended/salon_two
 import salonThreeIcon from '../../assets/Customer/HomeScreen/Recommended/salon_three.jpg';
 import salonFourIcon from '../../assets/Customer/HomeScreen/Recommended/salon_four.jpg';
 import SEOFooter from '../common/SEOFooter';
+import { Navigation as NavigationIcon } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -488,7 +489,7 @@ const SalonsListing = () => {
                                     {isDetectingLocation ? (
                                         <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
                                     ) : (
-                                        <Navigation className="w-4 h-4 -rotate-45" />
+                                        <NavigationIcon className="w-4 h-4 -rotate-45" />
                                     )}
                                 </button>
                                 {showCityDropdown && cityName && (

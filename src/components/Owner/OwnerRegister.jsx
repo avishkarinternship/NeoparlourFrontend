@@ -3,11 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, loginOwner, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation, Eye, EyeOff, Camera, UploadCloud, X, FileText, Store, Building, Clock, Upload, Compass } from 'lucide-react';
+import { User, UserCheck, Calendar, ChevronDown, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation as NavigationIcon, Eye, EyeOff, Camera, UploadCloud, X, FileText, Store, Building, Clock, Upload, Compass } from 'lucide-react';
 import searchService from '../../services/searchService';
 import { compressImage } from '../../utils/imageCompressor';
 import { GstStateInput, StateSelector, GstinInput } from '../common/GstStateInput';
-import { getStateFromCityName, getStateDisplayName } from '../../constants/indianStates';
+import { getStateFromCityName, getStateDisplayName, getGstInvoiceNotice, INDIAN_STATES } from '../../constants/indianStates';
 
 // Using existing assets
 import logoIcon from '../../assets/Neoparlour_logo.png';
@@ -16,6 +16,30 @@ import rightBackground from '../../assets/CustomerRegister/right_background.jpg'
 const getISTString = (date = new Date()) => {
   const tzoffset = -330; // IST is UTC+5:30
   return new Date(date.getTime() - (tzoffset * 60000)).toISOString().slice(0, -1) + '+05:30';
+};
+
+const is18OrOlder = (birthdateString) => {
+  if (!birthdateString) return false;
+  const dob = new Date(birthdateString);
+  if (isNaN(dob.getTime())) return false;
+  
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 18;
+};
+
+const getMax18PlusDate = () => {
+  const today = new Date();
+  today.setFullYear(today.getFullYear() - 18);
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const SALON_TYPES = [
@@ -53,6 +77,8 @@ const OwnerRegister = () => {
     name: '',
     email: '',
     phone: '',
+    gender: '',
+    birthdate: '',
     salonName: '',
     cityName: '',
     areaName: '',
@@ -65,6 +91,7 @@ const OwnerRegister = () => {
     confirmPassword: '',
     gstin: '',
     state: '',
+    includeGstInInvoice: false,
   });
 
   const handleGstStateChange = ({ gstin, state }) => {
@@ -386,6 +413,18 @@ const OwnerRegister = () => {
         toast.error('Mobile number must be exactly 10 digits.');
         return;
       }
+      if (!formData.gender) {
+        toast.error('Gender selection is required.');
+        return;
+      }
+      if (!formData.birthdate) {
+        toast.error('Date of Birth is required.');
+        return;
+      }
+      if (!is18OrOlder(formData.birthdate)) {
+        toast.error('Salon Owner must be at least 18 years old.');
+        return;
+      }
       if (!formData.password) {
         toast.error('Password is required.');
         return;
@@ -423,6 +462,21 @@ const OwnerRegister = () => {
       if (!exteriorImage.base64 || !interiorImage1.base64 || !interiorImage2.base64) {
         toast.error('Please upload at least 3 salon images: 1 exterior image (outside) and 2 interior images (inside).');
         return;
+      }
+      if (formData.includeGstInInvoice && formData.gstin) {
+        const cleanGst = formData.gstin.trim().toUpperCase();
+        if (cleanGst.length >= 2) {
+          const prefix = cleanGst.substring(0, 2);
+          const selStateObj = formData.state ? INDIAN_STATES.find(s => 
+            s.enumValue === formData.state || 
+            s.displayName.toLowerCase() === formData.state.toLowerCase() ||
+            s.enumValue.replace(/_/g, ' ').toLowerCase() === formData.state.toLowerCase()
+          ) : null;
+          if (selStateObj && selStateObj.stateCode !== prefix) {
+            toast.error(`The entered GSTIN state code (${prefix}) does not belong to the selected state (${selStateObj.displayName}). If you don't have a GSTIN for ${selStateObj.displayName}, please keep it blank.`);
+            return;
+          }
+        }
       }
       setCurrentStep(3);
     }
@@ -499,6 +553,7 @@ const OwnerRegister = () => {
       ...formData,
       gstin: formData.gstin ? formData.gstin.trim() : null,
       state: formData.state || null,
+      includeGstInInvoice: Boolean(formData.includeGstInInvoice),
       role: 'SALON_OWNER',
       openingTime: formData.openingTime + ':00',
       closingTime: formData.closingTime + ':00',
@@ -515,15 +570,16 @@ const OwnerRegister = () => {
         const formattedFullAddress = [
           formData.specificAddress ? formData.specificAddress.trim() : null,
           formData.landmark ? `near ${formData.landmark.trim()}` : null,
-          formData.areaName ? formData.areaName.trim() : null,
-          formData.cityName ? formData.cityName.trim() : null,
-          getStateDisplayName(formData.state) || (formData.state ? formData.state : null)
+          formData.areaName ? formData.areaName.trim() : null
         ].filter(Boolean).join(', ');
 
         const salonDetails = {
           salonName: formData.salonName,
           salonAddress: formattedFullAddress,
           salonEmail: formData.email,
+          gstin: formData.gstin ? formData.gstin.trim() : null,
+          state: formData.state || null,
+          includeGstInInvoice: Boolean(formData.includeGstInInvoice),
           openingTime: formData.openingTime + ':00',
           closingTime: formData.closingTime + ':00',
           latitude: 0.0,
@@ -686,6 +742,51 @@ const OwnerRegister = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Gender & Birthdate Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Gender Select */}
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors z-10">
+                          <UserCheck className="w-5 h-5 stroke-[2]" />
+                        </div>
+                        <select
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleInputChange}
+                          required
+                          className={`w-full pl-14 pr-10 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all font-bold appearance-none cursor-pointer ${
+                            formData.gender ? 'text-gray-900' : 'text-gray-400'
+                          }`}
+                        >
+                          <option value="" disabled className="text-gray-400 font-bold">Select Gender *</option>
+                          <option value="MALE" className="text-gray-900 font-bold">Male</option>
+                          <option value="FEMALE" className="text-gray-900 font-bold">Female</option>
+                          <option value="OTHER" className="text-gray-900 font-bold">Other</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
+                          <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                        </div>
+                      </div>
+
+                      {/* Date of Birth Input */}
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors z-10">
+                          <Calendar className="w-5 h-5 stroke-[2]" />
+                        </div>
+                        <input 
+                          type="date" 
+                          name="birthdate"
+                          value={formData.birthdate}
+                          max={getMax18PlusDate()}
+                          onChange={handleInputChange}
+                          required
+                          className={`w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all font-bold ${
+                            formData.birthdate ? 'text-gray-900' : 'text-gray-400'
+                          }`} 
+                        />
+                      </div>
+                    </div>
                   </div>
  
                   {/* Password Section */}
@@ -829,7 +930,7 @@ const OwnerRegister = () => {
                           {isDetectingLocation ? (
                             <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
                           ) : (
-                            <Navigation className="w-4 h-4 -rotate-45" />
+                            <NavigationIcon className="w-4 h-4 -rotate-45" />
                           )}
                         </button>
                         {showCityDropdown && formData.cityName && (
@@ -975,13 +1076,37 @@ const OwnerRegister = () => {
                       </div>
                     </div>
 
-                    {/* Row 3: GSTIN Number Below State, City, Area, Landmark */}
-                    <GstinInput
-                      gstin={formData.gstin}
-                      state={formData.state}
-                      onChange={handleGstStateChange}
-                      showLabel={false}
-                    />
+                    {/* Row 3: Include GST Checkbox & GSTIN Input */}
+                    <div className="p-4 bg-[#fafafa] border border-gray-100 rounded-2xl space-y-3 text-left">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.includeGstInInvoice)}
+                          onChange={(e) => setFormData(prev => ({ ...prev, includeGstInInvoice: e.target.checked }))}
+                          className="mt-1 w-4 h-4 text-[#ff0b01] rounded border-gray-300 focus:ring-[#ff0b01]"
+                        />
+                        <div>
+                          <span className="text-xs font-bold text-gray-900 block">Include GST (18%) in Customer Invoices</span>
+                          <span className="text-[10px] text-gray-500 font-medium block mt-0.5">
+                            {getGstInvoiceNotice(formData.state, formData.gstin)}
+                          </span>
+                        </div>
+                      </label>
+
+                      {formData.includeGstInInvoice && (
+                        <div className="pt-2">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1">
+                            Salon GSTIN Number
+                          </label>
+                          <GstinInput
+                            gstin={formData.gstin}
+                            state={formData.state}
+                            onChange={handleGstStateChange}
+                            showLabel={false}
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {/* Row 4: Shop / Building Address */}
                     <div className="relative group">
@@ -1007,9 +1132,7 @@ const OwnerRegister = () => {
                           {[
                             formData.specificAddress ? formData.specificAddress.trim() : null,
                             formData.landmark ? `near ${formData.landmark.trim()}` : null,
-                            formData.areaName ? formData.areaName.trim() : null,
-                            formData.cityName ? formData.cityName.trim() : null,
-                            getStateDisplayName(formData.state) || (formData.state ? formData.state : null)
+                            formData.areaName ? formData.areaName.trim() : null
                           ].filter(Boolean).join(', ')}
                         </p>
                       </div>

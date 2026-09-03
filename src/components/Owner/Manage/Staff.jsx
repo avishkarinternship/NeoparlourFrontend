@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
-import { User, Users, TrendingUp, Award, Share2 } from 'lucide-react';
+import { User, Users, TrendingUp, Award, Share2, Eye, EyeOff } from 'lucide-react';
 import StaffReferralStatsView from '../../StaffReferralStatsView';
 
 // Icons
@@ -21,6 +21,30 @@ const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
 };
 
+const is18OrOlder = (birthdateString) => {
+  if (!birthdateString) return false;
+  const dob = new Date(birthdateString);
+  if (isNaN(dob.getTime())) return false;
+  
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 18;
+};
+
+const getMax18PlusDate = () => {
+  const today = new Date();
+  today.setFullYear(today.getFullYear() - 18);
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const Staff = () => {
     const location = useLocation();
     const outletContext = useOutletContext() || {};
@@ -31,6 +55,9 @@ const Staff = () => {
     // Active Navigation Tab
     const [activeTab, setActiveTab] = useState('manage'); // 'manage' | 'referrals'
     const [selectedReferralStaffId, setSelectedReferralStaffId] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [dobFocus, setDobFocus] = useState(false);
+    const [editDobFocus, setEditDobFocus] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -162,6 +189,14 @@ const Staff = () => {
             toast.error("Phone number must be exactly 10 digits", toastStyle);
             return;
         }
+        if (!formData.birthdate) {
+            toast.error("Staff Date of Birth is required", toastStyle);
+            return;
+        }
+        if (!is18OrOlder(formData.birthdate)) {
+            toast.error("Staff member must be at least 18 years old", toastStyle);
+            return;
+        }
 
         setFormLoading(true);
         try {
@@ -218,6 +253,10 @@ const Staff = () => {
         }
         if (editFormData.phone.length !== 10 || !/^[0-9]{10}$/.test(editFormData.phone)) {
             toast.error("Phone number must be exactly 10 digits", toastStyle);
+            return;
+        }
+        if (editFormData.birthdate && !is18OrOlder(editFormData.birthdate)) {
+            toast.error("Staff member must be at least 18 years old", toastStyle);
             return;
         }
 
@@ -367,11 +406,38 @@ const Staff = () => {
                                 </div>
 
                                 <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
-                                    <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Password" className="w-full text-sm outline-none bg-transparent" required />
+                                    <input 
+                                        type={showPassword ? "text" : "password"} 
+                                        name="password" 
+                                        value={formData.password} 
+                                        onChange={handleInputChange} 
+                                        placeholder="Password" 
+                                        className="w-full text-sm outline-none bg-transparent pr-8" 
+                                        required 
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowPassword(!showPassword)} 
+                                        className="absolute right-3 text-gray-400 hover:text-red-600 transition cursor-pointer"
+                                        title={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
                                 </div>
 
                                 <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
-                                    <input type="date" name="birthdate" value={formData.birthdate} onChange={handleInputChange} className="w-full text-sm outline-none bg-transparent" />
+                                    <img src={dateIcon} alt="Date of Birth" className="w-4 h-4 mr-2.5 flex-shrink-0" />
+                                    <input 
+                                        type={dobFocus ? "date" : (formData.birthdate ? "date" : "text")} 
+                                        name="birthdate" 
+                                        value={formData.birthdate} 
+                                        max={getMax18PlusDate()}
+                                        onChange={handleInputChange} 
+                                        onFocus={() => setDobFocus(true)}
+                                        onBlur={() => setDobFocus(false)}
+                                        placeholder="Date of Birth (DD/MM/YYYY)" 
+                                        className="w-full text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400" 
+                                    />
                                 </div>
 
                                 <div className="md:col-span-2">
@@ -592,16 +658,20 @@ const Staff = () => {
                                                 />
                                             </div>
                                         </div>
-
-                                        <div>
+                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Birthdate</label>
                                             <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                                <img src={dateIcon} alt="Date of Birth" className="w-4 h-4 mr-2.5 flex-shrink-0" />
                                                 <input 
-                                                    type="date" 
+                                                    type={editDobFocus ? "date" : (editFormData.birthdate ? "date" : "text")} 
                                                     name="birthdate" 
                                                     value={editFormData.birthdate} 
+                                                    max={getMax18PlusDate()}
                                                     onChange={(e) => setEditFormData(prev => ({ ...prev, birthdate: e.target.value }))} 
-                                                    className="w-full text-sm outline-none bg-transparent" 
+                                                    onFocus={() => setEditDobFocus(true)}
+                                                    onBlur={() => setEditDobFocus(false)}
+                                                    placeholder="Date of Birth (DD/MM/YYYY)" 
+                                                    className="w-full text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400" 
                                                 />
                                             </div>
                                         </div>

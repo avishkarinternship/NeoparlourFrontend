@@ -16,7 +16,19 @@ export default function NotificationsScreen() {
         setLoading(true);
         try {
             const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
-            const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId || 1;
+            if (ownerUser.role === 'ADMIN') {
+                setNotifications([]);
+                setTotalPages(0);
+                setLoading(false);
+                return;
+            }
+            const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId;
+            if (!salonId || salonId === 'SYSTEM' || salonId === 'null' || isNaN(Number(salonId))) {
+                setNotifications([]);
+                setTotalPages(0);
+                setLoading(false);
+                return;
+            }
             
             const response = await axiosInstance.get(`/notifications/search?salonId=${salonId}&page=${currentPage}&size=10`);
             setNotifications(response.data.content || []);

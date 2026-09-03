@@ -583,6 +583,10 @@ export let routes = createBrowserRouter([
                         element: <OwnerRouteGuard><ServerHealth /></OwnerRouteGuard>
                     },
                     {
+                        path: '/admin/salons',
+                        element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
+                    },
+                    {
                         path: '/owner/salons',
                         element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
                     },

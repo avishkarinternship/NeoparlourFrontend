@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import { calculateInclusiveGst } from '../../../utils/taxUtils';
 
 // Icons
 import priceIcon from '../../../assets/Owner/Manage/Services/price_icon.svg';
@@ -172,6 +173,10 @@ const Service = () => {
     const [dragOverServiceId, setDragOverServiceId] = useState(null);
     const [svcDndLoading, setSvcDndLoading] = useState(false);
     const [dndMode, setDndMode] = useState('shift'); // 'shift' or 'swap' for service reordering
+
+    // GST Status & Live Breakdown state
+    const [salonGstStatus, setSalonGstStatus] = useState(null);
+    const [gstBreakdown, setGstBreakdown] = useState(null);
 
 
 
@@ -478,8 +483,41 @@ const Service = () => {
         }
     };
 
+    const fetchGstStatus = async () => {
+        try {
+            const res = await axiosInstance.get('/salons/profile');
+            const data = res.data || {};
+            setSalonGstStatus({
+                hasGstin: Boolean(data.gstin),
+                gstin: data.gstin || '',
+                state: data.state || ''
+            });
+        } catch (err) {
+            console.error("Failed to fetch salon GST status:", err);
+        }
+    };
+
+    const hasGstin = Boolean(salonGstStatus?.hasGstin || salonGstStatus?.gstin);
+    const stateUpper = (salonGstStatus?.state || '').toUpperCase();
+    const isUt = stateUpper === 'LADAKH' || 
+                 stateUpper === 'CHANDIGARH' || 
+                 stateUpper === 'LAKSHADWEEP' || 
+                 stateUpper === 'ANDAMAN_AND_NICOBAR_ISLANDS' || 
+                 stateUpper === 'DADRA_AND_NAGAR_HAVELI_AND_DAMAN_AND_DIU' ||
+                 stateUpper.includes('DAMAN') ||
+                 stateUpper.includes('ANDAMAN');
+
+    useEffect(() => {
+        if (hasGstin && price) {
+            setGstBreakdown(calculateInclusiveGst(price, isUt));
+        } else {
+            setGstBreakdown(null);
+        }
+    }, [price, hasGstin, isUt]);
+
     useEffect(() => {
         fetchServices();
+        fetchGstStatus();
     }, []);
 
     const toggleCategoryExpand = (catName) => {
@@ -677,25 +715,21 @@ const Service = () => {
                      <div className="max-w-5xl mx-auto">
 
                          {/* ==================== SERVICE TAB ==================== */}
-                         <>
-                                 <div className="inline-block border-b-2 border-red-600 pb-2 mb-6">
-                                     <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                         <span className="text-xl font-light leading-none select-none tracking-tight">+</span>
-                                         <span className="text-[13px] font-bold uppercase tracking-wider">
-                                             {editingServiceId ? 'Edit Service' : 'Add Service'}
-                                         </span>
-                                     </div>
+                         <>                                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 text-[#FF0B01] font-extrabold text-xs tracking-wider uppercase mb-5">
+                                     <span className="w-2 h-2 rounded-full bg-[#FF0B01] animate-pulse"></span>
+                                     <span>{editingServiceId ? 'Edit Service Details' : 'Add New Service'}</span>
                                  </div>
 
-                                 <div className={`max-w-3xl border rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-8 ${
-                                     isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'
+                                 <div className={`max-w-3xl border rounded-[28px] p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 mb-8 ${
+                                     isDarkMode ? 'bg-zinc-900/90 border-zinc-800 backdrop-blur-md' : 'bg-white border-gray-100/90'
                                  }`}>
-                                    <form onSubmit={handleServiceSave} className="space-y-5">
+                                    <form onSubmit={handleServiceSave} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             {/* Category Option (GIVEN FIRST) */}
-                                            <div className="relative">
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
-                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                            <div className="space-y-1.5">
+                                                <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Category</label>
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={categoryIcon} alt="Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <select
@@ -709,25 +743,26 @@ const Service = () => {
                                                             if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }));
                                                             if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                         }}
-                                                        className={`w-full text-sm font-semibold appearance-none bg-transparent outline-none cursor-pointer ${
-                                                            isDarkMode ? 'text-white' : 'text-gray-800'
+                                                        className={`w-full text-sm font-bold appearance-none bg-transparent outline-none cursor-pointer ${
+                                                            isDarkMode ? 'text-white' : 'text-gray-900'
                                                         }`}
                                                     >
-                                                        <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Category</option>
+                                                        <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Select Category</option>
                                                         {Object.keys(PREDEFINED_CATEGORIES).map((catName) => (
                                                             <option key={catName} value={catName} className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>{catName}</option>
                                                         ))}
                                                     </select>
                                                     <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                                 </div>
-                                                {formErrors.category && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.category}</p>}
+                                                {formErrors.category && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.category}</p>}
                                             </div>
- 
+
                                             {/* Predefined Service Select (Only if selectedCategory is predefined and not 'Other') */}
                                             {selectedCategory && selectedCategory !== 'Other' && (
-                                                <div className="relative">
-                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
-                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                <div className="space-y-1.5">
+                                                    <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Service Name</label>
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                     }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                         <select
@@ -740,11 +775,11 @@ const Service = () => {
                                                                 }
                                                                 if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                             }}
-                                                            className={`w-full text-sm font-semibold appearance-none bg-transparent outline-none cursor-pointer ${
-                                                                isDarkMode ? 'text-white' : 'text-gray-800'
+                                                            className={`w-full text-sm font-bold appearance-none bg-transparent outline-none cursor-pointer ${
+                                                                isDarkMode ? 'text-white' : 'text-gray-900'
                                                             }`}
                                                         >
-                                                            <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Service Name</option>
+                                                            <option value="" disabled hidden className={isDarkMode ? 'bg-zinc-900 text-zinc-400' : ''}>Select Service Name</option>
                                                             {(PREDEFINED_CATEGORIES[selectedCategory] || []).map((srvName) => (
                                                                 <option key={srvName} value={srvName} className={isDarkMode ? 'bg-zinc-900 text-white' : ''}>{srvName}</option>
                                                             ))}
@@ -752,44 +787,47 @@ const Service = () => {
                                                         </select>
                                                         <span className="absolute right-4 pointer-events-none text-gray-400 text-[10px]">▼</span>
                                                     </div>
-                                                    {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
+                                                    {formErrors.serviceName && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.serviceName}</p>}
                                                 </div>
                                             )}
- 
+
                                             {/* Custom Service Name Input (If selectedCategory === 'Other' OR selectedServiceName === 'Other') */}
                                             {(selectedCategory === 'Other' || selectedServiceName === 'Other') && (
-                                                <div className="relative">
-                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
-                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                                <div className="space-y-1.5">
+                                                    <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Custom Service Name</label>
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                        isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                     }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                         <input
                                                             type="text"
-                                                            placeholder="Custom Service Name"
+                                                            placeholder="Type Custom Service Name"
                                                             value={customServiceName}
                                                             onChange={(e) => {
                                                                 setCustomServiceName(e.target.value);
                                                                 if (formErrors.serviceName) setFormErrors(prev => ({ ...prev, serviceName: '' }));
                                                             }}
-                                                            className={`w-full text-sm font-semibold outline-none bg-transparent ${
-                                                                isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                            className={`w-full text-sm font-bold outline-none bg-transparent ${
+                                                                isDarkMode ? 'placeholder-zinc-500 text-white' : 'placeholder-gray-400 text-gray-900'
                                                             }`}
                                                         />
                                                     </div>
-                                                    {formErrors.serviceName && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.serviceName}</p>}
+                                                    {formErrors.serviceName && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.serviceName}</p>}
                                                 </div>
                                             )}
- 
+
                                             {/* Price Input */}
-                                            <div className="relative">
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
-                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                            <div className="space-y-1.5">
+                                                <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Service Price (₹)</label>
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
+                                                    <span className={`mr-1 font-extrabold text-sm ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>₹</span>
                                                     <input
                                                         type="text"
                                                         inputMode="decimal"
-                                                        placeholder="Price"
+                                                        placeholder="0.00"
                                                         value={price}
                                                         onChange={(e) => {
                                                             const val = e.target.value.replace(/[^0-9.]/g, '');
@@ -804,43 +842,96 @@ const Service = () => {
                                                                 setFormErrors(prev => ({ ...prev, price: "" }));
                                                             }
                                                         }}
-                                                        className={`w-full text-sm font-semibold outline-none bg-transparent ${
-                                                            isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                        className={`w-full text-sm font-extrabold outline-none bg-transparent ${
+                                                            isDarkMode ? 'placeholder-zinc-500 text-white' : 'placeholder-gray-400 text-gray-900'
                                                         }`}
                                                     />
                                                 </div>
-                                                {formErrors.price && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.price}</p>}
+                                                {formErrors.price && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.price}</p>}
                                             </div>
- 
+
                                             {/* Duration Input */}
-                                            <div className="relative">
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-4 focus-within:ring-red-500/10 transition-all duration-200 ${
-                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus-within:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white'
+                                            <div className="space-y-1.5">
+                                                <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Duration (in minutes)</label>
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={durationIcon} alt="Duration" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
                                                     <input
                                                         type="text"
-                                                        placeholder="Duration (in minutes)"
+                                                        placeholder="e.g. 45"
                                                         value={duration}
                                                         onChange={(e) => {
                                                             const val = e.target.value.replace(/[^0-9]/g, '');
                                                             setDuration(val);
                                                             if (formErrors.duration) setFormErrors(prev => ({ ...prev, duration: '' }));
                                                         }}
-                                                        className={`w-full text-sm font-semibold outline-none bg-transparent ${
-                                                            isDarkMode ? 'placeholder-slate-500 text-white' : 'placeholder-gray-400 text-gray-800'
+                                                        className={`w-full text-sm font-extrabold outline-none bg-transparent ${
+                                                            isDarkMode ? 'placeholder-zinc-500 text-white' : 'placeholder-gray-400 text-gray-900'
                                                         }`}
                                                     />
+                                                    <span className={`text-xs font-bold uppercase tracking-wider ml-2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>mins</span>
                                                 </div>
-                                                {formErrors.duration && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.duration}</p>}
+                                                {formErrors.duration && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.duration}</p>}
                                             </div>
+
+                                            {/* LIVE GST BREAKDOWN PREVIEW CARD (Visible only when GSTIN exists) */}
+                                            {hasGstin && gstBreakdown && (
+                                                <div className={`col-span-1 md:col-span-2 p-5 border rounded-2xl space-y-3 transition-all ${
+                                                    isDarkMode 
+                                                        ? 'bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-indigo-950/30 border-purple-800/50 text-purple-200' 
+                                                        : 'bg-gradient-to-r from-purple-50/90 via-purple-50/50 to-indigo-50/70 border-purple-200/80 text-purple-950'
+                                                }`}>
+                                                    <div className={`flex items-center justify-between font-bold border-b pb-2.5 ${
+                                                        isDarkMode ? 'border-purple-800/50' : 'border-purple-200/80'
+                                                    }`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                                            <span className="text-xs uppercase tracking-wider font-extrabold">Inclusive GST Breakdown (18%)</span>
+                                                        </div>
+                                                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-mono font-bold tracking-wider ${
+                                                            isDarkMode ? 'bg-purple-900/90 text-purple-200 border border-purple-700/50' : 'bg-purple-200/80 text-purple-900 border border-purple-300/60'
+                                                        }`}>
+                                                            GSTIN: {salonGstStatus?.gstin || 'Registered'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                                                        <div className={`p-2.5 rounded-xl border ${isDarkMode ? 'bg-zinc-900/60 border-purple-900/40' : 'bg-white/80 border-purple-100 shadow-2xs'}`}>
+                                                            <span className="text-[10px] uppercase font-bold text-gray-400 block">Base Value</span>
+                                                            <strong className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{gstBreakdown.baseValue}</strong>
+                                                        </div>
+                                                        <div className={`p-2.5 rounded-xl border ${isDarkMode ? 'bg-zinc-900/60 border-purple-900/40' : 'bg-white/80 border-purple-100 shadow-2xs'}`}>
+                                                            <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Tax (18%)</span>
+                                                            <strong className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{gstBreakdown.totalGst}</strong>
+                                                        </div>
+                                                        <div className={`p-2.5 rounded-xl border ${isDarkMode ? 'bg-zinc-900/60 border-purple-900/40' : 'bg-white/80 border-purple-100 shadow-2xs'}`}>
+                                                            <span className="text-[10px] uppercase font-bold text-gray-400 block">CGST (9%)</span>
+                                                            <strong className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{gstBreakdown.cgst}</strong>
+                                                        </div>
+                                                        <div className={`p-2.5 rounded-xl border ${isDarkMode ? 'bg-zinc-900/60 border-purple-900/40' : 'bg-white/80 border-purple-100 shadow-2xs'}`}>
+                                                            <span className="text-[10px] uppercase font-bold text-gray-400 block">{gstBreakdown.secondTaxLabel}</span>
+                                                            <strong className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{gstBreakdown.sgstOrUtgst}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className={`text-[11px] font-medium pt-1 space-y-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+                                                        <div className="flex items-center gap-1.5 font-bold">
+                                                            <span className="text-emerald-500">✔</span> Customer invoice amount: <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">₹{gstBreakdown.totalPrice}</strong>
+                                                        </div>
+                                                        <div className={`text-[10px] italic leading-relaxed ${isDarkMode ? 'text-purple-400/80' : 'text-purple-600/90'}`}>
+                                                            ℹ️ Note: This tax distribution is for salon accounting reference only and will not be displayed to customers when booking.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-2 text-xs font-bold uppercase tracking-wider">
+                                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-3 text-xs font-black uppercase tracking-wider">
                                             <button
                                                 type="submit"
                                                 disabled={submitting}
-                                                className="w-full sm:flex-1 bg-[#FF0B01] text-white py-4 rounded-2xl hover:bg-red-700 transition active:scale-[0.985] shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                                                className="w-full sm:flex-1 bg-gradient-to-r from-red-600 to-[#FF0B01] text-white py-4 rounded-2xl hover:brightness-110 active:scale-[0.985] transition-all shadow-md shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                                             >
                                                 {submitting ? 'Saving...' : editingServiceId ? 'Update Service' : 'Save Service'}
                                             </button>
@@ -848,11 +939,11 @@ const Service = () => {
                                             <button
                                                 type="button"
                                                 onClick={resetServiceForm}
-                                                className={`w-full sm:flex-1 border py-4 rounded-2xl transition ${
-                                                    isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                className={`w-full sm:flex-1 border py-4 rounded-2xl transition-all cursor-pointer ${
+                                                    isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800/80' : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                                                 }`}
                                             >
-                                                {editingServiceId ? 'Discard' : 'Cancel'}
+                                                {editingServiceId ? 'Discard Changes' : 'Reset Form'}
                                             </button>
                                         </div>
                                     </form>

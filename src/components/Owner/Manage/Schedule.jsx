@@ -4,6 +4,7 @@ import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles, Clock, Hourglass, AlertTriangle, Filter, SlidersHorizontal } from 'lucide-react';
 import RewardPointsAnimation from '../../common/RewardPointsAnimation';
+import BillingSummaryCard from '../../common/BillingSummaryCard';
 
 // Icons
 import assignStaffIcon from '../../../assets/Owner/Manage/Schedule/assign_staff_icon.svg';
@@ -674,6 +675,37 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
     return diff > 0 ? diff : null;
   };
 
+  // Helper to prevent extending services already present in the appointment
+  const isServiceAlreadyInAppointment = (svc, appt) => {
+    if (!svc || !appt) return false;
+
+    const svcIdStr = String(svc.id || svc.serviceId || '');
+    const svcNameLower = (svc.name || svc.serviceName || '').trim().toLowerCase();
+
+    // 1. Check direct serviceId / serviceName
+    if (appt.serviceId && String(appt.serviceId) === svcIdStr) return true;
+    if (appt.serviceName && appt.serviceName.trim().toLowerCase() === svcNameLower) return true;
+
+    // 2. Check serviceIds array
+    if (Array.isArray(appt.serviceIds) && appt.serviceIds.map(String).includes(svcIdStr)) return true;
+
+    // 3. Check serviceNames array
+    if (Array.isArray(appt.serviceNames)) {
+      if (appt.serviceNames.some(name => name?.trim().toLowerCase() === svcNameLower)) return true;
+    }
+
+    // 4. Check services array of objects
+    if (Array.isArray(appt.services)) {
+      if (appt.services.some(s => {
+        const sId = String(s.id || s.serviceId || '');
+        const sName = (s.name || s.serviceName || '').trim().toLowerCase();
+        return (sId && sId === svcIdStr) || (sName && sName === svcNameLower);
+      })) return true;
+    }
+
+    return false;
+  };
+
   // ==================== EXTEND APPOINTMENT ====================
   const openExtendModal = async (appt) => {
     setExtendAppointment(appt);
@@ -690,6 +722,11 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
   };
 
   const addExtendService = (svc) => {
+    if (!svc) return;
+    if (isServiceAlreadyInAppointment(svc, extendAppointment)) {
+      toast.error(`"${svc.name}" is already part of this appointment.`, toastStyle);
+      return;
+    }
     if (extendServices.find(s => s.serviceId === String(svc.id))) return;
     setExtendServices(prev => [...prev, {
       serviceId: String(svc.id),
@@ -1606,59 +1643,16 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-gray-100/60 my-2"></div>
-
-                {/* Service Subtotal */}
-                <div className="flex justify-between text-xs text-gray-600">
-                  <span className="font-sans">Service Subtotal:</span>
-                  <span className="font-bold">₹{(selectedAppointmentDetails.totalPrice ?? 0).toFixed(2)}</span>
-                </div>
-
-                {/* Home Service Charge */}
-                {selectedAppointmentDetails.homeService && (
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span className="font-sans">🏠 Home Service Charge:</span>
-                    <span className="font-bold text-amber-600">
-                      {selectedAppointmentDetails.homeCharge ? `+ ₹${Number(selectedAppointmentDetails.homeCharge).toFixed(2)}` : 'Included / Free'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Discount Applied */}
-                {(selectedAppointmentDetails.discountAmount ?? 0) > 0 && (
-                  <div className="flex flex-col gap-1 py-1 bg-green-50/30 px-2 rounded-lg border border-green-100/50">
-                    <div className="flex justify-between text-xs text-green-700">
-                      <span className="font-sans">🎁 Promo Discount:</span>
-                      <span className="font-bold">- ₹{(selectedAppointmentDetails.discountAmount ?? 0).toFixed(2)}</span>
-                    </div>
-                    {selectedAppointmentDetails.offerName && (
-                      <div className="text-[9px] font-sans text-green-600 font-bold uppercase tracking-wider">
-                        Offer: {selectedAppointmentDetails.offerName}
-                        {selectedAppointmentDetails.discountValue && (
-                          <span> ({selectedAppointmentDetails.discountType === 'percentage' ? `${selectedAppointmentDetails.discountValue}%` : `₹${selectedAppointmentDetails.discountValue}`} Off)</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Package Applied */}
-                {selectedAppointmentDetails.packageName && (
-                  <div className="flex justify-between text-xs text-blue-750 bg-blue-50/30 px-2 py-1 rounded-lg border border-blue-100/50">
-                    <span className="text-[9px] font-sans uppercase font-bold tracking-wider">📦 Package: {selectedAppointmentDetails.packageName}</span>
-                    <span className="text-[9px] font-sans text-blue-500 font-semibold">Applied</span>
-                  </div>
-                )}
-
-                {/* Horizontal divider */}
-                <div className="border-t border-dashed border-gray-250 pt-2 flex justify-between items-center">
-                  <span className="text-xs font-bold text-gray-800 font-sans">Final Net Amount:</span>
-                  <div className="flex flex-col items-end">
-                    <span className="text-lg font-black text-[#FF0B01]">
-                      ₹{(selectedAppointmentDetails.finalAmount ?? selectedAppointmentDetails.totalPrice ?? 0).toFixed(2)}
-                    </span>
-                    <span className="text-[8px] font-semibold text-gray-400 font-sans uppercase tracking-widest mt-0.5">Calculated & Verified</span>
-                  </div>
+                {/* Billing Summary Card */}
+                <div className="pt-2">
+                  <BillingSummaryCard
+                    subtotal={selectedAppointmentDetails.totalPrice ?? 0}
+                    discountAmount={selectedAppointmentDetails.discountAmount ?? 0}
+                    homeCharge={selectedAppointmentDetails.homeService ? (selectedAppointmentDetails.homeCharge ?? 0) : 0}
+                    includeGst={Boolean(selectedAppointmentDetails.includeGstInInvoice || selectedAppointmentDetails.salon?.includeGstInInvoice)}
+                    gstin={selectedAppointmentDetails.gstin || selectedAppointmentDetails.salon?.gstin || ''}
+                    isDarkMode={isDarkMode}
+                  />
                 </div>
               </div>
 
@@ -1759,10 +1753,13 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                 {serviceSearchQuery.trim() && (
                   <div className="mt-2 border border-gray-100 rounded-2xl overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                     {availableServices
-                      .filter(s =>
-                        s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
-                        s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase())
-                      )
+                      .filter(s => {
+                        const matchesQuery = s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                          s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase());
+                        const isAlreadyInAppt = isServiceAlreadyInAppointment(s, extendAppointment);
+                        const isAlreadyAdded = extendServices.some(added => String(added.serviceId) === String(s.id));
+                        return matchesQuery && !isAlreadyInAppt && !isAlreadyAdded;
+                      })
                       .slice(0, 12)
                       .map(svc => (
                         <button
@@ -1777,11 +1774,14 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                           <span className="text-sm font-bold text-orange-600">₹{svc.price}</span>
                         </button>
                       ))}
-                    {availableServices.filter(s =>
-                        s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
-                        s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase())
-                    ).length === 0 && (
-                      <div className="px-4 py-4 text-xs text-gray-400 font-medium text-center">No services found</div>
+                    {availableServices.filter(s => {
+                        const matchesQuery = s.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                          s.category?.toLowerCase().includes(serviceSearchQuery.toLowerCase());
+                        const isAlreadyInAppt = isServiceAlreadyInAppointment(s, extendAppointment);
+                        const isAlreadyAdded = extendServices.some(added => String(added.serviceId) === String(s.id));
+                        return matchesQuery && !isAlreadyInAppt && !isAlreadyAdded;
+                    }).length === 0 && (
+                      <div className="px-4 py-4 text-xs text-gray-400 font-medium text-center">No available extension services found</div>
                     )}
                   </div>
                 )}

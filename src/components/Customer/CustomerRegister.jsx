@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation } from 'lucide-react';
+import { User, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation as NavigationIcon } from 'lucide-react';
 import searchService from '../../services/searchService';
 
 // Using existing assets
@@ -344,7 +344,7 @@ const CustomerRegister = () => {
                       {isDetectingLocation ? (
                         <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
                       ) : (
-                        <Navigation className="w-4 h-4 -rotate-45" />
+                        <NavigationIcon className="w-4 h-4 -rotate-45" />
                       )}
                     </button>
                     {showCityDropdown && formData.cityName && (

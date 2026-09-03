@@ -48,14 +48,14 @@ export const StateSelector = ({ state, onChange, error, isDarkMode = false, disa
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(prev => !prev)}
         className={`w-full p-4 border rounded-2xl text-sm font-bold flex items-center justify-between transition text-left ${
-          disabled ? (isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed') : ''
+          disabled ? (isDarkMode ? 'bg-zinc-800/40 border-zinc-800 text-zinc-300 cursor-not-allowed' : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed') : ''
         } ${
           isDarkMode 
             ? 'border-zinc-700 bg-zinc-800 text-white focus:border-[#ff0b01]' 
             : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-[#ff0b01] focus:bg-white'
         }`}
       >
-        <span className={selectedStateObj ? (isDarkMode ? 'text-white' : 'text-gray-900') : 'text-gray-400'}>
+        <span className={selectedStateObj ? (isDarkMode ? (disabled ? 'text-zinc-300' : 'text-white') : 'text-gray-900') : (isDarkMode ? 'text-zinc-500' : 'text-gray-400')}>
           {selectedStateObj ? selectedStateObj.displayName : 'Select State / UT'}
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#ff0b01]' : ''}`} />
@@ -142,11 +142,33 @@ export const GstinInput = ({ gstin, state, onChange, isDarkMode = false, disable
     const autoDerivedState = getStateFromGstin(rawVal);
     onChange({
       gstin: rawVal,
-      state: autoDerivedState || state
+      state: state ? state : (autoDerivedState || state)
     });
   };
 
-  const isGstinValid = !gstin || GSTIN_REGEX.test(gstin);
+  const cleanGstin = (gstin || '').trim().toUpperCase();
+  const isFormatValid = !cleanGstin || GSTIN_REGEX.test(cleanGstin);
+
+  // Check state code mismatch against selected state
+  const gstinPrefix = cleanGstin.length >= 2 ? cleanGstin.substring(0, 2) : '';
+  const isNumericPrefix = /^\d{2}$/.test(gstinPrefix);
+
+  const selectedStateObj = state ? INDIAN_STATES.find(s => 
+    s.enumValue === state || 
+    s.displayName.toLowerCase() === state.toLowerCase() ||
+    s.enumValue.replace(/_/g, ' ').toLowerCase() === state.toLowerCase()
+  ) : null;
+
+  const derivedStateObj = isNumericPrefix ? INDIAN_STATES.find(s => s.stateCode === gstinPrefix) : null;
+
+  const isStateMismatch = Boolean(
+    cleanGstin.length >= 2 &&
+    isNumericPrefix &&
+    selectedStateObj &&
+    selectedStateObj.stateCode !== gstinPrefix
+  );
+
+  const isGstinValid = isFormatValid && !isStateMismatch;
 
   return (
     <div className="font-sans text-left">
@@ -165,7 +187,7 @@ export const GstinInput = ({ gstin, state, onChange, isDarkMode = false, disable
         value={gstin || ''}
         onChange={handleGstinChange}
         className={`w-full p-4 border rounded-2xl uppercase tracking-wider text-sm font-mono focus:outline-none transition ${
-          disabled ? (isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed') : ''
+          disabled ? (isDarkMode ? 'bg-zinc-800/40 border-zinc-800 text-zinc-300 cursor-not-allowed' : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed') : ''
         } ${
           !isGstinValid 
             ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-500' 
@@ -174,7 +196,24 @@ export const GstinInput = ({ gstin, state, onChange, isDarkMode = false, disable
               : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-[#ff0b01] focus:bg-white'
         }`}
       />
-      {!isGstinValid && (
+
+      {/* State Code Mismatch Error Notice */}
+      {isStateMismatch && (
+        <div className="mt-1.5 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium space-y-1 animate-in fade-in duration-150">
+          <p className="font-bold text-red-800 flex items-center gap-1">
+            <span>⚠️ State Code Mismatch (Code {gstinPrefix} vs {selectedStateObj?.displayName}):</span>
+          </p>
+          <p>
+            The entered GSTIN state code ({gstinPrefix}{derivedStateObj ? ` - ${derivedStateObj.displayName}` : ''}) does not belong to the selected state ({selectedStateObj?.displayName}).
+          </p>
+          <p className="text-[11px] text-red-600 font-bold">
+            If you don't have the GSTIN for {selectedStateObj?.displayName}, please keep this field blank.
+          </p>
+        </div>
+      )}
+
+      {/* Format Validation Error Notice */}
+      {!isFormatValid && !isStateMismatch && (
         <p className="text-xs text-red-600 mt-1 font-medium">Invalid 15-digit GSTIN format (e.g., 27AAAAA0000A1Z5)</p>
       )}
     </div>

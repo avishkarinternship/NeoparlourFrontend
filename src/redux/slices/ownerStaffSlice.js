@@ -6,7 +6,23 @@ export const loginOwner = createAsyncThunk(
   'ownerStaff/loginOwner',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/auth/login', credentials);
+      let usernameInput = (credentials?.username || '').trim();
+      // If user provided a phone number formatted with spaces, +91, hyphens, normalize it
+      if (/^[\d\s+\-\(\)]+$/.test(usernameInput)) {
+        const digitsOnly = usernameInput.replace(/\D/g, '');
+        if (digitsOnly.length === 10) {
+          usernameInput = digitsOnly;
+        } else if (digitsOnly.length === 12 && digitsOnly.startsWith('91')) {
+          usernameInput = digitsOnly.substring(2);
+        }
+      }
+
+      const payload = {
+        ...credentials,
+        username: usernameInput
+      };
+
+      const response = await axiosInstance.post('/auth/login', payload);
       const data = response.data;
       if (data.token) {
         localStorage.setItem('ownerStaffToken', data.token);

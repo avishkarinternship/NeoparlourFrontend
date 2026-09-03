@@ -36,7 +36,7 @@ export default function OwnerLayout() {
 
   useEffect(() => {
     const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
-    if (activeSalonId) {
+    if (activeSalonId && activeSalonId !== 'SYSTEM' && activeSalonId !== 'null' && !isNaN(Number(activeSalonId))) {
       axiosInstance.get(`/salons/${activeSalonId}`)
         .then(res => setSalon(res.data))
         .catch(err => console.warn('Could not fetch active salon info for ban check:', err.message));
@@ -50,7 +50,7 @@ export default function OwnerLayout() {
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       <div className="flex flex-1">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isDarkMode={isDarkMode} />
-        <div className="flex-1 flex flex-col min-w-0 p-3 sm:p-6">
+        <div className="flex-1 flex flex-col min-w-0 p-0">
           <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
           <Outlet context={{ isDarkMode, salon }} />
         </div>

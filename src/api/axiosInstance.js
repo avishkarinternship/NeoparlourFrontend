@@ -219,9 +219,11 @@ axiosInstance.interceptors.response.use(
       },
     };
 
-    // Deduplicate rate limit toasts to prevent stacking multiple alerts
+    // Deduplicate error toasts to prevent stacking multiple alerts
     if (error.response?.status === 429) {
       toastOptions.id = 'rate-limit-exceeded';
+    } else if (errorMessage) {
+      toastOptions.id = `error:${errorMessage}`;
     }
 
     // Show toast notification

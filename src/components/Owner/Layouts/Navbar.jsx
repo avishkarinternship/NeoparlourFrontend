@@ -88,10 +88,6 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
     imageUrl: null
   });
 
-  useEffect(() => {
-    console.log("[Navbar] Current search results:", searchResults);
-  }, [searchResults]);
-
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -117,8 +113,19 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   }, [isAdmin]);
 
   const fetchNotifications = async () => {
+    const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    if (ownerUser.role === 'ADMIN') {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
     try {
-      const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId || 1;
+      const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId;
+      if (!salonId || salonId === 'SYSTEM' || salonId === 'null' || isNaN(Number(salonId))) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
       const response = await axiosInstance.get(`/notifications/search?salonId=${salonId}&page=0&size=10`);
       const notifs = response.data.content || [];
       setNotifications(notifs);
@@ -141,8 +148,6 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             ? response.data.salonImages[0].imageUrl
             : null)
       });
-
-      console.log("Salon Profile:", response.data);
     } catch (error) {
       console.error("Salon profile fetch failed:", error);
     }

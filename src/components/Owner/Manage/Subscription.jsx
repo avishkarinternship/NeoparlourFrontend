@@ -125,7 +125,7 @@ const Subscription = () => {
     };
 
     return (
-                <main className={`flex-1 min-w-0 p-6 md:p-8 space-y-10 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 md:border-l md:border-zinc-800' : 'bg-white md:border-l md:border-gray-200'}`}>
+                <main className={`flex-1 min-w-0 p-4 md:p-6 space-y-10 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 md:border-l md:border-zinc-800' : 'bg-white md:border-l md:border-gray-200'}`}>
                     {/* Subscription Plans Section */}
                     <div className="space-y-6 max-w-5xl mx-auto">
                         <div className="inline-block border-b-2 border-red-600 pb-1">
