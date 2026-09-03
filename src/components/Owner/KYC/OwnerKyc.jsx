@@ -92,18 +92,20 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
   const approvedCount = documents.filter(d => (d.status || '').toUpperCase() === 'APPROVED').length;
   const pendingCount = documents.filter(d => {
     const status = (d.status || '').toUpperCase();
-    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath);
-    return status === 'PENDING' && hasFile;
+    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath || d.fileUrl || d.url || d.documentUrl);
+    return status === 'PENDING' || (hasFile && status !== 'APPROVED' && status !== 'REJECTED');
   }).length;
   const rejectedCount = documents.filter(d => (d.status || '').toUpperCase() === 'REJECTED').length;
   const actionRequiredCount = documents.filter(d => {
     const status = (d.status || '').toUpperCase();
-    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath);
-    return status === 'REJECTED' || status === 'NOT_SUBMITTED' || (!hasFile && status !== 'APPROVED');
+    const hasFile = !!(d.fileName || d.uploadedAt || d.filePath || d.fileUrl || d.url || d.documentUrl);
+    return status === 'REJECTED' || status === 'NOT_SUBMITTED' || (!hasFile && status !== 'APPROVED' && status !== 'PENDING');
   }).length;
 
+  const completionPercent = Math.round((approvedCount / (documents.length || 4)) * 100);
+
   return (
-    <div className={`space-y-6 transition-colors duration-300 ${
+    <div className={`p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-8 transition-colors duration-300 ${
       isDarkMode ? 'text-zinc-100' : 'text-slate-900'
     }`}>
 
@@ -142,7 +144,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
 
       {/* Rejection Alert Header Banner */}
       {rejectedCount > 0 && (
-        <div className="p-5 rounded-3xl bg-red-50 dark:bg-red-950/40 border-l-4 border-l-red-500 border border-red-200 dark:border-red-900/50 flex items-start gap-4">
+        <div className="p-6 rounded-3xl bg-red-50 dark:bg-red-950/40 border-l-4 border-l-red-500 border border-red-200 dark:border-red-900/50 flex items-start gap-4 shadow-sm">
           <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
             <ShieldAlert className="w-5.5 h-5.5" />
           </div>
@@ -157,9 +159,30 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
         </div>
       )}
 
-      {/* Metrics Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className={`p-5 rounded-3xl border flex items-center gap-4 ${
+      {/* Verification Completion Progress Bar */}
+      <div className={`p-6 sm:p-7 rounded-3xl border shadow-sm space-y-3 ${
+        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
+      }`}>
+        <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider">
+          <span className="flex items-center gap-2 text-slate-700 dark:text-zinc-200">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            Verification Progress
+          </span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+            {approvedCount} of {documents.length || 4} Verified ({completionPercent}%)
+          </span>
+        </div>
+        <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200/50 dark:border-zinc-700/50">
+          <div
+            className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 h-2 rounded-full transition-all duration-500 shadow-xs"
+            style={{ width: `${completionPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
           isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
         }`}>
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 font-black">
@@ -171,7 +194,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
           </div>
         </div>
 
-        <div className={`p-5 rounded-3xl border flex items-center gap-4 ${
+        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
           isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
         }`}>
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-black">
@@ -183,7 +206,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
           </div>
         </div>
 
-        <div className={`p-5 rounded-3xl border flex items-center gap-4 ${
+        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
           isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
         }`}>
           <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0 font-black">
@@ -197,7 +220,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
       </div>
 
       {/* Document List */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">
           Submitted Verification Documents
         </h3>
@@ -208,7 +231,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
             Loading KYC document statuses...
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {documents.map((doc, idx) => (
               <KycDocumentCard
                 key={doc.id || doc.documentType || idx}

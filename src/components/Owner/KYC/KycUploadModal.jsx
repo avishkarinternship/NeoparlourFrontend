@@ -30,6 +30,8 @@ const KycUploadModal = ({
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
+  const [filePreview, setFilePreview] = useState(null);
+
   useEffect(() => {
     if (isOpen) {
       if (documentType) {
@@ -39,8 +41,19 @@ const KycUploadModal = ({
       }
       setSelectedFile(null);
       setUploadProgress(0);
+      setFilePreview(null);
     }
   }, [isOpen, documentType]);
+
+  useEffect(() => {
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      const url = URL.createObjectURL(selectedFile);
+      setFilePreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setFilePreview(null);
+    }
+  }, [selectedFile]);
 
   if (!isOpen) return null;
 
@@ -103,12 +116,12 @@ const KycUploadModal = ({
       );
 
       const activeLabel = KYC_DOCUMENT_TYPES.find(t => t.value === selectedType)?.label || 'Document';
-      toast.success(`${activeLabel} resubmitted for Admin review.`);
+      toast.success(`${activeLabel} submitted for Admin review.`);
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      console.error("KYC resubmission failed:", err);
-      toast.error(err.response?.data?.message || err.message || "Failed to resubmit document");
+      console.error("KYC submission failed:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to submit document");
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -125,10 +138,10 @@ const KycUploadModal = ({
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-zinc-800">
           <div>
             <span className="text-[10px] font-black text-red-500 uppercase tracking-widest block">
-              Document Resubmission
+              Document Verification
             </span>
             <h3 className="text-lg font-black tracking-tight">
-              Upload KYC Document
+              Upload {KYC_DOCUMENT_TYPES.find(t => t.value === selectedType)?.label || 'KYC Document'}
             </h3>
           </div>
           <button
@@ -194,10 +207,16 @@ const KycUploadModal = ({
               />
 
               {selectedFile ? (
-                <div className="space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto">
-                    <FileText className="w-6 h-6" />
-                  </div>
+                <div className="space-y-3">
+                  {filePreview ? (
+                    <div className="relative w-24 h-24 mx-auto rounded-2xl overflow-hidden border border-emerald-500/30 shadow-md">
+                      <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-xs mx-auto">
                       {selectedFile.name}
@@ -206,9 +225,11 @@ const KycUploadModal = ({
                       {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                    Click to change file
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                      ✓ File Ready • Click to change
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
