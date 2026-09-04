@@ -16,8 +16,12 @@ const BanSalonModal = ({
   onClose,
   salon,
   onSuccess,
-  isDarkMode = false
+  isDarkMode: propIsDarkMode
 }) => {
+  const isDarkMode = propIsDarkMode !== undefined 
+    ? propIsDarkMode 
+    : (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+
   const [selectedReason, setSelectedReason] = useState(PREDEFINED_REASONS[0]);
   const [customNote, setCustomNote] = useState('');
   const [submitting, setSubmitting] = useState(false);

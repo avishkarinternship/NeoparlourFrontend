@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import {
@@ -35,6 +36,11 @@ const toastStyle = {
 };
 
 export default function AdminSubscriptions() {
+  const outletContext = useOutletContext() || {};
+  const isDarkMode = outletContext.isDarkMode !== undefined 
+    ? outletContext.isDarkMode 
+    : document.documentElement.classList.contains('dark');
+
   const [activeTab, setActiveTab] = useState('contracts'); // 'contracts' | 'plans' | 'coupons'
 
   // ==================== State: Contracts (Subscriptions) ====================
@@ -384,7 +390,9 @@ export default function AdminSubscriptions() {
   };
 
   return (
-    <main className="flex-1 p-6 md:p-8 bg-[#FAFAFA] overflow-y-auto max-w-7xl mx-auto w-full font-sans">
+    <main className={`flex-1 p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans ${
+      isDarkMode ? 'bg-zinc-950 text-white' : 'bg-[#FAFAFA] text-gray-900'
+    }`}>
       
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -392,8 +400,8 @@ export default function AdminSubscriptions() {
           <span className="text-[10px] font-black tracking-[0.2em] text-red-600 uppercase mb-2 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Administration Portal
           </span>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">Subscription & Coupon Control</h1>
-          <p className="text-xs text-gray-500 mt-1">Manage membership plans, promotional coupons, and active contracts.</p>
+          <h1 className={`text-2xl font-black tracking-tight uppercase leading-none ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Subscription & Coupon Control</h1>
+          <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Manage membership plans, promotional coupons, and active contracts.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -404,7 +412,9 @@ export default function AdminSubscriptions() {
               if (activeTab === 'coupons') fetchCoupons();
             }}
             disabled={loadingContracts || loadingPlans || loadingCoupons}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-200 rounded-xl shadow-xs transition disabled:opacity-50 text-xs font-bold cursor-pointer"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition disabled:opacity-50 cursor-pointer ${
+              isDarkMode ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800' : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-gray-200 shadow-xs'
+            }`}
           >
             <RefreshCw className={`w-4 h-4 ${(loadingContracts || loadingPlans || loadingCoupons) ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -433,13 +443,15 @@ export default function AdminSubscriptions() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-gray-200/60 rounded-2xl w-fit mb-8 border border-gray-200">
+      <div className={`flex items-center gap-2 p-1.5 rounded-2xl w-fit mb-8 border ${
+        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-200/60 border-gray-200'
+      }`}>
         <button
           onClick={() => setActiveTab('contracts')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'contracts'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-900'
+              ? isDarkMode ? 'bg-zinc-800 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm'
+              : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <CreditCard className="w-4 h-4 text-red-500" />
@@ -450,8 +462,8 @@ export default function AdminSubscriptions() {
           onClick={() => setActiveTab('plans')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'plans'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-900'
+              ? isDarkMode ? 'bg-zinc-800 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm'
+              : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <Tag className="w-4 h-4 text-red-500" />
@@ -462,8 +474,8 @@ export default function AdminSubscriptions() {
           onClick={() => setActiveTab('coupons')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === 'coupons'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-900'
+              ? isDarkMode ? 'bg-zinc-800 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm'
+              : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
           }`}
         >
           <Ticket className="w-4 h-4 text-red-500" />
@@ -476,34 +488,36 @@ export default function AdminSubscriptions() {
         <>
           {/* Stats Quick Overview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Contracts</p>
-              <p className="text-2xl font-black text-gray-900 mt-1">
+            <div className={`p-4 rounded-2xl border shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total Contracts</p>
+              <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {Array.isArray(subscriptions) ? subscriptions.length : 0}
               </p>
             </div>
-            <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Active Plans</p>
-              <p className="text-2xl font-black text-green-600 mt-1">
+            <div className={`p-4 rounded-2xl border shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Active Plans</p>
+              <p className="text-2xl font-black text-emerald-500 mt-1">
                 {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'active').length : 0}
               </p>
             </div>
-            <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Pending Orders</p>
+            <div className={`p-4 rounded-2xl border shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Pending Orders</p>
               <p className="text-2xl font-black text-amber-500 mt-1">
                 {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'pending').length : 0}
               </p>
             </div>
-            <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Expired Contracts</p>
-              <p className="text-2xl font-black text-gray-400 mt-1">
+            <div className={`p-4 rounded-2xl border shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Expired Contracts</p>
+              <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                 {Array.isArray(subscriptions) ? subscriptions.filter(s => s?.status?.toLowerCase() === 'expired').length : 0}
               </p>
             </div>
           </div>
 
           {/* Filters Bar */}
-          <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm mb-6 flex flex-col md:flex-row gap-4">
+          <div className={`p-4 rounded-2xl border shadow-sm mb-6 flex flex-col md:flex-row gap-4 ${
+            isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
+          }`}>
             <div className="flex-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                 <Search className="w-4 h-4" />
@@ -514,7 +528,9 @@ export default function AdminSubscriptions() {
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
                 placeholder="Search by Salon ID, Plan Code, or Payment ID..."
-                className="w-full pl-10 pr-4 py-2.5 bg-[#FAFAFA] border border-gray-100 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all placeholder-gray-400"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800 placeholder-zinc-500' : 'bg-[#FAFAFA] border-gray-100 text-gray-800 focus:bg-white placeholder-gray-400'
+                }`}
               />
             </div>
 
@@ -522,7 +538,9 @@ export default function AdminSubscriptions() {
               <select
                 value={planFilter}
                 onChange={(e) => { setPlanFilter(e.target.value); setPage(0); }}
-                className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-100 rounded-xl text-xs font-bold text-gray-600 focus:outline-none focus:border-red-500 focus:bg-white transition-all"
+                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
+                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
+                }`}
               >
                 <option value="">All Plans</option>
                 {uniquePlans.map(plan => (
@@ -535,7 +553,9 @@ export default function AdminSubscriptions() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-                className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-gray-100 rounded-xl text-xs font-bold text-gray-600 focus:outline-none focus:border-red-500 focus:bg-white transition-all"
+                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
+                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
+                }`}
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active Only</option>
@@ -555,7 +575,9 @@ export default function AdminSubscriptions() {
             {(searchTerm || statusFilter || planFilter) && (
               <button
                 onClick={handleSearchReset}
-                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 flex-shrink-0"
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 flex-shrink-0 ${
+                  isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                }`}
               >
                 <X className="w-3.5 h-3.5" /> Clear
               </button>
@@ -563,11 +585,15 @@ export default function AdminSubscriptions() {
           </div>
 
           {/* Table */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className={`border rounded-2xl shadow-sm overflow-hidden ${
+            isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
+          }`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
+                    isDarkMode ? 'bg-zinc-900/50 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
+                  }`}>
                     <th className="py-4 px-6">ID / Salon</th>
                     <th className="py-4 px-6">Plan Info</th>
                     <th className="py-4 px-6">Validity Period</th>
@@ -575,19 +601,19 @@ export default function AdminSubscriptions() {
                     <th className="py-4 px-6 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-xs text-gray-700">
+                <tbody className={`divide-y text-xs ${isDarkMode ? 'divide-zinc-800/60 text-zinc-300' : 'divide-gray-100 text-gray-700'}`}>
                   {loadingContracts ? (
                     <tr>
-                      <td colSpan="5" className="py-12 text-center text-gray-400">
+                      <td colSpan="5" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                         <RefreshCw className="w-8 h-8 animate-spin mx-auto text-red-500 mb-2" />
                         <span className="font-bold">Fetching contracts...</span>
                       </td>
                     </tr>
                   ) : filteredSubscriptions.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="py-12 text-center text-gray-400">
-                        <CreditCard className="w-12 h-12 mx-auto text-gray-200 mb-2" />
-                        <p className="font-bold text-gray-500">No subscription contracts found.</p>
+                      <td colSpan="5" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                        <CreditCard className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-200'}`} />
+                        <p className={`font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No subscription contracts found.</p>
                         {(searchTerm || statusFilter || planFilter) && (
                           <button onClick={handleSearchReset} className="mt-3 text-xs text-red-500 font-bold hover:underline cursor-pointer">Clear filters</button>
                         )}
@@ -595,42 +621,46 @@ export default function AdminSubscriptions() {
                     </tr>
                   ) : (
                     filteredSubscriptions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-[#FAFAFA]/70 transition-colors">
+                      <tr key={sub.id} className={`transition-colors ${isDarkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-[#FAFAFA]/70'}`}>
                         <td className="py-4.5 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isDarkMode ? 'bg-red-950/50 text-red-400' : 'bg-red-50 text-red-500'
+                            }`}>
                               <Building2 className="w-4 h-4" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900 leading-tight">Salon ID: {sub.salonId}</p>
-                              <p className="text-[9px] text-gray-400 mt-0.5">Contract Ref: #{sub.id}</p>
+                              <p className={`font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Salon ID: {sub.salonId}</p>
+                              <p className={`text-[9px] mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Contract Ref: #{sub.id}</p>
                             </div>
                           </div>
                         </td>
                         <td className="py-4.5 px-6">
-                          <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                          <div className={`flex items-center gap-1.5 font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
                             <Tag className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="bg-red-50 text-red-600 px-2.5 py-0.5 rounded-lg text-[10px]">
+                            <span className={`px-2.5 py-0.5 rounded-lg text-[10px] ${
+                              isDarkMode ? 'bg-red-950/60 text-red-400 border border-red-900' : 'bg-red-50 text-red-600'
+                            }`}>
                               {sub.planCode ? sub.planCode.toUpperCase() : 'N/A'}
                             </span>
                           </div>
                         </td>
                         <td className="py-4.5 px-6">
-                          <div className="space-y-0.5 text-gray-800 font-medium">
+                          <div className={`space-y-0.5 font-medium ${isDarkMode ? 'text-zinc-300' : 'text-gray-800'}`}>
                             <p className="flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5 text-gray-400" />
                               <span>Start: {sub.startDate ? new Date(sub.startDate).toLocaleDateString() : 'N/A'}</span>
                             </p>
-                            <p className="flex items-center gap-1.5 text-[10px] text-gray-500 pl-5">
+                            <p className={`flex items-center gap-1.5 text-[10px] pl-5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
                               <span>End: {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Lifetime / Continuous'}</span>
                             </p>
                           </div>
                         </td>
                         <td className="py-4.5 px-6">
                           <div className="max-w-[200px] truncate">
-                            <p className="font-bold text-gray-800 break-all">{sub.paymentId || 'N/A'}</p>
+                            <p className={`font-bold break-all ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>{sub.paymentId || 'N/A'}</p>
                             {sub.razorpaySubscriptionId && (
-                              <p className="text-[9px] text-gray-400 mt-0.5 truncate">Sub: {sub.razorpaySubscriptionId}</p>
+                              <p className={`text-[9px] mt-0.5 truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Sub: {sub.razorpaySubscriptionId}</p>
                             )}
                           </div>
                         </td>
@@ -645,19 +675,23 @@ export default function AdminSubscriptions() {
             </div>
 
             {/* Pagination Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
-              <div className="flex items-center gap-3 text-xs text-gray-500">
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t rounded-b-2xl ${
+              isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-50/50 border-gray-100 text-gray-500'
+            }`}>
+              <div className="flex items-center gap-3 text-xs">
                 <span className="font-semibold">Rows per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}
-                  className="px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 focus:outline-none focus:border-red-400 transition-all cursor-pointer"
+                  className={`px-2.5 py-1.5 border rounded-lg text-xs font-bold outline-none focus:border-red-400 transition-all cursor-pointer ${
+                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-200' : 'bg-white border-gray-200 text-gray-700'
+                  }`}
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span className="text-gray-400">
+                <span className={isDarkMode ? 'text-zinc-400' : 'text-gray-400'}>
                   {totalElements > 0
                     ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalElements)} of ${totalElements} contracts`
                     : `${subscriptions.length} contracts`
@@ -669,17 +703,21 @@ export default function AdminSubscriptions() {
                 <button
                   onClick={() => setPage(p => Math.max(0, p - 1))}
                   disabled={page === 0 || loadingContracts}
-                  className="px-3.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer ${
+                    isDarkMode ? 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
                   ← Prev
                 </button>
-                <span className="text-xs font-black text-gray-700 px-2">
+                <span className={`text-xs font-black px-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                   Page {page + 1} of {Math.max(1, totalPages)}
                 </span>
                 <button
                   onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1 || loadingContracts}
-                  className="px-3.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                  className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer ${
+                    isDarkMode ? 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
                   Next →
                 </button>
@@ -692,14 +730,18 @@ export default function AdminSubscriptions() {
       {/* TAB 2: SUBSCRIPTION PLANS */}
       {activeTab === 'plans' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
+          <div className={`flex items-center justify-between border p-4 rounded-2xl shadow-xs ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'
+          }`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isDarkMode ? 'bg-red-950/60 text-red-400' : 'bg-red-50 text-red-600'
+              }`}>
                 <Tag className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-extrabold text-gray-900 text-sm uppercase">Configured Subscription Plans</h3>
-                <p className="text-xs text-gray-400">Plans shown to salon owners on registration and management screens.</p>
+                <h3 className={`font-extrabold text-sm uppercase ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Configured Subscription Plans</h3>
+                <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Plans shown to salon owners on registration and management screens.</p>
               </div>
             </div>
 
@@ -713,15 +755,17 @@ export default function AdminSubscriptions() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loadingPlans ? (
-              <div className="col-span-full py-12 text-center text-gray-400">
+              <div className={`col-span-full py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto text-red-500 mb-2" />
                 <span className="font-bold">Loading plans...</span>
               </div>
             ) : plans.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-gray-400 bg-white rounded-2xl border border-gray-100">
-                <Tag className="w-12 h-12 mx-auto text-gray-200 mb-2" />
-                <p className="font-bold text-gray-600">No subscription plans found.</p>
-                <p className="text-xs text-gray-400 mt-1">Click "Create Plan" above to configure your first plan.</p>
+              <div className={`col-span-full py-12 text-center rounded-2xl border ${
+                isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-100 text-gray-400'
+              }`}>
+                <Tag className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-200'}`} />
+                <p className={`font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}>No subscription plans found.</p>
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Click "Create Plan" above to configure your first plan.</p>
               </div>
             ) : (
               plans.map((plan) => {
@@ -729,53 +773,63 @@ export default function AdminSubscriptions() {
                 return (
                   <div 
                     key={plan.id}
-                    className={`bg-white border rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
-                      plan.active ? 'border-gray-100' : 'border-gray-200 bg-gray-50/50 opacity-75'
+                    className={`border rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all duration-300 ${
+                      plan.active 
+                        ? isDarkMode ? 'bg-zinc-900/90 border-zinc-800 hover:shadow-md' : 'bg-white border-gray-100 hover:shadow-md'
+                        : isDarkMode ? 'bg-zinc-900/40 border-zinc-800/60 opacity-60' : 'bg-gray-50/50 border-gray-200 opacity-75'
                     }`}
                   >
                     <div>
                       <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
-                        <span className="text-[10px] font-black tracking-widest uppercase bg-red-50 text-red-600 px-3 py-1 rounded-full border border-red-100">
+                        <span className={`text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full border ${
+                          isDarkMode ? 'bg-red-950/60 text-red-400 border-red-900' : 'bg-red-50 text-red-600 border-red-100'
+                        }`}>
                           Code: {plan.planCode}
                         </span>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1">
+                          <div className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 border ${
+                            isDarkMode ? 'bg-emerald-950/60 border-emerald-900 text-emerald-400' : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                          }`}>
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                             <span>{plan.completedPaymentClaimCount ?? 0} Paid Subscriptions</span>
                           </div>
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            plan.active ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-gray-100 text-gray-500'
+                            plan.active 
+                              ? isDarkMode ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-900' : 'bg-green-50 text-green-600 border border-green-100' 
+                              : isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-gray-100 text-gray-500'
                           }`}>
                             {plan.active ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       </div>
 
-                      <h4 className="text-xl font-extrabold text-gray-900 tracking-tight mb-2 uppercase">
+                      <h4 className={`text-xl font-extrabold tracking-tight mb-2 uppercase ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                         {plan.planName}
                       </h4>
 
                       <div className="flex items-baseline gap-1 mb-4">
-                        <span className="text-3xl font-black text-gray-900">₹{amountInRupees}</span>
-                        <span className="text-xs font-semibold text-gray-400">
+                        <span className={`text-3xl font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹{amountInRupees}</span>
+                        <span className={`text-xs font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                           / {plan.durationMonths} {plan.durationMonths === 1 ? 'Month' : 'Months'}
                         </span>
                       </div>
 
                       {plan.razorpayPlanId && (
-                        <div className="text-[10px] font-mono text-gray-400 bg-gray-50 p-2 rounded-xl mb-4 truncate border border-gray-100">
+                        <div className={`text-[10px] font-mono p-2 rounded-xl mb-4 truncate border ${
+                          isDarkMode ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700' : 'bg-gray-50 text-gray-400 border-gray-100'
+                        }`}>
                           Razorpay ID: {plan.razorpayPlanId}
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                    <div className={`pt-4 border-t flex items-center justify-between gap-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
                       <button
                         onClick={() => handleTogglePlanActive(plan)}
                         className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition cursor-pointer ${
                           plan.active 
-                            ? 'border-gray-200 text-gray-600 hover:bg-gray-100' 
-                            : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
+                            ? isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-200 text-gray-600 hover:bg-gray-100' 
+                            : isDarkMode ? 'border-emerald-900 text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/60' : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
                         }`}
                       >
                         {plan.active ? 'Deactivate' : 'Activate'}
@@ -783,7 +837,9 @@ export default function AdminSubscriptions() {
 
                       <button
                         onClick={() => handleOpenEditPlan(plan)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          isDarkMode ? 'bg-white hover:bg-zinc-200 text-black' : 'bg-gray-900 hover:bg-black text-white'
+                        }`}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                         <span>Edit</span>
@@ -800,14 +856,18 @@ export default function AdminSubscriptions() {
       {/* TAB 3: COUPONS */}
       {activeTab === 'coupons' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
+          <div className={`flex items-center justify-between border p-4 rounded-2xl shadow-xs ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'
+          }`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isDarkMode ? 'bg-red-950/60 text-red-400' : 'bg-red-50 text-red-600'
+              }`}>
                 <Ticket className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-extrabold text-gray-900 text-sm uppercase">Promotional Coupons & Discounts</h3>
-                <p className="text-xs text-gray-400">Manage promotional discount codes and 100% free trial coupons.</p>
+                <h3 className={`font-extrabold text-sm uppercase ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Promotional Coupons & Discounts</h3>
+                <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Manage promotional discount codes and 100% free trial coupons.</p>
               </div>
             </div>
 
@@ -819,11 +879,15 @@ export default function AdminSubscriptions() {
             </button>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className={`border rounded-2xl shadow-sm overflow-hidden ${
+            isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
+          }`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                  <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
+                    isDarkMode ? 'bg-zinc-900/50 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
+                  }`}>
                     <th className="py-4 px-6">Coupon Code</th>
                     <th className="py-4 px-6">Discount Type & Value</th>
                     <th className="py-4 px-6">Applicable Plan</th>
@@ -833,53 +897,57 @@ export default function AdminSubscriptions() {
                     <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-xs text-gray-700">
+                <tbody className={`divide-y text-xs ${isDarkMode ? 'divide-zinc-800/60 text-zinc-300' : 'divide-gray-100 text-gray-700'}`}>
                   {loadingCoupons ? (
                     <tr>
-                      <td colSpan="7" className="py-12 text-center text-gray-400">
+                      <td colSpan="7" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                         <RefreshCw className="w-8 h-8 animate-spin mx-auto text-red-500 mb-2" />
                         <span className="font-bold">Loading coupons...</span>
                       </td>
                     </tr>
                   ) : coupons.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="py-12 text-center text-gray-400">
-                        <Ticket className="w-12 h-12 mx-auto text-gray-200 mb-2" />
-                        <p className="font-bold text-gray-600">No promotional coupons created yet.</p>
-                        <p className="text-xs text-gray-400 mt-1">Click "Add Coupon" above to create discount codes.</p>
+                      <td colSpan="7" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                        <Ticket className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-200'}`} />
+                        <p className={`font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}>No promotional coupons created yet.</p>
+                        <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Click "Add Coupon" above to create discount codes.</p>
                       </td>
                     </tr>
                   ) : (
                     coupons.map((coupon) => (
-                      <tr key={coupon.id} className="hover:bg-[#FAFAFA]/70 transition-colors">
-                        <td className="py-4.5 px-6 font-black text-gray-900">
-                          <span className="px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-xl font-mono text-xs tracking-wider">
+                      <tr key={coupon.id} className={`transition-colors ${isDarkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-[#FAFAFA]/70'}`}>
+                        <td className="py-4.5 px-6 font-black">
+                          <span className={`px-3 py-1 border rounded-xl font-mono text-xs tracking-wider ${
+                            isDarkMode ? 'bg-red-950/60 text-red-400 border-red-900' : 'bg-red-50 text-red-600 border-red-100'
+                          }`}>
                             {coupon.couponCode}
                           </span>
                         </td>
                         <td className="py-4.5 px-6">
-                          <span className="font-extrabold text-gray-900">
+                          <span className={`font-extrabold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}% OFF` : `₹${(coupon.discountValue / 100).toFixed(0)} OFF`}
                           </span>
-                          <span className="block text-[10px] text-gray-400 font-bold uppercase mt-0.5">
+                          <span className={`block text-[10px] font-bold uppercase mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                             {coupon.discountType}
                           </span>
                         </td>
                         <td className="py-4.5 px-6">
-                          <span className="font-bold text-gray-700">
+                          <span className={`font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
                             {coupon.applicablePlanCode ? coupon.applicablePlanCode.toUpperCase() : 'All Plans'}
                           </span>
                         </td>
                         <td className="py-4.5 px-6 font-semibold">
-                          <span className="text-gray-900 font-extrabold">{coupon.usedCount || 0}</span>
-                          <span className="text-gray-400"> / {coupon.maxUses !== null && coupon.maxUses !== undefined ? coupon.maxUses : '∞'}</span>
+                          <span className={`font-extrabold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{coupon.usedCount || 0}</span>
+                          <span className={isDarkMode ? 'text-zinc-500' : 'text-gray-400'}> / {coupon.maxUses !== null && coupon.maxUses !== undefined ? coupon.maxUses : '∞'}</span>
                         </td>
-                        <td className="py-4.5 px-6 text-gray-600 font-medium">
+                        <td className={`py-4.5 px-6 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
                           {coupon.validFrom ? new Date(coupon.validFrom).toLocaleDateString() : 'Immediate'} → {coupon.validTo ? new Date(coupon.validTo).toLocaleDateString() : 'Forever'}
                         </td>
                         <td className="py-4.5 px-6">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            coupon.active ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-gray-100 text-gray-500'
+                            coupon.active 
+                              ? isDarkMode ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-900' : 'bg-green-50 text-green-600 border border-green-100'
+                              : isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-gray-100 text-gray-500'
                           }`}>
                             {coupon.active ? 'Active' : 'Inactive'}
                           </span>
@@ -888,14 +956,18 @@ export default function AdminSubscriptions() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleOpenEditCoupon(coupon)}
-                              className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                              className={`p-2 rounded-lg transition cursor-pointer ${
+                                isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
                               title="Edit Coupon"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCoupon(coupon.id)}
-                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              className={`p-2 rounded-lg transition cursor-pointer ${
+                                isDarkMode ? 'text-red-400 hover:text-red-300 hover:bg-red-950/50' : 'text-red-500 hover:text-red-700 hover:bg-red-50'
+                              }`}
                               title="Delete Coupon"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -914,56 +986,66 @@ export default function AdminSubscriptions() {
 
       {/* ==================== MODAL: CREATE / EDIT PLAN ==================== */}
       {isPlanModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className={`rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border relative ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+          }`}>
             <button
               onClick={() => setIsPlanModalOpen(false)}
-              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition"
+              className={`absolute top-6 right-6 p-2 rounded-full transition cursor-pointer ${
+                isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                isDarkMode ? 'bg-red-950/60 text-red-400' : 'bg-red-50 text-red-600'
+              }`}>
                 <Tag className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-900 uppercase">
+                <h3 className={`text-lg font-black uppercase ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {editingPlan ? 'Edit Subscription Plan' : 'Create Subscription Plan'}
                 </h3>
-                <p className="text-xs text-gray-400 font-semibold">Configure membership pricing and terms.</p>
+                <p className={`text-xs font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Configure membership pricing and terms.</p>
               </div>
             </div>
 
             <form onSubmit={handleSavePlan} className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Plan Code *</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Plan Code *</label>
                 <input
                   type="text"
                   value={planForm.planCode}
                   onChange={(e) => setPlanForm({ ...planForm, planCode: e.target.value })}
                   placeholder="e.g. 1month, 12month, basic, pro"
                   required
-                  disabled={!!editingPlan} // Code should be unique key
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition disabled:opacity-60"
+                  disabled={!!editingPlan}
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition disabled:opacity-60 border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Plan Display Name *</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Plan Display Name *</label>
                 <input
                   type="text"
                   value={planForm.planName}
                   onChange={(e) => setPlanForm({ ...planForm, planName: e.target.value })}
                   placeholder="e.g. Monthly Basic Plan"
                   required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Price (₹ INR) *</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Price (₹ INR) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -971,12 +1053,14 @@ export default function AdminSubscriptions() {
                     onChange={(e) => setPlanForm({ ...planForm, amountInRupees: e.target.value })}
                     placeholder="e.g. 2999"
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Duration (Months) *</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Duration (Months) *</label>
                   <input
                     type="number"
                     min="1"
@@ -984,24 +1068,30 @@ export default function AdminSubscriptions() {
                     onChange={(e) => setPlanForm({ ...planForm, durationMonths: e.target.value })}
                     placeholder="e.g. 1, 3, 6, 12"
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Razorpay Plan ID (Optional)</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Razorpay Plan ID (Optional)</label>
                 <input
                   type="text"
                   value={planForm.razorpayPlanId}
                   onChange={(e) => setPlanForm({ ...planForm, razorpayPlanId: e.target.value })}
                   placeholder="e.g. plan_N12345ABC"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                  className={`w-full px-4 py-3 rounded-xl text-xs font-mono focus:outline-none focus:border-red-500 transition border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                  }`}
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <span className="text-xs font-bold text-gray-700">Active Status</span>
+              <div className={`flex items-center justify-between p-3 rounded-xl border ${
+                isDarkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-gray-50 border-gray-100'
+              }`}>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>Active Status</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -1009,7 +1099,9 @@ export default function AdminSubscriptions() {
                     onChange={(e) => setPlanForm({ ...planForm, active: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF2A14]"></div>
+                  <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF2A14] ${
+                    isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'
+                  }`}></div>
                 </label>
               </div>
 
@@ -1017,7 +1109,9 @@ export default function AdminSubscriptions() {
                 <button
                   type="button"
                   onClick={() => setIsPlanModalOpen(false)}
-                  className="flex-1 py-3 border border-gray-200 text-gray-600 font-bold rounded-xl text-xs uppercase hover:bg-gray-50 transition cursor-pointer"
+                  className={`flex-1 py-3 border font-bold rounded-xl text-xs uppercase transition cursor-pointer ${
+                    isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
                   Cancel
                 </button>
@@ -1036,47 +1130,57 @@ export default function AdminSubscriptions() {
 
       {/* ==================== MODAL: CREATE / EDIT COUPON ==================== */}
       {isCouponModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className={`rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border relative max-h-[90vh] overflow-y-auto custom-scrollbar ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-100 text-gray-900'
+          }`}>
             <button
               onClick={() => setIsCouponModalOpen(false)}
-              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition"
+              className={`absolute top-6 right-6 p-2 rounded-full transition cursor-pointer ${
+                isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                isDarkMode ? 'bg-red-950/60 text-red-400' : 'bg-red-50 text-red-600'
+              }`}>
                 <Ticket className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-900 uppercase">
+                <h3 className={`text-lg font-black uppercase ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {editingCoupon ? 'Edit Coupon' : 'Create Coupon'}
                 </h3>
-                <p className="text-xs text-gray-400 font-semibold">Configure promotional discount codes.</p>
+                <p className={`text-xs font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Configure promotional discount codes.</p>
               </div>
             </div>
 
             <form onSubmit={handleSaveCoupon} className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Coupon Code *</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Coupon Code *</label>
                 <input
                   type="text"
                   value={couponForm.couponCode}
                   onChange={(e) => setCouponForm({ ...couponForm, couponCode: e.target.value.toUpperCase() })}
                   placeholder="e.g. FREESUB, SAVE50, WELCOME10"
                   required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-black text-gray-800 tracking-wider uppercase focus:outline-none focus:border-red-500 focus:bg-white transition"
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-black tracking-wider uppercase focus:outline-none focus:border-red-500 transition border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Discount Type *</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Discount Type *</label>
                   <select
                     value={couponForm.discountType}
                     onChange={(e) => setCouponForm({ ...couponForm, discountType: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                    }`}
                   >
                     <option value="PERCENTAGE">Percentage (%)</option>
                     <option value="FLAT">Flat Amount (Paise)</option>
@@ -1084,7 +1188,7 @@ export default function AdminSubscriptions() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                     {couponForm.discountType === 'PERCENTAGE' ? 'Discount Value (%) *' : 'Flat Value (in Paise) *'}
                   </label>
                   <input
@@ -1094,17 +1198,21 @@ export default function AdminSubscriptions() {
                     onChange={(e) => setCouponForm({ ...couponForm, discountValue: e.target.value })}
                     placeholder={couponForm.discountType === 'PERCENTAGE' ? 'e.g. 100 (for 100% free)' : 'e.g. 50000 (for ₹500)'}
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Applicable Plan (Optional)</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Applicable Plan (Optional)</label>
                 <select
                   value={couponForm.applicablePlanCode}
                   onChange={(e) => setCouponForm({ ...couponForm, applicablePlanCode: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                  }`}
                 >
                   <option value="">All Subscription Plans</option>
                   {plans.map(p => (
@@ -1114,40 +1222,48 @@ export default function AdminSubscriptions() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Max Uses (Optional)</label>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Max Uses (Optional)</label>
                 <input
                   type="number"
                   value={couponForm.maxUses}
                   onChange={(e) => setCouponForm({ ...couponForm, maxUses: e.target.value })}
                   placeholder="Leave blank for unlimited uses"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Valid From (Optional)</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Valid From (Optional)</label>
                   <input
                     type="datetime-local"
                     value={couponForm.validFrom}
                     onChange={(e) => setCouponForm({ ...couponForm, validFrom: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Valid To (Optional)</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Valid To (Optional)</label>
                   <input
                     type="datetime-local"
                     value={couponForm.validTo}
                     onChange={(e) => setCouponForm({ ...couponForm, validTo: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-red-500 focus:bg-white transition"
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                    }`}
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <span className="text-xs font-bold text-gray-700">Active Status</span>
+              <div className={`flex items-center justify-between p-3 rounded-xl border ${
+                isDarkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-gray-50 border-gray-100'
+              }`}>
+                <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>Active Status</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -1155,7 +1271,9 @@ export default function AdminSubscriptions() {
                     onChange={(e) => setCouponForm({ ...couponForm, active: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF2A14]"></div>
+                  <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF2A14] ${
+                    isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'
+                  }`}></div>
                 </label>
               </div>
 
@@ -1163,7 +1281,9 @@ export default function AdminSubscriptions() {
                 <button
                   type="button"
                   onClick={() => setIsCouponModalOpen(false)}
-                  className="flex-1 py-3 border border-gray-200 text-gray-600 font-bold rounded-xl text-xs uppercase hover:bg-gray-50 transition cursor-pointer"
+                  className={`flex-1 py-3 border font-bold rounded-xl text-xs uppercase transition cursor-pointer ${
+                    isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
                   Cancel
                 </button>

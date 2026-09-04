@@ -534,20 +534,24 @@ const OwnerDashboard = () => {
 
     if (isAdmin) {
         return (
-            <main className="flex-1 p-6 md:p-8 bg-[#FAFAFA] overflow-y-auto max-w-7xl mx-auto w-full font-sans">
+            <main className={`flex-1 p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans ${
+                isDarkMode ? 'bg-zinc-950 text-white' : 'bg-[#FAFAFA] text-gray-900'
+            }`}>
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div>
                         <span className="text-[10px] font-black tracking-[0.2em] text-red-600 uppercase mb-2 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" /> System Controller
                         </span>
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">Admin Control Panel</h1>
-                        <p className="text-xs text-gray-500 mt-1">Real-time system health metrics, customer subscription status, and active salons.</p>
+                        <h1 className={`text-2xl font-black tracking-tight uppercase leading-none ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Admin Control Panel</h1>
+                        <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Real-time system health metrics, customer subscription status, and active salons.</p>
                     </div>
                     <button
                         onClick={fetchAdminStats}
                         disabled={loadingAdmin}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border border-gray-200 rounded-xl shadow-xs transition disabled:opacity-50 text-xs font-bold"
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition disabled:opacity-50 cursor-pointer ${
+                            isDarkMode ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-xs'
+                        }`}
                     >
                         <svg className={`w-4 h-4 ${loadingAdmin ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
@@ -560,142 +564,146 @@ const OwnerDashboard = () => {
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                         <div>
-                            <h2 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                            <h2 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 <span>Analytics Overview</span>
                             </h2>
-                            <p className="text-[11px] text-gray-400">Real-time appointment metrics & financial revenue statistics</p>
+                            <p className={`text-[11px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Real-time appointment metrics & financial revenue statistics</p>
                         </div>
 
                         {/* Date Filter Inputs */}
-                        <div className="flex items-center space-x-2 bg-white border border-gray-200 p-2 rounded-xl text-xs">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">From:</span>
+                        <div className={`flex items-center space-x-2 p-2 rounded-xl text-xs border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                            <span className={`text-[10px] font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From:</span>
                             <input 
                                 type="date" 
                                 value={overviewFromDate}
                                 onChange={(e) => setOverviewFromDate(e.target.value)}
-                                className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:border-red-500"
+                                className={`rounded-lg px-2 py-1 text-xs font-semibold border focus:outline-none focus:border-red-500 ${
+                                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-200' : 'bg-gray-50 border-gray-200 text-gray-700'
+                                }`}
                             />
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">To:</span>
+                            <span className={`text-[10px] font-bold uppercase ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To:</span>
                             <input 
                                 type="date" 
                                 value={overviewToDate}
                                 onChange={(e) => setOverviewToDate(e.target.value)}
-                                className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:border-red-500"
+                                className={`rounded-lg px-2 py-1 text-xs font-semibold border focus:outline-none focus:border-red-500 ${
+                                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-200' : 'bg-gray-50 border-gray-200 text-gray-700'
+                                }`}
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Card 1: Booked & Rescheduled Appointments */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Booked & Rescheduled</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked & Rescheduled</p>
+                                    <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                         {overviewLoading ? '...' : (adminOverview.bookedAndRescheduledAppointmentsCount ?? 0)}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
                                     <Calendar className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Booked, Confirmed & Rescheduled</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked, Confirmed & Rescheduled</p>
                         </div>
 
                         {/* Card 2: Ongoing Appointments */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Ongoing Appointments</p>
-                                    <p className="text-2xl font-black text-amber-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Ongoing Appointments</p>
+                                    <p className="text-2xl font-black text-amber-500 mt-1">
                                         {overviewLoading ? '...' : (adminOverview.ongoingAppointmentsCount ?? 0)}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
                                     <Clock className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Status: In Progress</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Status: In Progress</p>
                         </div>
 
                         {/* Card 3: Completed Appointments */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Completed Appointments</p>
-                                    <p className="text-2xl font-black text-green-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Completed Appointments</p>
+                                    <p className="text-2xl font-black text-emerald-500 mt-1">
                                         {overviewLoading ? '...' : (adminOverview.completedAppointmentsCount ?? 0)}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-green-50 text-green-600'}`}>
                                     <CheckCircle2 className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Finished sessions</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Finished sessions</p>
                         </div>
 
                         {/* Card 4: Cancelled Appointments */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Cancelled Appointments</p>
-                                    <p className="text-2xl font-black text-red-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Cancelled Appointments</p>
+                                    <p className="text-2xl font-black text-red-500 mt-1">
                                         {overviewLoading ? '...' : (adminOverview.cancelledAppointmentsCount ?? 0)}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>
                                     <XCircle className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Terminated bookings</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Terminated bookings</p>
                         </div>
 
                         {/* Card 5: Rescheduled Appointments Count */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Rescheduled Count</p>
-                                    <p className="text-2xl font-black text-purple-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Rescheduled Count</p>
+                                    <p className="text-2xl font-black text-purple-400 mt-1">
                                         {overviewLoading ? '...' : (adminOverview.rescheduledAppointmentsCount ?? 0)}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
                                     <RotateCw className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Shifted time slots</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Shifted time slots</p>
                         </div>
 
                         {/* Card 6: Completed Appointments Revenue */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Completed Revenue</p>
-                                    <p className="text-2xl font-black text-emerald-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Completed Revenue</p>
+                                    <p className="text-2xl font-black text-emerald-400 mt-1">
                                         {overviewLoading ? '...' : `₹ ${(adminOverview.completedAppointmentsRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
                                     <IndianRupee className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">From completed appointments</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From completed appointments</p>
                         </div>
 
                         {/* Card 7: Subscriptions Revenue */}
-                        <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-2xs hover:shadow-xs transition sm:col-span-2 lg:col-span-2">
+                        <div className={`p-5 rounded-2xl border transition shadow-2xs hover:shadow-xs sm:col-span-2 lg:col-span-2 ${isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Subscriptions Revenue</p>
-                                    <p className="text-2xl font-black text-red-600 mt-1">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Subscriptions Revenue</p>
+                                    <p className="text-2xl font-black text-red-500 mt-1">
                                         {overviewLoading ? '...' : `₹ ${(adminOverview.subscriptionsRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                     </p>
                                 </div>
-                                <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                                <div className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>
                                     <CreditCard className="w-5 h-5" />
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-3">Total revenue from subscription plans</p>
+                            <p className={`text-[10px] font-semibold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total revenue from subscription plans</p>
                         </div>
                     </div>
                 </div>
@@ -705,22 +713,28 @@ const OwnerDashboard = () => {
                     {/* Salons Card */}
                     <div 
                         onClick={() => navigate('/owner/salons')}
-                        className="bg-white border border-gray-150 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                        className={`p-6 rounded-2xl border shadow-xs transition-all cursor-pointer group ${
+                            isDarkMode ? 'bg-zinc-900/90 border-zinc-800 hover:border-red-500/40' : 'bg-white border-gray-150 hover:border-red-200 hover:shadow-md'
+                        }`}
                     >
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Registered Salons</p>
-                                <p className="text-3xl font-black text-gray-900 mt-1.5 group-hover:text-red-600 transition-colors">
+                                <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Registered Salons</p>
+                                <p className={`text-3xl font-black mt-1.5 transition-colors ${
+                                    isDarkMode ? 'text-white group-hover:text-red-500' : 'text-gray-900 group-hover:text-red-600'
+                                }`}>
                                     {loadingAdmin ? '...' : adminStats.totalSalons}
                                 </p>
                             </div>
-                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                            <div className={`p-3 rounded-xl transition-all ${
+                                isDarkMode ? 'bg-red-500/10 text-red-400 group-hover:bg-red-600 group-hover:text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white'
+                            }`}>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                        <p className={`text-[10px] font-semibold mt-4 flex items-center gap-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                             <span>Manage listings & verify documents</span>
                             <span className="group-hover:translate-x-1.5 transition-transform">→</span>
                         </p>
@@ -729,22 +743,28 @@ const OwnerDashboard = () => {
                     {/* Subscriptions Card */}
                     <div 
                         onClick={() => navigate('/owner/subscriptions')}
-                        className="bg-white border border-gray-155 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                        className={`p-6 rounded-2xl border shadow-xs transition-all cursor-pointer group ${
+                            isDarkMode ? 'bg-zinc-900/90 border-zinc-800 hover:border-red-500/40' : 'bg-white border-gray-155 hover:border-red-200 hover:shadow-md'
+                        }`}
                     >
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Active Subscriptions</p>
-                                <p className="text-3xl font-black text-gray-900 mt-1.5 group-hover:text-red-600 transition-colors">
+                                <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Active Subscriptions</p>
+                                <p className={`text-3xl font-black mt-1.5 transition-colors ${
+                                    isDarkMode ? 'text-white group-hover:text-red-500' : 'text-gray-900 group-hover:text-red-600'
+                                }`}>
                                     {loadingAdmin ? '...' : adminStats.totalActiveSubscriptions}
                                 </p>
                             </div>
-                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                            <div className={`p-3 rounded-xl transition-all ${
+                                isDarkMode ? 'bg-red-500/10 text-red-400 group-hover:bg-red-600 group-hover:text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white'
+                            }`}>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                        <p className={`text-[10px] font-semibold mt-4 flex items-center gap-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                             <span>Check payment history & status</span>
                             <span className="group-hover:translate-x-1.5 transition-transform">→</span>
                         </p>
@@ -753,34 +773,44 @@ const OwnerDashboard = () => {
                     {/* Server Health Card */}
                     <div 
                         onClick={() => navigate('/owner/monitoring')}
-                        className="bg-white border border-gray-155 p-6 rounded-2xl shadow-xs hover:shadow-md hover:border-red-200 transition-all cursor-pointer group"
+                        className={`p-6 rounded-2xl border shadow-xs transition-all cursor-pointer group ${
+                            isDarkMode ? 'bg-zinc-900/90 border-zinc-800 hover:border-red-500/40' : 'bg-white border-gray-155 hover:border-red-200 hover:shadow-md'
+                        }`}
                     >
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Server Status</p>
+                                <p className={`text-[10px] font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Server Status</p>
                                 <div className="mt-2.5">
                                     {adminStats.serverStatus === 'checking' ? (
-                                        <span className="inline-flex items-center text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                                        <span className={`inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full border ${
+                                            isDarkMode ? 'bg-zinc-800 text-zinc-400 border-zinc-700' : 'bg-gray-50 text-gray-400 border-gray-200'
+                                        }`}>
                                             <span className="w-2 h-2 rounded-full bg-gray-300 animate-pulse mr-1.5" /> Synchronizing...
                                         </span>
                                     ) : adminStats.serverStatus === 'up' ? (
-                                        <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-150">
-                                            <span className="w-2 h-2 rounded-full bg-green-505 mr-1.5 animate-ping" /> ONLINE (UP)
+                                        <span className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-full border ${
+                                            isDarkMode ? 'bg-emerald-950/60 text-emerald-400 border-emerald-900' : 'bg-green-50 text-green-600 border-green-150'
+                                        }`}>
+                                            <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-ping" /> ONLINE (UP)
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-150">
+                                        <span className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-full border ${
+                                            isDarkMode ? 'bg-red-950/60 text-red-400 border-red-900' : 'bg-red-50 text-red-600 border-red-150'
+                                        }`}>
                                             <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5" /> OFFLINE (DOWN)
                                         </span>
                                     )}
                                 </div>
                             </div>
-                            <div className="p-3 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-500 group-hover:text-white transition-all">
+                            <div className={`p-3 rounded-xl transition-all ${
+                                isDarkMode ? 'bg-red-500/10 text-red-400 group-hover:bg-red-600 group-hover:text-white' : 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white'
+                            }`}>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-[10px] text-gray-400 font-semibold mt-4 flex items-center gap-1">
+                        <p className={`text-[10px] font-semibold mt-4 flex items-center gap-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
                             <span>Open Grafana dashboard portal</span>
                             <span className="group-hover:translate-x-1.5 transition-transform">→</span>
                         </p>
@@ -788,7 +818,9 @@ const OwnerDashboard = () => {
                 </div>
 
                 {/* Welcome Card & Info Banner */}
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg mb-8">
+                <div className={`rounded-3xl p-8 text-white relative overflow-hidden shadow-lg mb-8 border ${
+                    isDarkMode ? 'bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border-zinc-800' : 'bg-gradient-to-br from-gray-900 to-gray-800 border-transparent'
+                }`}>
                     {/* Background glows */}
                     <div className="absolute right-0 top-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl -z-0 pointer-events-none" />
                     
