@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 
 import axiosInstance from '../../../api/axiosInstance';
@@ -16,7 +17,7 @@ const toastStyle = {
 };
 
 const AddPackages = () => {
-
+    const { t } = useTranslation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 

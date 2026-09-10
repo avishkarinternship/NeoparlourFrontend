@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -124,6 +125,7 @@ const getCategoryIcon = (catName) => {
 };
 
 const Service = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
@@ -915,12 +917,20 @@ const Service = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className={`text-[11px] font-medium pt-1 space-y-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+                                                    <div className={`text-[11px] font-medium pt-1 space-y-2.5 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
                                                         <div className="flex items-center gap-1.5 font-bold">
-                                                            <span className="text-emerald-500">✔</span> Customer invoice amount: <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">₹{gstBreakdown.totalPrice}</strong>
+                                                            <span className="text-emerald-500">✔</span> Customer invoice amount: <strong className="text-emerald-600 dark:text-emerald-400 font-black text-sm">₹{gstBreakdown.totalPrice}</strong>
                                                         </div>
-                                                        <div className={`text-[10px] italic leading-relaxed ${isDarkMode ? 'text-purple-400/80' : 'text-purple-600/90'}`}>
-                                                            ℹ️ Note: This tax distribution is for salon accounting reference only and will not be displayed to customers when booking.
+                                                        <div className={`p-3.5 rounded-xl border text-xs sm:text-sm font-black leading-snug flex items-start gap-2.5 shadow-sm transition-all ${
+                                                            isDarkMode 
+                                                                ? 'bg-amber-950/70 border-amber-500/60 text-amber-200' 
+                                                                : 'bg-amber-50 border-amber-300 text-amber-950'
+                                                        }`}>
+                                                            <span className="text-lg shrink-0 leading-none select-none">ℹ️</span>
+                                                            <div className="font-extrabold text-xs sm:text-sm leading-relaxed">
+                                                                <span className="font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mr-1.5">Note:</span>
+                                                                This tax distribution is for salon accounting reference only and will not be displayed to customers when booking.
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

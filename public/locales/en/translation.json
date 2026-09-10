@@ -592,5 +592,177 @@
     "inactive": "Inactive",
     "no_billing_history": "No billing history available",
     "download_invoice": "Download Invoice"
+  },
+  "owner": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "manage": "Manage Salon",
+      "analytics": "Analytics",
+      "billing": "Billing",
+      "orders": "Orders",
+      "customers": "Customers",
+      "staff_attendance": "Staff Attendance",
+      "staff_invitations": "Staff Invitations",
+      "kyc": "KYC Verification",
+      "subscriptions": "Subscriptions",
+      "support": "Support Requests",
+      "settings": "Settings",
+      "logout": "Logout",
+      "navigation": "Navigation"
+    },
+    "manage_sidebar": {
+      "schedule": "Schedule",
+      "walk_in": "Walk-in Booking",
+      "services": "Services",
+      "inventory": "Inventory",
+      "staff": "Staff",
+      "feedback": "Feedback",
+      "home_services": "Home Services",
+      "subscription": "Subscription",
+      "add_offers": "Add Offers",
+      "add_products": "Add Products",
+      "add_packages": "Add Packages"
+    },
+    "navbar": {
+      "search_placeholder": "Search staff, bookings, customers, services...",
+      "notifications": "Notifications",
+      "mark_all_read": "Mark All as Read",
+      "clear_all": "Clear All",
+      "no_notifications": "No notifications",
+      "view_all": "View All",
+      "salon_active": "Salon Active",
+      "salon_inactive": "Salon Inactive"
+    },
+    "dashboard": {
+      "title": "Salon Owner Dashboard",
+      "welcome": "Welcome back",
+      "overview": "Overview",
+      "total_revenue": "Total Revenue",
+      "total_bookings": "Total Bookings",
+      "active_services": "Active Services",
+      "total_customers": "Total Customers",
+      "recent_bookings": "Recent Bookings",
+      "quick_actions": "Quick Actions"
+    },
+    "manage": {
+      "services": {
+        "title": "Service Catalog & Management",
+        "add_service": "Add New Service",
+        "edit_service": "Edit Service",
+        "category": "Category",
+        "price": "Price",
+        "duration": "Duration (mins)",
+        "save_service": "Save Service"
+      },
+      "products": {
+        "title": "Products Management",
+        "add_product": "Add New Product",
+        "edit_product": "Edit Product",
+        "stock": "Stock",
+        "price": "Price",
+        "save_product": "Save Product"
+      },
+      "offers": {
+        "title": "Discounts & Special Offers",
+        "add_offer": "Add New Offer",
+        "coupon_code": "Coupon Code",
+        "discount_percent": "Discount %",
+        "valid_till": "Valid Till"
+      },
+      "packages": {
+        "title": "Combo Packages",
+        "add_package": "Create New Package",
+        "included_services": "Included Services",
+        "package_price": "Package Price"
+      },
+      "inventory": {
+        "title": "Inventory Management",
+        "stock_level": "Stock Level",
+        "low_stock_alert": "Low Stock Alerts",
+        "assign_stock": "Assign Stock to Staff",
+        "add_stock": "Add New Stock",
+        "usage_log": "Usage Log",
+        "swap_requests": "Stock Swap Requests"
+      },
+      "staff": {
+        "title": "Staff Management",
+        "add_staff": "Add New Staff Member",
+        "edit_staff": "Edit Staff Member",
+        "directory": "Staff Directory",
+        "referrals": "Staff Referrals & Stats",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "schedule": {
+        "title": "Operating Schedule & Slots",
+        "business_hours": "Business Working Hours",
+        "slot_duration": "Slot Duration",
+        "save_schedule": "Save Schedule"
+      },
+      "walkin": {
+        "title": "Walk-In Booking Wizard",
+        "client_name": "Client Name",
+        "client_phone": "Client Phone",
+        "select_services": "Select Services",
+        "select_stylist": "Select Stylist",
+        "book_appointment": "Confirm Walk-In Booking"
+      },
+      "homeservices": {
+        "title": "Home Services Configuration",
+        "enable_home_services": "Enable Home Services",
+        "service_charge": "Service Fee / Travel Charge"
+      },
+      "feedback": {
+        "title": "Customer Reviews & Feedback",
+        "rating": "Rating",
+        "review_text": "Review",
+        "reply": "Reply"
+      },
+      "subscription": {
+        "title": "Salon Subscription",
+        "current_plan": "Current Plan",
+        "upgrade": "Upgrade Subscription",
+        "features": "Plan Features"
+      }
+    },
+    "analytics": {
+      "title": "Analytics & Business Insights",
+      "revenue_breakdown": "Revenue Breakdown",
+      "popular_services": "Popular Services",
+      "customer_retention": "Customer Retention"
+    },
+    "billing": {
+      "title": "Billing & Invoices",
+      "invoices": "Invoices",
+      "download_invoice": "Download Invoice",
+      "tax_note": "Tax Distribution is for salon accounting reference only."
+    },
+    "customers": {
+      "title": "Customer Directory",
+      "total_visits": "Total Visits",
+      "total_spent": "Total Spent"
+    },
+    "orders": {
+      "title": "Product Orders",
+      "order_id": "Order ID",
+      "status": "Status"
+    },
+    "settings": {
+      "title": "Salon Settings",
+      "general": "General Profile",
+      "tax_bank": "Tax & Bank Details",
+      "save_settings": "Save Settings"
+    },
+    "staff_attendance": {
+      "title": "Staff Attendance & Check-Ins",
+      "check_in": "Check In",
+      "check_out": "Check Out",
+      "status": "Attendance Status"
+    },
+    "kyc": {
+      "title": "KYC Business Verification",
+      "upload_doc": "Upload Business Document",
+      "verification_status": "Verification Status"
+    }
   }
 }

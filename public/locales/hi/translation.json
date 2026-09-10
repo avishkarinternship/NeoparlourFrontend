@@ -590,7 +590,179 @@
     "pending": "पेंडिंग",
     "ended": "समाप्त",
     "inactive": "इनएक्टिव",
-    "no_billing_history": "कोई बिलिंग हिस्ट्री उपलब्ध नहीं है",
+    "no_billing_history": "कोई बिलिंग इतिहास उपलब्ध नहीं है",
     "download_invoice": "इनवॉइस डाउनलोड करें"
+  },
+  "owner": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "manage": "Salon Manage Karein",
+      "analytics": "Analytics",
+      "billing": "Billing",
+      "orders": "Orders",
+      "customers": "Customers",
+      "staff_attendance": "Staff Haaziri",
+      "staff_invitations": "Staff Invitations",
+      "kyc": "KYC Verification",
+      "subscriptions": "Subscriptions",
+      "support": "Support Requests",
+      "settings": "Settings",
+      "logout": "Logout",
+      "navigation": "Navigation"
+    },
+    "manage_sidebar": {
+      "schedule": "Schedule",
+      "walk_in": "Walk-in Booking",
+      "services": "Services",
+      "inventory": "Inventory",
+      "staff": "Staff",
+      "feedback": "Feedback",
+      "home_services": "Home Services",
+      "subscription": "Subscription",
+      "add_offers": "Offers Add Karein",
+      "add_products": "Products Add Karein",
+      "add_packages": "Packages Add Karein"
+    },
+    "navbar": {
+      "search_placeholder": "Staff, bookings, customers, services search karein...",
+      "notifications": "Notifications",
+      "mark_all_read": "Sabhi Read Mark Karein",
+      "clear_all": "Sabhi Clear Karein",
+      "no_notifications": "Koi Notification Nahi Hai",
+      "view_all": "Sabhi Dekhein",
+      "salon_active": "Salon Active",
+      "salon_inactive": "Salon Inactive"
+    },
+    "dashboard": {
+      "title": "Salon Owner Dashboard",
+      "welcome": "Wapas Swagat Hai",
+      "overview": "Overview",
+      "total_revenue": "Total Revenue",
+      "total_bookings": "Kul Bookings",
+      "active_services": "Active Services",
+      "total_customers": "Total Customers",
+      "recent_bookings": "Haal Ki Bookings",
+      "quick_actions": "Quick Actions"
+    },
+    "manage": {
+      "services": {
+        "title": "Service Catalog & Management",
+        "add_service": "Nayi Service Add Karein",
+        "edit_service": "Service Edit Karein",
+        "category": "Category",
+        "price": "Kimat",
+        "duration": "Duration (mins)",
+        "save_service": "Service Save Karein"
+      },
+      "products": {
+        "title": "Products Management",
+        "add_product": "Naya Product Add Karein",
+        "edit_product": "Product Edit Karein",
+        "stock": "Stock",
+        "price": "Kimat",
+        "save_product": "Product Save Karein"
+      },
+      "offers": {
+        "title": "Discounts & Special Offers",
+        "add_offer": "Naya Offer Add Karein",
+        "coupon_code": "Coupon Code",
+        "discount_percent": "Discount %",
+        "valid_till": "Tak Valid Hai"
+      },
+      "packages": {
+        "title": "Combo Packages",
+        "add_package": "Naya Package Banayein",
+        "included_services": "Shamil Services",
+        "package_price": "Package Kimat"
+      },
+      "inventory": {
+        "title": "Inventory Management",
+        "stock_level": "Stock Level",
+        "low_stock_alert": "Low Stock Alerts",
+        "assign_stock": "Staff Ko Stock Assign Karein",
+        "add_stock": "Naya Stock Add Karein",
+        "usage_log": "Usage Log",
+        "swap_requests": "Stock Swap Requests"
+      },
+      "staff": {
+        "title": "Staff Management",
+        "add_staff": "Naya Staff Add Karein",
+        "edit_staff": "Staff Edit Karein",
+        "directory": "Staff Directory",
+        "referrals": "Staff Referrals & Stats",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "schedule": {
+        "title": "Operating Schedule & Slots",
+        "business_hours": "Business Working Hours",
+        "slot_duration": "Slot Duration",
+        "save_schedule": "Schedule Save Karein"
+      },
+      "walkin": {
+        "title": "Walk-In Booking Wizard",
+        "client_name": "Client Name",
+        "client_phone": "Client Phone",
+        "select_services": "Services Select Karein",
+        "select_stylist": "Stylist Select Karein",
+        "book_appointment": "Walk-In Booking Confirm Karein"
+      },
+      "homeservices": {
+        "title": "Home Services Configuration",
+        "enable_home_services": "Home Services Enable Karein",
+        "service_charge": "Service Fee / Travel Charge"
+      },
+      "feedback": {
+        "title": "Customer Reviews & Feedback",
+        "rating": "Rating",
+        "review_text": "Review",
+        "reply": "Reply Karein"
+      },
+      "subscription": {
+        "title": "Salon Subscription",
+        "current_plan": "Current Plan",
+        "upgrade": "Subscription Upgrade Karein",
+        "features": "Plan Features"
+      }
+    },
+    "analytics": {
+      "title": "Analytics & Business Insights",
+      "revenue_breakdown": "Revenue Breakdown",
+      "popular_services": "Popular Services",
+      "customer_retention": "Customer Retention"
+    },
+    "billing": {
+      "title": "Billing & Invoices",
+      "invoices": "Invoices",
+      "download_invoice": "Invoice Download Karein",
+      "tax_note": "Tax Distribution sirf salon accounting reference ke liye hai."
+    },
+    "customers": {
+      "title": "Customer Directory",
+      "total_visits": "Total Visits",
+      "total_spent": "Total Spent"
+    },
+    "orders": {
+      "title": "Product Orders",
+      "order_id": "Order ID",
+      "status": "Status"
+    },
+    "settings": {
+      "title": "Salon Settings",
+      "general": "General Profile",
+      "tax_bank": "Tax & Bank Details",
+      "save_settings": "Settings Save Karein"
+    },
+    "staff_attendance": {
+      "title": "Staff Attendance & Check-Ins",
+      "check_in": "Check In",
+      "check_out": "Check Out",
+      "status": "Attendance Status"
+    },
+    "kyc": {
+      "title": "KYC Business Verification",
+      "upload_doc": "Business Document Upload Karein",
+      "verification_status": "Verification Status"
+    }
   }
 }

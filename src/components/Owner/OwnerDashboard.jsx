@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
@@ -137,6 +138,7 @@ const getTodayDateString = () => {
 };
 
 const OwnerDashboard = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
@@ -840,6 +842,13 @@ const OwnerDashboard = () => {
                                 className="bg-[#ff0b01] hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-md shadow-red-900/30"
                             >
                                 Open System Dashboard
+                            </button>
+                            <button 
+                                onClick={() => navigate('/admin/logs')}
+                                className="bg-[#1a1a1a] hover:bg-[#2a2a2a] text-emerald-400 font-bold text-xs px-5 py-2.5 rounded-xl border border-emerald-900/50 transition flex items-center gap-1.5 shadow-md"
+                            >
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                Live Server Logs
                             </button>
                             <button 
                                 onClick={() => navigate('/owner/settings')}

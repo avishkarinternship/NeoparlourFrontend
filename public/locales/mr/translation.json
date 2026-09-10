@@ -363,76 +363,179 @@
     "cancellation_policy": "कॅन्सेलेशन पॉलिसी",
     "your_safety": "आपली सेफ्टी",
     "ratings_reviews": "रेटिंग्स अँड रिव्ह्यूज",
-    "important_notice": "महत्त्वाचे: या अटी तुमच्या आणि प्लॅटफॉर्मदरम्यान कायदेशीररित्या बंधनकारक करार तयार करतात. खाते तयार करून किंवा बुकिंग करून, तुम्ही या अटी पूर्णपणे स्वीकारता.",
-    "sec1_title": "1. आम्ही कोण आहोत आणि आम्ही काय करतो",
-    "sec2_title": "2. पात्रता",
-    "sec3_title": "3. खाते नोंदणी",
-    "sec4_title": "4. बुकिंग कसे कार्य करते",
-    "sec5_title": "5. किंमत आणि पेमेंट",
-    "sec6_title": "6. रद्द करण्याचे धोरण",
-    "sec7_title": "7. परतावा (रिफंड)",
-    "sec8_title": "8. आरोग्य, सुरक्षितता आणि ॲलर्जी प्रकटीकरण",
-    "sec9_title": "9. रेटिंग आणि पुनरावलोकने",
-    "sec10_title": "10. प्रतिबंधित आचरण",
-    "sec11_title": "11. खाते निलंबन आणि समाप्ती",
-    "sec12_title": "12. प्लॅटफॉर्मची जबाबदारी",
-    "sec13_title": "13. तक्रार निवारण",
-    "sec14_title": "14. नियमन कायदा आणि वाद",
-    "sec15_title": "15. या अटींमधील बदल",
-    "sec16_title": "16. प्रायव्हसी आणि डेटा युज",
-    "sec17_title": "17. खाते हटवणे",
-    "sec18_title": "18. आमच्याशी संपर्क साधा"
-  },
-  "privacy": {
-    "title": "प्रायव्हसी पॉलिसी",
-    "subtitle": "नियोपार्लर ग्राहक ॲप",
-    "effective_date": "प्रभावी तारीख: 27 मे 2026",
-    "sec1_title": "1. परिचय",
-    "sec2_title": "2. आम्ही गोळा करतो ती माहिती",
-    "sec3_title": "3. आम्ही तुमच्या माहितीचा वापर कसा करतो",
-    "sec4_title": "4. माहिती शेअर करणे",
-    "sec5_title": "5. पेमेंट",
-    "sec6_title": "6. पुश सूचना",
-    "sec7_title": "7. डेटा राखणे",
-    "sec8_title": "8. खाते हटवणे",
-    "sec9_title": "9. डेटा सुरक्षितता",
-    "sec10_title": "10. तुमचे हक्क",
-    "sec11_title": "11. तृतीय-पक्ष सेवा",
-    "sec12_title": "12. मुलांची प्रायव्हसी",
-    "sec13_title": "13. या धोरणातील बदल",
-    "sec14_title": "14. आमच्याशी संपर्क साधा",
-    "sec15_title": "15. संमती"
-  },
-  "about_page": {
-    "hero_title": "टेक्नॉलॉजीने ब्यूटी रिडेफाइन करा",
-    "hero_desc": "NeoParlour कस्टमर्सना ट्रस्टेड सलून्सशी जोडते आणि सलून ओनर्सना त्यांचा बिझनेस सहज ग्रो करायला हेल्प करते.",
-    "list_salon_btn": "तुमचे सलून लिस्ट करा",
-    "trust_count": "10K+ सलून्स",
-    "trust_text": "NeoParlour वर ट्रस्ट करतात",
-    "problem_title": "द प्रॉब्लेम वी सॉल्व्ह",
-    "problem_subtitle": "आम्ही कस्टमर्स आणि सलून ओनर्स दोघांच्या प्रॉब्लेम्स समजतो.",
-    "for_customer": "कस्टमर्ससाठी",
-    "cust_p1": "ट्रस्टेड आणि व्हेरिफाइड सलून्स शोधणे कठीण असते.",
-    "cust_p2": "प्रायसिंग आणि स्लॉट अवेलेबिलिटीची क्लॅरिटी नसते.",
-    "cust_p3": "लाँग वेटिंग टाईम आणि पुअर एक्सपिरियन्स.",
-    "for_owner": "सलून ओनरसाठी",
-    "owner_p1": "इररेग्युलर बुकिंग्स आणि रिकामे स्लॉट्स.",
-    "owner_p2": "नो-शोज आणि लास्ट मिनिट कॅन्सलेशन.",
-    "owner_p3": "बिझनेस मॅनेज आणि ग्रो करण्यासाठी टूल्सची कमतरता.",
-    "solution_title": "आमचे सोल्यूशन",
-    "solution_subtitle": "बेटर सलून एक्सपिरियन्स आणि बिझनेस ग्रोथसाठी सोपे स्टेप्स.",
-    "how_it_works": "हे कसे काम करते",
-    "for_salon_owners": "सलून ओनर्ससाठी",
-    "c_step1_title": "सर्च करा",
-    "c_step1_desc": "सलून, सर्व्हिसेस आणि एक्सपर्ट्स सर्च करा",
-    "c_step2_title": "चूझ करा",
-    "c_step2_desc": "तुमच्यासाठी बेस्ट सलून सिलेक्ट करा",
-    "c_step3_title": "बुक करा",
-    "c_step3_desc": "डेट, टाईम सिलेक्ट करून इन्स्टंट बुक करा",
-    "c_step4_title": "व्हिजिट करा",
-    "c_step4_desc": "तुमची सर्व्हिस घ्या आणि एन्जॉय करा",
-    "c_step5_title": "रिव्ह्यू द्या",
-    "c_step5_desc": "तुमचा एक्सपिरियन्स शेअर करा आणि रिव्ह्यू द्या",
+    "important_notice": "महत्त्वाचे: या अटी तुमच्या आणि प्लॅटफॉर्मदरम्यान कायदेशीररित्या बंधनकारक करार तयार करतात. खाते तयार करून किंवा बुकिंग करून, तुम्ही या अटी पूर्णपणे स्वीकार�  "owner": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "manage": "Salon Manage Kara",
+      "analytics": "Analytics",
+      "billing": "Billing",
+      "orders": "Orders",
+      "customers": "Customers",
+      "staff_attendance": "Staff Chi Hazeri",
+      "staff_invitations": "Staff Invitations",
+      "kyc": "KYC Verification",
+      "subscriptions": "Subscriptions",
+      "support": "Support Requests",
+      "settings": "Settings",
+      "logout": "Logout",
+      "navigation": "Navigation"
+    },
+    "manage_sidebar": {
+      "schedule": "Schedule",
+      "walk_in": "Walk-in Booking",
+      "services": "Services",
+      "inventory": "Inventory",
+      "staff": "Staff",
+      "feedback": "Feedback",
+      "home_services": "Home Services",
+      "subscription": "Subscription",
+      "add_offers": "Offers Add Kara",
+      "add_products": "Products Add Kara",
+      "add_packages": "Packages Add Kara"
+    },
+    "navbar": {
+      "search_placeholder": "Staff, bookings, customers, services search kara...",
+      "notifications": "Notifications",
+      "mark_all_read": "Sarv Read Mark Kara",
+      "clear_all": "Sarv Clear Kara",
+      "no_notifications": "Kahi Notification Nahi Ahe",
+      "view_all": "Sarv Pahha",
+      "salon_active": "Salon Active",
+      "salon_inactive": "Salon Inactive"
+    },
+    "dashboard": {
+      "title": "Salon Owner Dashboard",
+      "welcome": "Manapasun Swagat Ahe",
+      "overview": "Overview",
+      "total_revenue": "Ekoon Revenue",
+      "total_bookings": "Ekoon Bookings",
+      "active_services": "Active Services",
+      "total_customers": "Ekoon Customers",
+      "recent_bookings": "Aliqadil Bookings",
+      "quick_actions": "Quick Actions"
+    },
+    "manage": {
+      "services": {
+        "title": "Service Catalog & Management",
+        "add_service": "Navin Service Add Kara",
+        "edit_service": "Service Edit Kara",
+        "category": "Category",
+        "price": "Kimat",
+        "duration": "Duration (mins)",
+        "save_service": "Service Save Kara"
+      },
+      "products": {
+        "title": "Products Management",
+        "add_product": "Navin Product Add Kara",
+        "edit_product": "Product Edit Kara",
+        "stock": "Stock",
+        "price": "Kimat",
+        "save_product": "Product Save Kara"
+      },
+      "offers": {
+        "title": "Discounts & Special Offers",
+        "add_offer": "Navin Offer Add Kara",
+        "coupon_code": "Coupon Code",
+        "discount_percent": "Discount %",
+        "valid_till": "Paryant Valid Ahe"
+      },
+      "packages": {
+        "title": "Combo Packages",
+        "add_package": "Navin Package Banva",
+        "included_services": "Samavisht Services",
+        "package_price": "Package Kimat"
+      },
+      "inventory": {
+        "title": "Inventory Management",
+        "stock_level": "Stock Level",
+        "low_stock_alert": "Low Stock Alerts",
+        "assign_stock": "Staff La Stock Assign Kara",
+        "add_stock": "Navin Stock Add Kara",
+        "usage_log": "Usage Log",
+        "swap_requests": "Stock Swap Requests"
+      },
+      "staff": {
+        "title": "Staff Management",
+        "add_staff": "Navin Staff Add Kara",
+        "edit_staff": "Staff Edit Kara",
+        "directory": "Staff Directory",
+        "referrals": "Staff Referrals & Stats",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "schedule": {
+        "title": "Operating Schedule & Slots",
+        "business_hours": "Business Working Hours",
+        "slot_duration": "Slot Duration",
+        "save_schedule": "Schedule Save Kara"
+      },
+      "walkin": {
+        "title": "Walk-In Booking Wizard",
+        "client_name": "Client Name",
+        "client_phone": "Client Phone",
+        "select_services": "Services Select Kara",
+        "select_stylist": "Stylist Select Kara",
+        "book_appointment": "Walk-In Booking Confirm Kara"
+      },
+      "homeservices": {
+        "title": "Home Services Configuration",
+        "enable_home_services": "Home Services Enable Kara",
+        "service_charge": "Service Fee / Travel Charge"
+      },
+      "feedback": {
+        "title": "Customer Reviews & Feedback",
+        "rating": "Rating",
+        "review_text": "Review",
+        "reply": "Reply Kara"
+      },
+      "subscription": {
+        "title": "Salon Subscription",
+        "current_plan": "Current Plan",
+        "upgrade": "Subscription Upgrade Kara",
+        "features": "Plan Features"
+      }
+    },
+    "analytics": {
+      "title": "Analytics & Business Insights",
+      "revenue_breakdown": "Revenue Breakdown",
+      "popular_services": "Popular Services",
+      "customer_retention": "Customer Retention"
+    },
+    "billing": {
+      "title": "Billing & Invoices",
+      "invoices": "Invoices",
+      "download_invoice": "Invoice Download Kara",
+      "tax_note": "Tax Distribution fakt salon accounting reference sathi ahe."
+    },
+    "customers": {
+      "title": "Customer Directory",
+      "total_visits": "Ekoon Visits",
+      "total_spent": "Ekoon Spent"
+    },
+    "orders": {
+      "title": "Product Orders",
+      "order_id": "Order ID",
+      "status": "Status"
+    },
+    "settings": {
+      "title": "Salon Settings",
+      "general": "General Profile",
+      "tax_bank": "Tax & Bank Details",
+      "save_settings": "Settings Save Kara"
+    },
+    "staff_attendance": {
+      "title": "Staff Attendance & Check-Ins",
+      "check_in": "Check In",
+      "check_out": "Check Out",
+      "status": "Attendance Status"
+    },
+    "kyc": {
+      "title": "KYC Business Verification",
+      "upload_doc": "Business Document Upload Kara",
+      "verification_status": "Verification Status"
+    }
+  }
+}��ियन्स शेअर करा आणि रिव्ह्यू द्या",
     "o_step1_title": "रजिस्टर करा",
     "o_step1_desc": "NeoParlour वर तुमचे सलून लिस्ट करा",
     "o_step2_title": "मॅनेज करा",
@@ -590,7 +693,179 @@
     "pending": "पेंडिंग",
     "ended": "समाप्त",
     "inactive": "इनॲक्टिव्ह",
-    "no_billing_history": "कोणतीही बिलिंग हिस्ट्री उपलब्ध नाही",
-    "download_invoice": "इनव्हॉइस डाउनलोड करा"
+    "no_billing_history": "कोणताही बिलिंग इतिहास उपलब्ध नाही",
+    "download_invoice": "इनव्हॉईस डाउनलोड करा"
+  },
+  "owner": {
+    "sidebar": {
+      "dashboard": "डॅशबोर्ड",
+      "manage": "सलून व्यवस्थापित करा",
+      "analytics": "अ‍ॅनालिटिक्स",
+      "billing": "बिलिंग",
+      "orders": "ऑर्डर्स",
+      "customers": "ग्राहक",
+      "staff_attendance": "स्टाफ उपस्थिती",
+      "staff_invitations": "स्टाफ आमंत्रणे",
+      "kyc": "केवायसी पडताळणी",
+      "subscriptions": "सबस्क्रिप्शन्स",
+      "support": "मदत विनंत्या",
+      "settings": "सेटिंग्ज",
+      "logout": "लॉगआउट",
+      "navigation": "नेव्हिगेशन"
+    },
+    "manage_sidebar": {
+      "schedule": "शेड्यूल",
+      "walk_in": "वॉक-इन बुकिंग",
+      "services": "सर्व्हिसेस",
+      "inventory": "इन्व्हेंटरी",
+      "staff": "स्टाफ",
+      "feedback": "फीडबॅक",
+      "home_services": "होम सर्व्हिसेस",
+      "subscription": "सबस्क्रिप्शन",
+      "add_offers": "ऑफर्स जोडा",
+      "add_products": "उत्पादने जोडा",
+      "add_packages": "पॅकेजेस जोडा"
+    },
+    "navbar": {
+      "search_placeholder": "स्टाफ, बुकिंग, ग्राहक, सर्व्हिसेस शोधा...",
+      "notifications": "सूचना",
+      "mark_all_read": "सर्व वाचलेले म्हणून चिन्हांकित करा",
+      "clear_all": "सर्व साफ करा",
+      "no_notifications": "कोणतीही सूचना नाही",
+      "view_all": "सर्व पहा",
+      "salon_active": "सलून अ‍ॅक्टिव्ह",
+      "salon_inactive": "सलून इनअ‍ॅक्टिव्ह"
+    },
+    "dashboard": {
+      "title": "सलून मालक डॅशबोर्ड",
+      "welcome": "परत स्वागत आहे",
+      "overview": "आढावा",
+      "total_revenue": "एकूण महसूल",
+      "total_bookings": "एकूण बुकिंग्स",
+      "active_services": "सक्रिय सेवा",
+      "total_customers": "एकूण ग्राहक",
+      "recent_bookings": "अलीकडील बुकिंग्स",
+      "quick_actions": "जलद कृती"
+    },
+    "manage": {
+      "services": {
+        "title": "सेवा कॅटलॉग आणि व्यवस्थापन",
+        "add_service": "नवीन सेवा जोडा",
+        "edit_service": "सेवा संपादित करा",
+        "category": "वर्ग",
+        "price": "किंमत",
+        "duration": "कालावधी (मिनिटे)",
+        "save_service": "सेवा जतन करा"
+      },
+      "products": {
+        "title": "उत्पादन व्यवस्थापन",
+        "add_product": "नवीन उत्पादन जोडा",
+        "edit_product": "उत्पादन संपादित करा",
+        "stock": "स्टॉक",
+        "price": "किंमत",
+        "save_product": "उत्पादन जतन करा"
+      },
+      "offers": {
+        "title": "सवलत आणि विशेष ऑफर्स",
+        "add_offer": "नवीन ऑफर जोडा",
+        "coupon_code": "कूपन कोड",
+        "discount_percent": "सवलत %",
+        "valid_till": "पर्यंत वैध"
+      },
+      "packages": {
+        "title": "कॉम्बो पॅकेजेस",
+        "add_package": "नवीन पॅकेज तयार करा",
+        "included_services": "समाविष्ट सेवा",
+        "package_price": "पॅकेज किंमत"
+      },
+      "inventory": {
+        "title": "इन्व्हेंटरी व्यवस्थापन",
+        "stock_level": "स्टॉक पातळी",
+        "low_stock_alert": "कमी स्टॉक इशारे",
+        "assign_stock": "स्टाफला स्टॉक द्या",
+        "add_stock": "नवीन स्टॉक जोडा",
+        "usage_log": "वापर नोंदणी",
+        "swap_requests": "स्टॉक अदलाबदल विनंत्या"
+      },
+      "staff": {
+        "title": "स्टाफ व्यवस्थापन",
+        "add_staff": "नवीन स्टाफ सदस्य जोडा",
+        "edit_staff": "स्टाफ सदस्य संपादित करा",
+        "directory": "स्टाफ डिरेक्टरी",
+        "referrals": "स्टाफ संदर्भ आणि आकडेवारी",
+        "active": "सक्रिय",
+        "inactive": "निष्क्रिय"
+      },
+      "schedule": {
+        "title": "ऑपरेटिंग वेळापत्रक आणि स्लॉट्स",
+        "business_hours": "व्यवसाय कामकाजाच्या वेळा",
+        "slot_duration": "स्लॉट कालावधी",
+        "save_schedule": "वेळापत्रक जतन करा"
+      },
+      "walkin": {
+        "title": "वॉक-इन बुकिंग विजार्ड",
+        "client_name": "ग्राहकाचे नाव",
+        "client_phone": "ग्राहकाचा फोन",
+        "select_services": "सेवा निवडा",
+        "select_stylist": "स्टायलिस्ट निवडा",
+        "book_appointment": "वॉक-इन बुकिंगची पुष्टी करा"
+      },
+      "homeservices": {
+        "title": "होम सर्व्हिसेस कॉन्फिगरेशन",
+        "enable_home_services": "होम सर्व्हिसेस सक्षम करा",
+        "service_charge": "सेवा शुल्क / प्रवास शुल्क"
+      },
+      "feedback": {
+        "title": "ग्राहक पुनरावलोकने आणि अभिप्राय",
+        "rating": "रेटिंग",
+        "review_text": "पुनरावलोकन",
+        "reply": "उत्तर द्या"
+      },
+      "subscription": {
+        "title": "सलून सबस्क्रिप्शन",
+        "current_plan": "सध्याचा प्लॅन",
+        "upgrade": "सबस्क्रिप्शन अपग्रेड करा",
+        "features": "प्लॅनची वैशिष्‍ट्ये"
+      }
+    },
+    "analytics": {
+      "title": "अ‍ॅनालिटिक्स आणि व्यवसाय माहिती",
+      "revenue_breakdown": "महसूल तपशील",
+      "popular_services": "लोकप्रिय सेवा",
+      "customer_retention": "ग्राहक धारणा"
+    },
+    "billing": {
+      "title": "बिलिंग आणि इनव्हॉइसेस",
+      "invoices": "इनव्हॉइसेस",
+      "download_invoice": "इनव्हॉईस डाउनलोड करा",
+      "tax_note": "कर वाटप केवळ सलून अकाउंटिंग संदर्भासाठी आहे."
+    },
+    "customers": {
+      "title": "ग्राहक डिरेक्टरी",
+      "total_visits": "एकूण भेटी",
+      "total_spent": "एकूण खर्च"
+    },
+    "orders": {
+      "title": "उत्पादनांच्या ऑर्डर्स",
+      "order_id": "ऑर्डर आयडी",
+      "status": "स्थिती"
+    },
+    "settings": {
+      "title": "सलून सेटिंग्ज",
+      "general": "सामान्य प्रोफाईल",
+      "tax_bank": "कर आणि बँक तपशील",
+      "save_settings": "सेटिंग्ज जतन करा"
+    },
+    "staff_attendance": {
+      "title": "स्टाफ उपस्थिती आणि चेक-इन",
+      "check_in": "चेक इन",
+      "check_out": "चेक आउट",
+      "status": "उपस्थिती स्थिती"
+    },
+    "kyc": {
+      "title": "केवायसी व्यवसाय पडताळणी",
+      "upload_doc": "व्यवसाय दस्तऐवज अपलोड करा",
+      "verification_status": "पडताळणी स्थिती"
+    }
   }
 }

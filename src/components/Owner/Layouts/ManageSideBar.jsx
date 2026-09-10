@@ -1,5 +1,6 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Icons
 import scheduleIcon from '../../../assets/Owner/Dashboard/SideBar/home_icon.svg';
@@ -8,6 +9,7 @@ import inventoryIcon from '../../../assets/Owner/Dashboard/SideBar/analytics_ico
 import staffIcon from '../../../assets/Owner/Dashboard/SideBar/team_icon.svg';
 
 const ManageSideBar = () => {
+  const { t } = useTranslation();
   const outletContext = useOutletContext() || {};
   const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 
@@ -30,57 +32,57 @@ const ManageSideBar = () => {
 
   const subMenu = [
     {
-      label: 'Schedule',
+      label: t('owner.manage_sidebar.schedule', 'Schedule'),
       icon: scheduleIcon,
       path: '/owner/manage/schedule'
     },
     {
-      label: 'Walk-in Booking',
+      label: t('owner.manage_sidebar.walk_in', 'Walk-in Booking'),
       icon: scheduleIcon,
       path: '/owner/manage/walk-in'
     },
     {
-      label: 'Service',
+      label: t('owner.manage_sidebar.services', 'Service'),
       icon: serviceIcon,
       path: '/owner/manage/services'
     },
     {
-      label: 'Inventory',
+      label: t('owner.manage_sidebar.inventory', 'Inventory'),
       icon: inventoryIcon,
       path: '/owner/manage/inventory'
     },
     {
-      label: 'Staff',
+      label: t('owner.manage_sidebar.staff', 'Staff'),
       icon: staffIcon,
       path: '/owner/manage/staff'
     },
     {
-      label: 'Feedback',
+      label: t('owner.manage_sidebar.feedback', 'Feedback'),
       icon: serviceIcon,
       path: '/owner/manage/feedback'
     },
     {
-      label: 'Home Services',
+      label: t('owner.manage_sidebar.home_services', 'Home Services'),
       icon: scheduleIcon,
       path: '/owner/manage/home-services'
     },
     {
-      label: 'Subscription',
+      label: t('owner.manage_sidebar.subscription', 'Subscription'),
       icon: inventoryIcon,
       path: '/owner/manage/subscription'
     },
     {
-      label: 'Add Offers',
+      label: t('owner.manage_sidebar.add_offers', 'Add Offers'),
       icon: serviceIcon,
       path: '/owner/manage/add-offers'
     },
     {
-      label: 'Add Products',
+      label: t('owner.manage_sidebar.add_products', 'Add Products'),
       icon: inventoryIcon,
       path: '/owner/manage/add-products'
     },
     {
-      label: 'Add Packages',
+      label: t('owner.manage_sidebar.add_packages', 'Add Packages'),
       icon: serviceIcon,
       path: '/owner/manage/add-package'
     },

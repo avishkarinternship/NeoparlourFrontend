@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import kycService from '../../../services/kycService';
@@ -23,6 +24,7 @@ const KycUploadModal = ({
   onSuccess,
   isDarkMode = false
 }) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef(null);
   const [selectedType, setSelectedType] = useState('AADHAAR_OR_GOVERNMENT_ID');
   const [selectedFile, setSelectedFile] = useState(null);

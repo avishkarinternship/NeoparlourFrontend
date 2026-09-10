@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -39,6 +40,7 @@ const formatStatusText = (status) => {
 };
 
 const Customers = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
@@ -145,7 +147,7 @@ const Customers = () => {
                                 </svg>
                             </div>
                             <div>
-                                <h1 className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Customers</h1>
+                                <h1 className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('owner.customers.title', 'Customers')}</h1>
                                 <p className={`text-xs font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Customer visit history at your salon</p>
                             </div>
                         </div>

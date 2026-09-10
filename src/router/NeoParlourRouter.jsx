@@ -78,6 +78,7 @@ import OwnerKyc from '../components/Owner/KYC/OwnerKyc'
 import AdminKycDashboard from '../components/Owner/AdminKycDashboard'
 import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard'
 import AdminPayoutQueueDashboard from '../pages/admin/AdminPayoutQueueDashboard'
+import ServerLogs from '../components/Owner/ServerLogs'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -685,6 +686,14 @@ export let routes = createBrowserRouter([
                     {
                         path: '/admin/payouts',
                         element: <OwnerRouteGuard><AdminPayoutQueueDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
                     },
                     {
                         path: '/staff/payouts',

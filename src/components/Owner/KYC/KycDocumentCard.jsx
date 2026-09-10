@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, AlertCircle, Clock, CheckCircle2, UploadCloud, Eye, FileMinus } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -36,6 +37,7 @@ const KycDocumentCard = ({
   onOpenUploadModal,
   isDarkMode = false
 }) => {
+  const { t } = useTranslation();
   const docType = document.documentType || 'DOCUMENT';
   const label = DOCUMENT_TYPE_LABELS[docType] || document.label || docType;
   

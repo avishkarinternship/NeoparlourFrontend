@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -74,6 +75,7 @@ const CustomTooltip = ({ active, payload, label, viewType }) => {
 };
 
 const Analytics = () => {
+  const { t } = useTranslation();
   const outletContext = useOutletContext() || {};
   const isDarkMode = outletContext.isDarkMode !== undefined 
     ? outletContext.isDarkMode 

@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -31,6 +32,7 @@ const DISCOUNT_TYPES = [
 ];
 
 const AddOffers = () => {
+    const { t } = useTranslation();
     const location = useLocation();
 
     const outletContext = useOutletContext() || {};

@@ -38,26 +38,52 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
     if (activeStaffId) {
       updateFilter('staffId', activeStaffId);
       fetchReferralStats(activeStaffId);
+    } else {
+      fetchReferralStats(null);
     }
   }, [activeStaffId]);
 
   const fetchReferralStats = async (id) => {
+    if (!id) {
+      setStats({
+        staffId: null,
+        staffName: 'Staff Member',
+        invitesSent: 0,
+        downloads: 0,
+        registrations: 0,
+        bookings: 0,
+        totalPointsEarned: 0,
+        totalRewardsEarned: 0
+      });
+      setLoadingStats(false);
+      return;
+    }
+
     setLoadingStats(true);
     try {
       const response = await staffInvitationService.getStaffStats(id);
       const resData = response.data?.content || response.data || null;
-      setStats(resData);
+      setStats(resData || {
+        staffId: id,
+        staffName: 'Staff Member',
+        invitesSent: 0,
+        downloads: 0,
+        registrations: 0,
+        bookings: 0,
+        totalPointsEarned: 0,
+        totalRewardsEarned: 0
+      });
     } catch (err) {
-      console.warn("Failed to fetch staff referral stats, using fallback:", err.message);
+      console.warn("Failed to fetch staff referral stats, using empty stats:", err.message);
       setStats({
         staffId: id,
         staffName: 'Staff Member',
-        invitesSent: 5,
-        downloads: 3,
-        registrations: 2,
-        bookings: 1,
-        totalPointsEarned: 150,
-        totalRewardsEarned: 250
+        invitesSent: 0,
+        downloads: 0,
+        registrations: 0,
+        bookings: 0,
+        totalPointsEarned: 0,
+        totalRewardsEarned: 0
       });
     } finally {
       setLoadingStats(false);

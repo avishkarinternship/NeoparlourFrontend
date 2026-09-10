@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { User, Users, TrendingUp, Award, Share2, Eye, EyeOff } from 'lucide-react';
 import StaffReferralStatsView from '../../StaffReferralStatsView';
 
@@ -46,6 +47,7 @@ const getMax18PlusDate = () => {
 };
 
 const Staff = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
@@ -313,13 +315,15 @@ const Staff = () => {
                     isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
                 }`}>
                     {/* Top Section Tab Navigation */}
-                    <div className="flex items-center gap-3 border-b border-gray-200 dark:border-zinc-800 mb-8 pb-1 overflow-x-auto">
+                    <div className={`flex items-center gap-3 border-b mb-8 pb-1 overflow-x-auto ${
+                        isDarkMode ? 'border-zinc-800' : 'border-gray-200'
+                    }`}>
                         <button
                             onClick={() => setActiveTab('manage')}
                             className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                                 activeTab === 'manage'
                                     ? 'border-red-600 text-red-600'
-                                    : 'border-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    : isDarkMode ? 'border-transparent text-zinc-400 hover:text-white' : 'border-transparent text-gray-400 hover:text-gray-900'
                             }`}
                         >
                             <Users className="w-4 h-4" /> Staff Directory & Add Member
@@ -330,7 +334,7 @@ const Staff = () => {
                             className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                                 activeTab === 'referrals'
                                     ? 'border-red-600 text-red-600'
-                                    : 'border-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    : isDarkMode ? 'border-transparent text-zinc-400 hover:text-white' : 'border-transparent text-gray-400 hover:text-gray-900'
                             }`}
                         >
                             <TrendingUp className="w-4 h-4" /> My Staff Referrals & Stats
@@ -347,23 +351,31 @@ const Staff = () => {
                     ) : (
                         <>
                             {/* Add New Staff Form */}
-                            <div className="max-w-3xl border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-                                <h2 className="text-xl font-bold mb-6">Add New Staff</h2>
+                            <div className={`max-w-3xl border rounded-2xl p-6 shadow-sm mb-8 ${
+                                isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-slate-800'
+                            }`}>
+                                <h2 className={`text-xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Staff</h2>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Profile Image Uploader */}
-                            <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-2xl max-w-md">
-                                <div className="relative w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center border border-gray-300 flex-shrink-0">
+                            <div className={`flex items-center gap-4 p-4 border rounded-2xl max-w-md ${
+                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'
+                            }`}>
+                                <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border flex-shrink-0 ${
+                                    isDarkMode ? 'bg-zinc-700 border-zinc-600' : 'bg-gray-200 border-gray-300'
+                                }`}>
                                     {imagePreview ? (
                                         <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                     ) : (
-                                        <User className="w-8 h-8 text-gray-400" />
+                                        <User className={`w-8 h-8 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`} />
                                     )}
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-gray-700">Profile Picture</span>
-                                    <span className="text-[10px] text-gray-400 mb-2">Square image recommended</span>
-                                    <label className="cursor-pointer bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 text-gray-700 shadow-sm w-fit">
+                                    <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>Profile Picture</span>
+                                    <span className={`text-[10px] mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Square image recommended</span>
+                                    <label className={`cursor-pointer border px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm w-fit transition ${
+                                        isDarkMode ? 'bg-zinc-800 border-zinc-600 text-zinc-200 hover:bg-zinc-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    }`}>
                                         Choose File
                                         <input
                                             type="file"
@@ -377,35 +389,45 @@ const Staff = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <img src={nameIcon} alt="Name" className="w-4 h-4 mr-2.5" />
                                     <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" className="w-full text-sm outline-none bg-transparent" required />
                                 </div>
 
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <img src={genderIcon} alt="Gender" className="w-4 h-4 mr-2.5" />
                                     <select
                                         name="gender"
                                         value={formData.gender}
                                         onChange={handleInputChange}
-                                        className="w-full text-sm outline-none bg-transparent"
+                                        className="w-full text-sm outline-none bg-transparent cursor-pointer"
                                     >
-                                        <option value="">Select Gender</option>
-                                        <option value="MALE">Male</option>
-                                        <option value="FEMALE">Female</option>
-                                        <option value="OTHERS">Other</option>
+                                        <option value="" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Select Gender</option>
+                                        <option value="MALE" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Male</option>
+                                        <option value="FEMALE" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Female</option>
+                                        <option value="OTHERS" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Other</option>
                                     </select>
                                 </div>
 
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone Number" className="w-full text-sm outline-none bg-transparent" required />
                                 </div>
 
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address" className="w-full text-sm outline-none bg-transparent" required />
                                 </div>
 
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <input 
                                         type={showPassword ? "text" : "password"} 
                                         name="password" 
@@ -418,14 +440,18 @@ const Staff = () => {
                                     <button 
                                         type="button" 
                                         onClick={() => setShowPassword(!showPassword)} 
-                                        className="absolute right-3 text-gray-400 hover:text-red-600 transition cursor-pointer"
+                                        className={`absolute right-3 transition cursor-pointer ${
+                                            isDarkMode ? 'text-zinc-400 hover:text-red-500' : 'text-gray-400 hover:text-red-600'
+                                        }`}
                                         title={showPassword ? "Hide password" : "Show password"}
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
                                 </div>
 
-                                <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                }`}>
                                     <img src={dateIcon} alt="Date of Birth" className="w-4 h-4 mr-2.5 flex-shrink-0" />
                                     <input 
                                         type={dobFocus ? "date" : (formData.birthdate ? "date" : "text")} 
@@ -436,20 +462,33 @@ const Staff = () => {
                                         onFocus={() => setDobFocus(true)}
                                         onBlur={() => setDobFocus(false)}
                                         placeholder="Date of Birth (DD/MM/YYYY)" 
-                                        className="w-full text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400" 
+                                        className={`w-full text-sm outline-none bg-transparent ${
+                                            isDarkMode ? 'text-white placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
+                                        }`} 
                                     />
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <textarea name="address" value={formData.address} onChange={handleInputChange} placeholder="Address" className="w-full border border-gray-200 rounded-xl p-3 text-sm" rows={3} />
+                                    <textarea 
+                                        name="address" 
+                                        value={formData.address} 
+                                        onChange={handleInputChange} 
+                                        placeholder="Address" 
+                                        className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 ${
+                                            isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
+                                        }`} 
+                                        rows={3} 
+                                    />
                                 </div>
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="submit" disabled={formLoading} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70">
+                                <button type="submit" disabled={formLoading} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70 cursor-pointer transition-all">
                                     {formLoading ? 'Saving...' : 'Save Staff'}
                                 </button>
-                                <button type="button" onClick={resetForm} className="flex-1 border border-gray-300 py-3 rounded-xl font-semibold hover:bg-gray-50">
+                                <button type="button" onClick={resetForm} className={`flex-1 border py-3 rounded-xl font-semibold cursor-pointer transition-all ${
+                                    isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}>
                                     Discard
                                 </button>
                             </div>
@@ -458,18 +497,22 @@ const Staff = () => {
 
                     {/* Staff List */}
                     <div className="max-w-4xl">
-                        <h3 className="text-lg font-bold mb-4">Staff Members</h3>
+                        <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Staff Members</h3>
 
                         {loading ? (
-                            <div className="text-center py-12">Loading staff...</div>
+                            <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading staff...</div>
                         ) : staffList.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">No staff found</div>
+                            <div className={`text-center py-12 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No staff found</div>
                         ) : (
                             <div className="space-y-3">
                                 {staffList.map((staff) => (
-                                    <div key={staff.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-all gap-4">
+                                    <div key={staff.id} className={`flex flex-col sm:flex-row sm:items-center justify-between border rounded-xl p-4 hover:shadow-sm transition-all gap-4 ${
+                                        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-200 text-slate-800'
+                                    }`}>
                                         <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
-                                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200 overflow-hidden flex-shrink-0">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border overflow-hidden flex-shrink-0 ${
+                                                isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-200'
+                                            }`}>
                                                 <img
                                                     src={staff.imageUrl || (staff.gender === 'FEMALE' ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png' : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')}
                                                     alt={staff.name}
@@ -482,17 +525,19 @@ const Staff = () => {
                                                 />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h4 className="font-semibold text-gray-900 truncate">{staff.name}</h4>
-                                                <p className="text-xs sm:text-sm text-gray-500 break-all">{staff.phone} • {staff.email}</p>
+                                                <h4 className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{staff.name}</h4>
+                                                <p className={`text-xs sm:text-sm break-all ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>{staff.phone} • {staff.email}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto border-t border-gray-50 pt-3 sm:pt-0 sm:border-t-0 flex-shrink-0">
+                                        <div className={`flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto border-t pt-3 sm:pt-0 sm:border-t-0 flex-shrink-0 ${
+                                            isDarkMode ? 'border-zinc-800' : 'border-gray-50'
+                                        }`}>
                                             <div className="flex items-center gap-2 mr-2">
                                                 <button
                                                     onClick={() => handleToggleStatus(staff.id, staff.active)}
                                                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                        staff.active ? 'bg-green-500' : 'bg-gray-200'
+                                                        staff.active ? 'bg-green-500' : (isDarkMode ? 'bg-zinc-700' : 'bg-gray-200')
                                                     }`}
                                                     role="switch"
                                                     aria-checked={staff.active}
@@ -504,7 +549,7 @@ const Staff = () => {
                                                         }`}
                                                     />
                                                 </button>
-                                                <span className={`text-xs font-bold w-12 text-left ${staff.active ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <span className={`text-xs font-bold w-12 text-left ${staff.active ? 'text-green-500' : (isDarkMode ? 'text-zinc-500' : 'text-gray-400')}`}>
                                                     {staff.active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
@@ -513,12 +558,19 @@ const Staff = () => {
                                                     setSelectedReferralStaffId(staff.id);
                                                     setActiveTab('referrals');
                                                 }} 
-                                                className="px-3 py-1.5 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                                                className={`px-3 py-1.5 border rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition ${
+                                                    isDarkMode ? 'border-amber-800/60 bg-amber-950/40 hover:bg-amber-900/50 text-amber-300' : 'border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800'
+                                                }`}
                                                 title="View Referral Performance & Rewards"
                                             >
-                                                <TrendingUp className="w-3.5 h-3.5 text-amber-600" /> Stats
+                                                <TrendingUp className="w-3.5 h-3.5 text-amber-500" /> Stats
                                             </button>
-                                            <button onClick={() => handleEdit(staff.id)} className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 cursor-pointer">
+                                            <button 
+                                                onClick={() => handleEdit(staff.id)} 
+                                                className={`px-4 py-1.5 border rounded-lg text-sm flex items-center gap-1 cursor-pointer transition ${
+                                                    isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                            >
                                                 <img src={editIcon} alt="edit" className="w-4 h-4" /> Edit
                                             </button>
                                         </div>
@@ -541,16 +593,22 @@ const Staff = () => {
                     />
                     
                     {/* Modal Window */}
-                    <div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+                    <div className={`relative rounded-2xl border shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-200 text-gray-900'
+                    }`}>
                         {/* Header */}
-                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
+                        <div className={`flex justify-between items-center px-6 py-4 border-b flex-shrink-0 ${
+                            isDarkMode ? 'border-zinc-800 bg-zinc-800/50' : 'border-gray-100 bg-gray-50/50'
+                        }`}>
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">Edit Staff Member</h3>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Update user profile details</p>
+                                <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Edit Staff Member</h3>
+                                <p className={`text-xs font-medium mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Update user profile details</p>
                             </div>
                             <button 
                                 onClick={closeEditModal}
-                                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-lg transition-all"
+                                className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                }`}
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -563,24 +621,30 @@ const Staff = () => {
                             {editFetchLoading ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-3">
                                     <div className="animate-spin h-8 w-8 border-3 border-red-600 border-t-transparent rounded-full"></div>
-                                    <p className="text-xs text-gray-400 font-semibold animate-pulse">Fetching staff details...</p>
+                                    <p className={`text-xs font-semibold animate-pulse ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Fetching staff details...</p>
                                 </div>
                             ) : (
                                 <form onSubmit={handleSubmitEdit} className="space-y-4">
                                     <div className="space-y-3.5">
                                         {/* Edit Profile Image Uploader */}
-                                        <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                            <div className="relative w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center border border-gray-300 flex-shrink-0">
+                                        <div className={`flex items-center gap-4 p-4 border rounded-xl ${
+                                            isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'
+                                        }`}>
+                                            <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center border flex-shrink-0 ${
+                                                isDarkMode ? 'bg-zinc-700 border-zinc-600' : 'bg-gray-200 border-gray-300'
+                                            }`}>
                                                 {editImagePreview ? (
                                                     <img src={editImagePreview} alt="Preview" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <User className="w-8 h-8 text-gray-400" />
+                                                    <User className={`w-8 h-8 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`} />
                                                 )}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-gray-700">Profile Picture</span>
-                                                <span className="text-[10px] text-gray-400 mb-2">Square image recommended</span>
-                                                <label className="cursor-pointer bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 text-gray-700 shadow-sm w-fit">
+                                                <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-700'}`}>Profile Picture</span>
+                                                <span className={`text-[10px] mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Square image recommended</span>
+                                                <label className={`cursor-pointer border px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm w-fit transition ${
+                                                    isDarkMode ? 'bg-zinc-800 border-zinc-600 text-zinc-200 hover:bg-zinc-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                }`}>
                                                     Choose File
                                                     <input
                                                         type="file"
@@ -593,8 +657,10 @@ const Staff = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
-                                            <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Full Name</label>
+                                            <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                            }`}>
                                                 <img src={nameIcon} alt="Name" className="w-4 h-4 mr-2.5" />
                                                 <input 
                                                     type="text" 
@@ -609,26 +675,30 @@ const Staff = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Gender</label>
-                                            <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Gender</label>
+                                            <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                            }`}>
                                                 <img src={genderIcon} alt="Gender" className="w-4 h-4 mr-2.5" />
                                                 <select
                                                     name="gender"
                                                     value={editFormData.gender}
                                                     onChange={(e) => setEditFormData(prev => ({ ...prev, gender: e.target.value }))}
-                                                    className="w-full text-sm outline-none bg-transparent"
+                                                    className="w-full text-sm outline-none bg-transparent cursor-pointer"
                                                 >
-                                                    <option value="">Select Gender</option>
-                                                    <option value="MALE">Male</option>
-                                                    <option value="FEMALE">Female</option>
-                                                    <option value="OTHERS">Other</option>
+                                                    <option value="" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Select Gender</option>
+                                                    <option value="MALE" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Male</option>
+                                                    <option value="FEMALE" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Female</option>
+                                                    <option value="OTHERS" className={isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>Other</option>
                                                 </select>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Phone Number</label>
-                                            <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Phone Number</label>
+                                            <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                            }`}>
                                                 <input 
                                                     type="tel" 
                                                     name="phone" 
@@ -645,8 +715,10 @@ const Staff = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
-                                            <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Email Address</label>
+                                            <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                            }`}>
                                                 <input 
                                                     type="email" 
                                                     name="email" 
@@ -659,8 +731,10 @@ const Staff = () => {
                                             </div>
                                         </div>
                                          <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Birthdate</label>
-                                            <div className="relative flex items-center border border-gray-200 rounded-xl px-3.5 py-2.5 bg-[#F9F9F9]">
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Birthdate</label>
+                                            <div className={`relative flex items-center border rounded-xl px-3.5 py-2.5 ${
+                                                isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white' : 'bg-[#F9F9F9] border-gray-200 text-gray-900'
+                                            }`}>
                                                 <img src={dateIcon} alt="Date of Birth" className="w-4 h-4 mr-2.5 flex-shrink-0" />
                                                 <input 
                                                     type={editDobFocus ? "date" : (editFormData.birthdate ? "date" : "text")} 
@@ -671,37 +745,45 @@ const Staff = () => {
                                                     onFocus={() => setEditDobFocus(true)}
                                                     onBlur={() => setEditDobFocus(false)}
                                                     placeholder="Date of Birth (DD/MM/YYYY)" 
-                                                    className="w-full text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400" 
+                                                    className={`w-full text-sm outline-none bg-transparent ${
+                                                        isDarkMode ? 'text-white placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
+                                                    }`} 
                                                 />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Address</label>
+                                            <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Address</label>
                                             <textarea 
                                                 name="address" 
                                                 value={editFormData.address} 
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, address: e.target.value }))} 
                                                 placeholder="Address" 
-                                                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 bg-[#F9F9F9]" 
+                                                className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 ${
+                                                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-[#F9F9F9] border-gray-200 text-gray-900 placeholder-gray-400'
+                                                }`} 
                                                 rows={2} 
                                             />
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex gap-4 pt-4 border-t border-gray-100 flex-shrink-0">
+                                    <div className={`flex gap-4 pt-4 border-t flex-shrink-0 ${
+                                        isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+                                    }`}>
                                         <button 
                                             type="submit" 
                                             disabled={formLoading} 
-                                            className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70 transition-all text-sm h-11"
+                                            className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70 transition-all text-sm h-11 cursor-pointer"
                                         >
                                             {formLoading ? 'Saving...' : 'Update Staff'}
                                         </button>
                                         <button 
                                             type="button" 
                                             onClick={closeEditModal} 
-                                            className="flex-1 border border-gray-300 py-2.5 rounded-xl font-semibold hover:bg-gray-50 transition-all text-sm text-gray-700 h-11"
+                                            className={`flex-1 border py-2.5 rounded-xl font-semibold transition-all text-sm h-11 cursor-pointer ${
+                                                isDarkMode ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                            }`}
                                         >
                                             Discard
                                         </button>

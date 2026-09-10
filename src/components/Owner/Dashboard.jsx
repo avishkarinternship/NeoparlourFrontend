@@ -3,6 +3,7 @@ import Navbar from './Layouts/Navbar';
 import Footer from '../common/Footer';
 import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';
+import { useTranslation } from 'react-i18next';
 
 // 1. Asset Imports with explicit folder pathways
 import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/upcoming_appointment_icon.svg';
@@ -10,6 +11,7 @@ import todaysAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/tod
 import appointmentActivityIcon from '../../assets/Owner/Dashboard/CenterScreen/appointment_activity.svg';
 
 const Dashboard = () => {
+    const { t } = useTranslation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const getFirstDayOfMonth = () => {
         const date = new Date();
@@ -153,7 +155,7 @@ const Dashboard = () => {
                 {/* --- MAIN GRID DASHBOARD CANVAS --- */}
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
                     {/* Main Workspace Header Title */}
-                    <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">Dashboard</h1>
+                    <h1 className="text-[22px] font-bold text-gray-900 mb-6 tracking-tight">{t('owner.sidebar.dashboard', 'Dashboard')}</h1>
 
                     {/* Balanced Responsive Workspace Display Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

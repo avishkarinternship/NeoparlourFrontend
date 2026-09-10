@@ -100,10 +100,18 @@ export const AddServiceModal = ({ isOpen, onClose, onSave, salonGstStatus, isDar
                 <div>CGST (9%): <strong className={isDarkMode ? 'text-white' : 'text-gray-900'}>₹{gstBreakdown.cgst}</strong></div>
                 <div>{gstBreakdown.secondTaxLabel}: <strong className={isDarkMode ? 'text-white' : 'text-gray-900'}>₹{gstBreakdown.sgstOrUtgst}</strong></div>
               </div>
-              <div className={`text-[11px] font-medium pt-1 space-y-1 ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+              <div className={`text-[11px] font-medium pt-1 space-y-2.5 ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
                 <div>✔ Customer will pay <strong>₹{gstBreakdown.totalPrice}</strong> on the invoice.</div>
-                <div className={`text-[10px] italic ${isDarkMode ? 'text-purple-400/80' : 'text-purple-600/80'}`}>
-                  * Note: This tax distribution is for salon accounting reference only and will not be displayed to customers when booking.
+                <div className={`p-3 rounded-xl border text-xs sm:text-sm font-black leading-snug flex items-start gap-2.5 shadow-sm transition-all ${
+                    isDarkMode 
+                        ? 'bg-amber-950/70 border-amber-500/60 text-amber-200' 
+                        : 'bg-amber-50 border-amber-300 text-amber-950'
+                }`}>
+                    <span className="text-lg shrink-0 leading-none select-none">ℹ️</span>
+                    <div className="font-extrabold text-xs sm:text-sm leading-relaxed">
+                        <span className="font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mr-1.5">Note:</span>
+                        This tax distribution is for salon accounting reference only and will not be displayed to customers when booking.
+                    </div>
                 </div>
               </div>
             </div>

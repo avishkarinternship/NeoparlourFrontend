@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { ShieldCheck, ShieldAlert, FileText, Clock, RefreshCw, AlertTriangle, CheckCircle2, UploadCloud } from 'lucide-react';
 import toast from 'react-hot-toast';
 import kycService from '../../../services/kycService';
@@ -14,6 +15,7 @@ const DEFAULT_DOCUMENTS = [
 ];
 
 const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
+  const { t } = useTranslation();
   const reduxSalonId = useSelector((state) => 
     state.ownerStaff?.user?.salonId || 
     state.ownerStaff?.user?.tenantId || 

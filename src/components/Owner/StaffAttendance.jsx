@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../api/axiosInstance';
 import { 
     Search, Calendar, Check, X, Clock, User, 
@@ -35,6 +36,7 @@ const monthNames = [
 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function StaffAttendance() {
+    const { t } = useTranslation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
       ? outletContext.isDarkMode 

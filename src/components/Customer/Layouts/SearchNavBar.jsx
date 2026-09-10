@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
-import { Search, MapPin, ChevronDown, Calendar, UserPlus, LogIn, MousePointerClick, User, ShoppingCart, Sun, Moon } from 'lucide-react';
+import { Search, MapPin, ChevronDown, Calendar, MousePointerClick, User, Sun, Moon, X, Scissors, Sparkles } from 'lucide-react';
 import { fetchCart } from '../../../redux/slices/cartSlice';
 import Drawer from '../Drawer';
 import ProfilePopup from '../ProfilePopup';
@@ -10,6 +10,17 @@ import PasswordResetModal from '../PasswordResetModal';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import LanguageSwitcher from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import axiosInstance from '../../../api/axiosInstance';
+
+const DEFAULT_SERVICES = [
+  { id: 101, name: 'Hair Cut', category: 'Hair Services', duration: 10, price: 250 },
+  { id: 102, name: 'Hair Styling', category: 'Hair Services', duration: 10, price: 100 },
+  { id: 103, name: 'Hair Wash & Blow Dry', category: 'Hair Services', duration: 15, price: 200 },
+  { id: 104, name: 'Hair Coloring', category: 'Hair Services', duration: 45, price: 800 },
+  { id: 105, name: 'Beard Trim & Styling', category: 'Grooming', duration: 15, price: 150 },
+  { id: 106, name: 'Deep Tissue Facial', category: 'Skin Care', duration: 30, price: 600 },
+  { id: 107, name: 'Classic Manicure', category: 'Nail Care', duration: 25, price: 350 },
+];
 
 const SearchNavBar = () => {
   const { t } = useTranslation();
@@ -24,6 +35,14 @@ const SearchNavBar = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
   const { isDark, toggleDark } = useDarkMode();
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [activeHoverIndex, setActiveHoverIndex] = useState(1); // Default highlight on second item like design mock
+  const searchContainerRef = useRef(null);
 
   const isIncomplete = (name) => {
       const t = (name || '').trim();
@@ -83,6 +102,73 @@ const SearchNavBar = () => {
       }
   }, [isAuthenticated, dispatch]);
 
+  // Click outside to close dropdown
+  useEffect(() => {
+      const handleClickOutside = (event) => {
+          if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+              setShowSearchDropdown(false);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Search logic handler
+  useEffect(() => {
+      if (!searchQuery.trim()) {
+          setSearchResults([]);
+          setShowSearchDropdown(false);
+          return;
+      }
+
+      setSearchLoading(true);
+      setShowSearchDropdown(true);
+
+      const activeSalonId = localStorage.getItem('activeSalonId');
+      const debounceTimer = setTimeout(async () => {
+          try {
+              const res = await axiosInstance.get('/services/public/active', {
+                  params: { salonId: activeSalonId }
+              });
+              const fetched = res.data || [];
+              const q = searchQuery.toLowerCase().trim();
+              const filtered = fetched.filter(s =>
+                  s.name?.toLowerCase().includes(q) ||
+                  s.category?.toLowerCase().includes(q)
+              );
+
+              if (filtered.length > 0) {
+                  setSearchResults(filtered);
+              } else {
+                  // Fallback to local default list
+                  const fallbackFiltered = DEFAULT_SERVICES.filter(s =>
+                      s.name.toLowerCase().includes(q) ||
+                      s.category.toLowerCase().includes(q)
+                  );
+                  setSearchResults(fallbackFiltered);
+              }
+          } catch (err) {
+              const q = searchQuery.toLowerCase().trim();
+              const fallbackFiltered = DEFAULT_SERVICES.filter(s =>
+                  s.name.toLowerCase().includes(q) ||
+                  s.category.toLowerCase().includes(q)
+              );
+              setSearchResults(fallbackFiltered);
+          } finally {
+              setSearchLoading(false);
+          }
+      }, 250);
+
+      return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e) => {
+      if (e) e.preventDefault();
+      if (!searchQuery.trim()) return;
+      setShowSearchDropdown(false);
+      navigate('/customer/book-service', { state: { searchQuery: searchQuery.trim() } });
+  };
+
   return (
     <>
       <header className={`w-full border-b px-3 sm:px-6 md:px-12 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm font-sans transition-all duration-500 ease-out transform ${
@@ -101,32 +187,123 @@ const SearchNavBar = () => {
       </div>
 
       {/* Global Hub Navigation Search & Filter Bar Group */}
-      <div className={`flex items-center border rounded-lg overflow-hidden max-w-[140px] xs:max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-2xl w-full mx-1.5 sm:mx-4 h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'}`}>
-        <div className="flex items-center flex-1 px-2 sm:px-3 lg:border-r border-gray-200 min-w-0">
-          <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          <input 
-            type="text" 
-            placeholder={t('navbar.search_placeholder', 'Search...')} 
-            className={`w-full text-xs sm:text-[13px] outline-none placeholder-[#8D8D8D] bg-transparent ${isDark ? 'text-gray-200' : 'text-[#8D8D8D]'}`}
-          />
-        </div>
-        
-        <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
-          <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
-          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-        </div>
+      <div ref={searchContainerRef} className="relative flex-1 max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-2xl mx-1.5 sm:mx-4">
+        <form onSubmit={handleSearchSubmit} className={`flex items-center border rounded-full overflow-hidden w-full h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${
+          showSearchDropdown || searchQuery ? 'border-[#FF0B01] ring-2 ring-[#FF0B01]/20' : isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'
+        } ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+          <div className="flex items-center flex-1 px-3 sm:px-4 lg:border-r border-gray-200 dark:border-gray-700 min-w-0">
+            <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                if (searchQuery.trim()) setShowSearchDropdown(true);
+              }}
+              placeholder={t('navbar.search_placeholder', 'Search services, salons...')} 
+              className={`w-full text-xs sm:text-[13px] outline-none placeholder-[#8D8D8D] bg-transparent ${isDark ? 'text-white' : 'text-gray-900'}`}
+            />
+            {searchQuery && (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowSearchDropdown(false);
+                }}
+                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition text-gray-400 hover:text-red-500 shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          
+          <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
+            <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+            <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
+            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+          </div>
 
-        <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
-          <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
-          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-        </div>
+          <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
+            <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+            <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
+            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+          </div>
 
-        <button className="bg-[#FF0B01] text-white text-[11px] sm:text-[13px] font-bold tracking-widest px-3 sm:px-6 h-full transition-opacity hover:opacity-90 uppercase flex-shrink-0 flex items-center justify-center">
-          <span className="hidden sm:inline">{t('buttons.search', 'SEARCH')}</span>
-          <Search className="w-3.5 h-3.5 sm:hidden" />
-        </button>
+          <button type="submit" className="bg-[#FF0B01] hover:bg-red-700 text-white text-[11px] sm:text-[13px] font-bold tracking-widest px-4 sm:px-6 h-full transition-all uppercase flex-shrink-0 flex items-center justify-center cursor-pointer rounded-r-full">
+            <span className="hidden sm:inline">{t('buttons.search', 'SEARCH')}</span>
+            <Search className="w-3.5 h-3.5 sm:hidden" />
+          </button>
+        </form>
+
+        {/* Live Search Results Overlay Dropdown */}
+        {showSearchDropdown && searchQuery.trim() !== '' && (
+          <div className={`absolute left-0 right-0 top-full mt-2.5 z-[100] border rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-96 overflow-y-auto custom-scrollbar p-4 sm:p-5 space-y-3 transition-all duration-200 ${
+            isDark
+              ? 'bg-[#1a1a1a] border-gray-800 text-white shadow-black/80'
+              : 'bg-[#1a1a1a] dark:bg-[#1a1a1a] border-gray-800 text-white shadow-2xl'
+          }`}>
+            <div className="flex items-center justify-between pb-2.5 border-b border-gray-800">
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5">
+                <Scissors className="w-3.5 h-3.5 text-[#FF0B01]" />
+                {t('search.services_header', 'SERVICES')}
+              </span>
+              <span className="text-[10px] font-bold text-gray-400">
+                {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}
+              </span>
+            </div>
+
+            {searchLoading ? (
+              <div className="flex items-center justify-center py-6 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
+                <div className="h-4 w-4 border-2 border-[#FF0B01]/20 border-t-[#FF0B01] rounded-full animate-spin" />
+                Searching services...
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-2">
+                {searchResults.map((service, index) => {
+                  const isSelected = activeHoverIndex === index;
+                  return (
+                    <div
+                      key={service.id || index}
+                      onMouseEnter={() => setActiveHoverIndex(index)}
+                      onClick={() => {
+                        setShowSearchDropdown(false);
+                        navigate('/customer/book-service', { state: { selectedCategory: service.category, serviceId: service.id } });
+                      }}
+                      className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl transition-all duration-200 cursor-pointer group ${
+                        isSelected 
+                          ? 'bg-[#2a2a2a] border border-gray-700/60 shadow-md scale-[1.01]' 
+                          : 'bg-transparent hover:bg-[#252525] border border-transparent'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <h4 className={`text-sm sm:text-base font-extrabold uppercase tracking-tight transition-colors duration-150 ${
+                          isSelected 
+                            ? 'text-[#FF0B01]' 
+                            : 'text-white group-hover:text-[#FF0B01]'
+                        }`}>
+                          {service.name}
+                        </h4>
+                        <p className="text-xs text-gray-400 font-medium mt-1 flex items-center gap-2">
+                          <span>{service.category}</span>
+                          <span className="text-gray-600">•</span>
+                          <span>{service.duration || 10} Mins</span>
+                        </p>
+                      </div>
+
+                      <div className="text-sm sm:text-base font-black text-[#FF0B01] shrink-0 ml-4">
+                        ₹ {service.price}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+                No services found matching "{searchQuery}"
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Session Profiles / Control Triggers Block */}
@@ -274,5 +451,3 @@ const SearchNavBar = () => {
 };
 
 export default SearchNavBar;
-
-

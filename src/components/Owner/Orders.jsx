@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ const LazyImage = ({ src, alt, className, isDarkMode = false }) => {
 };
 
 const Orders = () => {
+    const { t } = useTranslation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
       ? outletContext.isDarkMode 
@@ -24,8 +26,6 @@ const Orders = () => {
 
     const [activeTab, setActiveTab] = useState('ordered'); // 'ordered' | 'completed' | 'cancelled'
     
-
-
     // Filter states
     const [keyword, setKeyword] = useState('');
     const [mobile, setMobile] = useState('');
@@ -200,7 +200,7 @@ const Orders = () => {
                     <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <h1 className={`text-[18px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Orders Management
+                                {t('owner.orders.title', 'Orders Management')}
                             </h1>
                             <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Manage product sales orders, status updates, and customer purchase logs</p>
                         </div>

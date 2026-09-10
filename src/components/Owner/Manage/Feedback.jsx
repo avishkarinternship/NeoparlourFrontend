@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -20,6 +21,7 @@ const toastStyle = {
 };
 
 const Feedback = () => {
+    const { t } = useTranslation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Asset Icons Imports - Stepping up 2 levels to reach the src directory
 import nameIcon from '../../assets/Owner/Billing/name_icon.svg'; 
@@ -10,6 +11,7 @@ import amountIcon from '../../assets/Owner/Billing/amount_icon.svg';
 import downloadIcon from '../../assets/Owner/Billing/download_icon.svg';
 
 const Billing = () => {
+    const { t } = useTranslation();
     // Form structural inputs state management
     const [searchClient, setSearchClient] = useState('');
     const [selectedService, setSelectedService] = useState('');

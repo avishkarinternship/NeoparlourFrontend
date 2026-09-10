@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import BillingSummaryCard from '../../common/BillingSummaryCard';
 import {
     Scissors,
@@ -153,6 +154,7 @@ const getNextDays = () => {
 };
 
 const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPortal, staffOnlyId }) => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
@@ -1526,7 +1528,9 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
                         {/* Real-time Booking Summary Card */}
                         <section className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                            <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
+                                isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
+                            }`}>
                                 <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Booking Summary
                             </h3>
                             {selectedServiceObjects.length === 0 ? (
@@ -1557,8 +1561,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 <div className="pl-2 border-l-2 border-red-200 space-y-2">
                                                     {selectedServiceObjects.filter(s => offerServiceIds.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-xs">
-                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
-                                                            <span className="font-extrabold text-slate-900">₹{s.price}</span>
+                                                            <span className={`font-bold uppercase leading-tight line-clamp-1 ${isDarkMode ? 'text-zinc-200' : 'text-slate-700'}`}>{s.name}</span>
+                                                            <span className={`font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>₹{s.price}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1576,8 +1580,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 <div className="space-y-2">
                                                     {selectedServiceObjects.filter(s => !offerServiceIds.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-xs">
-                                                            <span className="font-bold text-slate-700 uppercase leading-tight line-clamp-1">{s.name}</span>
-                                                            <span className="font-extrabold text-slate-900">₹{s.price}</span>
+                                                            <span className={`font-bold uppercase leading-tight line-clamp-1 ${isDarkMode ? 'text-zinc-200' : 'text-slate-700'}`}>{s.name}</span>
+                                                            <span className={`font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>₹{s.price}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1586,10 +1590,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                     </div>
 
                                     {/* Cost breakdown ledger */}
-                                    <div className="border-t border-slate-100 pt-3 space-y-2.5 text-xs font-semibold text-zinc-500">
+                                    <div className={`border-t pt-3 space-y-2.5 text-xs font-semibold ${isDarkMode ? 'border-zinc-800 text-zinc-400' : 'border-slate-100 text-zinc-500'}`}>
                                         <div className="flex justify-between">
                                             <span>Subtotal</span>
-                                            <span className="text-slate-800 font-bold">₹{serviceSubtotal}</span>
+                                            <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>₹{serviceSubtotal}</span>
                                         </div>
                                         
                                         {discountAmount > 0 && (
@@ -1602,9 +1606,9 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         )}
 
                                         {/* Home Service toggle */}
-                                        <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+                                        <div className={`flex items-center justify-between border-t pt-2.5 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-800">Home Service?</span>
+                                                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>Home Service?</span>
                                                 <span className="text-[9px] text-zinc-400 font-medium normal-case">Avail services at your place</span>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -1628,7 +1632,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         {homeService && !fetchingHomeCharges && (
                                             <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                                                 {homeServiceCharges > 0 && (
-                                                    <div className="flex justify-between text-xs font-bold text-slate-700 bg-red-50/50 border border-red-100/50 p-2.5 rounded-xl">
+                                                    <div className={`flex justify-between text-xs font-bold p-2.5 rounded-xl border ${isDarkMode ? 'text-zinc-200 bg-red-950/30 border-red-900/40' : 'text-slate-700 bg-red-50/50 border-red-100/50'}`}>
                                                         <span>Home Charges</span>
                                                         <span className="text-[#FF0B01]">₹{homeServiceCharges}</span>
                                                     </div>
@@ -1640,13 +1644,13 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                         onChange={(e) => setCustomerAddress(e.target.value)}
                                                         placeholder="Enter complete home address"
                                                         rows="2"
-                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 focus:bg-white transition-all text-slate-700 resize-none"
+                                                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all resize-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white'}`}
                                                     />
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className="pt-2 border-t border-dashed border-slate-100">
+                                        <div className={`pt-2 border-t border-dashed ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
                                             <BillingSummaryCard
                                                 subtotal={serviceSubtotal}
                                                 discountAmount={discountAmount + weekdayDiscountAmount}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { CalendarClock, CheckCircle, XCircle, Eye, X, PlusCircle, Play, Package, Check, Sparkles, Clock, Hourglass, AlertTriangle, Filter, SlidersHorizontal } from 'lucide-react';
@@ -58,6 +59,7 @@ const parseConflictsFromMessage = (msg) => {
 };
 
 const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModeProp }) => {
+  const { t } = useTranslation();
   const outletContext = useOutletContext() || {};
   const isDarkMode = isDarkModeProp !== undefined ? isDarkModeProp : (outletContext.isDarkMode || document.documentElement.classList.contains('dark'));
   const location = useLocation();

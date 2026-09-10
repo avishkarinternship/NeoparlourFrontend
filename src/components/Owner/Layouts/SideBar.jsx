@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { performCleanLogout } from '../../../utils/auth';
 
 import homeIcon from '../../../assets/Owner/Dashboard/SideBar/home_icon.svg';
@@ -14,6 +15,7 @@ import logoutIcon from '../../../assets/Owner/Dashboard/SideBar/logout_icon.svg'
 import attendanceIcon from '../../../assets/Owner/Attendance/total_attendance.svg'
 
 const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,18 +27,18 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
   }, [location.pathname, isManagePath]);
 
   const subMenu = [
-    { label: 'Schedule', path: '/owner/manage/schedule' },
-    { label: 'Walk-in Booking', path: '/owner/manage/walk-in' },
-    { label: 'Service', path: '/owner/manage/services' },
-    { label: 'Inventory', path: '/owner/manage/inventory' },
-    { label: 'Staff', path: '/owner/manage/staff' },
-    { label: 'Staff Invitations', path: '/owner/staff-invitations' },
-    { label: 'Feedback', path: '/owner/manage/feedback' },
-    { label: 'Home Services', path: '/owner/manage/home-services' },
-    { label: 'Subscription', path: '/owner/manage/subscription' },
-    { label: 'Add Offers', path: '/owner/manage/add-offers' },
-    { label: 'Add Products', path: '/owner/manage/add-products' },
-    { label: 'Add Packages', path: '/owner/manage/add-package' },
+    { label: t('owner.manage_sidebar.schedule', 'Schedule'), path: '/owner/manage/schedule' },
+    { label: t('owner.manage_sidebar.walk_in', 'Walk-in Booking'), path: '/owner/manage/walk-in' },
+    { label: t('owner.manage_sidebar.services', 'Service'), path: '/owner/manage/services' },
+    { label: t('owner.manage_sidebar.inventory', 'Inventory'), path: '/owner/manage/inventory' },
+    { label: t('owner.manage_sidebar.staff', 'Staff'), path: '/owner/manage/staff' },
+    { label: t('owner.sidebar.staff_invitations', 'Staff Invitations'), path: '/owner/staff-invitations' },
+    { label: t('owner.manage_sidebar.feedback', 'Feedback'), path: '/owner/manage/feedback' },
+    { label: t('owner.manage_sidebar.home_services', 'Home Services'), path: '/owner/manage/home-services' },
+    { label: t('owner.manage_sidebar.subscription', 'Subscription'), path: '/owner/manage/subscription' },
+    { label: t('owner.manage_sidebar.add_offers', 'Add Offers'), path: '/owner/manage/add-offers' },
+    { label: t('owner.manage_sidebar.add_products', 'Add Products'), path: '/owner/manage/add-products' },
+    { label: t('owner.manage_sidebar.add_packages', 'Add Packages'), path: '/owner/manage/add-package' },
   ];
 
   const handleManageClick = (isMobile = false) => {
@@ -234,6 +236,38 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
                   </svg>
                   <span>Server Health</span>
+                </button>
+              );
+            })()}
+
+            {/* Server Logs */}
+            {(() => {
+              const isActive = location.pathname === '/admin/logs' || location.pathname === '/owner/logs';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/logs');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <svg
+                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Server Logs</span>
                 </button>
               );
             })()}
@@ -449,7 +483,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 location.pathname === '/owner/dashboard' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Dashboard</span>
+            <span>{t('owner.sidebar.dashboard', 'Dashboard')}</span>
           </button>
 
           {/* Manage */}
@@ -472,7 +506,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 isManagePath ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Manage</span>
+            <span>{t('owner.sidebar.manage', 'Manage')}</span>
             <span className={`ml-auto text-[10px] md:hidden ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
               {showManageDrawer ? '▼' : '▶'}
             </span>
@@ -526,7 +560,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 location.pathname === '/owner/analytics' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Analytics</span>
+            <span>{t('owner.sidebar.analytics', 'Analytics')}</span>
           </button>
 
           {/* Customers */}
@@ -553,7 +587,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>Customers</span>
+            <span>{t('owner.sidebar.customers', 'Customers')}</span>
           </button>
 
           {/* Orders */}
@@ -576,7 +610,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 location.pathname === '/owner/orders' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Orders</span>
+            <span>{t('owner.sidebar.orders', 'Orders')}</span>
           </button>
 
           {/* Attendance */}
@@ -599,7 +633,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 location.pathname === '/owner/attendance' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Attendance</span>
+            <span>{t('owner.sidebar.staff_attendance', 'Attendance')}</span>
           </button>
 
           {/* KYC Verification */}
@@ -629,7 +663,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            <span>KYC Verification</span>
+            <span>{t('owner.sidebar.kyc', 'KYC Verification')}</span>
           </button>
 
         </div>
@@ -645,7 +679,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
             }`}
           >
             <img src={helpIcon} alt="Help" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-70" />
-            <span>Help</span>
+            <span>{t('drawer.support', 'Help')}</span>
           </button>
 
           {/* Settings Link Option */}
@@ -668,7 +702,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 location.pathname === '/owner/settings' ? 'active-icon-glow' : 'opacity-70'
               }`}
             />
-            <span>Settings</span>
+            <span>{t('owner.sidebar.settings', 'Settings')}</span>
           </button>
 
           {/* Session Termination Area */}
@@ -680,7 +714,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
               }`}
             >
               <img src={logoutIcon} alt="Logout" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-70" />
-              <span>Logout</span>
+              <span>{t('owner.sidebar.logout', 'Logout')}</span>
             </button>
           </div>
         </div>

@@ -27,8 +27,8 @@ export const LanguageSwitcher = ({ className = "" }) => {
 
   const languages = [
     { code: 'en', label: 'English', short: 'EN' },
-    { code: 'hi', label: 'हिन्दी', short: 'HI' },
-    { code: 'mr', label: 'मराठी', short: 'MR' }
+    { code: 'hi', label: 'Hinglish', short: 'HI' },
+    { code: 'mr', label: 'Minglish', short: 'MR' }
   ];
 
   return (

@@ -7,6 +7,7 @@ import axiosInstance from '../../../api/axiosInstance';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
 import profileIcon from '../../../assets/Owner/profile.jpg';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
@@ -63,6 +64,7 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 };
 
 export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDarkMode }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const dropdownRef = useRef(null);
@@ -103,7 +105,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   }, []);
 
   const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
-  const isAdmin = ownerUser.role === 'ADMIN';
+  const isAdmin = ownerUser.role === 'ADMIN' || ownerUser.role === 'SUPER_ADMIN' || ownerUser.role === 'ROLE_ADMIN';
 
   useEffect(() => {
     if (!isAdmin) {
@@ -132,6 +134,61 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
       setUnreadCount(notifs.filter(n => n.status === 'pending').length);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
+    }
+  };
+
+  const [deletingNotifId, setDeletingNotifId] = useState(null);
+
+  const handleDeleteNotification = async (id, e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (deletingNotifId === id) return;
+    setDeletingNotifId(id);
+
+    // Optimistically remove notification from state immediately
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      setUnreadCount(updated.filter(n => n.status === 'pending').length);
+      return updated;
+    });
+
+    try {
+      await axiosInstance.delete(`/notifications/${id}`);
+      toast.success("Notification deleted");
+      await fetchNotifications();
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+      if (error.response?.status !== 404) {
+        toast.error("Failed to delete notification");
+        await fetchNotifications();
+      }
+    } finally {
+      setDeletingNotifId(null);
+    }
+  };
+
+  const handleDeleteAllNotifications = async (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    
+    // Optimistically clear state immediately
+    setNotifications([]);
+    setUnreadCount(0);
+
+    try {
+      await axiosInstance.delete('/notifications/all');
+      toast.success("All notifications deleted");
+      await fetchNotifications();
+    } catch (error) {
+      console.error("Failed to delete all notifications:", error);
+      if (error.response?.status !== 404) {
+        toast.error("Failed to delete all notifications");
+        await fetchNotifications();
+      }
     }
   };
 
@@ -247,7 +304,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             </svg>
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t('owner.navbar.search_placeholder', 'Search...')}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -273,7 +330,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
               </button>
             )}
             <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
-              Search
+              {t('buttons.search', 'Search')}
             </button>
           </div>
 
@@ -303,8 +360,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                   No matching records found.
                 </div>
               ) : (
-                <>
-                  {/* Category 1: Staff Stylists */}
+                <>                  {/* Category 1: Staff Stylists */}
                   {searchResults.staff && searchResults.staff.length > 0 && (
                     <div className="space-y-2">
                       <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
@@ -350,8 +406,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] ${
-                                    isDarkMode ? 'text-zinc-100' : 'text-gray-900'
+                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                                    isDarkMode ? 'text-white' : 'text-gray-900'
                                   }`}>{staff.name}</div>
                                   <div className="text-[9px] text-gray-400 font-semibold">{staff.phone}</div>
                                 </div>
@@ -387,8 +443,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                             className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
                           >
                             <div className="flex justify-between items-start w-full">
-                              <span className={`text-xs font-bold group-hover:text-[#ff0b01] truncate ${
-                                isDarkMode ? 'text-zinc-100' : 'text-gray-900'
+                              <span className={`text-xs font-bold group-hover:text-[#ff0b01] transition-colors truncate ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
                               }`}>
                                 {visit.customerName}
                               </span>
@@ -429,7 +485,9 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                             className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
                           >
                             <div className="flex justify-between items-start w-full">
-                              <span className="text-xs font-bold text-gray-900 group-hover:text-[#ff0b01] truncate">
+                              <span className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>
                                 {appt.customerName || appt.customer?.fullName || 'Customer'}
                               </span>
                               <span className="text-[9px] font-bold text-gray-400">
@@ -475,7 +533,9 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                             className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
                           >
                             <div className="min-w-0 flex-1 pr-2">
-                              <div className="text-xs font-bold text-gray-900 truncate group-hover:text-[#ff0b01]">{service.name}</div>
+                              <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                                isDarkMode ? 'text-white' : 'text-gray-900'
+                              }`}>{service.name}</div>
                               <div className="text-[9px] text-gray-400 font-semibold capitalize">{service.category} • {service.duration} mins</div>
                             </div>
                             <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
@@ -524,8 +584,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] ${
-                                    isDarkMode ? 'text-zinc-100' : 'text-gray-900'
+                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                                    isDarkMode ? 'text-white' : 'text-gray-900'
                                   }`}>{product.name}</div>
                                   <div className="text-[9px] text-gray-400 font-semibold">{product.category} • {product.stock} in stock</div>
                                 </div>
@@ -563,8 +623,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                               className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
                             >
                               <div className="min-w-0 flex-1 pr-2">
-                                <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] ${
-                                  isDarkMode ? 'text-zinc-100' : 'text-gray-900'
+                                <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
                                 }`}>{offer.name}</div>
                                 <div className="text-[9px] text-gray-400 font-semibold">
                                   {discountLabel}
@@ -590,7 +650,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
         </div>
 
         {/* Language Switcher */}
-        <LanguageSwitcher />
+        {!isAdmin && <LanguageSwitcher />}
 
         {/* Dark Mode Toggle Button */}
         <button
@@ -641,27 +701,35 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                 isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-gray-100 bg-gray-50/50'
               }`}>
                 <h3 className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={handleDeleteAllNotifications}
+                    className="text-[11px] font-bold text-[#ff0b01] hover:underline transition-all"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
               <div className="overflow-y-auto p-2 flex-1">
                 {notifications.length === 0 ? (
                    <div className="py-8 text-center text-xs font-semibold text-gray-400">No notifications found</div>
                 ) : (
                   notifications.map(notif => (
-                    <div key={notif.id} className={`p-3 mb-2 rounded-xl border transition-colors cursor-default ${
+                    <div key={notif.id} className={`p-3 mb-2 rounded-xl border transition-colors cursor-default relative group ${
                       isDarkMode ? 'border-zinc-800/60 hover:bg-zinc-800/50' : 'border-gray-50 hover:bg-gray-50'
                     }`}>
-                       <div className="flex justify-between items-start mb-1">
+                       <div className="flex justify-between items-start mb-1 pr-6">
                           <div className="flex items-center gap-2">
                              {notif.type === 'APPOINTMENT' ? (
-                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                              ) : notif.type === 'PRODUCT_ORDERED' ? (
-                                <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                <svg className="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                              ) : (
-                                <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                              )}
-                             <h4 className={`text-sm font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>{notif.title}</h4>
+                             <h4 className={`text-sm font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>{notif.title}</h4>
                           </div>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase flex-shrink-0 ${
                             notif.status === 'pending' 
                               ? isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-red-600' 
                               : 'bg-green-50 text-green-600'
@@ -669,7 +737,16 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                              {notif.status}
                           </span>
                        </div>
-                       <p className={`text-xs pl-6 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>{notif.message}</p>
+                       <p className={`text-xs pl-6 pr-6 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>{notif.message}</p>
+                       <button
+                         onClick={(e) => handleDeleteNotification(notif.id, e)}
+                         className="absolute top-2.5 right-2 text-gray-400 hover:text-red-500 p-1 rounded-lg transition-colors opacity-80 group-hover:opacity-100"
+                         title="Delete"
+                       >
+                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                         </svg>
+                       </button>
                     </div>
                   ))
                 )}

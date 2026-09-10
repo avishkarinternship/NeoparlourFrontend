@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -56,6 +57,7 @@ const LazyImage = ({ src, alt, className }) => {
 };
 
 const AddProducts = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode || document.documentElement.classList.contains('dark');

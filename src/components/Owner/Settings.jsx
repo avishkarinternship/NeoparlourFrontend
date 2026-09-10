@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { GstStateInput, StateSelector, GstinInput } from "../common/GstStateInput";
@@ -33,6 +34,7 @@ const getMax18PlusDate = () => {
 };
 
 const Settings = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const outletContext = useOutletContext() || {};
     const isDarkMode = outletContext.isDarkMode !== undefined 
