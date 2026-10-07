@@ -7,7 +7,8 @@ import { User, UserCheck, Calendar, ChevronDown, Mail, Phone, Lock, ShieldCheck,
 import searchService from '../../services/searchService';
 import { compressImage } from '../../utils/imageCompressor';
 import { GstStateInput, StateSelector, GstinInput } from '../common/GstStateInput';
-import { getStateFromCityName, getStateDisplayName, getGstInvoiceNotice, INDIAN_STATES } from '../../constants/indianStates';
+import { getStateFromCityName, getStateFromStateName, getStateDisplayName, getGstInvoiceNotice, INDIAN_STATES } from '../../constants/indianStates';
+import LocationPickerModal from '../location/LocationPickerModal';
 
 // Using existing assets
 import logoIcon from '../../assets/Neoparlour_logo.png';
@@ -92,6 +93,8 @@ const OwnerRegister = () => {
     gstin: '',
     state: '',
     includeGstInInvoice: false,
+    latitude: null,
+    longitude: null,
   });
 
   const handleGstStateChange = ({ gstin, state }) => {
@@ -116,6 +119,7 @@ const OwnerRegister = () => {
   const [showLandmarkDropdown, setShowLandmarkDropdown] = useState(false);
   const [tncAccepted, setTncAccepted] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const [profileImageBase64, setProfileImageBase64] = useState('');
@@ -252,44 +256,61 @@ const OwnerRegister = () => {
     };
   }, [dispatch]);
 
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleDetectLocation = async () => {
+    try {
+      setIsDetectingLocation(true);
+      toast("📍 Detecting GPS coordinates... Please ensure you are inside your salon!", { icon: "📍", duration: 3000 });
 
-    setIsDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const result = await searchService.reverseGeocode(latitude, longitude);
-          if (result.city) {
-            setIsUserTypingCity(false);
-            setIsUserTypingArea(false);
-            setFormData(prev => ({
-              ...prev,
-              cityName: result.city,
-              areaName: result.area || ''
-            }));
-            toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
-          } else {
-            toast.error("Could not determine your city. Please enter it manually.");
-          }
-        } catch (err) {
-          console.error("Location detection error:", err);
-          toast.error("Failed to detect location. Please enter manually.");
-        } finally {
-          setIsDetectingLocation(false);
+      const coords = await searchService.detectCoordinates(4000);
+      const { latitude, longitude, isIpFallback } = coords;
+
+      const result = await searchService.reverseGeocode(latitude, longitude);
+      if (result.city || result.area) {
+        setIsUserTypingCity(false);
+        setIsUserTypingArea(false);
+        setIsUserTypingLandmark(false);
+        setFormData(prev => ({
+          ...prev,
+          latitude: latitude,
+          longitude: longitude,
+          state: result.stateEnum || prev.state,
+          cityName: result.city || prev.cityName,
+          areaName: result.area || prev.areaName,
+          landmark: result.landmark || prev.landmark
+        }));
+
+        if (result.nearbyLandmarks && result.nearbyLandmarks.length > 0) {
+          setLandmarkSuggestions(result.nearbyLandmarks);
         }
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        toast.error("Location access denied or unavailable.");
-        setIsDetectingLocation(false);
-      },
-      { enableHighAccuracy: false, timeout: 8000 }
-    );
+
+        const stateName = result.stateEnum ? getStateDisplayName(result.stateEnum) : result.stateName;
+        toast.success(`📍 Salon location detected${isIpFallback ? ' (via network)' : ''}! State: ${stateName || 'Detected'}, City: ${result.city || 'Detected'}, Area: ${result.area || 'Detected'}${result.landmark ? `, Landmark: ${result.landmark}` : ''}`);
+      } else {
+        toast.error("Could not determine your location. Please enter it manually.");
+      }
+    } catch (err) {
+      console.error("Location detection error:", err);
+      toast.error(err?.message || "Failed to detect location. Please enter manually.");
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
+
+  const handleConfirmMapLocation = (loc) => {
+    setIsUserTypingCity(false);
+    setIsUserTypingArea(false);
+    setIsUserTypingLandmark(false);
+    setFormData(prev => ({
+      ...prev,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      state: (loc.stateName ? getStateFromStateName(loc.stateName) : null) || (loc.cityName ? getStateFromCityName(loc.cityName) : null) || prev.state,
+      cityName: loc.cityName || prev.cityName,
+      areaName: loc.areaName || prev.areaName,
+      landmark: loc.landmark || prev.landmark,
+      address: loc.formattedAddress || prev.address
+    }));
+    toast.success(`📍 Salon entrance location set: ${loc.cityName}${loc.areaName ? `, ${loc.areaName}` : ''}`);
   };
 
   const handleInputChange = (e) => {
@@ -549,8 +570,18 @@ const OwnerRegister = () => {
       ...optionalImages.map(img => img.base64)
     ].filter(Boolean);
 
+    const stateDisplay = formData.state ? getStateDisplayName(formData.state) : '';
+    const formattedFullAddress = [
+      formData.specificAddress ? formData.specificAddress.trim() : null,
+      formData.landmark ? `near ${formData.landmark.trim()}` : null,
+      formData.areaName ? formData.areaName.trim() : null,
+      formData.cityName ? formData.cityName.trim() : null,
+      stateDisplay || null
+    ].filter(Boolean).join(', ');
+
     const userDTO = {
       ...formData,
+      address: formattedFullAddress,
       gstin: formData.gstin ? formData.gstin.trim() : null,
       state: formData.state || null,
       includeGstInInvoice: Boolean(formData.includeGstInInvoice),
@@ -567,12 +598,6 @@ const OwnerRegister = () => {
 
     dispatch(registerWithOtp({ userDTO, otp, type: 'OWNER' })).unwrap()
       .then(() => {
-        const formattedFullAddress = [
-          formData.specificAddress ? formData.specificAddress.trim() : null,
-          formData.landmark ? `near ${formData.landmark.trim()}` : null,
-          formData.areaName ? formData.areaName.trim() : null
-        ].filter(Boolean).join(', ');
-
         const salonDetails = {
           salonName: formData.salonName,
           salonAddress: formattedFullAddress,
@@ -582,8 +607,8 @@ const OwnerRegister = () => {
           includeGstInInvoice: Boolean(formData.includeGstInInvoice),
           openingTime: formData.openingTime + ':00',
           closingTime: formData.closingTime + ':00',
-          latitude: 0.0,
-          longitude: 0.0,
+          latitude: typeof formData.latitude === 'number' ? formData.latitude : 0.0,
+          longitude: typeof formData.longitude === 'number' ? formData.longitude : 0.0,
           homeServiceCharges: 0.0,
           imageBase64: profileImageBase64 || ""
         };
@@ -890,6 +915,72 @@ const OwnerRegister = () => {
                       />
                     </div>
 
+                    {/* Compact Auto-Detect Salon Location Bar */}
+                    <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-400/30 rounded-xl px-3.5 py-2.5 text-left shadow-xs">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="p-1.5 rounded-lg bg-amber-500 text-white flex-shrink-0 shadow-xs">
+                            <NavigationIcon className="w-3.5 h-3.5 -rotate-45" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-black uppercase tracking-wider text-amber-900">
+                                Auto-Detect Salon Location
+                              </span>
+                              <span className="text-[9px] bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider hidden sm:inline">
+                                Physical Presence
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-amber-900/80 font-medium leading-tight mt-0.5">
+                              ⚠️ Please be physically inside your salon when detecting for accurate GPS coordinates.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsMapModalOpen(true)}
+                            className="px-3 py-1.5 bg-gray-900 hover:bg-black text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 hover:-translate-y-0.5 active:translate-y-0"
+                          >
+                            <Compass className="w-3 h-3 text-red-500" />
+                            <span>Pin on Map</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleDetectLocation}
+                            disabled={isDetectingLocation}
+                            className={`px-3 py-1.5 bg-[#ff0b01] hover:bg-red-700 text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 ${
+                              isDetectingLocation ? 'animate-pulse pointer-events-none opacity-80' : 'hover:-translate-y-0.5 active:translate-y-0'
+                            }`}
+                          >
+                            {isDetectingLocation ? (
+                              <>
+                                <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Detecting...</span>
+                              </>
+                            ) : (
+                              <>
+                                <NavigationIcon className="w-3 h-3 -rotate-45" />
+                                <span>Auto-Detect</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {formData.latitude && formData.longitude && (
+                        <div className="mt-1.5 pt-1.5 border-t border-amber-300/30 flex items-center justify-between text-[10px] font-bold text-emerald-700">
+                          <span className="flex items-center gap-1.5">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            GPS: {Number(formData.latitude).toFixed(5)}, {Number(formData.longitude).toFixed(5)}
+                          </span>
+                          <span className="text-[9px] text-emerald-600 font-medium">✓ Location Captured</span>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Row 1: State & City Name Together */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* State Custom Dropdown */}
@@ -997,29 +1088,78 @@ const OwnerRegister = () => {
                                 <span>Searching...</span>
                               </div>
                             ) : areaSuggestions.length > 0 ? (
-                              areaSuggestions.map((area, idx) => (
-                                <div 
-                                  key={idx} 
+                              <>
+                                {areaSuggestions.map((area, idx) => (
+                                  <div 
+                                    key={idx} 
+                                    onClick={() => {
+                                      setIsUserTypingArea(false);
+                                      setFormData(prev => ({ 
+                                        ...prev, 
+                                        areaName: area.name,
+                                        areaDistrict: area.district || ''
+                                      }));
+                                      setAreaSuggestions([]);
+                                      setShowAreaDropdown(false);
+                                    }}
+                                    className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5"
+                                  >
+                                    <span className="font-bold text-gray-900">{area.name}</span>
+                                    {area.city && (
+                                      <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {/* Custom Village / Area selection option if typed name differs from suggestions */}
+                                {formData.areaName.trim().length >= 2 && !areaSuggestions.some(a => a.name.toLowerCase() === formData.areaName.trim().toLowerCase()) && (
+                                  <div
+                                    onClick={() => {
+                                      setIsUserTypingArea(false);
+                                      setFormData(prev => ({ 
+                                        ...prev, 
+                                        areaName: formData.areaName.trim(),
+                                        areaDistrict: formData.cityName || ''
+                                      }));
+                                      setAreaSuggestions([]);
+                                      setShowAreaDropdown(false);
+                                    }}
+                                    className="px-4 py-2.5 rounded-xl bg-gray-50 hover:bg-[#ff0b01]/10 text-[#ff0b01] cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border-t border-gray-100 mt-1"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-extrabold flex items-center gap-1.5">
+                                        <span>📍</span> Use &quot;{formData.areaName.trim()}&quot; as Village / Area
+                                      </span>
+                                      <span className="text-[10px] text-gray-400 font-medium">Click to confirm custom village in {formData.cityName}</span>
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#ff0b01]/10 font-bold uppercase tracking-wider">Select</span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="p-1">
+                                <div
                                   onClick={() => {
                                     setIsUserTypingArea(false);
                                     setFormData(prev => ({ 
                                       ...prev, 
-                                      areaName: area.name,
-                                      areaDistrict: area.district || ''
+                                      areaName: formData.areaName.trim(),
+                                      areaDistrict: formData.cityName || ''
                                     }));
                                     setAreaSuggestions([]);
                                     setShowAreaDropdown(false);
                                   }}
-                                  className="px-4 py-2.5 rounded-xl hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5"
+                                  className="px-4 py-3 rounded-xl bg-[#ff0b01]/5 hover:bg-[#ff0b01]/10 text-[#ff0b01] cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border border-[#ff0b01]/20"
                                 >
-                                  <span className="font-bold text-gray-900">{area.name}</span>
-                                  {area.city && (
-                                    <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
-                                  )}
+                                  <div className="flex flex-col">
+                                    <span className="font-extrabold flex items-center gap-1.5">
+                                      <span>📍</span> Use &quot;{formData.areaName.trim()}&quot; as Village / Area
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 font-medium mt-0.5">Click to confirm custom village in {formData.cityName}</span>
+                                  </div>
+                                  <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#ff0b01] text-white font-bold uppercase tracking-wider">Confirm</span>
                                 </div>
-                              ))
-                            ) : (
-                              <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                              </div>
                             )}
                           </div>
                         )}
@@ -1125,14 +1265,16 @@ const OwnerRegister = () => {
                     </div>
 
                     {/* Live Formatted Address Preview */}
-                    {(formData.specificAddress || formData.landmark || formData.areaName || formData.cityName) && (
+                    {(formData.specificAddress || formData.landmark || formData.areaName || formData.cityName || formData.state) && (
                       <div className="p-3.5 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl text-left font-sans">
                         <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">📍 Formatted Address Preview</span>
                         <p className="text-xs font-bold text-gray-800 leading-relaxed">
                           {[
                             formData.specificAddress ? formData.specificAddress.trim() : null,
                             formData.landmark ? `near ${formData.landmark.trim()}` : null,
-                            formData.areaName ? formData.areaName.trim() : null
+                            formData.areaName ? formData.areaName.trim() : null,
+                            formData.cityName ? formData.cityName.trim() : null,
+                            formData.state ? getStateDisplayName(formData.state) : null
                           ].filter(Boolean).join(', ')}
                         </p>
                       </div>
@@ -1573,6 +1715,18 @@ const OwnerRegister = () => {
         </div>
       </div>
 
+      {/* Interactive Map Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        onConfirm={handleConfirmMapLocation}
+        initialLat={formData.latitude || null}
+        initialLng={formData.longitude || null}
+        title="Pin Salon Entrance"
+        subtitle="Zoom in and position the pin directly on your salon's main entrance door"
+        confirmButtonText="Save Salon Location"
+        isOwnerMode={true}
+      />
     </div>
   );
 };

@@ -13,6 +13,10 @@ import { fetchCart } from '../../../redux/slices/cartSlice';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import LocationHeaderPill from '../../location/LocationHeaderPill';
+import AddressDrawer from '../../location/AddressDrawer';
+import LocationPickerModal from '../../location/LocationPickerModal';
+import { closeLocationPicker, setActiveLocation, addSavedAddressLocal, saveCustomerAddress, fetchCustomerAddresses } from '../../../redux/slices/locationSlice';
 
 const Navbar = () => {
     const { t } = useTranslation();
@@ -24,7 +28,16 @@ const Navbar = () => {
     const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
     const dispatch = useDispatch();
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
+    const { isPickerOpen, activeLocation } = useSelector((state) => state.location);
     const { isDark, toggleDark } = useDarkMode();
+
+    const handleConfirmLocation = (loc) => {
+        dispatch(setActiveLocation(loc));
+        dispatch(addSavedAddressLocal(loc));
+        if (isAuthenticated) {
+            dispatch(saveCustomerAddress(loc));
+        }
+    };
 
     const isIncomplete = (name) => {
         const t = (name || '').trim();
@@ -86,6 +99,7 @@ const Navbar = () => {
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(fetchCart());
+            dispatch(fetchCustomerAddresses());
         }
     }, [isAuthenticated, dispatch]);
 
@@ -100,14 +114,18 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`flex items-center justify-between px-3 sm:px-6 md:px-12 py-3 sm:py-4 border-b sticky top-0 z-50 font-sans transition-all duration-500 ease-out transform ${
-                mounted ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
-            } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'}`}>
+            <nav className={`flex items-center justify-between px-3 sm:px-6 md:px-12 py-3 sm:py-4 border-b sticky top-0 z-50 font-sans ${
+                isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'
+            }`}>
                 
-                {/* Logo Section */}
-                <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
-                    <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
-                    <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
+                {/* Logo & Location Section */}
+                <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                    <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
+                        <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
+                        <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
+                    </div>
+
+                    <LocationHeaderPill className="flex max-w-[130px] sm:max-w-[200px] md:max-w-[260px]" />
                 </div>
 
                 {/* Desktop Navigation Links */}
@@ -266,6 +284,21 @@ const Navbar = () => {
             <PasswordResetModal 
                 isOpen={isPasswordResetOpen} 
                 onClose={() => setIsPasswordResetOpen(false)} 
+            />
+
+            {/* Customer Saved Address Drawer */}
+            <AddressDrawer />
+
+            {/* Interactive Map Location Picker Modal */}
+            <LocationPickerModal
+                isOpen={isPickerOpen}
+                onClose={() => dispatch(closeLocationPicker())}
+                onConfirm={handleConfirmLocation}
+                initialLat={activeLocation?.latitude || null}
+                initialLng={activeLocation?.longitude || null}
+                title="Select Delivery / Salon Location"
+                subtitle="Position the pin to browse salons closest to your doorstep"
+                confirmButtonText="Save Address & Search Salons"
             />
         </>
     );

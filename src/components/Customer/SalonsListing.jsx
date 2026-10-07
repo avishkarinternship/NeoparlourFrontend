@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { searchSalonsByLocation, switchTenant } from '../../redux/slices/customerSlice';
+import { searchSalonsByLocation, switchTenant, fetchCustomerProfile } from '../../redux/slices/customerSlice';
+import { setActiveLocation } from '../../redux/slices/locationSlice';
 import searchService from '../../services/searchService';
+import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import logoIcon from '../../assets/Neoparlour_logo.png';
 import salonOneIcon from '../../assets/Customer/HomeScreen/Recommended/salon_one.jpg';
 import salonTwoIcon from '../../assets/Customer/HomeScreen/Recommended/salon_two.jpg';
 import salonThreeIcon from '../../assets/Customer/HomeScreen/Recommended/salon_three.jpg';
 import salonFourIcon from '../../assets/Customer/HomeScreen/Recommended/salon_four.jpg';
+import searchIcon from '../../assets/Customer/HomeScreen/MainScreen/search_icon.svg';
+import locationIcon from '../../assets/Customer/HomeScreen/MainScreen/location_icon.svg';
+import dropdownIcon from '../../assets/Customer/HomeScreen/MainScreen/dropdown_icon.svg';
 import SEOFooter from '../common/SEOFooter';
-import { Navigation as NavigationIcon } from 'lucide-react';
+import { Navigation as NavigationIcon, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useDarkMode } from '../../context/DarkModeContext';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -28,12 +35,40 @@ const SalonsListing = () => {
     const location = useLocation();
     const dispatch = useDispatch();
     const { token, user, isAuthenticated, profile } = useSelector((state) => state.customer);
+    const activeLocation = useSelector((state) => state.location?.activeLocation);
 
     const isFromProducts = location.state?.purpose === 'products';
 
+    // Helper to get initial coordinates from Redux activeLocation or localStorage
+    const getInitialCoords = () => {
+        if (activeLocation?.latitude && activeLocation?.longitude) {
+            return { latitude: Number(activeLocation.latitude), longitude: Number(activeLocation.longitude) };
+        }
+        try {
+            const saved = localStorage.getItem('customerLocation');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.latitude && parsed.longitude) {
+                    return { latitude: Number(parsed.latitude), longitude: Number(parsed.longitude) };
+                }
+            }
+            const savedLat = localStorage.getItem('customerLatitude');
+            const savedLng = localStorage.getItem('customerLongitude');
+            if (savedLat && savedLng && !isNaN(Number(savedLat)) && !isNaN(Number(savedLng))) {
+                return { latitude: Number(savedLat), longitude: Number(savedLng) };
+            }
+        } catch {}
+        return { latitude: null, longitude: null };
+    };
+
     // Search state
-    const [cityName, setCityName] = useState(localStorage.getItem('customerCity') || '');
-    const [areaName, setAreaName] = useState(localStorage.getItem('customerArea') || '');
+    const [cityName, setCityName] = useState(
+        location.state?.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || ''
+    );
+    const [areaName, setAreaName] = useState(
+        location.state?.areaName || activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerCurrentArea') || localStorage.getItem('customerArea') || ''
+    );
+    const [userCoords, setUserCoords] = useState(getInitialCoords);
     const [category, setCategory] = useState(location.state?.selectedCategory || location.state?.category || '');
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
@@ -44,6 +79,27 @@ const SalonsListing = () => {
     const [isUserTypingCity, setIsUserTypingCity] = useState(false);
     const [isUserTypingArea, setIsUserTypingArea] = useState(false);
 
+    // Sync with activeLocation from Redux (e.g. navbar address pill or drawer)
+    useEffect(() => {
+        if (activeLocation?.latitude && activeLocation?.longitude) {
+            setUserCoords({
+                latitude: Number(activeLocation.latitude),
+                longitude: Number(activeLocation.longitude),
+            });
+        }
+        const activeCity = activeLocation?.cityName || activeLocation?.city;
+        const activeArea = activeLocation?.areaName || activeLocation?.area || '';
+        // Only override state from activeLocation if user didn't navigate with an explicit search
+        if (!location.state?.cityName && activeCity && (activeCity !== cityName || activeArea !== areaName)) {
+            setCityName(activeCity);
+            setAreaName(activeArea);
+            fetchSalons(activeCity, activeArea, 0, category, {
+                latitude: activeLocation.latitude ? Number(activeLocation.latitude) : null,
+                longitude: activeLocation.longitude ? Number(activeLocation.longitude) : null,
+            });
+        }
+    }, [activeLocation]);
+
     // Salon data state
     const [salons, setSalons] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -51,6 +107,7 @@ const SalonsListing = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [searchedCity, setSearchedCity] = useState('');
+    const [selectedRadius, setSelectedRadius] = useState(50);
     const [switchingId, setSwitchingId] = useState(null);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [favouriteIds, setFavouriteIds] = useState(new Set());
@@ -184,23 +241,32 @@ const SalonsListing = () => {
         return () => clearTimeout(delayDebounce);
     }, [areaName, cityName, isUserTypingArea]);
 
-    // Fetch salons by city and area
-    const fetchSalons = async (city, area = '', pageNum = 0, cat = '') => {
-        if (!city || city.trim().length === 0) return;
+    // Fetch salons by coordinates and location (uses Haversine formula)
+    const fetchSalons = async (city = '', area = '', pageNum = 0, cat = '', customCoords = null, radius = selectedRadius) => {
+        const lat = customCoords?.latitude !== undefined ? customCoords.latitude : userCoords.latitude;
+        const lng = customCoords?.longitude !== undefined ? customCoords.longitude : userCoords.longitude;
+
+        if (!city?.trim() && (!lat || !lng)) return;
         setLoading(true);
         try {
             const results = await dispatch(
                 searchSalonsByLocation({
-                    cityName: city.trim(),
+                    cityName: city ? city.trim() : undefined,
                     areaName: area ? area.trim() : '',
-                    category: cat ? cat.trim() : undefined
+                    category: cat ? cat.trim() : undefined,
+                    latitude: lat || undefined,
+                    longitude: lng || undefined,
+                    radiusKm: radius,
+                    page: pageNum,
+                    size: 10
                 })
             ).unwrap();
-            setSalons(results || []);
-            setTotalPages(1);
-            setTotalElements(results ? results.length : 0);
-            setPage(0);
-            setSearchedCity(city);
+            const list = Array.isArray(results) ? results : (results?.content || []);
+            setSalons(list);
+            setTotalPages(results?.totalPages ?? (list.length > 0 ? 1 : 0));
+            setTotalElements(results?.totalElements ?? list.length);
+            setPage(pageNum);
+            setSearchedCity(city || 'Nearby');
         } catch (err) {
             console.error('Error fetching salons:', err);
             setSalons([]);
@@ -211,65 +277,122 @@ const SalonsListing = () => {
         }
     };
 
-    // Auto-detect location on mount or read from localStorage
+    // Auto-detect location on mount or read from localStorage / Redux
     useEffect(() => {
-        const storedCity = localStorage.getItem('customerCity');
-        const storedArea = localStorage.getItem('customerArea') || '';
+        const searchCity = location.state?.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || '';
+        const searchArea = location.state?.areaName || activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerCurrentArea') || localStorage.getItem('customerArea') || '';
         const initialCategory = location.state?.selectedCategory || location.state?.category || '';
+        const coords = getInitialCoords();
+        const initialCoords = (coords.latitude && coords.longitude) ? coords : null;
         
-        if (storedCity) {
+        if (searchCity) {
             setIsUserTypingCity(false);
-            setCityName(storedCity);
-            if (storedArea) {
+            setCityName(searchCity);
+            if (searchArea) {
                 setIsUserTypingArea(false);
-                setAreaName(storedArea);
+                setAreaName(searchArea);
             }
-            fetchSalons(storedCity, storedArea, 0, initialCategory);
+        }
+
+        if (initialCoords) {
+            setUserCoords(initialCoords);
+            // Fetch nearby salons immediately using stored coordinates via lat-long API
+            fetchSalons(searchCity, searchArea, 0, initialCategory, initialCoords);
         } else if ('geolocation' in navigator) {
+            // No coordinates yet: request browser GPS to get coordinates and call the lat-long API immediately
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setUserCoords({ latitude, longitude });
+                    localStorage.setItem('customerLatitude', String(latitude));
+                    localStorage.setItem('customerLongitude', String(longitude));
+                    localStorage.setItem('customerCurrentLatitude', String(latitude));
+                    localStorage.setItem('customerCurrentLongitude', String(longitude));
+                    localStorage.setItem('customerLocation', JSON.stringify({
+                        latitude,
+                        longitude,
+                        city: searchCity,
+                        area: searchArea
+                    }));
+
+                    // Call the lat-long API immediately!
+                    fetchSalons(searchCity, searchArea, 0, initialCategory, { latitude, longitude });
+
                     try {
-                        const { latitude, longitude } = position.coords;
-                        const geo = await searchService.reverseGeocode(latitude, longitude);
-                        if (geo.city) {
+                        const geo = await searchService.reverseGeocode(latitude, longitude, { provider: 'photon' });
+                        if (geo && geo.city) {
+                            dispatch(setActiveLocation({
+                                address: geo.formattedAddress || `${geo.area ? geo.area + ', ' : ''}${geo.city}`,
+                                cityName: geo.city,
+                                city: geo.city,
+                                areaName: geo.area || '',
+                                area: geo.area || '',
+                                latitude,
+                                longitude,
+                                postalCode: geo.postalCode || ''
+                            }));
                             localStorage.setItem('customerCity', geo.city);
+                            localStorage.setItem('customerCurrentCity', geo.city);
                             if (geo.area) {
                                 localStorage.setItem('customerArea', geo.area);
+                                localStorage.setItem('customerCurrentArea', geo.area);
                             }
-                            setIsUserTypingCity(false);
-                            setCityName(geo.city);
-                            if (geo.area) {
-                                setIsUserTypingArea(false);
-                                setAreaName(geo.area);
+                            localStorage.setItem('customerLocation', JSON.stringify({
+                                latitude,
+                                longitude,
+                                city: geo.city,
+                                area: geo.area || '',
+                                formattedAddress: geo.formattedAddress || ''
+                            }));
+                            if (!location.state?.cityName) {
+                                setIsUserTypingCity(false);
+                                setCityName(geo.city);
+                                if (geo.area) {
+                                    setIsUserTypingArea(false);
+                                    setAreaName(geo.area);
+                                }
                             }
-                            fetchSalons(geo.city, geo.area || '', 0, initialCategory);
                         }
                     } catch (err) {
                         console.error('Geolocation error:', err);
                     }
                 },
                 () => {
-                    // Permission denied - do nothing, user can search manually
+                    // Fallback to searchCity or Pune if permission denied
+                    fetchSalons(searchCity || 'Pune', searchArea || '', 0, initialCategory, null);
                 },
-                { enableHighAccuracy: false, timeout: 8000 }
+                { enableHighAccuracy: true, timeout: 8000 }
             );
+        } else if (searchCity) {
+            fetchSalons(searchCity, searchArea, 0, initialCategory, null);
         }
     }, []);
 
     const handleSearch = () => {
-        if (!cityName.trim()) {
+        if (!cityName.trim() && (!userCoords.latitude || !userCoords.longitude)) {
             toast.error('Please enter a city name');
             return;
         }
-        localStorage.setItem('customerCity', cityName.trim());
-        localStorage.setItem('customerArea', areaName.trim());
+        if (cityName.trim()) {
+            sessionStorage.setItem('lastSearchedCity', cityName.trim());
+            sessionStorage.setItem('lastSearchedArea', areaName.trim());
+        }
         setPage(0);
-        fetchSalons(cityName.trim(), areaName.trim(), 0, category);
+        const effectiveCoords = (userCoords.latitude && userCoords.longitude) ? userCoords : getInitialCoords();
+        fetchSalons(cityName.trim(), areaName.trim(), 0, category, effectiveCoords, selectedRadius);
+    };
+
+    const handleRadiusChange = (newRadius) => {
+        setSelectedRadius(newRadius);
+        setPage(0);
+        const effectiveCoords = (userCoords.latitude && userCoords.longitude) ? userCoords : getInitialCoords();
+        fetchSalons(cityName || searchedCity, areaName, 0, category, effectiveCoords, newRadius);
     };
 
     const handlePageChange = (newPage) => {
         if (newPage < 0 || newPage >= totalPages) return;
-        fetchSalons(searchedCity, areaName, newPage, category);
+        const effectiveCoords = (userCoords.latitude && userCoords.longitude) ? userCoords : getInitialCoords();
+        fetchSalons(cityName || searchedCity, areaName, newPage, category, effectiveCoords, selectedRadius);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -283,33 +406,54 @@ const SalonsListing = () => {
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
+                setUserCoords({ latitude, longitude });
+
+                // Immediately fetch nearby salons using detected coordinates
+                fetchSalons(cityName || '', areaName || '', 0, category, { latitude, longitude });
+
                 try {
-                    const result = await searchService.reverseGeocode(latitude, longitude);
-                    if (result.city) {
+                    const result = await searchService.reverseGeocode(latitude, longitude, { provider: 'photon' });
+                    if (result && result.city) {
+                        dispatch(setActiveLocation({
+                            address: result.formattedAddress || `${result.area ? result.area + ', ' : ''}${result.city}`,
+                            city: result.city,
+                            area: result.area || '',
+                            latitude,
+                            longitude,
+                            postalCode: result.postalCode || ''
+                        }));
                         setIsUserTypingCity(false);
                         setIsUserTypingArea(false);
                         setCityName(result.city);
-                        setAreaName(result.area || '');
                         localStorage.setItem('customerCity', result.city);
                         localStorage.setItem('customerArea', result.area || '');
+                        localStorage.setItem('customerLatitude', String(latitude));
+                        localStorage.setItem('customerLongitude', String(longitude));
+                        localStorage.setItem('customerLocation', JSON.stringify({
+                            latitude,
+                            longitude,
+                            city: result.city,
+                            area: result.area || '',
+                            formattedAddress: result.formattedAddress || ''
+                        }));
                         
-                        // Immediately fetch salons
-                        fetchSalons(result.city, result.area || '', 0, category);
                         toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
-                    } else {
-                        toast.error("Could not determine your city. Please enter it manually.");
                     }
                 } catch (error) {
-                    toast.error("Could not determine your city. Please enter it manually.");
+                    console.error("Reverse geocoding error:", error);
                 } finally {
                     setIsDetectingLocation(false);
                 }
             },
             (error) => {
-                toast.error("Location permission denied. Please enter it manually.");
+                let msg = "Could not detect location.";
+                if (error.code === error.PERMISSION_DENIED) {
+                    msg = "Location permission denied. Please allow location access in your browser settings.";
+                }
+                toast.error(msg);
                 setIsDetectingLocation(false);
             },
-            { enableHighAccuracy: false, timeout: 8000 }
+            { enableHighAccuracy: true, timeout: 8000 }
         );
     };
 
@@ -331,18 +475,14 @@ const SalonsListing = () => {
                         toast.dismiss('geo-detect');
                         try {
                             const { latitude, longitude } = position.coords;
-                            const geo = await searchService.reverseGeocode(latitude, longitude);
+                            const geo = await searchService.reverseGeocode(latitude, longitude, { provider: 'photon' });
                             if (geo.city) {
                                 localStorage.setItem('customerCity', geo.city);
-                                if (geo.area) {
-                                    localStorage.setItem('customerArea', geo.area);
-                                }
+                                localStorage.setItem('customerArea', geo.area || '');
                                 setIsUserTypingCity(false);
                                 setCityName(geo.city);
-                                if (geo.area) {
-                                    setIsUserTypingArea(false);
-                                    setAreaName(geo.area);
-                                }
+                                setIsUserTypingArea(false);
+                                setAreaName(geo.area || '');
                                 fetchSalons(geo.city, geo.area || '', 0, category);
                                 toast.success(`Location detected: ${geo.city}`);
                             }
@@ -506,6 +646,7 @@ const SalonsListing = () => {
                                                     setIsUserTypingArea(false);
                                                     setCityName(city.name);
                                                     setAreaName('');
+                                                    setUserCoords({ latitude: city.latitude || null, longitude: city.longitude || null });
                                                     setShowCityDropdown(false);
                                                 }} className={`px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-sm text-left ${isDark ? 'text-gray-250' : 'text-gray-700'}`}>{city.name}</div>
                                             ))
@@ -556,6 +697,10 @@ const SalonsListing = () => {
                                                     setIsUserTypingCity(false);
                                                     setIsUserTypingArea(false);
                                                     setAreaName(area.name);
+                                                    setUserCoords(prev => ({
+                                                        latitude: area.latitude || prev.latitude,
+                                                        longitude: area.longitude || prev.longitude
+                                                    }));
                                                     setShowAreaDropdown(false);
                                                 }} className={`px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-sm text-left ${isDark ? 'text-gray-250' : 'text-gray-700'}`}>
                                                     {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
@@ -617,20 +762,61 @@ const SalonsListing = () => {
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
                 {/* Results Header */}
                 {!isShowingStatic && searchedCity && !loading && (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 mt-2">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-2">
                         <div>
                             <h2 className={`text-xl sm:text-2xl font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Salons in <span className="text-[#FF2A14]">{searchedCity}</span>
+                                Salons near <span className="text-[#FF2A14]">{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</span>
                             </h2>
                             <p className="text-sm text-gray-400 font-medium mt-0.5">
-                                {totalElements} salon{totalElements !== 1 ? 's' : ''} found
+                                {cityName?.trim() || areaName?.trim() ? (
+                                    <span>{totalElements} salon{totalElements !== 1 ? 's' : ''} found in <strong className={isDark ? 'text-white' : 'text-gray-800'}>{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</strong> • <span className="text-amber-500 font-semibold lowercase">radius disabled</span></span>
+                                ) : (
+                                    <span>{totalElements} salon{totalElements !== 1 ? 's' : ''} found within {selectedRadius} km</span>
+                                )}
                             </p>
                         </div>
-                        {totalPages > 1 && (
-                            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full self-start sm:self-auto transition-colors duration-300 ${isDark ? 'text-gray-300 bg-gray-900' : 'text-gray-400 bg-gray-100'}`}>
-                                Page {page + 1} of {totalPages}
-                            </span>
-                        )}
+
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Radius Selector Chips - Disabled when searching specific city or area */}
+                            {cityName?.trim() || areaName?.trim() ? (
+                                <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border transition-all ${
+                                    isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'
+                                }`} title="Radius filter is disabled when searching by city or area">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span className="text-xs font-bold uppercase tracking-wider">
+                                        Radius Disabled for {cityName || searchedCity}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className={`flex items-center gap-1 p-1 rounded-2xl border transition-colors ${
+                                    isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'
+                                }`}>
+                                    <span className="text-[10px] font-bold px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                        📍 Radius:
+                                    </span>
+                                    {[5, 10, 25, 50].map((r) => (
+                                        <button
+                                            key={r}
+                                            type="button"
+                                            onClick={() => handleRadiusChange(r)}
+                                            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                                selectedRadius === r
+                                                    ? 'bg-gradient-to-r from-[#FF2A14] to-[#FF4D3A] text-white shadow-sm shadow-[#FF2A14]/20'
+                                                    : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
+                                            }`}
+                                        >
+                                            {r} km
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {totalPages > 1 && (
+                                <span className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors duration-300 ${isDark ? 'text-gray-300 bg-gray-900' : 'text-gray-400 bg-gray-100'}`}>
+                                    Page {page + 1} of {totalPages}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -737,23 +923,33 @@ const SalonsListing = () => {
                                                 {isOpen ? 'Open' : 'Closed'}
                                             </div>
 
-                                            {/* Rating Badge */}
-                                            {rating != null ? (
-                                                <div className={`backdrop-blur-md border rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm transition-colors duration-300 ${
-                                                    isDark
-                                                        ? 'bg-gray-900/95 border-amber-500/30 text-amber-400'
-                                                        : 'bg-white/95 border-amber-500/20 text-amber-600'
-                                                }`}>
-                                                    <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                    </svg>
-                                                    <span>{rating} ({reviewsCount}+)</span>
-                                                </div>
-                                            ) : (
-                                                <div className="bg-emerald-600 text-white rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest flex items-center shadow-sm">
-                                                    NEW
-                                                </div>
-                                            )}
+                                            {/* Right-side Badges: Distance Badge + Rating Badge */}
+                                            <div className="flex items-center gap-1.5">
+                                                {salon.distanceFormatted && (
+                                                    <div className="backdrop-blur-md bg-emerald-950/85 text-white border border-emerald-400/40 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                                                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                        <span className="text-emerald-300 font-extrabold text-xs">{salon.distanceFormatted}</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Rating Badge */}
+                                                {rating != null ? (
+                                                    <div className={`backdrop-blur-md border rounded-full px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm transition-colors duration-300 ${
+                                                        isDark
+                                                            ? 'bg-gray-900/95 border-amber-500/30 text-amber-400'
+                                                            : 'bg-white/95 border-amber-500/20 text-amber-600'
+                                                    }`}>
+                                                        <svg className="w-3.5 h-3.5 fill-amber-500 text-amber-500" viewBox="0 0 20 20">
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                        </svg>
+                                                        <span>{rating} ({reviewsCount}+)</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-emerald-600 text-white rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest flex items-center shadow-sm">
+                                                        NEW
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Floating Heart Button */}
@@ -802,12 +998,38 @@ const SalonsListing = () => {
                                             )}
                                         </div>
 
+                                        {/* Prominent High-Visibility Proximity Banner */}
+                                        {salon.distanceFormatted && (
+                                            <div className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl mb-3 border transition-colors duration-300 ${
+                                                isDark 
+                                                    ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300' 
+                                                    : 'bg-emerald-50/80 border-emerald-200 text-emerald-800'
+                                            }`}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                                        <NavigationIcon className="w-3.5 h-3.5" />
+                                                    </div>
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-sm font-black tracking-tight">
+                                                            {salon.distanceFormatted}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                                            away from you
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-600 text-white tracking-widest shrink-0">
+                                                    NEARBY
+                                                </span>
+                                            </div>
+                                        )}
+
                                         <div className={`flex items-center gap-1.5 text-xs font-bold mb-1 transition-colors duration-300 ${isDark ? 'text-gray-250' : 'text-gray-700'}`}>
                                             <svg className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
-                                            <span>{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
+                                            <span className="truncate">{salon.areaName || 'Kothrud'}, {salon.cityName || 'Pune'}</span>
                                         </div>
 
                                         <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">

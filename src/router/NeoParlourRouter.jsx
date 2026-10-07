@@ -55,6 +55,7 @@ import Favourites from '../components/Customer/Favourites'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
 import AdminSupportRequests from '../components/Owner/AdminSupportRequests'
+import AdminSupportDashboard from '../components/Admin/AdminSupportDashboard'
 import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
 
 // Import New Footer Pages
@@ -79,6 +80,11 @@ import AdminKycDashboard from '../components/Owner/AdminKycDashboard'
 import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard'
 import AdminPayoutQueueDashboard from '../pages/admin/AdminPayoutQueueDashboard'
 import ServerLogs from '../components/Owner/ServerLogs'
+import SupportTicketsBoard from '../components/Admin/SupportTicketsBoard'
+import SupportEngineerAnalytics from '../components/Admin/SupportEngineerAnalytics'
+import DeveloperBugsPage from '../components/Admin/DeveloperBugsPage'
+import NewTicketPage from '../components/Customer/NewTicketPage'
+import { SupportEngineerRouteGuard } from '../components/Admin/AdminRouteGuard'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -110,6 +116,18 @@ const OwnerRouteGuard = ({ children }) => {
         // Guest trying to access owner page -> send to owner login
         return <Navigate to="/owner/login" replace />;
     }
+
+    const savedUserStr = localStorage.getItem('ownerStaffUser');
+    if (savedUserStr) {
+        try {
+            const u = JSON.parse(savedUserStr);
+            const role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
+                return <Navigate to="/admin/tickets" replace />;
+            }
+        } catch (e) {}
+    }
+
     return children;
 };
 
@@ -139,6 +157,9 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
                 role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
             } catch (e) {}
         }
+        if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
+            return <Navigate to="/admin/tickets" replace />;
+        }
         if (role.includes('STAFF')) {
             return <Navigate to="/staff/dashboard" replace />;
         }
@@ -148,6 +169,35 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
     if (!isPublic && !customerToken) {
         // Guest trying to access private customer page -> send to customer login
         return <Navigate to="/customer/login" replace />;
+    }
+
+    return children;
+};
+
+const GuestRouteGuard = ({ children }) => {
+    const ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (ownerToken) {
+        const savedUserStr = localStorage.getItem('ownerStaffUser');
+        let role = '';
+        if (savedUserStr) {
+            try {
+                const u = JSON.parse(savedUserStr);
+                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            } catch (e) {}
+        }
+        if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
+            return <Navigate to="/admin/tickets" replace />;
+        }
+        if (role.includes('STAFF')) {
+            return <Navigate to="/staff/dashboard" replace />;
+        }
+        return <Navigate to="/owner/dashboard" replace />;
+    }
+
+    if (customerToken) {
+        return <Navigate to="/" replace />;
     }
 
     return children;
@@ -166,47 +216,47 @@ export let routes = createBrowserRouter([
             // Standalone customer auth / select salon routes (no layouts)
             {
                 path: '/customer/login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/customer-login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner/login',
-                element: <OwnerLogin />
+                element: <GuestRouteGuard><OwnerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner-login',
-                element: <OwnerLogin />
+                element: <GuestRouteGuard><OwnerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner/forgot-password',
-                element: <OwnerForgotPassword />
+                element: <GuestRouteGuard><OwnerForgotPassword /></GuestRouteGuard>
             },
             {
                 path: '/owner-forgot-password',
-                element: <OwnerForgotPassword />
+                element: <GuestRouteGuard><OwnerForgotPassword /></GuestRouteGuard>
             },
             {
                 path: '/register',
-                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
             },
             {
                 path: '/signup',
-                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
             },
             {
                 path: '/owner/register',
-                element: <OwnerRegister />
+                element: <GuestRouteGuard><OwnerRegister /></GuestRouteGuard>
             },
             {
                 path: '/owner-signup',
-                element: <OwnerRegister />
+                element: <GuestRouteGuard><OwnerRegister /></GuestRouteGuard>
             },
             {
                 path: '/staff/dashboard',
@@ -218,11 +268,11 @@ export let routes = createBrowserRouter([
             },
             {
                 path: '/staff/login',
-                element: <StaffRegister />
+                element: <GuestRouteGuard><StaffRegister /></GuestRouteGuard>
             },
             {
                 path: '/staff/register',
-                element: <StaffRegister />
+                element: <GuestRouteGuard><StaffRegister /></GuestRouteGuard>
             },
             {
                 path: '/customer/select-salon',
@@ -349,6 +399,10 @@ export let routes = createBrowserRouter([
                     {
                         path: 'support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'support/new',
+                        element: <CustomerRouteGuard isPublic={true}><NewTicketPage /></CustomerRouteGuard>
                     },
                     {
                         path: 'customer/support',
@@ -577,7 +631,7 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/owner/analytics',
-                        element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard isFinancialRoute={true}><Analytics /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/monitoring',
@@ -585,15 +639,15 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/admin/salons',
-                        element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard><AdminSalons /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/salons',
-                        element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard><AdminSalons /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/subscriptions',
-                        element: <OwnerRouteGuard><AdminSubscriptions /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard isFinancialRoute={true}><AdminSubscriptions /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/orders',
@@ -629,7 +683,31 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/owner/support-requests',
-                        element: <OwnerRouteGuard><AdminSupportRequests /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard><AdminSupportRequests /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/support-requests',
+                        element: <SupportEngineerRouteGuard><AdminSupportRequests /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/support-dashboard',
+                        element: <SupportEngineerRouteGuard><AdminSupportDashboard /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/owner/support-dashboard',
+                        element: <SupportEngineerRouteGuard><AdminSupportDashboard /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/tickets',
+                        element: <SupportEngineerRouteGuard><SupportTicketsBoard /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/support-analytics',
+                        element: <SupportEngineerRouteGuard><SupportEngineerAnalytics /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/developer-bugs',
+                        element: <SupportEngineerRouteGuard><DeveloperBugsPage /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/maintenance',
@@ -689,6 +767,10 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/admin/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/system/logs',
                         element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
                     },
                     {

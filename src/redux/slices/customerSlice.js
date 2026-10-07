@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
-// import { searchSalonsByLocation } from '../../redux/slices/customerSlice';
+import searchService from '../../services/searchService';
 
 // Async thunk for customer login
 export const loginCustomer = createAsyncThunk(
@@ -58,27 +58,180 @@ export const switchTenant = createAsyncThunk(
 
 export const searchSalonsByLocation = createAsyncThunk(
   'customer/searchSalonsByLocation',
-  async ({ cityName, areaName, category }, { rejectWithValue }) => {
+  async ({ cityName, areaName, category, latitude, longitude, radiusKm, page = 0, size = 10 }, { rejectWithValue }) => {
     try {
-      const params = {};
-      if (cityName) params.cityName = cityName;
-      if (areaName) params.areaName = areaName;
-      if (category) params.category = category;
+      // 1. Resolve effective coordinates
+      let effectiveLat = (latitude !== undefined && latitude !== null && !isNaN(Number(latitude))) ? Number(latitude) : null;
+      let effectiveLng = (longitude !== undefined && longitude !== null && !isNaN(Number(longitude))) ? Number(longitude) : null;
 
-      const response = await axiosInstance.get('/salons/location-search', { params });
-      return response.data;
+      // Fallback 1: check customerLocation or customerLatitude/Longitude in localStorage
+      if (!effectiveLat || !effectiveLng) {
+        try {
+          const locStr = localStorage.getItem('customerLocation');
+          if (locStr) {
+            const parsed = JSON.parse(locStr);
+            if (parsed.latitude && parsed.longitude) {
+              effectiveLat = Number(parsed.latitude);
+              effectiveLng = Number(parsed.longitude);
+            }
+          }
+          if (!effectiveLat || !effectiveLng) {
+            const savedLat = localStorage.getItem('customerLatitude');
+            const savedLng = localStorage.getItem('customerLongitude');
+            if (savedLat && savedLng && !isNaN(Number(savedLat)) && !isNaN(Number(savedLng))) {
+              effectiveLat = Number(savedLat);
+              effectiveLng = Number(savedLng);
+            }
+          }
+        } catch {}
+      }
+
+      // Fallback 2: if areaName or cityName is provided and we still don't have coords, resolve coordinates of the area
+      if ((!effectiveLat || !effectiveLng) && (areaName || cityName)) {
+        try {
+          const areaResults = await searchService.searchExternalLocations(areaName || cityName, 'area', cityName);
+          if (areaResults && areaResults.length > 0 && areaResults[0].latitude && areaResults[0].longitude) {
+            effectiveLat = Number(areaResults[0].latitude);
+            effectiveLng = Number(areaResults[0].longitude);
+          }
+        } catch {}
+      }
+
+      const hasCityOrArea = Boolean(cityName?.trim() || areaName?.trim());
+
+      const queryParams = {
+        page: page ?? 0,
+        size: size ?? 10
+      };
+      if (cityName) queryParams.cityName = cityName.trim();
+      if (areaName) queryParams.areaName = areaName.trim();
+      if (category) queryParams.category = category.trim();
+      if (effectiveLat) queryParams.latitude = effectiveLat;
+      if (effectiveLng) queryParams.longitude = effectiveLng;
+      if (radiusKm != null) {
+        queryParams.radiusKm = radiusKm;
+      }
+
+      let results = [];
+      let totalPages = 1;
+      let totalElements = 0;
+      let pageNumber = page ?? 0;
+      let pageSize = size ?? 10;
+
+      // 1. If city or area name is provided, search by location without radius restriction
+      if (hasCityOrArea) {
+        try {
+          const response = await axiosInstance.get('/salons/location-search', { params: queryParams });
+          const rawData = response.data;
+          results = Array.isArray(rawData) ? rawData : (rawData?.content || []);
+          totalPages = rawData?.page?.totalPages ?? rawData?.totalPages ?? (results.length > 0 ? 1 : 0);
+          totalElements = rawData?.page?.totalElements ?? rawData?.totalElements ?? results.length;
+          pageNumber = rawData?.page?.number ?? rawData?.number ?? (page ?? 0);
+          pageSize = rawData?.page?.size ?? rawData?.size ?? (size ?? 10);
+        } catch (err) {
+          console.error('/salons/location-search failed, trying fallback:', err);
+          try {
+            if (cityName) {
+              const cityRes = await axiosInstance.get('/salons/by-city', {
+                params: {
+                  cityName: cityName.trim(),
+                  latitude: effectiveLat || undefined,
+                  longitude: effectiveLng || undefined,
+                  page: page ?? 0,
+                  size: size ?? 10
+                }
+              });
+              const rawData = cityRes.data;
+              results = Array.isArray(rawData) ? rawData : (rawData?.content || []);
+              totalPages = rawData?.page?.totalPages ?? rawData?.totalPages ?? (results.length > 0 ? 1 : 0);
+              totalElements = rawData?.page?.totalElements ?? rawData?.totalElements ?? results.length;
+              pageNumber = rawData?.page?.number ?? rawData?.number ?? (page ?? 0);
+              pageSize = rawData?.page?.size ?? rawData?.size ?? (size ?? 10);
+            }
+          } catch (fallbackErr) {
+            console.error('Fallback by-city search also failed:', fallbackErr);
+            results = [];
+          }
+        }
+      } else if (effectiveLat && effectiveLng) {
+        // 2. Pure GPS nearby search with radius around customer's current coordinates
+        try {
+          const nearbyParams = {
+            latitude: effectiveLat,
+            longitude: effectiveLng,
+            radiusKm: radiusKm || 50,
+            page: page ?? 0,
+            size: size ?? 10
+          };
+          if (category) nearbyParams.category = category;
+
+          const nearbyRes = await axiosInstance.get('/salons/nearby', { params: nearbyParams });
+          const rawData = nearbyRes.data;
+          results = Array.isArray(rawData) ? rawData : (rawData?.content || []);
+          totalPages = rawData?.page?.totalPages ?? rawData?.totalPages ?? (results.length > 0 ? 1 : 0);
+          totalElements = rawData?.page?.totalElements ?? rawData?.totalElements ?? results.length;
+          pageNumber = rawData?.page?.number ?? rawData?.number ?? (page ?? 0);
+          pageSize = rawData?.page?.size ?? rawData?.size ?? (size ?? 10);
+        } catch (err) {
+          console.error('/salons/nearby request failed:', err);
+          results = [];
+        }
+      } else {
+        // 3. Neither coordinates nor city/area provided: query default salons
+        try {
+          const response = await axiosInstance.get('/salons/location-search', { params: queryParams });
+          const rawData = response.data;
+          results = Array.isArray(rawData) ? rawData : (rawData?.content || []);
+          totalPages = rawData?.page?.totalPages ?? rawData?.totalPages ?? (results.length > 0 ? 1 : 0);
+          totalElements = rawData?.page?.totalElements ?? rawData?.totalElements ?? results.length;
+          pageNumber = rawData?.page?.number ?? rawData?.number ?? (page ?? 0);
+          pageSize = rawData?.page?.size ?? rawData?.size ?? (size ?? 10);
+        } catch (err) {
+          results = [];
+        }
+      }
+
+      // 3. Client-side distance enrichment & proximity ranking (Always calculate if coordinates exist)
+      if (Array.isArray(results) && effectiveLat && effectiveLng) {
+        results = results.map(salon => {
+          let dist = (salon.distanceKm !== null && salon.distanceKm !== undefined) ? salon.distanceKm : null;
+          if (dist === null && salon.latitude && salon.longitude && Number(salon.latitude) !== 0 && Number(salon.longitude) !== 0) {
+            const R = 6371;
+            const dLat = (Number(salon.latitude) - Number(effectiveLat)) * Math.PI / 180;
+            const dLon = (Number(salon.longitude) - Number(effectiveLng)) * Math.PI / 180;
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(Number(effectiveLat) * Math.PI / 180) * Math.cos(Number(salon.latitude) * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            dist = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+          }
+          return {
+            ...salon,
+            distanceKm: dist != null ? Math.round(dist * 10) / 10 : null,
+            distanceFormatted: salon.distanceFormatted || (dist !== null ? (dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`) : null)
+          };
+        });
+
+        // Sort: Salons with coordinates ordered by nearest; salons without coordinates preserved at the end
+        results.sort((a, b) => {
+          if (a.distanceKm !== null && b.distanceKm !== null) return a.distanceKm - b.distanceKm;
+          if (a.distanceKm !== null) return -1;
+          if (b.distanceKm !== null) return 1;
+          return 0;
+        });
+      }
+
+      return {
+        content: results,
+        totalPages,
+        totalElements,
+        page: pageNumber,
+        size: pageSize
+      };
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Search failed.'
       );
-    }
-  },
-  {
-    condition: (_, { getState }) => {
-      const { customer } = getState();
-      if (customer.loading) {
-        return false;
-      }
     }
   }
 );
@@ -191,14 +344,29 @@ export const verifyDeleteCustomerOtp = createAsyncThunk(
   }
 );
 
+const safeParseJson = (key) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState = {
-  user: JSON.parse(localStorage.getItem('customerUser')) || null,
-  profile: JSON.parse(localStorage.getItem('customerProfile')) || null,
+  user: safeParseJson('customerUser'),
+  profile: safeParseJson('customerProfile'),
   token: localStorage.getItem('customerToken') || null,
   isAuthenticated: !!localStorage.getItem('customerToken'),
   loading: false,
   error: null,
   salonResults: [],
+  salonPagination: {
+    totalPages: 1,
+    totalElements: 0,
+    page: 0,
+    size: 10
+  },
   defaultSalon: null,
 };
 
@@ -275,13 +443,27 @@ const customerSlice = createSlice({
 
       .addCase(searchSalonsByLocation.fulfilled, (state, action) => {
         state.loading = false;
-        state.salonResults = action.payload;
+        state.salonResults = Array.isArray(action.payload)
+          ? action.payload
+          : (action.payload?.content || []);
+        state.salonPagination = {
+          totalPages: action.payload?.totalPages ?? 1,
+          totalElements: action.payload?.totalElements ?? state.salonResults.length,
+          page: action.payload?.page ?? 0,
+          size: action.payload?.size ?? 10
+        };
       })
 
       .addCase(searchSalonsByLocation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.salonResults = [];
+        state.salonPagination = {
+          totalPages: 0,
+          totalElements: 0,
+          page: 0,
+          size: 10
+        };
       })
       // Fetch Profile
       .addCase(fetchCustomerProfile.pending, (state) => {

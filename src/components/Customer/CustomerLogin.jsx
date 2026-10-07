@@ -5,6 +5,7 @@ import { loginCustomerWithOtp, clearCustomerError, switchTenant } from '../../re
 import { Sparkles, AlertCircle, Phone, Lock, ArrowLeft } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { toast } from 'react-hot-toast';
+import { cleanIndianMobile, isValidIndianMobile } from '../../utils/validation';
 
 // Using existing assets
 import logoIcon from '../../assets/Neoparlour_logo.png';
@@ -62,10 +63,22 @@ const CustomerLogin = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
+  const handleMobileChange = (e) => {
+    const cleaned = cleanIndianMobile(e.target.value);
+    setMobile(cleaned);
+    if (cleaned.length > 0 && !/^[6-9]/.test(cleaned)) {
+      setLocalError('Indian mobile numbers must start with 6, 7, 8, or 9.');
+    } else if (cleaned.length === 10 && !isValidIndianMobile(cleaned)) {
+      setLocalError('Please enter a valid 10-digit Indian mobile number.');
+    } else {
+      setLocalError('');
+    }
+  };
+
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
-    if (!mobile || mobile.length !== 10 || !/^\d+$/.test(mobile)) {
-      setLocalError('Please enter a valid 10-digit mobile number.');
+    if (!mobile || !isValidIndianMobile(mobile)) {
+      setLocalError('Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).');
       return;
     }
 
@@ -194,12 +207,10 @@ const CustomerLogin = () => {
                     type="tel" 
                     name="mobile"
                     value={mobile}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setMobile(val);
-                    }}
-                    placeholder="Enter mobile number" 
+                    onChange={handleMobileChange}
+                    placeholder="Enter 10-digit mobile number" 
                     required
+                    maxLength={10}
                     className="w-full pl-24 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold tracking-wide" 
                   />
                 </div>
@@ -220,8 +231,8 @@ const CustomerLogin = () => {
                 <button 
                   type="button"
                   onClick={handleSendOtp}
-                  disabled={sendingOtp || mobile.length !== 10}
-                  className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${sendingOtp || mobile.length !== 10 ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
+                  disabled={sendingOtp || !isValidIndianMobile(mobile)}
+                  className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${sendingOtp || !isValidIndianMobile(mobile) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
                 >
                   {sendingOtp && (
                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -125,7 +125,7 @@ const CustomerRegister = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const result = await searchService.reverseGeocode(latitude, longitude);
+          const result = await searchService.reverseGeocode(latitude, longitude, { provider: 'photon' });
           if (result.city) {
             setIsUserTypingCity(false);
             setIsUserTypingArea(false);

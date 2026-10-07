@@ -19,13 +19,15 @@ import {
     Mail,
     Calendar,
     Heart,
-    Lock
+    Lock,
+    Navigation
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import { updateSEOMetadata, injectJSONLD, generateSalonSlug } from '../../utils/seoHelper';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
+import { calculateDistanceKm, formatDistance } from '../../services/searchService';
 
 
 
@@ -173,11 +175,41 @@ const SalonPage = () => {
     const navigate = useNavigate();
     const { salonSlug } = useParams();
     const { isAuthenticated } = useSelector((state) => state.customer);
+    const activeLocation = useSelector((state) => state.location?.activeLocation);
     const [resolvedSalonId, setResolvedSalonId] = useState(null);
 
     // --- STATE ---
     const [isFavourite, setIsFavourite] = useState(false);
     const [salon, setSalon] = useState(null);
+
+    // Dynamic distance calculation
+    const distanceBadge = useMemo(() => {
+        const userLat = activeLocation?.lat || activeLocation?.latitude || 
+            (localStorage.getItem('customerLatitude') ? parseFloat(localStorage.getItem('customerLatitude')) : null) || 
+            (() => {
+                try {
+                    const parsed = JSON.parse(localStorage.getItem('customerLocation') || '{}');
+                    return parsed.lat || parsed.latitude || null;
+                } catch { return null; }
+            })();
+        const userLng = activeLocation?.lng || activeLocation?.longitude || 
+            (localStorage.getItem('customerLongitude') ? parseFloat(localStorage.getItem('customerLongitude')) : null) || 
+            (() => {
+                try {
+                    const parsed = JSON.parse(localStorage.getItem('customerLocation') || '{}');
+                    return parsed.lng || parsed.longitude || null;
+                } catch { return null; }
+            })();
+
+        if (!userLat || !userLng || !salon?.latitude || !salon?.longitude) return null;
+        const dist = calculateDistanceKm(
+            userLat,
+            userLng,
+            salon.latitude,
+            salon.longitude
+        );
+        return formatDistance(dist);
+    }, [activeLocation, salon?.latitude, salon?.longitude]);
     const [services, setServices] = useState([]);
     const [categories, setCategories] = useState([]);
     const [staffList, setStaffList] = useState([]);
@@ -956,10 +988,29 @@ const SalonPage = () => {
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 dark:text-white tracking-tight uppercase truncate">
                             {salon?.name || salon?.salonName || 'Salon Details'}
                         </h1>
-                        <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-400 font-bold flex items-center gap-1.5 uppercase">
-                            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
-                            <span className="truncate">{salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
+                                <span className="truncate">{salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'No address specified'}</span>
+                            </div>
+                            {distanceBadge && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0 shadow-xs">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    📍 {distanceBadge} away
+                                </span>
+                            )}
+                            {(salon?.latitude && salon?.longitude) && (
+                                <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${salon.latitude},${salon.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 underline decoration-dotted hover:decoration-solid shrink-0"
+                                    title="Open Google Maps Navigation"
+                                >
+                                    <Navigation className="w-3 h-3" /> Directions
+                                </a>
+                            )}
+                        </div>
                         <div className="flex flex-wrap items-center gap-2 pt-0.5">
                             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all shadow-sm ${
                                 isSalonOpenNow()

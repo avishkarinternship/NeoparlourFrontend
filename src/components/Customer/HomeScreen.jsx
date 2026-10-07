@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,6 +9,7 @@ import {
     fetchCustomerProfile,
     fetchDefaultSalon
 } from '../../redux/slices/customerSlice';
+import { setActiveLocation, openAddressDrawer } from '../../redux/slices/locationSlice';
 import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
 import { useTranslation } from 'react-i18next';
@@ -137,13 +138,64 @@ const HomeScreen = () => {
         }
     }, [isAuthenticated, user, profile, dispatch]);
 
+    const activeLocation = useSelector((state) => state.location?.activeLocation);
+
+    const isLocationChangedRef = useRef(false);
+
     const [searchData, setSearchData] = useState({
-        cityName: localStorage.getItem('customerCity') || '',
-        areaName: localStorage.getItem('customerArea') || '',
+        cityName: activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || '',
+        areaName: activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerCurrentArea') || localStorage.getItem('customerArea') || '',
+        latitude: activeLocation?.latitude || null,
+        longitude: activeLocation?.longitude || null,
         category: '',
     });
+
+    const prevActiveLocationRef = useRef(activeLocation);
+
+    // Keep searchData synced & reload salons whenever activeLocation changes (e.g. from address drawer / map picker)
+    useEffect(() => {
+        const city = activeLocation?.cityName || activeLocation?.city;
+        const area = activeLocation?.areaName ?? activeLocation?.area ?? '';
+        if (city && !isLocationChangedRef.current) {
+            setSearchData((prev) => ({
+                ...prev,
+                cityName: city,
+                areaName: area,
+                latitude: activeLocation.latitude ?? prev.latitude,
+                longitude: activeLocation.longitude ?? prev.longitude,
+            }));
+        }
+
+        // If user selected another address from Address Drawer or Picker after initial load:
+        if (hasInitializedRef.current && activeLocation) {
+            const prevLoc = prevActiveLocationRef.current;
+            const hasCoordsChanged = prevLoc?.latitude !== activeLocation.latitude || prevLoc?.longitude !== activeLocation.longitude;
+            const hasCityChanged = (prevLoc?.cityName || prevLoc?.city) !== (activeLocation.cityName || activeLocation.city);
+            const hasAreaChanged = (prevLoc?.areaName || prevLoc?.area) !== (activeLocation.areaName || activeLocation.area);
+
+            if (hasCoordsChanged || hasCityChanged || hasAreaChanged) {
+                prevActiveLocationRef.current = activeLocation;
+                const effLat = activeLocation.latitude;
+                const effLng = activeLocation.longitude;
+                if (effLat && effLng) {
+                    setIsPageLoading(true);
+                    // Fetch salons directly with known address coordinates — 0 Ola Maps API calls needed!
+                    fetchNearbySalons(city || '', effLat, effLng, area, homeRadius, true).then((salons) => {
+                        setRecommendedList(salons.map(formatSalonCard));
+                        setIsPageLoading(false);
+                    }).catch(() => {
+                        setIsPageLoading(false);
+                    });
+                }
+            }
+        }
+        prevActiveLocationRef.current = activeLocation;
+    }, [activeLocation]);
     const [isPageLoading, setIsPageLoading] = useState(true);
-    const [geoFetched, setGeoFetched] = useState(false);
+    const hasInitializedRef = useRef(false);
+    const lastFetchKeyRef = useRef('');
+    const cachedSalonsRef = useRef([]);
+    const activeFetchPromiseRef = useRef(null);
 
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [areaSuggestions, setAreaSuggestions] = useState([]);
@@ -157,6 +209,7 @@ const HomeScreen = () => {
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [locationPermission, setLocationPermission] = useState('prompt');
     const [recommendedList, setRecommendedList] = useState(recommendedSalons);
+    const [homeRadius, setHomeRadius] = useState(50);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
 
@@ -244,24 +297,55 @@ const HomeScreen = () => {
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 try {
-                    const result = await searchService.reverseGeocode(latitude, longitude);
-                    if (result.city) {
+                    // When user clicks detect button, always query Ola Maps for fresh, accurate location!
+                    const result = await searchService.reverseGeocode(latitude, longitude, { provider: 'olamaps' });
+                    if (result?.city) {
+                        localStorage.setItem('customerLatitude', String(latitude));
+                        localStorage.setItem('customerLongitude', String(longitude));
+                        localStorage.setItem('customerCurrentLatitude', String(latitude));
+                        localStorage.setItem('customerCurrentLongitude', String(longitude));
+                        localStorage.setItem('customerCity', result.city);
+                        localStorage.setItem('customerCurrentCity', result.city);
+                        localStorage.setItem('customerArea', result.area || '');
+                        localStorage.setItem('customerCurrentArea', result.area || '');
+                        localStorage.setItem('customerLocation', JSON.stringify({
+                            latitude,
+                            longitude,
+                            city: result.city,
+                            area: result.area || '',
+                            formattedAddress: result.formattedAddress || `${result.area ? result.area + ', ' : ''}${result.city}`,
+                            postalCode: result.pincode || ''
+                        }));
+                    }
+
+                    if (result?.city) {
+                        dispatch(setActiveLocation({
+                            address: result.formattedAddress || `${result.area ? result.area + ', ' : ''}${result.city}`,
+                            label: result.area || result.city,
+                            city: result.city,
+                            cityName: result.city,
+                            area: result.area || '',
+                            areaName: result.area || '',
+                            latitude,
+                            longitude,
+                            postalCode: result.pincode || ''
+                        }));
                         setSearchData({
                             cityName: result.city,
-                            areaName: result.area || ''
+                            areaName: result.area || '',
+                            latitude,
+                            longitude
                         });
-                        localStorage.setItem('customerCity', result.city);
-                        localStorage.setItem('customerArea', result.area || '');
                         setIsLocationChanged(false);
+                        isLocationChangedRef.current = false;
 
-                        // Immediately dispatch salon search
-                        dispatch(
-                            searchSalonsByLocation({
-                                cityName: result.city,
-                                areaName: result.area || '',
-                            })
-                        );
-                        toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
+                        // Immediately fetch and display nearby salons using coordinates
+                        const nearby = await fetchNearbySalons(result.city, latitude, longitude, result.area || '');
+                        const formatted = nearby.map(formatSalonCard);
+                        setRecommendedList(formatted);
+                        setSearchSalonsList(formatted);
+
+                        toast.success(`Location: ${result.city || 'Nearby'}${result.area ? `, ${result.area}` : ''}`);
                     } else {
                         toast.error("Could not determine your city. Please enter it manually.");
                     }
@@ -294,15 +378,95 @@ const HomeScreen = () => {
         return `${base}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     };
 
-    const fetchCitySalons = async (cityName) => {
+    const formatSalonCard = (s) => ({
+        id: s.salonId || s.id,
+        name: s.salonName || s.name,
+        location: s.areaName || s.cityName,
+        cityName: s.cityName,
+        areaName: s.areaName,
+        img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
+        rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
+        distanceFormatted: s.distanceFormatted,
+        distanceKm: s.distanceKm,
+        isApiSalon: true,
+        originalSalon: s
+    });
+
+    const fetchNearbySalons = async (cityName = '', customLat = null, customLng = null, areaName = '', radius = 50, force = false) => {
         try {
-            const response = await axiosInstance.get(`/salons/by-city`, {
-                params: { cityName }
-            });
-            return response.data?.content || [];
+            const storedLoc = (() => {
+                try {
+                    const s = localStorage.getItem('customerLocation');
+                    return s ? JSON.parse(s) : null;
+                } catch { return null; }
+            })();
+
+            const effectiveLat = customLat ?? activeLocation?.latitude ?? storedLoc?.latitude ?? null;
+            const effectiveLng = customLng ?? activeLocation?.longitude ?? storedLoc?.longitude ?? null;
+
+            // Generate deduplication cache key (round coordinates to 4 decimal places ~ 11 meters)
+            const latKey = effectiveLat != null ? Number(effectiveLat).toFixed(4) : '';
+            const lngKey = effectiveLng != null ? Number(effectiveLng).toFixed(4) : '';
+            const fetchKey = `${cityName || ''}_${latKey}_${lngKey}_${areaName || ''}_${radius}`;
+
+            if (!force && lastFetchKeyRef.current === fetchKey && cachedSalonsRef.current.length > 0) {
+                return cachedSalonsRef.current;
+            }
+
+            if (!force && activeFetchPromiseRef.current && activeFetchPromiseRef.current.key === fetchKey) {
+                return await activeFetchPromiseRef.current.promise;
+            }
+
+            const fetchPromise = (async () => {
+                const list = await dispatch(
+                    searchSalonsByLocation({
+                        cityName: cityName || undefined,
+                        areaName: areaName || undefined,
+                        latitude: effectiveLat || undefined,
+                        longitude: effectiveLng || undefined,
+                        radiusKm: radius
+                    })
+                ).unwrap();
+
+                const result = Array.isArray(list) ? list : (list?.content || []);
+                lastFetchKeyRef.current = fetchKey;
+                cachedSalonsRef.current = result;
+                return result;
+            })();
+
+            activeFetchPromiseRef.current = { key: fetchKey, promise: fetchPromise };
+            const result = await fetchPromise;
+            activeFetchPromiseRef.current = null;
+            return result;
         } catch (err) {
-            console.error("Error fetching salons by city:", err);
+            activeFetchPromiseRef.current = null;
+            console.error("Error fetching nearby salons:", err);
             return [];
+        }
+    };
+
+    const handleHomeRadiusChange = async (newRadius) => {
+        setHomeRadius(newRadius);
+        setIsPageLoading(true);
+        try {
+            const storedLoc = (() => {
+                try {
+                    const s = localStorage.getItem('customerLocation');
+                    return s ? JSON.parse(s) : null;
+                } catch { return null; }
+            })();
+            const effectiveLat = activeLocation?.latitude ?? storedLoc?.latitude ?? null;
+            const effectiveLng = activeLocation?.longitude ?? storedLoc?.longitude ?? null;
+            const storedCity = activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCity') || '';
+            const storedArea = activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerArea') || '';
+
+            const apiSalons = await fetchNearbySalons(storedCity, effectiveLat, effectiveLng, storedArea, newRadius, true);
+            const formatted = apiSalons.map(formatSalonCard);
+            setRecommendedList(formatted);
+        } catch (err) {
+            console.error('Failed to change radius on home screen:', err);
+        } finally {
+            setIsPageLoading(false);
         }
     };
 
@@ -326,40 +490,122 @@ const HomeScreen = () => {
                 const { latitude, longitude } = position.coords;
                 setLocationPermission('granted');
                 try {
-                    const result = await searchService.reverseGeocode(latitude, longitude);
-                    const detectedCity = result.city || "Pune";
+                    const storedLat = (localStorage.getItem('customerCurrentLatitude') || localStorage.getItem('customerLatitude')) ? Number(localStorage.getItem('customerCurrentLatitude') || localStorage.getItem('customerLatitude')) : null;
+                    const storedLng = (localStorage.getItem('customerCurrentLongitude') || localStorage.getItem('customerLongitude')) ? Number(localStorage.getItem('customerCurrentLongitude') || localStorage.getItem('customerLongitude')) : null;
+                    const savedLoc = (() => {
+                        try { return JSON.parse(localStorage.getItem('customerLocation')); } catch { return null; }
+                    })();
+                    const storedCity = activeLocation?.cityName || activeLocation?.city || savedLoc?.cityName || savedLoc?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || '';
+                    const storedArea = activeLocation?.areaName || activeLocation?.area || savedLoc?.areaName || savedLoc?.area || localStorage.getItem('customerCurrentArea') || localStorage.getItem('customerArea') || '';
 
-                    // Fetch salons from city
-                    const apiSalons = await fetchCitySalons(detectedCity);
+                    // Check if coordinates are essentially unchanged (< 500m)
+                    const distMovedKm = (storedLat && storedLng) 
+                        ? searchService.calculateDistanceKm(latitude, longitude, storedLat, storedLng) 
+                        : null;
+                    const isKopargaonArea = latitude >= 19.7 && latitude <= 20.1 && longitude >= 74.3 && longitude <= 74.7;
+                    const isStaleAhmednagar = storedCity === 'Ahmednagar' && isKopargaonArea;
+                    const isSameLocation = distMovedKm !== null && distMovedKm < 0.5 && Boolean(storedCity) && !isStaleAhmednagar;
 
-                    // Format and map cover images and ratings
-                    const formatted = apiSalons.map((s, index) => ({
-                        name: s.salonName,
-                        location: s.areaName || s.cityName,
-                        img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
-                        rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
-                        isApiSalon: true,
-                        originalSalon: s
-                    }));
+                    let detectedCity = storedCity;
+                    let detectedArea = storedArea;
+                    let formattedAddress = '';
+                    let pincode = '';
 
-                    // Sort by rating descending (top-rated first)
-                    formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+                    if (isSameLocation) {
+                        // User in same location (< 500m): 0 API calls needed!
+                        formattedAddress = savedLoc?.formattedAddress || `${storedArea ? storedArea + ', ' : ''}${storedCity}`;
+                        pincode = savedLoc?.postalCode || savedLoc?.pincode || '';
+
+                        // If salons were already fetched on mount for this location, avoid redundant API call!
+                        if (!isClickTriggered && cachedSalonsRef.current && cachedSalonsRef.current.length > 0) {
+                            dispatch(setActiveLocation({
+                                address: formattedAddress,
+                                label: detectedArea || detectedCity,
+                                city: detectedCity,
+                                cityName: detectedCity,
+                                area: detectedArea || '',
+                                areaName: detectedArea || '',
+                                latitude,
+                                longitude,
+                                postalCode: pincode
+                            }));
+                            if (!isLocationChangedRef.current || isClickTriggered) {
+                                setSearchData({
+                                    cityName: detectedCity,
+                                    areaName: detectedArea,
+                                    latitude,
+                                    longitude,
+                                    category: ''
+                                });
+                                setIsLocationChanged(false);
+                                isLocationChangedRef.current = false;
+                            }
+                            setIsPageLoading(false);
+                            return;
+                        }
+                    } else {
+                        // First visit or coordinates moved significantly (>500m): call Ola Maps for high accuracy!
+                        const result = await searchService.reverseGeocode(latitude, longitude, { provider: 'olamaps' });
+                        detectedCity = result?.city || "Pune";
+                        detectedArea = result?.area || "";
+                        formattedAddress = result?.formattedAddress || `${detectedArea ? detectedArea + ', ' : ''}${detectedCity}`;
+                        pincode = result?.pincode || '';
+
+                        // Update localStorage with fresh coordinates and resolved location
+                        localStorage.setItem('customerLatitude', String(latitude));
+                        localStorage.setItem('customerLongitude', String(longitude));
+                        localStorage.setItem('customerCurrentLatitude', String(latitude));
+                        localStorage.setItem('customerCurrentLongitude', String(longitude));
+                        if (result?.city) {
+                            localStorage.setItem('customerCity', result.city);
+                            localStorage.setItem('customerCurrentCity', result.city);
+                            localStorage.setItem('customerArea', result.area || '');
+                            localStorage.setItem('customerCurrentArea', result.area || '');
+                        }
+                        localStorage.setItem('customerLocation', JSON.stringify({
+                            latitude,
+                            longitude,
+                            city: detectedCity,
+                            area: detectedArea,
+                            formattedAddress,
+                            postalCode: pincode
+                        }));
+                    }
+
+                    // Fetch nearby salons using user's latitude & longitude
+                    const apiSalons = await fetchNearbySalons(detectedCity, latitude, longitude, detectedArea);
+                    const formatted = apiSalons.map(formatSalonCard);
 
                     setRecommendedList(formatted);
 
-                    // Save to localStorage
-                    localStorage.setItem('customerCity', result.city || detectedCity);
-                    localStorage.setItem('customerArea', result.area || '');
+                    // Sync Redux for navbar indicator & search bar
+                    dispatch(setActiveLocation({
+                        address: formattedAddress,
+                        label: detectedArea || detectedCity,
+                        city: detectedCity,
+                        cityName: detectedCity,
+                        area: detectedArea || '',
+                        areaName: detectedArea || '',
+                        latitude,
+                        longitude,
+                        postalCode: pincode
+                    }));
 
-                    // Also auto-populate search bar if detecting location
-                    setSearchData({
-                        cityName: result.city || detectedCity,
-                        areaName: result.area || ''
-                    });
-                    setIsLocationChanged(false);
+                    // Auto-populate search bar with detected location only if user hasn't typed their own search
+                    if (!isLocationChangedRef.current || isClickTriggered) {
+                        setSearchData({
+                            cityName: detectedCity,
+                            areaName: detectedArea,
+                            latitude,
+                            longitude,
+                            category: ''
+                        });
+                        setIsLocationChanged(false);
+                        isLocationChangedRef.current = false;
+                    }
 
                     if (isClickTriggered) {
-                        toast.success(`Location detected: ${detectedCity}! Recommended list updated.`);
+                        toast.success(`Location detected: ${detectedCity}! Showing nearby salons.`);
                     }
                 } catch (error) {
                     console.error("Error retrieving salons:", error);
@@ -394,29 +640,45 @@ const HomeScreen = () => {
 
     // Website loaded first geolocation trigger
     useEffect(() => {
-        if (geoFetched) return;
-        setGeoFetched(true);
+        if (hasInitializedRef.current) return;
+        hasInitializedRef.current = true;
 
-        const storedCity = localStorage.getItem('customerCity');
-        if (storedCity) {
+        const storedLoc = (() => {
+            try {
+                const s = localStorage.getItem('customerLocation');
+                return s ? JSON.parse(s) : null;
+            } catch { return null; }
+        })();
+
+        const storedCity = activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCity');
+        const storedArea = activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerArea') || '';
+        const effectiveLat = activeLocation?.latitude || storedLoc?.latitude || (localStorage.getItem('customerLatitude') ? Number(localStorage.getItem('customerLatitude')) : null);
+        const effectiveLng = activeLocation?.longitude || storedLoc?.longitude || (localStorage.getItem('customerLongitude') ? Number(localStorage.getItem('customerLongitude')) : null);
+
+        if (effectiveLat && effectiveLng) {
+            // Lat & lng available: fetch nearby salons using user coordinates immediately (single API call)
             setIsPageLoading(true);
-            fetchCitySalons(storedCity).then(apiSalons => {
-                const formatted = apiSalons.map((s, index) => ({
-                    name: s.salonName,
-                    location: s.areaName || s.cityName,
-                    img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
-                    rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
-                    isApiSalon: true,
-                    originalSalon: s
-                }));
-                formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-                setRecommendedList(formatted);
+            fetchNearbySalons(storedCity || '', effectiveLat, effectiveLng, storedArea).then(apiSalons => {
+                setRecommendedList(apiSalons.map(formatSalonCard));
                 setIsPageLoading(false);
+                requestLocationAndFetchSalons(false);
             }).catch(() => {
                 setRecommendedList(recommendedSalons);
                 setIsPageLoading(false);
+                requestLocationAndFetchSalons(false);
+            });
+        } else if (storedCity) {
+            // City name available: fetch and request GPS in background for accurate nearby salons
+            setIsPageLoading(true);
+            fetchNearbySalons(storedCity).then(apiSalons => {
+                setRecommendedList(apiSalons.map(formatSalonCard));
+                setIsPageLoading(false);
+                requestLocationAndFetchSalons(false);
+            }).catch(() => {
+                requestLocationAndFetchSalons(false);
             });
         } else {
+            // First time visit: request browser GPS to get coordinates and fetch nearby salons
             requestLocationAndFetchSalons(false);
         }
     }, []);
@@ -431,7 +693,7 @@ const HomeScreen = () => {
             category: service.name
         }));
 
-        const city = searchData.cityName || localStorage.getItem('customerCity');
+        const city = searchData.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity');
         if (!city) {
             toast.error("Please select a city first to explore salons!");
             return;
@@ -447,43 +709,46 @@ const HomeScreen = () => {
         setSearchDropdownLoading(true);
         setShowSearchDropdown(true);
         setIsLocationChanged(true);
+        isLocationChangedRef.current = true;
 
         if (searchData.cityName) {
-            localStorage.setItem('customerCity', searchData.cityName);
-            localStorage.setItem('customerArea', searchData.areaName || '');
+            sessionStorage.setItem('lastSearchedCity', searchData.cityName);
+            sessionStorage.setItem('lastSearchedArea', searchData.areaName || '');
         }
 
         try {
-            let results = [];
-            if (activeCategory || searchData.areaName) {
-                const response = await axiosInstance.get('/salons/location-search', {
-                    params: {
-                        cityName: searchData.cityName || undefined,
-                        areaName: searchData.areaName || undefined,
-                        category: activeCategory || undefined
-                    }
-                });
-                results = response.data || [];
-            } else {
-                const response = await axiosInstance.get('/salons/by-city', {
-                    params: { cityName: searchData.cityName }
-                });
-                results = response.data?.content || response.data || [];
-            }
+            // Customer's actual GPS coordinates (e.g. Delhi) to calculate distance to searched salons (e.g. Pune)
+            const customerLat = (localStorage.getItem('customerCurrentLatitude') || localStorage.getItem('customerLatitude'))
+                ? Number(localStorage.getItem('customerCurrentLatitude') || localStorage.getItem('customerLatitude'))
+                : (activeLocation?.latitude || undefined);
+            const customerLng = (localStorage.getItem('customerCurrentLongitude') || localStorage.getItem('customerLongitude'))
+                ? Number(localStorage.getItem('customerCurrentLongitude') || localStorage.getItem('customerLongitude'))
+                : (activeLocation?.longitude || undefined);
 
-            const formatted = results.map(s => ({
+            const results = await dispatch(
+                searchSalonsByLocation({
+                    cityName: searchData.cityName || undefined,
+                    areaName: searchData.areaName || undefined,
+                    category: activeCategory || undefined,
+                    latitude: customerLat,
+                    longitude: customerLng
+                })
+            ).unwrap();
+
+            const salonList = Array.isArray(results) ? results : (results?.content || []);
+            const formatted = salonList.map(s => ({
+                id: s.salonId || s.id,
                 name: s.salonName || s.name,
                 location: s.areaName || s.cityName,
                 cityName: s.cityName,
                 areaName: s.areaName,
                 img: s.imageUrl ? getSalonImageSrc(s.imageUrl, null) : null,
                 rating: s.rating || (((s.salonId || 0) % 5) * 0.1 + 4.5).toFixed(1),
+                distanceFormatted: s.distanceFormatted,
+                distanceKm: s.distanceKm,
                 isApiSalon: true,
                 originalSalon: s
             }));
-
-            // Sort by rating descending (highest rated first)
-            formatted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
 
             setSearchSalonsList(formatted);
             setRecommendedList(formatted);
@@ -831,6 +1096,7 @@ const HomeScreen = () => {
                                         }));
                                         setShowCityDropdown(true);
                                         setIsLocationChanged(true);
+                                        isLocationChangedRef.current = true;
                                         setShowSearchDropdown(false);
                                     }}
                                     onFocus={() => setShowCityDropdown(true)}
@@ -849,6 +1115,15 @@ const HomeScreen = () => {
                                         <NavigationIcon className="w-4 h-4 -rotate-45" />
                                     )}
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => dispatch(openAddressDrawer())}
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-[#FF2A14] hover:bg-[#FF2A14]/5 transition-all duration-150 flex items-center gap-1 shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+                                    title="Select from Saved Addresses"
+                                >
+                                    <MapPin className="w-4 h-4 text-[#FF2A14]" />
+                                    <span className="text-[11px] font-bold text-gray-600 dark:text-zinc-300 hidden lg:inline">Addresses</span>
+                                </button>
                                 {showCityDropdown && searchData.cityName && (
                                     <div className="absolute left-0 top-full z-45 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
                                         {isLoadingCities ? (
@@ -857,13 +1132,20 @@ const HomeScreen = () => {
                                                 Locating...
                                             </div>
                                         ) : citySuggestions.length > 0 ? (
-                                            citySuggestions.map((city, idx) => (
+                                             citySuggestions.map((city, idx) => (
                                                 <div key={idx} onClick={() => {
                                                     setIsUserTypingCity(false);
                                                     setIsUserTypingArea(false);
-                                                    setSearchData(p => ({ ...p, cityName: city.name, areaName: '' }));
+                                                    setSearchData(p => ({
+                                                        ...p,
+                                                        cityName: city.name,
+                                                        areaName: '',
+                                                        latitude: city.latitude || null,
+                                                        longitude: city.longitude || null
+                                                    }));
                                                     setShowCityDropdown(false);
                                                     setIsLocationChanged(true);
+                                                    isLocationChangedRef.current = true;
                                                     setShowSearchDropdown(false);
                                                 }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
                                             ))
@@ -871,7 +1153,7 @@ const HomeScreen = () => {
                                             <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
                                         )}
                                     </div>
-                                )}
+                                    )}
                             </div>
 
                             <div className="relative area-dropdown-container flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
@@ -889,6 +1171,7 @@ const HomeScreen = () => {
                                             }));
                                             setShowAreaDropdown(true);
                                             setIsLocationChanged(true);
+                                            isLocationChangedRef.current = true;
                                             setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
@@ -908,9 +1191,15 @@ const HomeScreen = () => {
                                                 <div key={idx} onClick={() => {
                                                     setIsUserTypingCity(false);
                                                     setIsUserTypingArea(false);
-                                                    setSearchData(p => ({ ...p, areaName: area.name }));
+                                                    setSearchData(p => ({
+                                                        ...p,
+                                                        areaName: area.name,
+                                                        latitude: area.latitude || p.latitude,
+                                                        longitude: area.longitude || p.longitude
+                                                    }));
                                                     setShowAreaDropdown(false);
                                                     setIsLocationChanged(true);
+                                                    isLocationChangedRef.current = true;
                                                     setShowSearchDropdown(false);
                                                 }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
                                                     {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
@@ -1013,10 +1302,17 @@ const HomeScreen = () => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <h4 className="text-sm font-bold text-gray-900 uppercase truncate tracking-tight">{salon.name}</h4>
-                                                        <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5 font-medium">
-                                                            <MapPin className="w-3.5 h-3.5 text-[#FF2A14]" />
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <h4 className="text-sm font-bold text-gray-900 uppercase truncate tracking-tight">{salon.name}</h4>
+                                                            {salon.distanceFormatted && (
+                                                                <span className="px-2.5 py-0.5 text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-md shrink-0 flex items-center gap-1 shadow-xs">
+                                                                    📍 {salon.distanceFormatted}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-0.5 font-medium">
+                                                            <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
                                                             <span className="truncate">{salon.location}</span>
                                                         </p>
                                                     </div>
@@ -1114,23 +1410,75 @@ const HomeScreen = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
                     <div>
                         <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{t('home.premium_salons.title', 'Premium Salons Nearby')}</h3>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
-                            {isLocationChanged
-                                ? t('home.premium_salons.showing_typed', 'Showing salons according to your typed city and area name')
-                                : t('home.premium_salons.showing_current', 'Showing salons of your current location')
-                            }
+                            {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
+                                <>
+                                    <span>Showing all salons in <strong className="text-[#FF2A14]">{searchData.areaName ? `${searchData.areaName}, ` : ''}{searchData.cityName}</strong></span>
+                                    <span className="text-gray-300 dark:text-gray-600">•</span>
+                                    <span className="text-amber-500 font-semibold lowercase">radius disabled</span>
+                                </>
+                            ) : (
+                                <>
+                                    {t('home.premium_salons.showing_current', 'Showing salons of your current location')}
+                                    <span className="text-gray-300 dark:text-gray-600">•</span>
+                                    <span className="text-[#FF2A14] font-semibold lowercase">within {homeRadius} km</span>
+                                </>
+                            )}
                         </p>
                     </div>
-                    <button
-                        onClick={() => navigate('/salons')}
-                        className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
-                    >
-                        {t('buttons.see_more', 'See More')}
-                        <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+
+                    <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                        {/* Radius Filter Pills - Disabled when searching specific city or area */}
+                        {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
+                            <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border transition-all ${
+                                isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'
+                            }`} title="Radius filter is disabled when searching by city or area">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span className="text-xs font-bold uppercase tracking-wider">
+                                    Radius Disabled for {searchData.cityName || 'City'}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className={`flex items-center gap-1 p-1 rounded-2xl border transition-colors ${
+                                isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'
+                            }`}>
+                                <span className="text-[10px] font-bold px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                    📍 Radius:
+                                </span>
+                                {[5, 10, 25, 50].map((r) => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        onClick={() => handleHomeRadiusChange(r)}
+                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                            homeRadius === r
+                                                ? 'bg-gradient-to-r from-[#FF2A14] to-[#FF4D3A] text-white shadow-sm shadow-[#FF2A14]/20'
+                                                : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
+                                        }`}
+                                    >
+                                        {r} km
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => navigate('/salons', {
+                                state: isLocationChanged && searchData.cityName ? {
+                                    cityName: searchData.cityName,
+                                    areaName: searchData.areaName,
+                                    category: searchData.category
+                                } : undefined
+                            })}
+                            className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
+                        >
+                            {t('buttons.see_more', 'See More')}
+                            <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {isPageLoading ? (
@@ -1148,24 +1496,61 @@ const HomeScreen = () => {
                             <div
                                 key={idx}
                                 onClick={() => handleRecommendedCardClick(salon)}
-                                className="rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition cursor-pointer group"
+                                className={`rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-100 bg-white'}`}
                             >
-                                <div className="h-48 relative overflow-hidden bg-gray-50">
+                                <div className="h-48 relative overflow-hidden bg-gray-50 dark:bg-gray-800">
                                     {salon.img ? (
-                                        <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                        <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                                             <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
                                             <span className="text-[11px] font-semibold text-gray-400">No image available</span>
                                         </div>
                                     )}
-                                    <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                                        {salon.rating != null ? `⭐ ${parseFloat(salon.rating).toFixed(1)}` : '⭐ NEW'}
+
+                                    {/* Prominent Floating Distance Pill */}
+                                    {salon.distanceFormatted && (
+                                        <div className="absolute top-3 left-3 backdrop-blur-md bg-emerald-950/85 text-white border border-emerald-400/40 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg z-10">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="text-emerald-300 font-extrabold text-xs">{salon.distanceFormatted}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow-sm border border-gray-100 dark:border-gray-800 z-10">
+                                        <span className="text-amber-500">★</span>
+                                        <span>{salon.rating != null ? parseFloat(salon.rating).toFixed(1) : 'NEW'}</span>
                                     </div>
                                 </div>
-                                <div className={`p-4 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                                    <h4 className="font-bold text-gray-800 uppercase tracking-tight">{salon.name}</h4>
-                                    <p className="text-xs text-gray-500">{salon.location}</p>
+
+                                <div className="p-4 flex flex-col flex-1">
+                                    <h4 className={`font-extrabold uppercase tracking-tight truncate text-base group-hover:text-[#FF2A14] transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{salon.name}</h4>
+                                    
+                                    {/* Prominent Proximity Indicator */}
+                                    {salon.distanceFormatted && (
+                                        <div className={`mt-2 mb-2 flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
+                                            isDark 
+                                                ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300' 
+                                                : 'bg-emerald-50 border-emerald-200/80 text-emerald-800'
+                                        }`}>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-emerald-600 dark:text-emerald-400 text-xs">📍</span>
+                                                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+                                                    {salon.distanceFormatted}
+                                                </span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                                    away
+                                                </span>
+                                            </div>
+                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-600 text-white tracking-wider">
+                                                Nearby
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-1.5 mt-auto pt-1 text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
+                                        <MapPin className="w-3.5 h-3.5 text-[#FF2A14] shrink-0" />
+                                        <span className="truncate">{salon.location}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))

@@ -146,7 +146,14 @@ const OwnerDashboard = () => {
       : document.documentElement.classList.contains('dark');
 
     const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
-    const isAdmin = user.role === 'ADMIN';
+    const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
+    const isAdmin = roleStr === 'ADMIN';
+
+    useEffect(() => {
+        if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
+            navigate('/admin/tickets', { replace: true });
+        }
+    }, [roleStr, navigate]);
 
     const [adminStats, setAdminStats] = useState({
         totalSalons: 0,

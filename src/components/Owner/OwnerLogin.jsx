@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginOwner, clearOwnerStaffError } from '../../redux/slices/ownerStaffSlice';
-import { User, Lock, Sparkles, AlertCircle } from 'lucide-react';
+import { Phone, Lock, Sparkles, AlertCircle } from 'lucide-react';
+import { cleanIndianMobile, isValidIndianMobile } from '../../utils/validation';
 
 // Using existing assets
 import logoIcon from '../../assets/Neoparlour_logo.png';
@@ -20,6 +21,7 @@ const OwnerLogin = () => {
     password: '',
   });
 
+  const [localError, setLocalError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -31,21 +33,44 @@ const OwnerLogin = () => {
     const savedPassword = localStorage.getItem('neoparlour_owner_remembered_password');
     if (savedUsername && savedPassword) {
       setFormData({
-        username: savedUsername,
+        username: cleanIndianMobile(savedUsername),
         password: savedPassword
       });
       setRememberMe(true);
     }
   }, [dispatch]);
 
+  const handleMobileChange = (e) => {
+    const cleaned = cleanIndianMobile(e.target.value);
+    setFormData((prev) => ({ ...prev, username: cleaned }));
+    if (cleaned.length > 0 && !/^[6-9]/.test(cleaned)) {
+      setLocalError('Indian mobile numbers must start with 6, 7, 8, or 9.');
+    } else if (cleaned.length === 10 && !isValidIndianMobile(cleaned)) {
+      setLocalError('Please enter a valid 10-digit Indian mobile number.');
+    } else {
+      setLocalError('');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (localError) setLocalError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const cleanedUsername = (formData.username || '').trim();
+    if (!formData.username || !isValidIndianMobile(formData.username)) {
+      setLocalError('Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).');
+      return;
+    }
+    if (!formData.password || !formData.password.trim()) {
+      setLocalError('Please enter your password.');
+      return;
+    }
+
+    setLocalError('');
+    const cleanedUsername = cleanIndianMobile(formData.username);
     const loginPayload = { ...formData, username: cleanedUsername };
     dispatch(loginOwner(loginPayload)).unwrap().then((res) => {
       // Save or clear credentials based on rememberMe status
@@ -68,7 +93,9 @@ const OwnerLogin = () => {
         ''
       ).toUpperCase();
 
-      if (roleStr.includes('STAFF')) {
+      if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
+        navigate('/admin/tickets');
+      } else if (roleStr.includes('STAFF')) {
         navigate('/staff/dashboard');
       } else {
         navigate('/owner/dashboard');
@@ -105,10 +132,10 @@ const OwnerLogin = () => {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {(localError || error) && (
             <div className="mb-6 p-4 bg-red-50 text-red-600 text-xs font-semibold rounded-2xl border border-red-100 shadow-sm flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <span>{error}</span>
+              <span>{localError || error}</span>
             </div>
           )}
 
@@ -116,16 +143,20 @@ const OwnerLogin = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#ff0b01] transition-colors">
-                <User className="w-5 h-5 stroke-[2]" />
+                <Phone className="w-5 h-5 stroke-[2]" />
               </div>
+              <span className="absolute inset-y-0 left-12 flex items-center text-sm font-bold text-gray-500">
+                +91
+              </span>
               <input 
-                type="text" 
+                type="tel" 
                 name="username"
                 value={formData.username}
-                onChange={handleInputChange}
-                placeholder="Username / Mobile" 
+                onChange={handleMobileChange}
+                placeholder="Enter 10-digit mobile number" 
                 required
-                className="w-full pl-14 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold" 
+                maxLength={10}
+                className="w-full pl-24 pr-4 py-4 bg-[#fafafa] border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#ff0b01] focus:bg-white transition-all placeholder-gray-400 font-bold tracking-wide" 
               />
             </div>
 
@@ -162,8 +193,8 @@ const OwnerLogin = () => {
 
             <button 
               type="submit" 
-              disabled={loading}
-              className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
+              disabled={loading || !isValidIndianMobile(formData.username) || !formData.password}
+              className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${loading || !isValidIndianMobile(formData.username) || !formData.password ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
             >
               {loading && (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

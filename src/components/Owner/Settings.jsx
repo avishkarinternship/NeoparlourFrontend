@@ -5,9 +5,10 @@ import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { GstStateInput, StateSelector, GstinInput } from "../common/GstStateInput";
 import { BillingSummaryCard } from "../common/BillingSummaryCard";
-import { getStateFromCityName, getGstInvoiceNotice, getStateDisplayName, INDIAN_STATES } from "../../constants/indianStates";
+import { getStateFromCityName, getStateFromStateName, getGstInvoiceNotice, getStateDisplayName, INDIAN_STATES } from "../../constants/indianStates";
 import searchService from "../../services/searchService";
 import { MapPin, Navigation as NavigationIcon, Compass, Building } from "lucide-react";
+import LocationPickerModal from "../location/LocationPickerModal";
 
 const is18OrOlder = (birthdateString) => {
   if (!birthdateString) return false;
@@ -90,6 +91,8 @@ const Settings = () => {
         afternoonDiscount: "",
         eveningDiscount: "",
         nightDiscount: "",
+        latitude: null,
+        longitude: null,
     });
 
     // Location search states for Salon Settings (Photon Komoot API)
@@ -110,6 +113,7 @@ const Settings = () => {
     const [showLandmarkDropdown, setShowLandmarkDropdown] = useState(false);
 
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
     const [discountMode, setDiscountMode] = useState("NONE"); // "NONE", "WEEKDAY", "CATEGORY"
 
@@ -202,44 +206,61 @@ const Settings = () => {
         }
     };
 
-    const handleDetectLocation = () => {
-        if (!navigator.geolocation) {
-            toast.error("Geolocation is not supported by your browser");
-            return;
-        }
+    const handleDetectLocation = async () => {
+        try {
+            setIsDetectingLocation(true);
+            toast("📍 Detecting GPS coordinates... Please ensure you are inside your salon!", { icon: "📍", duration: 3000 });
 
-        setIsDetectingLocation(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    const result = await searchService.reverseGeocode(latitude, longitude);
-                    if (result.city) {
-                        setIsUserTypingCity(false);
-                        setIsUserTypingArea(false);
-                        setSalonProfile(prev => ({
-                            ...prev,
-                            cityName: result.city,
-                            areaName: result.area || ''
-                        }));
-                        toast.success(`Location detected: ${result.city}${result.area ? `, ${result.area}` : ''}`);
-                    } else {
-                        toast.error("Could not determine your city. Please enter it manually.");
-                    }
-                } catch (err) {
-                    console.error("Location detection error:", err);
-                    toast.error("Failed to detect location. Please enter manually.");
-                } finally {
-                    setIsDetectingLocation(false);
+            const coords = await searchService.detectCoordinates(4000);
+            const { latitude, longitude, isIpFallback } = coords;
+
+            const result = await searchService.reverseGeocode(latitude, longitude);
+            if (result.city || result.area) {
+                setIsUserTypingCity(false);
+                setIsUserTypingArea(false);
+                setIsUserTypingLandmark(false);
+                setSalonProfile(prev => ({
+                    ...prev,
+                    latitude: latitude,
+                    longitude: longitude,
+                    state: result.stateEnum || prev.state,
+                    cityName: result.city || prev.cityName,
+                    areaName: result.area || prev.areaName,
+                    landmark: result.landmark || prev.landmark
+                }));
+
+                if (result.nearbyLandmarks && result.nearbyLandmarks.length > 0) {
+                    setLandmarkSuggestions(result.nearbyLandmarks);
                 }
-            },
-            (error) => {
-                console.error("Geolocation error:", error);
-                toast.error("Location access denied or unavailable.");
-                setIsDetectingLocation(false);
-            },
-            { enableHighAccuracy: false, timeout: 8000 }
-        );
+
+                const stateName = result.stateEnum ? getStateDisplayName(result.stateEnum) : result.stateName;
+                toast.success(`📍 Salon location detected${isIpFallback ? ' (via network)' : ''}! State: ${stateName || 'Detected'}, City: ${result.city || 'Detected'}, Area: ${result.area || 'Detected'}${result.landmark ? `, Landmark: ${result.landmark}` : ''}`);
+            } else {
+                toast.error("Could not determine your location. Please enter it manually.");
+            }
+        } catch (err) {
+            console.error("Location detection error:", err);
+            toast.error(err?.message || "Failed to detect location. Please enter manually.");
+        } finally {
+            setIsDetectingLocation(false);
+        }
+    };
+
+    const handleConfirmMapLocation = (loc) => {
+        setIsUserTypingCity(false);
+        setIsUserTypingArea(false);
+        setIsUserTypingLandmark(false);
+        setSalonProfile(prev => ({
+            ...prev,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            state: (loc.stateName ? getStateFromStateName(loc.stateName) : null) || (loc.cityName ? getStateFromCityName(loc.cityName) : null) || prev.state,
+            cityName: loc.cityName || prev.cityName,
+            areaName: loc.areaName || prev.areaName,
+            landmark: loc.landmark || prev.landmark,
+            address: loc.formattedAddress || prev.address
+        }));
+        toast.success(`📍 Salon location updated: ${loc.cityName}${loc.areaName ? `, ${loc.areaName}` : ''}`);
     };
 
     // Autocomplete city search (Photon Komoot API)
@@ -452,10 +473,13 @@ const Settings = () => {
                 }
             }
 
+            const stateDisplay = salonProfile.state ? getStateDisplayName(salonProfile.state) : '';
             const formattedAddress = [
-                salonProfile.specificAddress,
-                salonProfile.landmark ? `(Near ${salonProfile.landmark})` : '',
-                salonProfile.areaName
+                salonProfile.specificAddress ? salonProfile.specificAddress.trim() : null,
+                salonProfile.landmark ? `(Near ${salonProfile.landmark.trim()})` : null,
+                salonProfile.areaName ? salonProfile.areaName.trim() : null,
+                salonProfile.cityName ? salonProfile.cityName.trim() : null,
+                stateDisplay || null
             ].filter(Boolean).join(', ');
 
             const payload = {
@@ -783,6 +807,84 @@ const Settings = () => {
                                     }`}>
                                         <h4 className={`text-xs font-black uppercase tracking-widest border-b pb-2 ${isDarkMode ? 'text-zinc-400 border-zinc-800' : 'text-gray-400 border-gray-200'}`}>📍 Salon Location & Address Details</h4>
                                         
+                                        {/* Compact Auto-Detect Salon Location Bar */}
+                                        <div className={`border rounded-xl px-3.5 py-2.5 text-left shadow-xs ${
+                                            isDarkMode 
+                                                ? 'bg-amber-950/20 border-amber-500/30 text-amber-200' 
+                                                : 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-400/30 text-amber-950'
+                                        }`}>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className="p-1.5 rounded-lg bg-amber-500 text-white flex-shrink-0 shadow-xs">
+                                                        <NavigationIcon className="w-3.5 h-3.5 -rotate-45" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-[11px] font-black uppercase tracking-wider ${isDarkMode ? 'text-amber-300' : 'text-amber-900'}`}>
+                                                                Auto-Detect Salon Location
+                                                            </span>
+                                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider hidden sm:inline ${
+                                                                isDarkMode ? 'bg-amber-400/20 text-amber-400' : 'bg-amber-200/80 text-amber-900'
+                                                            }`}>
+                                                                Physical Presence
+                                                            </span>
+                                                        </div>
+                                                        <p className={`text-[10px] font-medium leading-tight mt-0.5 ${isDarkMode ? 'text-amber-200/80' : 'text-amber-900/80'}`}>
+                                                            ⚠️ Please be physically inside your salon when detecting for accurate GPS coordinates.
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {isSalonEdit && (
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsMapModalOpen(true)}
+                                                            className={`px-3 py-1.5 font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 hover:-translate-y-0.5 active:translate-y-0 ${
+                                                                isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-gray-900 hover:bg-black text-white'
+                                                            }`}
+                                                        >
+                                                            <Compass className="w-3 h-3 text-red-500" />
+                                                            <span>Pin on Map</span>
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleDetectLocation}
+                                                            disabled={isDetectingLocation}
+                                                            className={`px-3 py-1.5 bg-[#ff0b01] hover:bg-red-700 text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 ${
+                                                                isDetectingLocation ? 'animate-pulse pointer-events-none opacity-80' : 'hover:-translate-y-0.5 active:translate-y-0'
+                                                            }`}
+                                                        >
+                                                            {isDetectingLocation ? (
+                                                                <>
+                                                                    <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                    <span>Detecting...</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <NavigationIcon className="w-3 h-3 -rotate-45" />
+                                                                    <span>Auto-Detect</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {salonProfile.latitude && salonProfile.longitude && (
+                                                <div className={`mt-1.5 pt-1.5 border-t flex items-center justify-between text-[10px] font-bold ${
+                                                    isDarkMode ? 'border-amber-500/20 text-emerald-400' : 'border-amber-300/30 text-emerald-700'
+                                                }`}>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        GPS: {Number(salonProfile.latitude).toFixed(5)}, {Number(salonProfile.longitude).toFixed(5)}
+                                                    </span>
+                                                    <span className={`text-[9px] font-medium ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>✓ Location Captured</span>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {/* Row 1: State & City Name */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* State Selector */}
@@ -909,31 +1011,84 @@ const Settings = () => {
                                                                 <span>Searching...</span>
                                                             </div>
                                                         ) : areaSuggestions.length > 0 ? (
-                                                            areaSuggestions.map((area, idx) => (
-                                                                <div 
-                                                                    key={idx} 
+                                                            <>
+                                                                {areaSuggestions.map((area, idx) => (
+                                                                    <div 
+                                                                        key={idx} 
+                                                                        onClick={() => {
+                                                                            setIsUserTypingArea(false);
+                                                                            setSalonProfile(prev => ({ 
+                                                                                ...prev, 
+                                                                                areaName: area.name,
+                                                                                areaDistrict: area.district || ''
+                                                                            }));
+                                                                            setAreaSuggestions([]);
+                                                                            setShowAreaDropdown(false);
+                                                                        }}
+                                                                        className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5 ${
+                                                                            isDarkMode ? 'hover:bg-zinc-800 hover:text-red-400 text-zinc-200' : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                                                                        }`}
+                                                                    >
+                                                                        <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{area.name}</span>
+                                                                        {area.city && (
+                                                                            <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+
+                                                                {/* Custom Village / Area selection option if typed name differs from suggestions */}
+                                                                {salonProfile.areaName.trim().length >= 2 && !areaSuggestions.some(a => a.name.toLowerCase() === salonProfile.areaName.trim().toLowerCase()) && (
+                                                                    <div
+                                                                        onClick={() => {
+                                                                            setIsUserTypingArea(false);
+                                                                            setSalonProfile(prev => ({ 
+                                                                                ...prev, 
+                                                                                areaName: salonProfile.areaName.trim(),
+                                                                                areaDistrict: salonProfile.cityName || ''
+                                                                            }));
+                                                                            setAreaSuggestions([]);
+                                                                            setShowAreaDropdown(false);
+                                                                        }}
+                                                                        className={`px-4 py-2.5 rounded-xl cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border-t mt-1 ${
+                                                                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700 text-red-400 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 text-[#ff0b01] hover:bg-[#ff0b01]/10'
+                                                                        }`}
+                                                                    >
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-extrabold flex items-center gap-1.5">
+                                                                                <span>📍</span> Use &quot;{salonProfile.areaName.trim()}&quot; as Village / Area
+                                                                            </span>
+                                                                            <span className="text-[10px] text-gray-400 font-medium">Click to confirm custom village in {salonProfile.cityName}</span>
+                                                                        </div>
+                                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#ff0b01]/10 font-bold uppercase tracking-wider">Select</span>
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <div className="p-1">
+                                                                <div
                                                                     onClick={() => {
                                                                         setIsUserTypingArea(false);
                                                                         setSalonProfile(prev => ({ 
                                                                             ...prev, 
-                                                                            areaName: area.name,
-                                                                            areaDistrict: area.district || ''
+                                                                            areaName: salonProfile.areaName.trim(),
+                                                                            areaDistrict: salonProfile.cityName || ''
                                                                         }));
                                                                         setAreaSuggestions([]);
                                                                         setShowAreaDropdown(false);
                                                                     }}
-                                                                    className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5 ${
-                                                                        isDarkMode ? 'hover:bg-zinc-800 hover:text-red-400 text-zinc-200' : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                                                                    className={`px-4 py-3 rounded-xl cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border ${
+                                                                        isDarkMode ? 'bg-zinc-800/80 border-red-500/30 text-red-400 hover:bg-zinc-800' : 'bg-[#ff0b01]/5 border-[#ff0b01]/20 text-[#ff0b01] hover:bg-[#ff0b01]/10'
                                                                     }`}
                                                                 >
-                                                                    <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{area.name}</span>
-                                                                    {area.city && (
-                                                                        <span className="text-[11px] font-semibold text-gray-400">{area.city}</span>
-                                                                    )}
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-extrabold flex items-center gap-1.5">
+                                                                            <span>📍</span> Use &quot;{salonProfile.areaName.trim()}&quot; as Village / Area
+                                                                        </span>
+                                                                        <span className="text-[10px] text-gray-400 font-medium mt-0.5">Click to confirm custom village in {salonProfile.cityName}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#ff0b01] text-white font-bold uppercase tracking-wider">Confirm</span>
                                                                 </div>
-                                                            ))
-                                                        ) : (
-                                                            <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No areas found</div>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )}
@@ -1019,16 +1174,18 @@ const Settings = () => {
                                         </div>
 
                                         {/* Live Formatted Address Preview */}
-                                        {(salonProfile.specificAddress || salonProfile.address || salonProfile.landmark || salonProfile.areaName || salonProfile.cityName) && (
+                                        {(salonProfile.specificAddress || salonProfile.address || salonProfile.landmark || salonProfile.areaName || salonProfile.cityName || salonProfile.state) && (
                                             <div className={`p-3.5 border rounded-2xl text-left font-sans ${
                                                 isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200' : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-800'
                                             }`}>
                                                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">📍 Formatted Address Preview</span>
                                                 <p className={`text-xs font-bold leading-relaxed ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
                                                     {[
-                                                        salonProfile.specificAddress,
-                                                        salonProfile.landmark ? `(Near ${salonProfile.landmark})` : '',
-                                                        salonProfile.areaName
+                                                        salonProfile.specificAddress ? salonProfile.specificAddress.trim() : null,
+                                                        salonProfile.landmark ? `(Near ${salonProfile.landmark.trim()})` : null,
+                                                        salonProfile.areaName ? salonProfile.areaName.trim() : null,
+                                                        salonProfile.cityName ? salonProfile.cityName.trim() : null,
+                                                        salonProfile.state ? getStateDisplayName(salonProfile.state) : null
                                                     ].filter(Boolean).join(', ') || salonProfile.address || 'No address specified'}
                                                 </p>
                                             </div>
@@ -1655,6 +1812,19 @@ const Settings = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* Interactive Map Location Picker Modal */}
+                    <LocationPickerModal
+                        isOpen={isMapModalOpen}
+                        onClose={() => setIsMapModalOpen(false)}
+                        onConfirm={handleConfirmMapLocation}
+                        initialLat={salonProfile.latitude || null}
+                        initialLng={salonProfile.longitude || null}
+                        title="Update Salon Entrance Pin"
+                        subtitle="Position the pin directly on your salon's main entrance door"
+                        confirmButtonText="Update Salon Location"
+                        isOwnerMode={true}
+                    />
                 </main>
     );
 };

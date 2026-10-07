@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://sb.neoparlour.com/api'
+  ? 'https://uat.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
@@ -37,15 +37,21 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    // Prioritization: For staff/owner/subscription endpoints, use ownerToken first.
-    const isOwnerOrStaffRequest = config.url && (
+    const currentPathname = typeof window !== 'undefined' ? window.location?.pathname || '' : '';
+    const isAdminOrOwnerPage = currentPathname.startsWith('/admin') || currentPathname.startsWith('/owner') || currentPathname.startsWith('/staff');
+
+    // Prioritization: For staff/owner/admin/subscription/ticket endpoints or when on admin/owner/staff pages, use ownerToken first.
+    const isOwnerOrStaffRequest = isAdminOrOwnerPage || (config.url && (
       config.url.includes('/subscriptions') ||
       config.url.includes('/staff') ||
       config.url.includes('/appointments/salon') ||
       config.url.includes('/staff-attendance') ||
       config.url.includes('/staff-inventory') ||
-      config.url.includes('/kyc')
-    );
+      config.url.includes('/kyc') ||
+      config.url.includes('/tickets') ||
+      config.url.includes('/admin') ||
+      config.url.includes('/auth/admin')
+    ));
     const token = isOwnerOrStaffRequest
       ? (ownerToken || customerToken || genericToken) 
       : (customerToken || ownerToken || genericToken);

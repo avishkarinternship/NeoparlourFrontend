@@ -277,7 +277,20 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => navigate('/owner/dashboard')}>
+        <div 
+          className="flex items-center space-x-2.5 cursor-pointer" 
+          onClick={() => {
+            const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+            const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
+            if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
+              navigate('/admin/tickets');
+            } else if (roleStr.includes('STAFF')) {
+              navigate('/staff/dashboard');
+            } else {
+              navigate('/owner/dashboard');
+            }
+          }}
+        >
           <img
             src={logoIcon}
             alt="NeoParlour Logo"

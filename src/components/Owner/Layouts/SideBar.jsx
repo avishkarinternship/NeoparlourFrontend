@@ -63,7 +63,251 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
 
   const renderSidebarContent = (isMobile = false) => {
     const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
-    const isAdmin = user.role === 'ADMIN';
+    const roleStr = String(user.role || user.userRole || '').toUpperCase();
+    const isAdmin = roleStr === 'ADMIN';
+    const isSupportEngineer = roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT');
+
+    if (isSupportEngineer) {
+      return (
+        <>
+          {/* Mobile Header with Close Button */}
+          {isMobile && (
+            <div className={`flex items-center justify-between p-4 border-b lg:hidden flex-shrink-0 ${
+              isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+            }`}>
+              <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Support Engineer Portal</span>
+              <button onClick={onClose} className={`p-1 ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Support Engineer Navigation Items */}
+          <div className="pt-4 px-3 flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+            
+            {/* 1. Support Requests (Tier-1 Helpdesk Workspace) */}
+            {(() => {
+              const isActive = location.pathname === '/admin/support-requests' || location.pathname === '/owner/support-requests';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/support-requests');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <span>Support Requests</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-red-500/10 text-red-500 border border-red-500/20">
+                    Tier-1 Helpdesk
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* 2. Developer Bug Queue (Dev Escalations Portal) */}
+            {(() => {
+              const isActive = location.pathname === '/admin/developer-bugs';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/developer-bugs');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    <span>Developer Bug Queue</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                    Dev Escalations
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* 3. Support Analytics (SLA & Velocity Monitor) */}
+            {(() => {
+              const isActive = location.pathname === '/admin/support-analytics' || location.pathname === '/admin/support-dashboard';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/support-analytics');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Support Analytics</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                    SLA & Velocity
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* Salons & KYC */}
+            {(() => {
+              const isActive = location.pathname === '/admin/salons' || location.pathname === '/owner/salons' || location.pathname === '/owner/kyc';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/salons');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <svg
+                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span>Salons & KYC</span>
+                </button>
+              );
+            })()}
+
+            {/* KYC Queue */}
+            {(() => {
+              const isActive = location.pathname === '/admin/kyc-requests' || location.pathname === '/admin/kyc';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/kyc-requests');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <svg
+                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span>KYC Queue</span>
+                </button>
+              );
+            })()}
+
+          </div>
+
+          {/* Bottom Utility Actions Group */}
+          <div className={`p-3 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+            {(() => {
+              const isActive = location.pathname === '/owner/settings';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/owner/settings');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <img
+                    src={settingIcon}
+                    alt="Settings"
+                    className={`w-[18px] h-[18px] sidebar-icon ${isActive ? 'active-icon-glow' : 'opacity-70'}`}
+                  />
+                  <span>Settings</span>
+                </button>
+              );
+            })()}
+
+            <div className={`pt-2 border-t mt-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+              <button
+                onClick={handleLogout}
+                className={`w-full flex items-center space-x-3.5 px-4 py-2.5 text-[13px] font-bold transition-colors duration-150 cursor-pointer sidebar-btn ${
+                  isDarkMode ? 'text-zinc-300 hover:text-red-400 hover:bg-zinc-800/80' : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+                }`}
+              >
+                <img src={logoutIcon} alt="Logout" className="w-[18px] h-[18px] object-contain flex-shrink-0 sidebar-icon opacity-70" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </>
+      );
+    }
 
     if (isAdmin) {
       return (
@@ -272,16 +516,16 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
               );
             })()}
 
-            {/* Support Requests */}
+            {/* 1. Support Requests (Tier-1 Helpdesk Workspace) */}
             {(() => {
-              const isActive = location.pathname === '/owner/support-requests';
+              const isActive = location.pathname === '/admin/support-requests' || location.pathname === '/owner/support-requests';
               return (
                 <button
                   onClick={() => {
-                    navigate('/owner/support-requests');
+                    navigate('/admin/support-requests');
                     if (isMobile && onClose) onClose();
                   }}
-                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
                     isActive
                       ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
                       : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -290,16 +534,95 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                   {isActive && (
                     <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
                   )}
-                  <svg 
-                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span>Support Requests</span>
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <span>Support Requests</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-red-500/10 text-red-500 border border-red-500/20">
+                    Tier-1 Helpdesk
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* 2. Developer Bug Queue (Dev Escalations Portal) */}
+            {(() => {
+              const isActive = location.pathname === '/admin/developer-bugs';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/developer-bugs');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    <span>Developer Bug Queue</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                    Dev Escalations
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* 3. Support Analytics (SLA & Velocity Monitor) */}
+            {(() => {
+              const isActive = location.pathname === '/admin/support-analytics' || location.pathname === '/admin/support-dashboard';
+              return (
+                <button
+                  onClick={() => {
+                    navigate('/admin/support-analytics');
+                    if (isMobile && onClose) onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
+                    isActive
+                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                  )}
+                  <div className="flex items-center space-x-3.5">
+                    <svg 
+                      className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Support Analytics</span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                    SLA & Velocity
+                  </span>
                 </button>
               );
             })()}

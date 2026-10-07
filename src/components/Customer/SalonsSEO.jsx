@@ -80,7 +80,7 @@ export default function SalonsSEO() {
           })
         ).unwrap();
 
-        const salonList = results || [];
+        const salonList = Array.isArray(results) ? results : (results?.content || []);
         setSalons(salonList);
 
         // 2. Fetch prices and services for each salon to show real starting price and services list

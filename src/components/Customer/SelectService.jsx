@@ -33,6 +33,7 @@ import BillDetails from './BillDetails.jsx';
 import AppointmentBooked from './AppointmentBooked.jsx';
 import SEOFooter from '../common/SEOFooter.jsx';
 import { useDarkMode } from '../../context/DarkModeContext';
+import { openAddressDrawer } from '../../redux/slices/locationSlice';
 
 // SVG Category Logos from src/assets/Logos
 import hairLogo from '../../assets/Logos/Hair.svg';
@@ -292,8 +293,12 @@ const SelectService = () => {
     // --- HOME SERVICE STATES ---
     const [homeService, setHomeService] = useState(false);
     const [homeServiceCharges, setHomeServiceCharges] = useState(0);
+    const activeLocation = useSelector((state) => state.location?.activeLocation);
     const [customerAddress, setCustomerAddress] = useState(() => {
         try {
+            const loc = JSON.parse(localStorage.getItem('customerLocation'));
+            if (loc?.formattedAddress) return loc.formattedAddress;
+            if (loc?.displayAddress) return loc.displayAddress;
             const profile = JSON.parse(localStorage.getItem('customerProfile')) || {};
             return profile.address || '';
         } catch (e) {
@@ -301,6 +306,13 @@ const SelectService = () => {
         }
     });
     const [fetchingHomeCharges, setFetchingHomeCharges] = useState(false);
+
+    useEffect(() => {
+        if (!customerAddress && activeLocation) {
+            const addr = activeLocation.formattedAddress || activeLocation.displayAddress || [activeLocation.area, activeLocation.city].filter(Boolean).join(', ');
+            if (addr) setCustomerAddress(addr);
+        }
+    }, [activeLocation]);
 
     useEffect(() => {
         if (!selectedSlot && (!selectedExpert || selectedExpert === 'any')) {
@@ -1805,12 +1817,21 @@ const SelectService = () => {
                                                         <span className="text-[#FF0B01]">₹{homeServiceCharges}</span>
                                                     </div>
                                                 )}
-                                                <div className="flex flex-col gap-1">
-                                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">{t('book_service.delivery_address', 'Delivery Address')} <span className="text-[#FF0B01] font-black">*</span></label>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex justify-between items-center">
+                                                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-0.5">{t('book_service.delivery_address', 'Delivery Address')} <span className="text-[#FF0B01] font-black">*</span></label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => dispatch(openAddressDrawer())}
+                                                            className="text-[10px] font-bold text-[#FF0B01] hover:underline flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <MapPin className="w-3 h-3" /> Change / Saved
+                                                        </button>
+                                                    </div>
                                                     <textarea
                                                         rows={2}
-                                                        value={homeAddress}
-                                                        onChange={(e) => setHomeAddress(e.target.value)}
+                                                        value={customerAddress}
+                                                        onChange={(e) => setCustomerAddress(e.target.value)}
                                                         placeholder={t('book_service.address_placeholder', 'Enter complete home address')}
                                                         className="w-full text-xs font-semibold p-3 border border-slate-200 rounded-xl outline-none focus:border-[#FF0B01] transition-all bg-slate-50"
                                                     />
