@@ -211,14 +211,15 @@ const Settings = () => {
             setIsDetectingLocation(true);
             toast("📍 Detecting GPS coordinates... Please ensure you are inside your salon!", { icon: "📍", duration: 3000 });
 
-            const coords = await searchService.detectCoordinates(4000);
+            const coords = await searchService.detectCoordinates(10000);
             const { latitude, longitude, isIpFallback } = coords;
 
-            const result = await searchService.reverseGeocode(latitude, longitude);
+            const result = await searchService.reverseGeocode(latitude, longitude, { preferGoogle: true, provider: 'google' });
             if (result.city || result.area) {
                 setIsUserTypingCity(false);
                 setIsUserTypingArea(false);
                 setIsUserTypingLandmark(false);
+                const resolvedLandmark = (typeof result.landmark === 'object' ? (result.landmark?.title || result.landmark?.name || '') : (result.landmark || ''));
                 setSalonProfile(prev => ({
                     ...prev,
                     latitude: latitude,
@@ -226,7 +227,7 @@ const Settings = () => {
                     state: result.stateEnum || prev.state,
                     cityName: result.city || prev.cityName,
                     areaName: result.area || prev.areaName,
-                    landmark: result.landmark || prev.landmark
+                    landmark: resolvedLandmark || prev.landmark
                 }));
 
                 if (result.nearbyLandmarks && result.nearbyLandmarks.length > 0) {
@@ -251,6 +252,11 @@ const Settings = () => {
         setIsUserTypingArea(false);
         setIsUserTypingLandmark(false);
         const resolvedLandmark = (typeof loc.landmark === 'object' ? (loc.landmark?.title || '') : (loc.landmark || ''));
+        const combinedSpecificAddress = loc.specificAddress || [
+            loc.houseFlatNo ? String(loc.houseFlatNo).trim() : null,
+            loc.buildingName ? String(loc.buildingName).trim() : null
+        ].filter(Boolean).join(', ');
+
         setSalonProfile(prev => ({
             ...prev,
             latitude: loc.latitude,
@@ -259,6 +265,7 @@ const Settings = () => {
             cityName: loc.cityName || prev.cityName,
             areaName: loc.areaName || prev.areaName,
             landmark: resolvedLandmark || prev.landmark,
+            specificAddress: combinedSpecificAddress || prev.specificAddress || '',
             address: loc.formattedAddress || prev.address
         }));
         toast.success(`📍 Salon location updated: ${loc.cityName}${loc.areaName ? `, ${loc.areaName}` : ''}`);
@@ -1822,6 +1829,9 @@ const Settings = () => {
                         onConfirm={handleConfirmMapLocation}
                         initialLat={salonProfile.latitude || null}
                         initialLng={salonProfile.longitude || null}
+                        initialLandmark={typeof salonProfile.landmark === 'string' ? salonProfile.landmark : (salonProfile.landmark?.title || '')}
+                        initialHouseFlatNo={salonProfile.specificAddress ? salonProfile.specificAddress.split(',')[0]?.trim() : ''}
+                        initialBuildingName={salonProfile.specificAddress && salonProfile.specificAddress.includes(',') ? salonProfile.specificAddress.split(',').slice(1).join(',').trim() : ''}
                         title="Update Salon Entrance Pin"
                         subtitle="Position the pin directly on your salon's main entrance door"
                         confirmButtonText="Update Salon Location"

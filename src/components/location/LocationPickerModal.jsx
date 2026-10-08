@@ -11,6 +11,9 @@ export default function LocationPickerModal({
   onConfirm,
   initialLat = null,
   initialLng = null,
+  initialHouseFlatNo = '',
+  initialBuildingName = '',
+  initialLandmark = '',
   title = "Pin Exact Location",
   subtitle = "Drag the map to place the pin directly on the entrance",
   confirmButtonText = "Confirm Location",
@@ -109,8 +112,15 @@ export default function LocationPickerModal({
         setCoords({ lat: null, lng: null });
       }
       setIsPinMoved(false);
+
+      setAddressDetails(prev => ({
+        ...prev,
+        houseFlatNo: initialHouseFlatNo || prev.houseFlatNo || '',
+        buildingName: initialBuildingName || prev.buildingName || '',
+        landmark: (typeof initialLandmark === 'string' ? initialLandmark : (initialLandmark?.title || '')) || prev.landmark || ''
+      }));
     }
-  }, [isOpen, initialLat, initialLng]);
+  }, [isOpen, initialLat, initialLng, initialHouseFlatNo, initialBuildingName, initialLandmark]);
 
   // Initialize or re-center map when modal opens
   useEffect(() => {
@@ -195,7 +205,7 @@ export default function LocationPickerModal({
               setIsLocatingUser(false);
               toast("GPS location blocked or unavailable. Please drag the pin or search your area.", { icon: '📍' });
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
           );
         } else {
           toast.error("Geolocation is not supported by your browser");
@@ -270,7 +280,7 @@ export default function LocationPickerModal({
         toast.error("Could not retrieve GPS location. Please drag map manually.");
         setIsLocatingUser(false);
       },
-      { enableHighAccuracy: true, timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -349,6 +359,11 @@ export default function LocationPickerModal({
       return;
     }
 
+    const combinedSpecificAddress = [
+      addressDetails.houseFlatNo ? String(addressDetails.houseFlatNo).trim() : null,
+      addressDetails.buildingName ? String(addressDetails.buildingName).trim() : null
+    ].filter(Boolean).join(', ');
+
     const payload = {
       latitude: finalLat,
       longitude: finalLng,
@@ -359,6 +374,7 @@ export default function LocationPickerModal({
       landmark: addressDetails.landmark,
       houseFlatNo: addressDetails.houseFlatNo,
       buildingName: addressDetails.buildingName,
+      specificAddress: combinedSpecificAddress,
       addressType: addressDetails.addressType,
       formattedAddress: addressDetails.formattedAddress || 
         `${addressDetails.houseFlatNo ? addressDetails.houseFlatNo + ', ' : ''}${addressDetails.buildingName ? addressDetails.buildingName + ', ' : ''}${addressDetails.areaName ? addressDetails.areaName + ', ' : ''}${addressDetails.cityName || ''}`

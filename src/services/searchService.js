@@ -478,6 +478,117 @@ export const matchesQueryFuzzy = (targetText, queryText) => {
   return false;
 };
 
+/**
+ * Rate Limiter, Cache & Circuit Breaker for Ola Maps API calls
+ * Protects against 429 (Too Many Requests) and quota limits by:
+ * 1. Strict Sliding Window: Maximum 4 requests per rolling 60-second window (1 minute).
+ * 2. Beyond 4 req/min, seamlessly falls back to free Photon Komoot with zero user lag.
+ * 3. Spatial caching for 2 minutes (~11m bucket) so repeat pin drops don't consume quota.
+ * 4. In-flight deduplication prevents redundant simultaneous HTTP calls.
+ * 5. Circuit breaker: if a 429 is received from Ola Maps, cools down for 20s.
+ */
+class OlaRateLimiter {
+  constructor() {
+    this.maxRequestsPerMinute = 4; // 4 requests per minute
+    this.windowMs = 60000; // 60 seconds rolling window
+    this.requestTimestamps = [];
+    this.minIntervalMs = 1000; // Enforce at least 1s gap between outbound calls
+    this.lastRequestTime = 0;
+    this.circuitBreakerCooldownMs = 20000; // 20s cooldown on 429
+    this.circuitBreakerUntil = 0;
+    this.cacheTtlMs = 120000; // 2 minutes
+    this.maxCacheSize = 60;
+    this.cache = new Map();
+    this.inFlight = new Map();
+    this.queue = [];
+    this.isProcessing = false;
+  }
+
+  getCacheKey(lat, lng) {
+    if (lat === null || lat === undefined || lng === null || lng === undefined) return '';
+    return `${Number(lat).toFixed(4)},${Number(lng).toFixed(4)}`;
+  }
+
+  getCached(key) {
+    if (!key || !this.cache.has(key)) return null;
+    const entry = this.cache.get(key);
+    if (Date.now() - entry.timestamp > this.cacheTtlMs) {
+      this.cache.delete(key);
+      return null;
+    }
+    return entry.data;
+  }
+
+  setCached(key, data) {
+    if (!key || !data) return;
+    if (this.cache.size >= this.maxCacheSize) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) this.cache.delete(oldestKey);
+    }
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  tripCircuitBreaker(reason = 'Rate limit 429') {
+    this.circuitBreakerUntil = Date.now() + this.circuitBreakerCooldownMs;
+    console.warn(`[OlaRateLimiter] Circuit breaker tripped (${reason}). Cooling down for ${this.circuitBreakerCooldownMs / 1000}s. Falling back to alternative providers.`);
+  }
+
+  isCircuitOpen() {
+    return Date.now() < this.circuitBreakerUntil;
+  }
+
+  canMakeRequest() {
+    if (this.isCircuitOpen()) return false;
+    const now = Date.now();
+    this.requestTimestamps = this.requestTimestamps.filter(t => now - t < this.windowMs);
+    return this.requestTimestamps.length < this.maxRequestsPerMinute;
+  }
+
+  recordRequest() {
+    this.requestTimestamps.push(Date.now());
+  }
+
+  async schedule(fn) {
+    return new Promise((resolve, reject) => {
+      if (this.queue.length >= 3) {
+        const dropped = this.queue.shift();
+        dropped.resolve(null);
+      }
+      this.queue.push({ fn, resolve, reject });
+      this.processQueue();
+    });
+  }
+
+  async processQueue() {
+    if (this.isProcessing || this.queue.length === 0) return;
+    this.isProcessing = true;
+
+    while (this.queue.length > 0) {
+      const now = Date.now();
+      const elapsed = now - this.lastRequestTime;
+      if (elapsed < this.minIntervalMs) {
+        await new Promise(r => setTimeout(r, this.minIntervalMs - elapsed));
+      }
+
+      const item = this.queue.shift();
+      if (!item) break;
+
+      this.lastRequestTime = Date.now();
+      this.recordRequest();
+      try {
+        const res = await item.fn();
+        item.resolve(res);
+      } catch (err) {
+        item.reject(err);
+      }
+    }
+
+    this.isProcessing = false;
+  }
+}
+
+const olaRateLimiter = new OlaRateLimiter();
+
 const searchService = {
   /**
    * Search for city names from backend
@@ -814,7 +925,7 @@ const searchService = {
    * @param {number} [timeoutMs=6000]
    * @returns {Promise<{latitude: number, longitude: number, isIpFallback: boolean}>}
    */
-  detectCoordinates: async (timeoutMs = 6000) => {
+  detectCoordinates: async (timeoutMs = 10000) => {
     return new Promise((resolve, reject) => {
       let settled = false;
 
@@ -873,6 +984,7 @@ const searchService = {
         return;
       }
 
+      // Try high-accuracy GPS first with maximumAge: 0 (bypasses browser location caching)
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           if (settled) return;
@@ -881,21 +993,40 @@ const searchService = {
           resolve({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
             isIpFallback: false
           });
         },
-        async () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          const ipCoords = await fallbackToIp();
-          if (ipCoords) {
-            resolve(ipCoords);
-          } else {
-            reject(new Error("Location access denied or unavailable."));
-          }
+        async (geoErr) => {
+          console.warn("High-accuracy geolocation failed, attempting standard accuracy:", geoErr);
+          // If high accuracy fails or times out, try standard accuracy with maximumAge: 0 before IP fallback
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              resolve({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                isIpFallback: false
+              });
+            },
+            async () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              const ipCoords = await fallbackToIp();
+              if (ipCoords) {
+                resolve(ipCoords);
+              } else {
+                reject(new Error("Location access denied or unavailable."));
+              }
+            },
+            { enableHighAccuracy: false, timeout: 4000, maximumAge: 0 }
+          );
         },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+        { enableHighAccuracy: true, timeout: timeoutMs > 3000 ? timeoutMs - 1500 : 6000, maximumAge: 0 }
       );
     });
   },
@@ -1007,120 +1138,164 @@ const searchService = {
   },
 
   /**
-   * Reverse geocode using Ola Maps API if key is available
+   * Reverse geocode using Ola Maps API with rate limiting, cache, and circuit breaker
    */
   reverseGeocodeOla: async (lat, lng, apiKey) => {
-    try {
-      const url = `https://api.olamaps.io/places/v1/reverse-geocode`;
-      const response = await axios.get(url, {
-        params: {
-          latlng: `${lat},${lng}`,
-          api_key: apiKey
-        }
-      });
+    if (!apiKey) return null;
 
-      const results = response.data?.results || [];
-      if (results.length === 0) return null;
-
-      let area = '';
-      let city = '';
-      let state = '';
-      let pincode = '';
-      let landmark = '';
-
-      const landmarkItems = [];
-      const seenTitles = new Set();
-
-      const addLandmark = (title, subtitle = '', distance = '', type = '') => {
-        if (!title || typeof title !== 'string') return;
-        const clean = title.trim();
-        const lower = clean.toLowerCase();
-        if (clean.length < 2 || ['pune', 'mumbai', 'india', 'maharashtra', 'delhi', 'bangalore', 'bengaluru'].includes(lower)) return;
-        if (seenTitles.has(lower)) return;
-        seenTitles.add(lower);
-        landmarkItems.push({
-          title: clean,
-          subtitle: subtitle ? subtitle.trim() : '',
-          distance: distance ? `${distance}m away` : '',
-          type: type || 'landmark'
-        });
-      };
-
-      for (const res of results) {
-        // Extract landmark phrases like "Near ...", "Opp ...", "Behind ..." from formatted_address
-        if (res.formatted_address) {
-          const match = res.formatted_address.match(/\b((?:Near|Opp|Opposite|Behind|Beside|Next to)\s+[^,]+)/i);
-          if (match && match[1]) {
-            addLandmark(match[1].trim(), res.name || res.formatted_address, res.distance_meters, 'landmark');
-          }
-        }
-
-        // Collect venue / building names
-        if (res.name && typeof res.name === 'string') {
-          const primaryType = Array.isArray(res.types) && res.types[0] ? res.types[0] : 'venue';
-          addLandmark(res.name, res.formatted_address, res.distance_meters, primaryType);
-        }
-
-        let compLocality = '';
-        let compAdmin3 = ''; // Taluka / Sub-district (e.g. Kopargaon, Haveli)
-        let compAdmin2 = ''; // District (e.g. Ahmednagar, Pune)
-        let compSublocality = '';
-        let compNeighborhood = '';
-
-        for (const comp of res.address_components || []) {
-          const types = comp.types || [];
-          if (types.includes('locality')) compLocality = comp.long_name;
-          if (types.includes('administrative_area_level_3')) compAdmin3 = comp.long_name;
-          if (types.includes('administrative_area_level_2')) compAdmin2 = comp.long_name;
-          if (types.includes('sublocality_level_1') || types.includes('sublocality')) compSublocality = comp.long_name;
-          if (types.includes('neighborhood') || types.includes('sublocality_level_2')) compNeighborhood = comp.long_name;
-
-          if (!state && types.includes('administrative_area_level_1')) {
-            state = comp.long_name;
-          }
-          if (!pincode && types.includes('postal_code')) {
-            pincode = comp.long_name;
-          }
-          if (!landmark && (types.includes('point_of_interest') || types.includes('establishment') || types.includes('premise'))) {
-            landmark = comp.long_name;
-          }
-        }
-
-        if (!city) {
-          // Priority: Locality (actual city/town) > Admin Level 3 (taluka) > Admin Level 2 (district)
-          city = compLocality || compAdmin3 || compAdmin2 || '';
-        }
-        if (!area) {
-          area = compSublocality || compNeighborhood || (compLocality && compLocality !== city ? compLocality : '');
-        }
-      }
-
-      if (!landmark && landmarkItems.length > 0) {
-        // Prefer "Near ..." or "Opp ..." landmark if found
-        const preferred = landmarkItems.find(l => /^near\s+/i.test(l.title)) || landmarkItems[0];
-        landmark = preferred.title;
-      }
-
-      const formattedAddress = results[0]?.formatted_address || '';
-      const stateEnum = getStateFromStateName(state) || getStateFromCityName(city) || null;
-
-      return {
-        city: city.trim(),
-        area: area.trim(),
-        landmark: landmark.trim(),
-        nearbyLandmarks: landmarkItems,
-        stateName: state.trim(),
-        stateEnum: stateEnum,
-        pincode: pincode.trim(),
-        formattedAddress: formattedAddress,
-        latitude: lat,
-        longitude: lng,
-        source: 'olamaps'
-      };
-    } catch (err) {
-      console.warn('Ola Maps reverse geocode error:', err);
+    // 1. Check rate limit (max 4 req/min) & circuit breaker (fall back immediately if limit reached)
+    if (!olaRateLimiter.canMakeRequest()) {
       return null;
     }
+
+    // 2. Check local memory cache (~11m bucket, 2 min TTL)
+    const cacheKey = olaRateLimiter.getCacheKey(lat, lng);
+    const cached = olaRateLimiter.getCached(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 3. Deduplicate simultaneous in-flight calls for identical coordinates
+    if (cacheKey && olaRateLimiter.inFlight.has(cacheKey)) {
+      return await olaRateLimiter.inFlight.get(cacheKey);
+    }
+
+    // 4. Rate-limit and throttle request execution
+    const requestPromise = olaRateLimiter.schedule(async () => {
+      try {
+        const url = `https://api.olamaps.io/places/v1/reverse-geocode`;
+        const response = await axios.get(url, {
+          params: {
+            latlng: `${lat},${lng}`,
+            api_key: apiKey
+          },
+          timeout: 6000
+        });
+
+        const results = response.data?.results || [];
+        if (results.length === 0) return null;
+
+        let area = '';
+        let city = '';
+        let state = '';
+        let pincode = '';
+        let landmark = '';
+
+        const landmarkItems = [];
+        const seenTitles = new Set();
+
+        const addLandmark = (title, subtitle = '', distance = '', type = '') => {
+          if (!title || typeof title !== 'string') return;
+          const clean = title.trim();
+          const lower = clean.toLowerCase();
+          if (clean.length < 2 || ['pune', 'mumbai', 'india', 'maharashtra', 'delhi', 'bangalore', 'bengaluru'].includes(lower)) return;
+          if (seenTitles.has(lower)) return;
+          seenTitles.add(lower);
+          landmarkItems.push({
+            title: clean,
+            name: clean,
+            subtitle: subtitle ? subtitle.trim() : '',
+            distance: distance ? `${distance}m away` : '',
+            type: type || 'landmark'
+          });
+        };
+
+        for (const res of results) {
+          // Extract landmark phrases like "Near ...", "Opp ...", "Behind ..." from formatted_address
+          if (res.formatted_address) {
+            const match = res.formatted_address.match(/\b((?:Near|Opp|Opposite|Behind|Beside|Next to)\s+[^,]+)/i);
+            if (match && match[1]) {
+              addLandmark(match[1].trim(), res.name || res.formatted_address, res.distance_meters, 'landmark');
+            }
+          }
+
+          // Collect venue / building names
+          if (res.name && typeof res.name === 'string') {
+            const primaryType = Array.isArray(res.types) && res.types[0] ? res.types[0] : 'venue';
+            addLandmark(res.name, res.formatted_address, res.distance_meters, primaryType);
+          }
+
+          let compLocality = '';
+          let compAdmin3 = ''; // Taluka / Sub-district (e.g. Kopargaon, Haveli)
+          let compAdmin2 = ''; // District (e.g. Ahmednagar, Pune)
+          let compSublocality = '';
+          let compNeighborhood = '';
+
+          for (const comp of res.address_components || []) {
+            const types = comp.types || [];
+            if (types.includes('locality')) compLocality = comp.long_name;
+            if (types.includes('administrative_area_level_3')) compAdmin3 = comp.long_name;
+            if (types.includes('administrative_area_level_2')) compAdmin2 = comp.long_name;
+            if (types.includes('sublocality_level_1') || types.includes('sublocality')) compSublocality = comp.long_name;
+            if (types.includes('neighborhood') || types.includes('sublocality_level_2')) compNeighborhood = comp.long_name;
+
+            if (!state && types.includes('administrative_area_level_1')) {
+              state = comp.long_name;
+            }
+            if (!pincode && types.includes('postal_code')) {
+              pincode = comp.long_name;
+            }
+            if (!landmark && (types.includes('point_of_interest') || types.includes('establishment') || types.includes('premise'))) {
+              landmark = comp.long_name;
+            }
+          }
+
+          if (!city) {
+            // Priority: Locality (actual city/town) > Admin Level 3 (taluka) > Admin Level 2 (district)
+            city = compLocality || compAdmin3 || compAdmin2 || '';
+          }
+          if (!area) {
+            area = compSublocality || compNeighborhood || (compLocality && compLocality !== city ? compLocality : '');
+          }
+        }
+
+        if (!landmark && landmarkItems.length > 0) {
+          // Prefer "Near ..." or "Opp ..." landmark if found
+          const preferred = landmarkItems.find(l => /^near\s+/i.test(l.title)) || landmarkItems[0];
+          landmark = preferred.title;
+        }
+
+        const formattedAddress = results[0]?.formatted_address || '';
+        const stateEnum = getStateFromStateName(state) || getStateFromCityName(city) || null;
+
+        const resultObj = {
+          city: city.trim(),
+          area: area.trim(),
+          landmark: landmark.trim(),
+          nearbyLandmarks: landmarkItems,
+          stateName: state.trim(),
+          stateEnum: stateEnum,
+          pincode: pincode.trim(),
+          formattedAddress: formattedAddress,
+          latitude: lat,
+          longitude: lng,
+          source: 'olamaps'
+        };
+
+        if (cacheKey && (resultObj.city || resultObj.area)) {
+          olaRateLimiter.setCached(cacheKey, resultObj);
+        }
+
+        return resultObj;
+      } catch (err) {
+        if (err?.response?.status === 429) {
+          olaRateLimiter.tripCircuitBreaker('HTTP 429 Too Many Requests');
+        } else {
+          console.warn('Ola Maps reverse geocode error:', err?.message || err);
+        }
+        return null;
+      } finally {
+        if (cacheKey) {
+          olaRateLimiter.inFlight.delete(cacheKey);
+        }
+      }
+    });
+
+    if (cacheKey) {
+      olaRateLimiter.inFlight.set(cacheKey, requestPromise);
+    }
+
+    return await requestPromise;
   },
 
   /**
