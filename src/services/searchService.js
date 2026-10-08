@@ -1313,9 +1313,13 @@ const searchService = {
         if ((!isRoad && !isAreaBoundary) || isChowkOrSignal) {
           if (!seenNames.has(nameLower)) {
             seenNames.add(nameLower);
+            const typeLabel = p.osm_value ? p.osm_value.replace(/_/g, ' ') : (p.osm_key || 'Landmark');
+            const sub = p.street || (typeLabel !== 'Landmark' ? typeLabel : '');
             detectedLandmarks.push({
+              title: name,
               name: name,
-              type: p.osm_value || p.osm_key || 'Landmark',
+              subtitle: sub,
+              type: typeLabel,
               street: p.street || ''
             });
           }
@@ -1498,7 +1502,9 @@ const searchService = {
         }
 
         results.push({
+          title: name.trim(),
           name: name.trim(),
+          subtitle: details,
           type: props.osm_value || props.type || 'landmark',
           details: details,
           rankScore: rankScore

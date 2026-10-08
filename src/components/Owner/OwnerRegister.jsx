@@ -300,17 +300,18 @@ const OwnerRegister = () => {
     setIsUserTypingCity(false);
     setIsUserTypingArea(false);
     setIsUserTypingLandmark(false);
+    const cleanLandmark = typeof loc.landmark === 'string' ? loc.landmark : (loc.landmark?.title || '');
     setFormData(prev => ({
       ...prev,
       latitude: loc.latitude,
       longitude: loc.longitude,
       state: (loc.stateName ? getStateFromStateName(loc.stateName) : null) || (loc.cityName ? getStateFromCityName(loc.cityName) : null) || prev.state,
-      cityName: loc.cityName || prev.cityName,
-      areaName: loc.areaName || prev.areaName,
-      landmark: loc.landmark || prev.landmark,
-      address: loc.formattedAddress || prev.address
+      cityName: loc.cityName || prev.cityName || '',
+      areaName: loc.areaName || prev.areaName || '',
+      landmark: cleanLandmark || prev.landmark || '',
+      address: loc.formattedAddress || prev.address || ''
     }));
-    toast.success(`📍 Salon entrance location set: ${loc.cityName}${loc.areaName ? `, ${loc.areaName}` : ''}`);
+    toast.success(`📍 Salon entrance location set: ${loc.cityName || ''}${loc.areaName ? `, ${loc.areaName}` : ''}`);
   };
 
   const handleInputChange = (e) => {
@@ -372,7 +373,8 @@ const OwnerRegister = () => {
   // Autocomplete landmark search
   useEffect(() => {
     if (!isUserTypingLandmark) return;
-    if (!formData.landmark || formData.landmark.trim().length < 2) {
+    const landmarkStr = typeof formData.landmark === 'object' ? (formData.landmark?.title || '') : String(formData.landmark || '');
+    if (!landmarkStr || landmarkStr.trim().length < 2) {
       setLandmarkSuggestions([]);
       return;
     }
@@ -572,10 +574,10 @@ const OwnerRegister = () => {
 
     const stateDisplay = formData.state ? getStateDisplayName(formData.state) : '';
     const formattedFullAddress = [
-      formData.specificAddress ? formData.specificAddress.trim() : null,
-      formData.landmark ? `near ${formData.landmark.trim()}` : null,
-      formData.areaName ? formData.areaName.trim() : null,
-      formData.cityName ? formData.cityName.trim() : null,
+      formData.specificAddress ? String(formData.specificAddress).trim() : null,
+      formData.landmark ? `near ${String(typeof formData.landmark === 'object' ? (formData.landmark?.title || '') : formData.landmark).trim()}` : null,
+      formData.areaName ? String(formData.areaName).trim() : null,
+      formData.cityName ? String(formData.cityName).trim() : null,
       stateDisplay || null
     ].filter(Boolean).join(', ');
 
@@ -1112,13 +1114,13 @@ const OwnerRegister = () => {
                                 ))}
 
                                 {/* Custom Village / Area selection option if typed name differs from suggestions */}
-                                {formData.areaName.trim().length >= 2 && !areaSuggestions.some(a => a.name.toLowerCase() === formData.areaName.trim().toLowerCase()) && (
+                                {(formData.areaName || '').trim().length >= 2 && !areaSuggestions.some(a => (a?.name || '').toLowerCase() === (formData.areaName || '').trim().toLowerCase()) && (
                                   <div
                                     onClick={() => {
                                       setIsUserTypingArea(false);
                                       setFormData(prev => ({ 
                                         ...prev, 
-                                        areaName: formData.areaName.trim(),
+                                        areaName: (formData.areaName || '').trim(),
                                         areaDistrict: formData.cityName || ''
                                       }));
                                       setAreaSuggestions([]);
@@ -1128,7 +1130,7 @@ const OwnerRegister = () => {
                                   >
                                     <div className="flex flex-col">
                                       <span className="font-extrabold flex items-center gap-1.5">
-                                        <span>📍</span> Use &quot;{formData.areaName.trim()}&quot; as Village / Area
+                                        <span>📍</span> Use &quot;{(formData.areaName || '').trim()}&quot; as Village / Area
                                       </span>
                                       <span className="text-[10px] text-gray-400 font-medium">Click to confirm custom village in {formData.cityName}</span>
                                     </div>
@@ -1143,7 +1145,7 @@ const OwnerRegister = () => {
                                     setIsUserTypingArea(false);
                                     setFormData(prev => ({ 
                                       ...prev, 
-                                      areaName: formData.areaName.trim(),
+                                      areaName: (formData.areaName || '').trim(),
                                       areaDistrict: formData.cityName || ''
                                     }));
                                     setAreaSuggestions([]);
@@ -1153,7 +1155,7 @@ const OwnerRegister = () => {
                                 >
                                   <div className="flex flex-col">
                                     <span className="font-extrabold flex items-center gap-1.5">
-                                      <span>📍</span> Use &quot;{formData.areaName.trim()}&quot; as Village / Area
+                                      <span>📍</span> Use &quot;{(formData.areaName || '').trim()}&quot; as Village / Area
                                     </span>
                                     <span className="text-[10px] text-gray-500 font-medium mt-0.5">Click to confirm custom village in {formData.cityName}</span>
                                   </div>
@@ -1270,10 +1272,10 @@ const OwnerRegister = () => {
                         <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">📍 Formatted Address Preview</span>
                         <p className="text-xs font-bold text-gray-800 leading-relaxed">
                           {[
-                            formData.specificAddress ? formData.specificAddress.trim() : null,
-                            formData.landmark ? `near ${formData.landmark.trim()}` : null,
-                            formData.areaName ? formData.areaName.trim() : null,
-                            formData.cityName ? formData.cityName.trim() : null,
+                            formData.specificAddress ? String(formData.specificAddress).trim() : null,
+                            formData.landmark ? `near ${String(typeof formData.landmark === 'object' ? (formData.landmark?.title || '') : formData.landmark).trim()}` : null,
+                            formData.areaName ? String(formData.areaName).trim() : null,
+                            formData.cityName ? String(formData.cityName).trim() : null,
                             formData.state ? getStateDisplayName(formData.state) : null
                           ].filter(Boolean).join(', ')}
                         </p>

@@ -369,17 +369,19 @@ const SalonsListing = () => {
     }, []);
 
     const handleSearch = () => {
-        if (!cityName.trim() && (!userCoords.latitude || !userCoords.longitude)) {
+        const cleanCity = (cityName || '').trim();
+        const cleanArea = (areaName || '').trim();
+        if (!cleanCity && (!userCoords.latitude || !userCoords.longitude)) {
             toast.error('Please enter a city name');
             return;
         }
-        if (cityName.trim()) {
-            sessionStorage.setItem('lastSearchedCity', cityName.trim());
-            sessionStorage.setItem('lastSearchedArea', areaName.trim());
+        if (cleanCity) {
+            sessionStorage.setItem('lastSearchedCity', cleanCity);
+            sessionStorage.setItem('lastSearchedArea', cleanArea);
         }
         setPage(0);
         const effectiveCoords = (userCoords.latitude && userCoords.longitude) ? userCoords : getInitialCoords();
-        fetchSalons(cityName.trim(), areaName.trim(), 0, category, effectiveCoords, selectedRadius);
+        fetchSalons(cleanCity, cleanArea, 0, category, effectiveCoords, selectedRadius);
     };
 
     const handleRadiusChange = (newRadius) => {
@@ -722,9 +724,11 @@ const SalonsListing = () => {
                                         onChange={(e) => {
                                             const newCat = e.target.value;
                                             setCategory(newCat);
-                                            if (cityName.trim()) {
+                                            const cleanCity = (cityName || '').trim();
+                                            const cleanArea = (areaName || '').trim();
+                                            if (cleanCity) {
                                                 setPage(0);
-                                                fetchSalons(cityName.trim(), areaName.trim(), 0, newCat);
+                                                fetchSalons(cleanCity, cleanArea, 0, newCat);
                                             }
                                         }}
                                         className={`w-full outline-none text-sm font-medium bg-transparent cursor-pointer appearance-none text-left transition-colors duration-300 ${isDark ? 'text-white [&>option]:bg-gray-900 [&>option]:text-white' : 'text-gray-700 [&>option]:bg-white [&>option]:text-gray-700'}`}

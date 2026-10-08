@@ -64,14 +64,31 @@ export default function LocationPickerModal({
 
   // Filter landmarks based on search query
   const filteredLandmarks = useMemo(() => {
-    if (!landmarkSearch.trim()) return nearbyLandmarks;
-    const q = landmarkSearch.toLowerCase().trim();
-    return nearbyLandmarks.filter(lm => {
-      const title = (typeof lm === 'string' ? lm : lm.title) || '';
-      const subtitle = (typeof lm === 'string' ? '' : lm.subtitle) || '';
+    const rawSearch = typeof landmarkSearch === 'string' ? landmarkSearch : (landmarkSearch?.title || landmarkSearch?.name || '');
+    const getLmTitle = (lm) => (typeof lm === 'string' ? lm : (lm?.title || lm?.name || ''));
+    const getLmSub = (lm) => (typeof lm === 'string' ? '' : (lm?.subtitle || lm?.details || lm?.street || (lm?.type ? String(lm.type).replace(/_/g, ' ') : '')));
+
+    const valid = nearbyLandmarks.filter(lm => Boolean(getLmTitle(lm)?.trim()));
+    if (!rawSearch.trim()) return valid;
+
+    const q = rawSearch.toLowerCase().trim();
+    const matched = valid.filter(lm => {
+      const title = getLmTitle(lm);
+      const subtitle = getLmSub(lm);
       return title.toLowerCase().includes(q) || subtitle.toLowerCase().includes(q);
     });
-  }, [nearbyLandmarks, landmarkSearch]);
+
+    const currentSelected = typeof addressDetails.landmark === 'string' 
+      ? addressDetails.landmark 
+      : (addressDetails.landmark?.title || addressDetails.landmark?.name || '');
+
+    // If query matches current selection and gave no matches, show all valid so user can choose from list
+    if (matched.length === 0 && rawSearch.trim().toLowerCase() === currentSelected.trim().toLowerCase()) {
+      return valid;
+    }
+
+    return matched;
+  }, [nearbyLandmarks, landmarkSearch, addressDetails.landmark]);
 
   // Clean up Leaflet instance when modal closes or unmounts
   useEffect(() => {
@@ -205,13 +222,16 @@ export default function LocationPickerModal({
       setNearbyLandmarks(landmarksList);
       setIsPinMoved(false);
 
+      const firstLm = landmarksList[0];
+      const firstLmTitle = typeof firstLm === 'string' ? firstLm : (firstLm?.title || firstLm?.name || '');
+      const primaryLm = typeof res.landmark === 'string' ? res.landmark : (res.landmark?.title || res.landmark?.name || '');
+
       setAddressDetails(prev => ({
         ...prev,
         areaName: res.area || '',
         cityName: res.city || '',
         stateName: res.stateName || '',
-        pincode: res.pincode || '',
-        landmark: res.landmark || (landmarksList[0] || ''),
+        landmark: primaryLm || firstLmTitle || '',
         formattedAddress: res.formattedAddress || `${res.area ? res.area + ', ' : ''}${res.city || ''}`
       }));
 
@@ -561,7 +581,7 @@ export default function LocationPickerModal({
                 <input
                   type="text"
                   placeholder={nearbyLandmarks.length > 0 ? "Search detected landmarks or type custom..." : "e.g. Near Pawar Hospital, Opp Bank"}
-                  value={addressDetails.landmark}
+                  value={typeof addressDetails.landmark === 'string' ? addressDetails.landmark : (addressDetails.landmark?.title || addressDetails.landmark?.name || '')}
                   onFocus={() => {
                     setIsLandmarkDropdownOpen(true);
                     setLandmarkSearch(addressDetails.landmark || '');
@@ -576,7 +596,7 @@ export default function LocationPickerModal({
                 />
 
                 <div className="absolute right-2 top-2 flex items-center gap-0.5">
-                  {addressDetails.landmark && (
+                  {(typeof addressDetails.landmark === 'string' ? addressDetails.landmark : (addressDetails.landmark?.title || addressDetails.landmark?.name || '')) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -591,7 +611,12 @@ export default function LocationPickerModal({
                   {nearbyLandmarks.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setIsLandmarkDropdownOpen(!isLandmarkDropdownOpen)}
+                      onClick={() => {
+                        if (!isLandmarkDropdownOpen) {
+                          setLandmarkSearch('');
+                        }
+                        setIsLandmarkDropdownOpen(!isLandmarkDropdownOpen);
+                      }}
                       className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
                       <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isLandmarkDropdownOpen ? 'rotate-180' : ''}`} />
@@ -604,9 +629,10 @@ export default function LocationPickerModal({
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-2xl z-[1100] max-h-56 overflow-y-auto divide-y divide-gray-50 dark:divide-zinc-700/50 animate-in fade-in zoom-in-95 duration-150">
                     {filteredLandmarks.length > 0 ? (
                       filteredLandmarks.map((lm, idx) => {
-                        const title = typeof lm === 'string' ? lm : lm.title;
-                        const subtitle = typeof lm === 'string' ? '' : lm.subtitle;
-                        const distance = typeof lm === 'string' ? '' : lm.distance;
+                        const title = typeof lm === 'string' ? lm : (lm?.title || lm?.name || '');
+                        const subtitle = typeof lm === 'string' ? '' : (lm?.subtitle || lm?.details || lm?.street || (lm?.type ? String(lm.type).replace(/_/g, ' ') : ''));
+                        const distance = typeof lm === 'string' ? '' : (lm?.distance || '');
+                        if (!title.trim()) return null;
                         return (
                           <button
                             type="button"
@@ -649,30 +675,33 @@ export default function LocationPickerModal({
               </div>
 
               {/* Quick Clickable Chips */}
-              {nearbyLandmarks.length > 0 && (
+              {nearbyLandmarks.some(lm => Boolean((typeof lm === 'string' ? lm : (lm?.title || lm?.name))?.trim())) && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {nearbyLandmarks.slice(0, 4).map((lm, idx) => {
-                    const title = typeof lm === 'string' ? lm : lm.title;
-                    const isSelected = addressDetails.landmark === title;
-                    return (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => {
-                          setAddressDetails(prev => ({ ...prev, landmark: title }));
-                          setLandmarkSearch(title);
-                          setIsLandmarkDropdownOpen(false);
-                        }}
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                            : 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700 hover:border-red-400'
-                        }`}
-                      >
-                        + {title}
-                      </button>
-                    );
-                  })}
+                  {nearbyLandmarks
+                    .filter(lm => Boolean((typeof lm === 'string' ? lm : (lm?.title || lm?.name))?.trim()))
+                    .slice(0, 4)
+                    .map((lm, idx) => {
+                      const title = typeof lm === 'string' ? lm : (lm?.title || lm?.name || '');
+                      const isSelected = addressDetails.landmark === title;
+                      return (
+                        <button
+                          type="button"
+                          key={idx}
+                          onClick={() => {
+                            setAddressDetails(prev => ({ ...prev, landmark: title }));
+                            setLandmarkSearch(title);
+                            setIsLandmarkDropdownOpen(false);
+                          }}
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                              : 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700 hover:border-red-400'
+                          }`}
+                        >
+                          + {title}
+                        </button>
+                      );
+                    })}
                 </div>
               )}
             </div>

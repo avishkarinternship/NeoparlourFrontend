@@ -250,6 +250,7 @@ const Settings = () => {
         setIsUserTypingCity(false);
         setIsUserTypingArea(false);
         setIsUserTypingLandmark(false);
+        const resolvedLandmark = (typeof loc.landmark === 'object' ? (loc.landmark?.title || '') : (loc.landmark || ''));
         setSalonProfile(prev => ({
             ...prev,
             latitude: loc.latitude,
@@ -257,7 +258,7 @@ const Settings = () => {
             state: (loc.stateName ? getStateFromStateName(loc.stateName) : null) || (loc.cityName ? getStateFromCityName(loc.cityName) : null) || prev.state,
             cityName: loc.cityName || prev.cityName,
             areaName: loc.areaName || prev.areaName,
-            landmark: loc.landmark || prev.landmark,
+            landmark: resolvedLandmark || prev.landmark,
             address: loc.formattedAddress || prev.address
         }));
         toast.success(`📍 Salon location updated: ${loc.cityName}${loc.areaName ? `, ${loc.areaName}` : ''}`);
@@ -312,7 +313,8 @@ const Settings = () => {
     // Autocomplete landmark search (Photon Komoot API)
     useEffect(() => {
         if (!isUserTypingLandmark) return;
-        if (!salonProfile.landmark || salonProfile.landmark.trim().length < 2) {
+        const landmarkStr = typeof salonProfile.landmark === 'object' ? (salonProfile.landmark?.title || '') : String(salonProfile.landmark || '');
+        if (!landmarkStr || landmarkStr.trim().length < 2) {
             setLandmarkSuggestions([]);
             return;
         }
@@ -475,10 +477,10 @@ const Settings = () => {
 
             const stateDisplay = salonProfile.state ? getStateDisplayName(salonProfile.state) : '';
             const formattedAddress = [
-                salonProfile.specificAddress ? salonProfile.specificAddress.trim() : null,
-                salonProfile.landmark ? `(Near ${salonProfile.landmark.trim()})` : null,
-                salonProfile.areaName ? salonProfile.areaName.trim() : null,
-                salonProfile.cityName ? salonProfile.cityName.trim() : null,
+                salonProfile.specificAddress ? String(salonProfile.specificAddress).trim() : null,
+                salonProfile.landmark ? `(Near ${String(typeof salonProfile.landmark === 'object' ? (salonProfile.landmark?.title || '') : salonProfile.landmark).trim()})` : null,
+                salonProfile.areaName ? String(salonProfile.areaName).trim() : null,
+                salonProfile.cityName ? String(salonProfile.cityName).trim() : null,
                 stateDisplay || null
             ].filter(Boolean).join(', ');
 
@@ -1037,13 +1039,13 @@ const Settings = () => {
                                                                 ))}
 
                                                                 {/* Custom Village / Area selection option if typed name differs from suggestions */}
-                                                                {salonProfile.areaName.trim().length >= 2 && !areaSuggestions.some(a => a.name.toLowerCase() === salonProfile.areaName.trim().toLowerCase()) && (
+                                                                {(salonProfile.areaName || '').trim().length >= 2 && !areaSuggestions.some(a => (a?.name || '').toLowerCase() === (salonProfile.areaName || '').trim().toLowerCase()) && (
                                                                     <div
                                                                         onClick={() => {
                                                                             setIsUserTypingArea(false);
                                                                             setSalonProfile(prev => ({ 
                                                                                 ...prev, 
-                                                                                areaName: salonProfile.areaName.trim(),
+                                                                                areaName: (salonProfile.areaName || '').trim(),
                                                                                 areaDistrict: salonProfile.cityName || ''
                                                                             }));
                                                                             setAreaSuggestions([]);
@@ -1055,7 +1057,7 @@ const Settings = () => {
                                                                     >
                                                                         <div className="flex flex-col">
                                                                             <span className="font-extrabold flex items-center gap-1.5">
-                                                                                <span>📍</span> Use &quot;{salonProfile.areaName.trim()}&quot; as Village / Area
+                                                                                <span>📍</span> Use &quot;{(salonProfile.areaName || '').trim()}&quot; as Village / Area
                                                                             </span>
                                                                             <span className="text-[10px] text-gray-400 font-medium">Click to confirm custom village in {salonProfile.cityName}</span>
                                                                         </div>
@@ -1070,7 +1072,7 @@ const Settings = () => {
                                                                         setIsUserTypingArea(false);
                                                                         setSalonProfile(prev => ({ 
                                                                             ...prev, 
-                                                                            areaName: salonProfile.areaName.trim(),
+                                                                            areaName: (salonProfile.areaName || '').trim(),
                                                                             areaDistrict: salonProfile.cityName || ''
                                                                         }));
                                                                         setAreaSuggestions([]);
@@ -1082,7 +1084,7 @@ const Settings = () => {
                                                                 >
                                                                     <div className="flex flex-col">
                                                                         <span className="font-extrabold flex items-center gap-1.5">
-                                                                            <span>📍</span> Use &quot;{salonProfile.areaName.trim()}&quot; as Village / Area
+                                                                            <span>📍</span> Use &quot;{(salonProfile.areaName || '').trim()}&quot; as Village / Area
                                                                         </span>
                                                                         <span className="text-[10px] text-gray-400 font-medium mt-0.5">Click to confirm custom village in {salonProfile.cityName}</span>
                                                                     </div>
@@ -1181,10 +1183,10 @@ const Settings = () => {
                                                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1">📍 Formatted Address Preview</span>
                                                 <p className={`text-xs font-bold leading-relaxed ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
                                                     {[
-                                                        salonProfile.specificAddress ? salonProfile.specificAddress.trim() : null,
-                                                        salonProfile.landmark ? `(Near ${salonProfile.landmark.trim()})` : null,
-                                                        salonProfile.areaName ? salonProfile.areaName.trim() : null,
-                                                        salonProfile.cityName ? salonProfile.cityName.trim() : null,
+                                                        salonProfile.specificAddress ? String(salonProfile.specificAddress).trim() : null,
+                                                        salonProfile.landmark ? `(Near ${String(typeof salonProfile.landmark === 'object' ? (salonProfile.landmark?.title || '') : salonProfile.landmark).trim()})` : null,
+                                                        salonProfile.areaName ? String(salonProfile.areaName).trim() : null,
+                                                        salonProfile.cityName ? String(salonProfile.cityName).trim() : null,
                                                         salonProfile.state ? getStateDisplayName(salonProfile.state) : null
                                                     ].filter(Boolean).join(', ') || salonProfile.address || 'No address specified'}
                                                 </p>
