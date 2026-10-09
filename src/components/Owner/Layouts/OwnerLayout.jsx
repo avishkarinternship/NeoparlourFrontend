@@ -9,14 +9,26 @@ import axiosInstance from '../../../api/axiosInstance';
 export default function OwnerLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [salon, setSalon] = useState(null);
+  // Detect SEO Admin role
+  const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+  const userRole = String(ownerUser?.role || ownerUser?.userRole || (Array.isArray(ownerUser?.roles) ? ownerUser.roles[0] : ownerUser?.roles) || '').toUpperCase();
+  const isSeoAdmin = userRole === 'SEO_ADMIN' || userRole.includes('SEO');
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('owner_dark_mode') === 'true';
+    const saved = localStorage.getItem('owner_dark_mode');
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    // Default to dark mode for SEO admin initially, but allow toggle
+    if (isSeoAdmin) return true;
+    return false;
   });
 
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => {
       const next = !prev;
       localStorage.setItem('owner_dark_mode', String(next));
+      localStorage.setItem('theme', next ? 'dark' : 'light');
       if (next) {
         document.documentElement.classList.add('dark');
       } else {
@@ -29,8 +41,10 @@ export default function OwnerLayout() {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [isDarkMode]);
 

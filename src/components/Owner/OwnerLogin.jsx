@@ -95,6 +95,8 @@ const OwnerLogin = () => {
 
       if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
         navigate('/admin/tickets');
+      } else if (roleStr === 'SEO_ADMIN' || roleStr.includes('SEO')) {
+        navigate('/admin/blogs');
       } else if (roleStr.includes('STAFF')) {
         navigate('/staff/dashboard');
       } else {

@@ -64,17 +64,16 @@ export default function SEOSalons() {
       const fetchSalons = async () => {
         setLoading(true);
         try {
-          const response = await fetch(
-            `https://sb.neoparlour.com/api/salons/location-search?cityName=${encodeURIComponent(
-              urlCity
-            )}&areaName=${encodeURIComponent(urlArea)}&serviceName=${encodeURIComponent(
-              urlService
-            )}&category=${encodeURIComponent(urlService)}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setSalons(data || []);
-          }
+          const response = await axiosInstance.get('/salons/location-search', {
+            params: {
+              cityName: urlCity || undefined,
+              areaName: urlArea || undefined,
+              serviceName: urlService || undefined,
+              category: urlService || undefined
+            }
+          });
+          const data = response.data?.content || response.data || [];
+          setSalons(Array.isArray(data) ? data : []);
         } catch (error) {
           console.error('Error fetching salons direct link', error);
           toast.error('Failed to load salons list.');
@@ -84,6 +83,23 @@ export default function SEOSalons() {
       };
       fetchSalons();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Default view when visiting /seo-salons directly
+      const fetchDefaultSalons = async () => {
+        setLoading(true);
+        try {
+          const response = await axiosInstance.get('/salons/nearby', {
+            params: { page: 0, size: 24 }
+          });
+          const data = response.data?.content || response.data || [];
+          setSalons(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error('Error fetching default salons list', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchDefaultSalons();
     }
   }, [location.state, location.search, paramCity, paramArea, paramService]);
 

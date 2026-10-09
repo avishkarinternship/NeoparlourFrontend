@@ -3,36 +3,6 @@ import { Star, Quote, ChevronLeft, ChevronRight, Sparkles, UserCheck } from 'luc
 import { testimonialService } from '../../services/testimonialService';
 import SEOFooter from '../common/SEOFooter';
 
-const SAMPLE_TESTIMONIALS = [
-  {
-    id: 1,
-    clientName: "Rahul Sharma",
-    clientRole: "Regular Customer, Pune",
-    rating: 5,
-    content: "Booking appointments via NeoParlour has completely eliminated weekend queue wait times. The live slot availability and instant confirmation make salon visits effortless!",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-    isFeatured: true
-  },
-  {
-    id: 2,
-    clientName: "Priya Patel",
-    clientRole: "Salon Owner, Biguine",
-    rating: 5,
-    content: "The staff walk-in tracking and automated inventory features saved our salon over 15 hours a week in manual bookkeeping. Incredible platform!",
-    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200",
-    isFeatured: true
-  },
-  {
-    id: 3,
-    clientName: "Amit Verma",
-    clientRole: "Verified Customer",
-    rating: 5,
-    content: "Clean UI, transparent pricing, and instant discount vouchers. Finding top rated stylists near me has never been easier.",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-    isFeatured: true
-  }
-];
-
 const TestimonialsComponent = ({ showHeader = true, isStandalone = true }) => {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,14 +17,14 @@ const TestimonialsComponent = ({ showHeader = true, isStandalone = true }) => {
       setLoading(true);
       const res = await testimonialService.getFeaturedTestimonials();
       const fetched = res.data?.content || res.data || [];
-      if (Array.isArray(fetched) && fetched.length > 0) {
+      if (Array.isArray(fetched)) {
         setTestimonials(fetched);
       } else {
-        setTestimonials(SAMPLE_TESTIMONIALS);
+        setTestimonials([]);
       }
     } catch (err) {
-      console.warn("Using sample testimonials:", err.message);
-      setTestimonials(SAMPLE_TESTIMONIALS);
+      console.warn("Failed to fetch customer testimonials:", err?.message || err);
+      setTestimonials([]);
     } finally {
       setLoading(false);
     }
@@ -161,7 +131,13 @@ const TestimonialsComponent = ({ showHeader = true, isStandalone = true }) => {
           )}
 
         </div>
-      ) : null}
+      ) : (
+        <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-100 dark:border-zinc-800 max-w-lg mx-auto">
+          <Star className="w-10 h-10 text-slate-300 dark:text-zinc-700 mx-auto mb-3" />
+          <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">No Testimonials Published Yet</h3>
+          <p className="text-xs text-slate-400 font-semibold mt-1">Verified customer reviews and feedback will appear here once published.</p>
+        </div>
+      )}
 
     </div>
   );

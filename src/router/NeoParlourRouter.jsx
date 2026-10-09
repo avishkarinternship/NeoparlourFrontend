@@ -66,6 +66,7 @@ import BlogPostDetailPage from '../components/Customer/BlogPostDetailPage'
 import TestimonialsComponent from '../components/Customer/TestimonialsComponent'
 import AdminBlogManager from '../components/Owner/AdminBlogManager'
 import AdminTestimonialManager from '../components/Owner/AdminTestimonialManager'
+import AdminSeoDirectory from '../components/Owner/AdminSeoDirectory'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
 import Offers from '../components/Customer/Offers'
@@ -101,6 +102,7 @@ import Updates from '../components/Customer/updates'
 import CaseStudies from '../components/Customer/CaseStudies'
 import SalonsSEO from '../components/Customer/SalonsSEO'
 import SitemapXML from '../components/Customer/SitemapXML'
+import RobotsTxtViewer from '../components/Customer/RobotsTxtViewer'
 import SEOSalons from '../components/Customer/SEOSalons'
 
 // --- Route Guards ---
@@ -125,6 +127,15 @@ const OwnerRouteGuard = ({ children }) => {
             if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
                 return <Navigate to="/admin/tickets" replace />;
             }
+            if ((role === 'SEO_ADMIN' || role.includes('SEO')) && (
+                window.location.pathname === '/owner/dashboard' || 
+                window.location.pathname.startsWith('/owner/manage') ||
+                window.location.pathname.startsWith('/owner/analytics') ||
+                window.location.pathname.startsWith('/owner/orders') ||
+                window.location.pathname.startsWith('/owner/billing')
+            )) {
+                return <Navigate to="/admin/blogs" replace />;
+            }
         } catch (e) {}
     }
 
@@ -145,6 +156,11 @@ const StaffRouteGuard = ({ children }) => {
 };
 
 const CustomerRouteGuard = ({ children, isPublic = false }) => {
+    // Public routes (such as /seo-salons, /blogs, /sitemap, etc.) are viewable by all users including SEO admins
+    if (isPublic) {
+        return children;
+    }
+
     const ownerToken = localStorage.getItem('ownerStaffToken');
     const customerToken = localStorage.getItem('customerToken');
 
@@ -159,6 +175,9 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
         }
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
             return <Navigate to="/admin/tickets" replace />;
+        }
+        if (role === 'SEO_ADMIN' || role.includes('SEO')) {
+            return <Navigate to="/admin/blogs" replace />;
         }
         if (role.includes('STAFF')) {
             return <Navigate to="/staff/dashboard" replace />;
@@ -190,6 +209,9 @@ const GuestRouteGuard = ({ children }) => {
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
             return <Navigate to="/admin/tickets" replace />;
         }
+        if (role === 'SEO_ADMIN' || role.includes('SEO')) {
+            return <Navigate to="/admin/blogs" replace />;
+        }
         if (role.includes('STAFF')) {
             return <Navigate to="/staff/dashboard" replace />;
         }
@@ -212,6 +234,10 @@ export let routes = createBrowserRouter([
             {
                 path: '/sitemap.xml',
                 element: <SitemapXML />
+            },
+            {
+                path: '/robots.txt',
+                element: <RobotsTxtViewer />
             },
             // Standalone customer auth / select salon routes (no layouts)
             {
@@ -455,6 +481,10 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: 'blogs/:slug',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'blog/:slug',
                         element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
                     },
                     {
@@ -732,6 +762,46 @@ export let routes = createBrowserRouter([
                     {
                         path: '/admin/testimonials',
                         element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/seo-salons',
+                        element: <OwnerRouteGuard><AdminSeoDirectory /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/seo-salons',
+                        element: <OwnerRouteGuard><AdminSeoDirectory /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/sitemap',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/sitemap',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/sitemap.xml',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/sitemap.xml',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/robots',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/robots',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/robots.txt',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/robots.txt',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
                     },
                     {
                         path: '/owner/staff-invitations',

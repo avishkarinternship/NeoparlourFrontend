@@ -514,12 +514,12 @@ export default function LocationPickerModal({
             </div>
           </div>
 
-          {/* "Locate Me" GPS Button (Floating on bottom right) */}
+          {/* "Locate Me" GPS Button (Stacked cleanly above zoom controls) */}
           <button
             type="button"
             onClick={handleLocateMe}
             disabled={isLocatingUser}
-            className="absolute bottom-4 right-4 z-[1000] p-3 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 rounded-full shadow-xl border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+            className="absolute bottom-24 right-3 z-[1000] p-2.5 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-200 rounded-full shadow-xl border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
             title="Recenter to current GPS"
           >
             {isLocatingUser ? (

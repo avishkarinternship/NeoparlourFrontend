@@ -1,9 +1,95 @@
+# ==============================================================================
+# NeoParlour Official Robots Exclusion Protocol (robots.txt)
+# Website: https://neoparlour.com
+# Maintained by: NeoParlour SEO & Engineering Team
+# Last Updated: October 2026
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Global Crawler Directives
+# ------------------------------------------------------------------------------
 User-agent: *
 Allow: /
+Allow: /assets/
+Allow: /locales/
+Allow: /salons/
+Allow: /salon/
+Allow: /blogs
+Allow: /blog/
+Allow: /seo-salons
+Allow: /client-testimonials
+Allow: /about
+Allow: /support
+Allow: /security
+Allow: /partner-with-us
+Allow: /features
+Allow: /sitemap
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+# Disallow Internal & Administrative Dashboards
+Disallow: /admin/
 Disallow: /owner/
+Disallow: /staff/
+Disallow: /api/
+Disallow: /owner-login
+Disallow: /customer-login
+Disallow: /login
+
+# Disallow Sensitive Customer Sessions & Checkout Funnel
+Disallow: /customer/login
+Disallow: /customer/select-salon
+Disallow: /customer/appointments
+Disallow: /customer/my-orders
+Disallow: /customer/cart
+Disallow: /customer/checkout
+Disallow: /customer/profile
+
+# ------------------------------------------------------------------------------
+# 2. Targeted Search Engine Rules
+# ------------------------------------------------------------------------------
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /staff/
+Disallow: /api/
 Disallow: /customer/select-salon
 Disallow: /customer/appointments
 Disallow: /customer/my-orders
 Disallow: /customer/cart
 
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /staff/
+Disallow: /api/
+Disallow: /customer/select-salon
+Disallow: /customer/appointments
+Disallow: /customer/my-orders
+Disallow: /customer/cart
+Crawl-delay: 1
+
+# ------------------------------------------------------------------------------
+# 3. AI & LLM Assistants (Curated Indexing)
+# ------------------------------------------------------------------------------
+User-agent: GPTBot
+Allow: /blogs
+Allow: /blog/
+Allow: /salons
+Allow: /seo-salons
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /customer/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /customer/
+
+# ------------------------------------------------------------------------------
+# 4. XML Sitemap Location
+# ------------------------------------------------------------------------------
 Sitemap: https://neoparlour.com/sitemap.xml

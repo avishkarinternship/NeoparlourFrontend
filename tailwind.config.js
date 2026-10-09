@@ -20,6 +20,11 @@ export default {
         extrabold: '700',
         black: '800',
       },
+      colors: {
+        zinc: {
+          850: '#1f1f23',
+        },
+      },
     },
   },
   plugins: [],

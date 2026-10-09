@@ -448,3 +448,161 @@ body {
 .animate-moon-exit {
   animation: moonExit 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+/* ========================================================================== */
+/* BLOG & EDITORIAL ARTICLE TYPOGRAPHY ENGINE                                 */
+/* ========================================================================== */
+.blog-content {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.dark .blog-content {
+  color: #d4d4d8;
+}
+
+.blog-content p {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+.blog-content p.lead,
+.blog-content .lead {
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.75;
+  color: #1e293b;
+}
+
+.dark .blog-content p.lead,
+.dark .blog-content .lead {
+  color: #f4f4f5;
+}
+
+.blog-content h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+}
+
+.dark .blog-content h1 {
+  color: #ffffff;
+}
+
+.blog-content h2 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.dark .blog-content h2 {
+  color: #ffffff;
+}
+
+.blog-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.dark .blog-content h3 {
+  color: #f4f4f5;
+}
+
+.blog-content h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.dark .blog-content h4 {
+  color: #f4f4f5;
+}
+
+.blog-content ul {
+  list-style-type: disc;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1.75rem;
+}
+
+.blog-content ol {
+  list-style-type: decimal;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1.75rem;
+}
+
+.blog-content li {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.7;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #FF2A14;
+  padding-left: 1.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  color: #475569;
+}
+
+.dark .blog-content blockquote {
+  color: #a1a1aa;
+}
+
+.blog-content a {
+  color: #FF2A14;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.blog-content a:hover {
+  color: #dc2626;
+}
+
+.blog-content strong,
+.blog-content b {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dark .blog-content strong,
+.dark .blog-content b {
+  color: #ffffff;
+}
+
+.blog-content img {
+  border-radius: 1rem;
+  max-width: 100%;
+  height: auto;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.blog-content hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  border-color: #e2e8f0;
+}
+
+.dark .blog-content hr {
+  border-color: #27272a;
+}

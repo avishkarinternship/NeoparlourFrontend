@@ -5,45 +5,6 @@ import toast from 'react-hot-toast';
 import { blogService } from '../../services/blogService';
 import SEOFooter from '../common/SEOFooter';
 
-const SAMPLE_BLOGS = [
-  {
-    id: 1,
-    title: "5 Summer Haircare Routines Recommended by Top Stylists",
-    slug: "5-summer-haircare-routines-recommended-by-top-stylists",
-    category: "Styling Tips",
-    author: "Elena Rostova",
-    createdAt: "2026-06-10T10:00:00Z",
-    readTime: "4 min read",
-    content: "Keep your locks glowing and protected under the sun. Our partner stylists share their secret hydration formulas, UV protection sprays, and deep conditioning masks to preserve your hair vibrancy all summer long.",
-    imageUrl: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&q=80&w=800",
-    isPublished: true
-  },
-  {
-    id: 2,
-    title: "SaaS & Beauty: How Tech is Transforming Local Salon Operations",
-    slug: "saas-beauty-how-tech-is-transforming-local-salon-operations",
-    category: "Industry Insights",
-    author: "Avishkar Sharma",
-    createdAt: "2026-05-28T14:30:00Z",
-    readTime: "6 min read",
-    content: "From AI-powered slot scheduling to automated inventory notifications and staff walk-in tracking. Explore how modern salons utilize NeoParlour SaaS platforms to scale revenue and eliminate booking friction.",
-    imageUrl: "https://images.unsplash.com/photo-1521590832167-7bcbfea48342?auto=format&fit=crop&q=80&w=800",
-    isPublished: true
-  },
-  {
-    id: 3,
-    title: "Bridal Makeup Trends for 2026: Elegant, Minimalist & Dewy",
-    slug: "bridal-makeup-trends-for-2026-elegant-minimalist-dewy",
-    category: "Trends",
-    author: "Priya Kapoor",
-    createdAt: "2026-05-15T09:15:00Z",
-    readTime: "5 min read",
-    content: "Ditch the heavy layers. This wedding season is all about skin-first dewy finishes, soft blush accents, and customizable bridal packages that keep brides glowing effortlessly through day & night celebrations.",
-    imageUrl: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800",
-    isPublished: true
-  }
-];
-
 const BlogListingPage = () => {
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
@@ -61,14 +22,14 @@ const BlogListingPage = () => {
       setLoading(true);
       const res = await blogService.getAllBlogs();
       const fetched = res.data?.content || res.data || [];
-      if (Array.isArray(fetched) && fetched.length > 0) {
+      if (Array.isArray(fetched)) {
         setBlogs(fetched);
       } else {
-        setBlogs(SAMPLE_BLOGS);
+        setBlogs([]);
       }
     } catch (err) {
-      console.warn("Using fallback blogs:", err.message);
-      setBlogs(SAMPLE_BLOGS);
+      console.warn("Failed to fetch customer blogs:", err?.message || err);
+      setBlogs([]);
     } finally {
       setLoading(false);
     }

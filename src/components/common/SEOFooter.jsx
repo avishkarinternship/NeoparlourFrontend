@@ -7,7 +7,7 @@ import { useDarkMode } from '../../context/DarkModeContext';
 
 export default function SEOFooter() {
   const navigate = useNavigate();
-  const { isDark } = useDarkMode();
+  const { isDark = false } = useDarkMode() || {};
   const sliderRef = useRef(null);
 
   // 1. Major metropolitan and important Indian cities

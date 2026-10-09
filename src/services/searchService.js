@@ -1281,7 +1281,7 @@ const searchService = {
         if (err?.response?.status === 429) {
           olaRateLimiter.tripCircuitBreaker('HTTP 429 Too Many Requests');
         } else {
-          console.warn('Ola Maps reverse geocode error:', err?.message || err);
+          console.warn('Ola Maps reverse geocode error:', err?.response?.data?.message || err?.message || err);
         }
         return null;
       } finally {

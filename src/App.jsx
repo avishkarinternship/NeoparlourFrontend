@@ -7,6 +7,7 @@ import './App.css';
 import { useSubscriptionRecovery } from './hooks/useSubscriptionRecovery';
 import SubscriptionNoticeModal from './components/SubscriptionNoticeModal';
 import MaintenanceOverlay from './components/MaintenanceOverlay';
+import { DarkModeProvider } from './context/DarkModeContext';
 
 const App = () => {
   const { modalState, closeModal } = useSubscriptionRecovery();
@@ -24,17 +25,19 @@ const App = () => {
   }, [location.pathname]);
 
   return (
-    <div className="app-container overflow-x-hidden font-sans">
-      <Toaster position="top-right" />
-      <MaintenanceOverlay />
-      <SubscriptionNoticeModal
-        isOpen={modalState.isOpen}
-        status={modalState.status}
-        orderDetails={modalState.orderDetails}
-        onClose={closeModal}
-      />
-      <Outlet />
-    </div>
+    <DarkModeProvider>
+      <div className="app-container overflow-x-hidden font-sans">
+        <Toaster position="top-right" />
+        <MaintenanceOverlay />
+        <SubscriptionNoticeModal
+          isOpen={modalState.isOpen}
+          status={modalState.status}
+          orderDetails={modalState.orderDetails}
+          onClose={closeModal}
+        />
+        <Outlet />
+      </div>
+    </DarkModeProvider>
   );
 }
 

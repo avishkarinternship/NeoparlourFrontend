@@ -26,4 +26,15 @@ export const DarkModeProvider = ({ children }) => {
   );
 };
 
-export const useDarkMode = () => useContext(DarkModeContext);
+export const useDarkMode = () => {
+  const context = useContext(DarkModeContext);
+  if (!context) {
+    const isDark = typeof document !== 'undefined' && (
+      document.documentElement.classList.contains('dark') ||
+      localStorage.getItem('neoparlour-dark-mode') === 'true' ||
+      localStorage.getItem('theme') === 'dark'
+    );
+    return { isDark: Boolean(isDark), toggleDark: () => {} };
+  }
+  return context;
+};

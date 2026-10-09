@@ -29,4 +29,31 @@ export const SupportEngineerRouteGuard = ({ children, isFinancialRoute = false }
   return children;
 };
 
+export const SeoAdminRouteGuard = ({ children, isAllowedForSeo = true }) => {
+  const token = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+  const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+  const userRole = (user?.role || user?.userRole || '').toUpperCase();
+
+  if (!token) {
+    return <Navigate to="/owner/login" replace />;
+  }
+
+  // If user is SEO_ADMIN trying to access restricted salon/finance routes
+  if ((userRole === 'SEO_ADMIN' || userRole.includes('SEO')) && !isAllowedForSeo) {
+    toast.error('Access Restricted: Dedicated SEO & Content Workspace', {
+      id: 'seo-admin-restricted-toast',
+      style: {
+        background: '#18181b',
+        color: '#f59e0b',
+        border: '1px solid #d97706',
+        fontSize: '12px',
+        fontWeight: 'bold'
+      }
+    });
+    return <Navigate to="/admin/blogs" replace />;
+  }
+
+  return children;
+};
+
 export default SupportEngineerRouteGuard;

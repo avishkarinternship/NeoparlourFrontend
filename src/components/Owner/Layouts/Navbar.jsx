@@ -8,6 +8,7 @@ import logoIcon from '../../../assets/Neoparlour_logo.png';
 import profileIcon from '../../../assets/Owner/profile.jpg';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import SeoAdminProfileModal from './SeoAdminProfileModal';
 
 
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
@@ -105,14 +106,19 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   }, []);
 
   const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
-  const isAdmin = ownerUser.role === 'ADMIN' || ownerUser.role === 'SUPER_ADMIN' || ownerUser.role === 'ROLE_ADMIN';
+  const userRole = String(ownerUser?.role || ownerUser?.userRole || (Array.isArray(ownerUser?.roles) ? ownerUser.roles[0] : ownerUser?.roles) || '').toUpperCase();
+  const isSeoAdmin = userRole === 'SEO_ADMIN' || userRole.includes('SEO');
+  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'ROLE_ADMIN';
+
+  const [showSeoProfileModal, setShowSeoProfileModal] = useState(false);
+  const [seoAdminUser, setSeoAdminUser] = useState(ownerUser);
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdmin && !isSeoAdmin) {
       fetchSalonProfile();
+      fetchNotifications();
     }
-    fetchNotifications();
-  }, [isAdmin]);
+  }, [isAdmin, isSeoAdmin]);
 
   const fetchNotifications = async () => {
     const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
@@ -308,6 +314,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
       <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2.5 sm:space-x-6 min-w-0">
 
         {/* Pill-Shaped Inline Search Field with Dropdown container */}
+        {!isSeoAdmin && (
         <div ref={dropdownRef} className="relative flex-1 max-w-[140px] sm:max-w-xs md:max-w-md transition-all duration-300">
           <div className={`border rounded-full p-1 pl-3 sm:pl-4 flex items-center focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200 ${
             isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white border-gray-300'
@@ -661,9 +668,10 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             </div>
           )}
         </div>
+        )}
 
         {/* Language Switcher */}
-        {!isAdmin && <LanguageSwitcher />}
+        {!isAdmin && !isSeoAdmin && <LanguageSwitcher />}
 
         {/* Dark Mode Toggle Button */}
         <button
@@ -686,6 +694,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
         </button>
 
         {/* Notification Bell with Badge */}
+        {!isSeoAdmin && (
         <div ref={notifDropdownRef} className="relative">
           <button 
             onClick={() => {
@@ -780,9 +789,29 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             </div>
           )}
         </div>
+        )}
 
-         {/* User Identity Profile Block */}
-        {isAdmin ? (
+        {/* User Identity Profile Block */}
+        {isSeoAdmin ? (
+          <button
+            type="button"
+            onClick={() => setShowSeoProfileModal(true)}
+            className="flex items-center space-x-2.5 p-1 sm:px-3 sm:py-1.5 rounded-full cursor-pointer transition-all border shrink-0 bg-zinc-800/90 border-zinc-700 hover:border-[#FF2A14]/60 hover:bg-zinc-800 shadow-xs group"
+            title="SEO Admin Profile Settings"
+          >
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 text-white font-black text-xs flex items-center justify-center shadow-md ring-2 ring-red-500/20 group-hover:scale-105 transition-transform">
+              {(seoAdminUser?.name ? seoAdminUser.name.charAt(0).toUpperCase() : (ownerUser?.name ? ownerUser.name.charAt(0).toUpperCase() : 'S'))}
+            </div>
+            <div className="hidden sm:flex flex-col text-left min-w-0 pr-1">
+              <span className="text-xs font-black text-white leading-tight truncate max-w-[120px]">
+                {seoAdminUser?.name || ownerUser?.name || 'SEO Admin'}
+              </span>
+              <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider leading-tight">
+                SEO Admin
+              </span>
+            </div>
+          </button>
+        ) : isAdmin ? (
           <div 
             className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-full cursor-pointer transition-all border shrink-0 ${
               isDarkMode 
@@ -840,6 +869,15 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
         )}
 
       </div>
+
+      {/* SEO Admin Profile Modal */}
+      {isSeoAdmin && (
+        <SeoAdminProfileModal
+          isOpen={showSeoProfileModal}
+          onClose={() => setShowSeoProfileModal(false)}
+          onProfileUpdated={(updated) => setSeoAdminUser(updated)}
+        />
+      )}
     </header>
   );
 }

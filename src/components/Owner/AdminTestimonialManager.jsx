@@ -3,26 +3,6 @@ import { Plus, Edit2, Trash2, Search, Star, MessageSquareQuote, CheckCircle, X, 
 import toast from 'react-hot-toast';
 import { testimonialService } from '../../services/testimonialService';
 
-const SAMPLE_TESTIMONIALS = [
-  {
-    id: 1,
-    clientName: "Rahul Sharma",
-    clientRole: "Regular Customer, Pune",
-    rating: 5,
-    content: "Booking appointments via NeoParlour has completely eliminated weekend queue wait times. Live slot availability is fantastic!",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-    isFeatured: true
-  },
-  {
-    id: 2,
-    clientName: "Priya Patel",
-    clientRole: "Salon Owner, Biguine",
-    rating: 5,
-    content: "The staff walk-in tracking and automated inventory features saved our salon over 15 hours a week in manual bookkeeping.",
-    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200",
-    isFeatured: true
-  }
-];
 
 const AdminTestimonialManager = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -57,14 +37,14 @@ const AdminTestimonialManager = () => {
       setLoading(true);
       const res = await testimonialService.getAllTestimonials();
       const fetched = res.data?.content || res.data || [];
-      if (Array.isArray(fetched) && fetched.length > 0) {
+      if (Array.isArray(fetched)) {
         setTestimonials(fetched);
       } else {
-        setTestimonials(SAMPLE_TESTIMONIALS);
+        setTestimonials([]);
       }
     } catch (err) {
-      console.warn("Using sample admin testimonials:", err.message);
-      setTestimonials(SAMPLE_TESTIMONIALS);
+      console.warn("Failed to fetch admin testimonials:", err?.message || err);
+      setTestimonials([]);
     } finally {
       setLoading(false);
     }
@@ -189,32 +169,32 @@ const AdminTestimonialManager = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-zinc-800 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 bg-slate-50/50 dark:bg-zinc-800/50">
-                  <th className="py-4 px-6">ID</th>
-                  <th className="py-4 px-6">Client & Role</th>
-                  <th className="py-4 px-6">Rating</th>
-                  <th className="py-4 px-6">Featured</th>
-                  <th className="py-4 px-6">Quote</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6 hidden sm:table-cell">ID</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6">Client & Role</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6">Rating</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6 hidden md:table-cell">Featured</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6 hidden lg:table-cell">Quote</th>
+                  <th className="py-3.5 sm:py-4 px-3 sm:px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60 text-xs font-semibold">
                 {filteredTestimonials.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/40 transition">
-                    <td className="py-4 px-6 font-bold text-slate-400">#{item.id}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6 font-bold text-slate-400 hidden sm:table-cell">#{item.id}</td>
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6">
                       <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         {item.clientName}
                       </div>
                       <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">{item.clientRole || 'Customer'}</span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6">
                       <div className="flex items-center gap-0.5 text-amber-400">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className={`w-3.5 h-3.5 ${i < (item.rating || 5) ? 'fill-amber-400' : 'text-slate-200 dark:text-zinc-700'}`} />
                         ))}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6 hidden md:table-cell">
                       {item.isFeatured ? (
                         <span className="inline-flex items-center gap-1 text-[9px] font-black bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full uppercase border border-amber-200 dark:border-amber-800">
                           <Sparkles className="w-3 h-3" /> Featured
@@ -223,15 +203,15 @@ const AdminTestimonialManager = () => {
                         <span className="text-[10px] font-semibold text-slate-400">Standard</span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-zinc-300 max-w-xs truncate">
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6 text-slate-600 dark:text-zinc-300 max-w-xs truncate hidden lg:table-cell">
                       "{item.content}"
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-3.5 sm:py-4 px-3 sm:px-6 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(item)}
-                          className="p-2 rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                          className="p-1.5 sm:p-2 rounded-xl text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -242,7 +222,7 @@ const AdminTestimonialManager = () => {
                             setDeletingId(item.id);
                             setShowDeleteModal(true);
                           }}
-                          className="p-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                          className="p-1.5 sm:p-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -259,8 +239,8 @@ const AdminTestimonialManager = () => {
 
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-2xl space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-zinc-800">
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 {editingItem ? 'Edit Testimonial' : 'Add New Testimonial'}
