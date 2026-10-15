@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Calendar, User, Clock, Share2, Heart, Sparkles, BookOpen, 
-  ChevronRight, ArrowUpRight, Compass, Scissors, Layers, Tag
+  ChevronRight, ArrowUpRight, Compass, Scissors, Layers, Tag, Type
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { blogService } from '../../services/blogService';
@@ -27,13 +27,16 @@ const sanitizeArticleHtml = (rawHtml) => {
 };
 
 const parseSeoMetadata = (blog) => {
-  if (!blog) return { metaTitle: '', metaDescription: '', metaKeywords: '' };
+  if (!blog) return { metaTitle: '', metaDescription: '', metaKeywords: '', fontFamily: 'sans', fontSize: '16px', textColor: '' };
   let metaTitle = blog.metaTitle || '';
   let metaDescription = blog.metaDescription || '';
   let metaKeywords = blog.metaKeywords || '';
+  let fontFamily = blog.fontFamily || 'sans';
+  let fontSize = blog.fontSize || '16px';
+  let textColor = blog.textColor || '';
 
   // Fallback: parse from embedded HTML comment
-  if ((!metaTitle || !metaDescription || !metaKeywords) && blog.content) {
+  if (blog.content) {
     const match = blog.content.match(/<!--seo_meta:(\{.*?\})-->/);
     if (match && match[1]) {
       try {
@@ -41,6 +44,9 @@ const parseSeoMetadata = (blog) => {
         if (!metaTitle && parsed.metaTitle) metaTitle = parsed.metaTitle;
         if (!metaDescription && parsed.metaDescription) metaDescription = parsed.metaDescription;
         if (!metaKeywords && parsed.metaKeywords) metaKeywords = parsed.metaKeywords;
+        if (parsed.fontFamily) fontFamily = parsed.fontFamily;
+        if (parsed.fontSize) fontSize = parsed.fontSize;
+        if (parsed.textColor) textColor = parsed.textColor;
       } catch (e) {
         console.warn("Failed to parse fallback seo_meta comment:", e);
       }
@@ -58,7 +64,7 @@ const parseSeoMetadata = (blog) => {
     metaKeywords = `${blog.category || 'Salon'}, salon tips, hair and beauty, NeoParlour`;
   }
 
-  return { metaTitle, metaDescription, metaKeywords };
+  return { metaTitle, metaDescription, metaKeywords, fontFamily, fontSize, textColor };
 };
 
 const parseRelatedBlogIds = (blog) => {
@@ -88,6 +94,36 @@ const BlogPostDetailPage = () => {
   const [allBlogs, setAllBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
+  const [readerFont, setReaderFont] = useState(null);
+  const [readerSizeDelta, setReaderSizeDelta] = useState(0);
+
+  const { metaTitle, metaDescription, metaKeywords, fontFamily: authorFont, fontSize: authorSize, textColor: authorColor } = useMemo(() => {
+    return parseSeoMetadata(blog);
+  }, [blog]);
+
+  const effectiveFont = readerFont || authorFont || 'sans';
+  const rawBaseSize = parseInt(authorSize || '16', 10);
+  const effectiveBaseSize = (isNaN(rawBaseSize) ? 16 : rawBaseSize) + readerSizeDelta;
+
+  const fontCss = useMemo(() => {
+    switch (effectiveFont) {
+      case 'serif':
+        return 'Georgia, "Times New Roman", serif';
+      case 'playfair':
+        return '"Playfair Display", Georgia, serif';
+      case 'poppins':
+        return '"Poppins", sans-serif';
+      case 'merriweather':
+        return '"Merriweather", Georgia, serif';
+      case 'inknut':
+        return '"Inknut Antiqua", Georgia, serif';
+      case 'mono':
+        return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+      case 'sans':
+      default:
+        return '"Outfit", system-ui, -apple-system, sans-serif';
+    }
+  }, [effectiveFont]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -129,7 +165,6 @@ const BlogPostDetailPage = () => {
   // Dynamically update SEO Title, Meta tags and Google Article Schema
   useEffect(() => {
     if (!blog) return;
-    const { metaTitle, metaDescription, metaKeywords } = parseSeoMetadata(blog);
     updateSEOMetadata({
       title: metaTitle,
       description: metaDescription,
@@ -143,7 +178,7 @@ const BlogPostDetailPage = () => {
       metaTitle,
       metaDescription
     }));
-  }, [blog]);
+  }, [blog, metaTitle, metaDescription, metaKeywords]);
 
   // Compute Related Blogs for Left Sidebar
   const relatedBlogs = useMemo(() => {
@@ -479,9 +514,102 @@ const BlogPostDetailPage = () => {
                 />
               </div>
 
+              {/* Reading Typography & Comfort Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-zinc-850/60 border border-slate-200/80 dark:border-zinc-800 text-xs">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-bold">
+                  <Type className="w-4 h-4 text-[#FF2A14]" />
+                  <span>Reading Typography:</span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Font switcher */}
+                  <div className="flex items-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl p-0.5 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setReaderFont('sans')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        effectiveFont === 'sans' || effectiveFont === 'poppins' || effectiveFont === 'outfit'
+                          ? 'bg-[#FF2A14] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                      }`}
+                      title="Modern Sans-Serif font"
+                    >
+                      Sans
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReaderFont('serif')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold font-serif transition cursor-pointer ${
+                        effectiveFont === 'serif' || effectiveFont === 'playfair' || effectiveFont === 'merriweather' || effectiveFont === 'inknut'
+                          ? 'bg-[#FF2A14] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                      }`}
+                      title="Classic Editorial Serif font"
+                    >
+                      Serif
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReaderFont('mono')}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
+                        effectiveFont === 'mono'
+                          ? 'bg-[#FF2A14] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                      }`}
+                      title="Clean Monospace font"
+                    >
+                      Mono
+                    </button>
+                  </div>
+
+                  {/* Font size adjuster A- / A+ */}
+                  <div className="flex items-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl p-0.5 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setReaderSizeDelta(prev => Math.max(-4, prev - 2))}
+                      disabled={readerSizeDelta <= -4}
+                      className="px-2.5 py-1 text-slate-600 dark:text-zinc-300 hover:text-[#FF2A14] disabled:opacity-40 font-black text-xs cursor-pointer transition active:scale-95"
+                      title="Decrease text size (A-)"
+                    >
+                      A-
+                    </button>
+                    <span className="px-2 text-[11px] font-mono font-bold text-slate-500 dark:text-zinc-400">
+                      {effectiveBaseSize}px
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReaderSizeDelta(prev => Math.min(8, prev + 2))}
+                      disabled={readerSizeDelta >= 8}
+                      className="px-2.5 py-1 text-slate-600 dark:text-zinc-300 hover:text-[#FF2A14] disabled:opacity-40 font-black text-xs cursor-pointer transition active:scale-95"
+                      title="Increase text size (A+)"
+                    >
+                      A+
+                    </button>
+                  </div>
+
+                  {(readerFont !== null || readerSizeDelta !== 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReaderFont(null);
+                        setReaderSizeDelta(0);
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-red-500 underline font-bold cursor-pointer"
+                      title="Reset to author defaults"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Article HTML Body Content */}
               <div
-                className="blog-content py-4 text-sm sm:text-base text-slate-700 dark:text-zinc-300 font-medium leading-relaxed"
+                className="blog-content py-4 text-slate-700 dark:text-zinc-300 font-medium leading-relaxed"
+                style={{
+                  fontFamily: fontCss,
+                  fontSize: `${effectiveBaseSize}px`
+                }}
                 dangerouslySetInnerHTML={{ __html: cleanHtmlContent }}
               />
 

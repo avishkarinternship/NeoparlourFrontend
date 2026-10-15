@@ -40,8 +40,20 @@ axiosInstance.interceptors.request.use(
     const currentPathname = typeof window !== 'undefined' ? window.location?.pathname || '' : '';
     const isAdminOrOwnerPage = currentPathname.startsWith('/admin') || currentPathname.startsWith('/owner') || currentPathname.startsWith('/staff');
 
+    const method = (config.method || 'get').toLowerCase();
+    const isWriteMethod = ['post', 'put', 'delete', 'patch'].includes(method);
+
+    // Platform administrative operations that must use owner/admin token and avoid customer token
+    const isAdministrativeAction = config.url && (
+      (config.url.includes('/blogs') && isWriteMethod) ||
+      (config.url.includes('/testimonials') && isWriteMethod) ||
+      config.url.includes('/images/upload') ||
+      config.url.includes('/admin') ||
+      config.url.includes('/auth/admin')
+    );
+
     // Prioritization: For staff/owner/admin/subscription/ticket endpoints or when on admin/owner/staff pages, use ownerToken first.
-    const isOwnerOrStaffRequest = isAdminOrOwnerPage || (config.url && (
+    const isOwnerOrStaffRequest = isAdminOrOwnerPage || isAdministrativeAction || (config.url && (
       config.url.includes('/subscriptions') ||
       config.url.includes('/staff') ||
       config.url.includes('/appointments/salon') ||
@@ -50,9 +62,16 @@ axiosInstance.interceptors.request.use(
       config.url.includes('/kyc') ||
       config.url.includes('/tickets') ||
       config.url.includes('/admin') ||
-      config.url.includes('/auth/admin')
+      config.url.includes('/auth/admin') ||
+      config.url.includes('/blogs') ||
+      config.url.includes('/testimonials') ||
+      config.url.includes('/images/upload') ||
+      config.url.includes('/seo')
     ));
-    const token = isOwnerOrStaffRequest
+
+    const token = isAdministrativeAction
+      ? (ownerToken || genericToken)
+      : isOwnerOrStaffRequest
       ? (ownerToken || customerToken || genericToken) 
       : (customerToken || ownerToken || genericToken);
 
@@ -64,9 +83,14 @@ axiosInstance.interceptors.request.use(
       delete config.headers.authorization;
     }
 
-    // Attach salonId / tenant headers if available in localStorage
+    // Attach salonId / tenant headers if available in localStorage (skip for global platform endpoints)
+    const isGlobalPlatformEndpoint = config.url && (
+      config.url.includes('/blogs') ||
+      config.url.includes('/testimonials') ||
+      config.url.includes('/images/upload')
+    );
     const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
-    if (activeSalonId) {
+    if (activeSalonId && !isGlobalPlatformEndpoint) {
       config.headers['X-Salon-Id'] = activeSalonId;
       config.headers['salonId'] = activeSalonId;
       config.headers['X-Tenant-ID'] = activeSalonId;
@@ -194,8 +218,13 @@ axiosInstance.interceptors.response.use(
       errorData = { ...errorData, message };
     }
 
-    // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... }
-    const errorMessage = errorData?.message || error.message || 'Something went wrong';
+    // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... } or { "error": "Forbidden", "status": 403 }
+    const errorMessage = errorData?.message || 
+      (errorData?.error && error.response?.status === 403 
+        ? "Access Denied (403): You do not have permission to perform this action. Please ensure you are logged in with an authorized Admin or SEO Admin account."
+        : errorData?.error) || 
+      error.message || 
+      'Something went wrong';
 
     // Bypass global toast for switch-tenant errors (so they can show popup instead)
     const isSwitchTenant = error.config?.url?.includes('/customer/switch-tenant');

@@ -122,7 +122,7 @@ export default function Cart() {
 
   if (loading && !cart) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] font-sans text-neutral-800 antialiased flex flex-col">
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-black font-sans text-neutral-800 dark:text-gray-300 antialiased flex flex-col">
         <main className="max-w-6xl w-full mx-auto px-4 md:px-8 py-12 flex-1 space-y-8">
           <div className="space-y-3">
             <div className="h-4 yt-skeleton rounded w-36"></div>
@@ -131,7 +131,7 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl p-5 border border-neutral-100 flex justify-between items-center">
+                <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-neutral-100 dark:border-gray-800 flex justify-between items-center">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 yt-skeleton rounded-xl"></div>
                     <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function Cart() {
                 </div>
               ))}
             </div>
-            <div className="bg-white rounded-3xl border border-neutral-100 p-6 space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-neutral-100 dark:border-gray-800 p-6 space-y-6">
               <div className="h-6 yt-skeleton rounded w-36"></div>
               <div className="h-20 yt-skeleton rounded-xl"></div>
               <div className="h-12 yt-skeleton rounded-2xl"></div>
@@ -160,40 +160,40 @@ export default function Cart() {
   const hasOutOfStockItems = items.some(item => !item.inStock);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans text-neutral-800 antialiased flex flex-col">
-      <main className="max-w-6xl w-full mx-auto px-4 md:px-8 py-12 flex-1">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-black font-sans text-neutral-800 dark:text-gray-300 antialiased flex flex-col">
+      <main className="max-w-6xl w-full mx-auto px-3.5 sm:px-6 md:px-8 py-5 sm:py-8 md:py-12 flex-1">
         
         {/* Breadcrumbs */}
-        <div className="mb-8 space-y-2">
+        <div className="mb-4 sm:mb-8 space-y-1 sm:space-y-2">
           <div className="flex items-center space-x-1.5 text-[11px] text-gray-400 font-medium">
             <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
             <ChevronRight className="w-3 h-3" />
             <span className="hover:underline cursor-pointer" onClick={() => navigate('/customer/product-search')}>Products</span>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-600 font-semibold">Shopping Cart</span>
+            <span className="text-gray-600 dark:text-gray-300 font-semibold">Shopping Cart</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-[#131313] flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wider text-[#131313] dark:text-white flex items-center gap-2 sm:gap-3">
             Shopping Cart
-            <span className="text-xs font-black bg-red-50 text-[#FF0B01] border border-red-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-black bg-red-50 dark:bg-red-950/40 text-[#FF0B01] border border-red-100 dark:border-red-900/40 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-wider">
               {totalItemsCount} {totalItemsCount === 1 ? 'Item' : 'Items'}
             </span>
           </h1>
         </div>
 
         {items.length === 0 ? (
-          <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-neutral-100 shadow-sm text-center space-y-6 mx-auto my-12">
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto border border-red-100">
-              <ShoppingCart className="w-10 h-10 text-[#FF0B01]" />
+          <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-neutral-100 dark:border-gray-800 shadow-sm text-center space-y-4 sm:space-y-6 mx-auto my-6 sm:my-12">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-red-50 dark:bg-red-950/30 rounded-full flex items-center justify-center mx-auto border border-red-100 dark:border-red-900/30">
+              <ShoppingCart className="w-7 h-7 sm:w-10 sm:h-10 text-[#FF0B01]" />
             </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-wider text-[#131313]">Your Cart is Empty</h2>
-              <p className="text-sm font-semibold text-neutral-400">
+            <div className="space-y-1.5 sm:space-y-2">
+              <h2 className="text-lg sm:text-2xl font-black uppercase tracking-wider text-[#131313] dark:text-white">Your Cart is Empty</h2>
+              <p className="text-xs sm:text-sm font-semibold text-neutral-400 dark:text-gray-400">
                 Browse our salon's premium beauty formulations and add them to your cart.
               </p>
             </div>
             <button 
               onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
-              className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 sm:py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-xs sm:text-[14px] tracking-wider rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4" />
               Continue Browsing
@@ -202,27 +202,27 @@ export default function Cart() {
         ) : (
           <>
             {hasOutOfStockItems && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl sm:rounded-2xl flex items-start gap-2.5 sm:gap-3 text-amber-800 dark:text-amber-300">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
                 <div className="text-xs font-semibold leading-relaxed">
-                  <p className="font-extrabold text-sm uppercase tracking-wide mb-0.5">Out of Stock Alert</p>
+                  <p className="font-extrabold text-xs sm:text-sm uppercase tracking-wide mb-0.5">Out of Stock Alert</p>
                   Some items in your cart are currently unavailable. Please remove them to proceed to checkout.
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
           {/* Cart Items List */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             {items.map((item) => (
               <div 
                 key={item.productId} 
-                className={`bg-white rounded-2xl p-4 md:p-5 border shadow-sm transition duration-200 flex flex-col sm:flex-row items-center justify-between gap-4
-                  ${item.inStock ? 'border-neutral-100' : 'border-red-200 bg-red-50/10'}`}
+                className={`bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border shadow-xs transition duration-200 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4
+                  ${item.inStock ? 'border-neutral-100 dark:border-gray-800' : 'border-red-200 dark:border-red-900/60 bg-red-50/10 dark:bg-red-950/20'}`}
               >
                 {/* Left block: Image & Details */}
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-50 flex-shrink-0 border border-neutral-100 flex items-center justify-center">
+                <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-neutral-50 dark:bg-gray-800 flex-shrink-0 border border-neutral-100 dark:border-gray-700 flex items-center justify-center">
                     {item.productImageUrl ? (
                       <img 
                         src={getProductImageSrc(item.productImageUrl)} 
@@ -230,24 +230,24 @@ export default function Cart() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-red-50 text-[#FF0B01] font-black text-sm uppercase">
+                      <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-950/30 text-[#FF0B01] font-black text-sm uppercase">
                         {item.productName?.charAt(0) || 'P'}
                       </div>
                     )}
                   </div>
                   <div className="space-y-1 text-left min-w-0">
-                    <span className="text-[10px] bg-neutral-100 text-neutral-500 font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
+                    <span className="text-[10px] bg-neutral-100 dark:bg-gray-800 text-neutral-500 dark:text-gray-400 font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
                       Brand Product
                     </span>
-                    <h3 className="text-sm font-black text-[#131313] truncate max-w-[200px] md:max-w-[300px]">
+                    <h3 className="text-sm font-black text-[#131313] dark:text-white truncate max-w-[200px] md:max-w-[300px]">
                       {item.productName}
                     </h3>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-extrabold text-neutral-800">
+                      <span className="text-xs font-extrabold text-neutral-800 dark:text-gray-200">
                         ₹ {item.price}
                       </span>
                       {!item.inStock && (
-                        <span className="text-[9px] font-black uppercase bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[9px] font-black uppercase bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-2 py-0.5 rounded-md">
                           Out of Stock
                         </span>
                       )}
@@ -256,22 +256,22 @@ export default function Cart() {
                 </div>
 
                 {/* Right block: Qty adjustment, line total & actions */}
-                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-neutral-50">
+                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-neutral-50 dark:border-gray-800">
                   {/* Qty Adjustment */}
-                  <div className="flex items-center space-x-2 bg-neutral-50 p-1 rounded-xl border border-neutral-100">
+                  <div className="flex items-center space-x-2 bg-neutral-50 dark:bg-gray-800 p-1 rounded-xl border border-neutral-100 dark:border-gray-700">
                     <button 
                       onClick={() => handleQuantityDecrease(item.productId, item.quantity)}
-                      className="w-7 h-7 rounded-lg bg-white border border-neutral-200 shadow-2xs flex items-center justify-center text-neutral-700 hover:bg-neutral-50 transition cursor-pointer"
+                      className="w-7 h-7 rounded-lg bg-white dark:bg-gray-900 border border-neutral-200 dark:border-gray-700 shadow-2xs flex items-center justify-center text-neutral-700 dark:text-gray-300 hover:bg-neutral-50 dark:hover:bg-gray-800 transition cursor-pointer"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-xs font-black text-neutral-800 min-w-[20px] text-center">
+                    <span className="text-xs font-black text-neutral-800 dark:text-gray-200 min-w-[20px] text-center">
                       {item.quantity}
                     </span>
                     <button 
                       onClick={() => handleQuantityIncrease(item.productId, item.quantity, item.availableStock)}
                       disabled={!item.inStock}
-                      className="w-7 h-7 rounded-lg bg-white border border-neutral-200 shadow-2xs flex items-center justify-center text-neutral-700 hover:bg-neutral-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-7 h-7 rounded-lg bg-white dark:bg-gray-900 border border-neutral-200 dark:border-gray-700 shadow-2xs flex items-center justify-center text-neutral-700 dark:text-gray-300 hover:bg-neutral-50 dark:hover:bg-gray-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -279,8 +279,8 @@ export default function Cart() {
 
                   {/* Line Total */}
                   <div className="text-right min-w-[80px]">
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Total</p>
-                    <p className="text-sm font-extrabold text-[#131313] mt-0.5">
+                    <p className="text-[10px] text-neutral-400 dark:text-gray-400 font-bold uppercase tracking-wider">Total</p>
+                    <p className="text-sm font-extrabold text-[#131313] dark:text-white mt-0.5">
                       ₹ {item.lineTotal}
                     </p>
                   </div>
@@ -288,7 +288,7 @@ export default function Cart() {
                   {/* Trash Action */}
                   <button 
                     onClick={() => handleRemoveItem(item.productId)}
-                    className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                    className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition cursor-pointer"
                     title="Remove item"
                   >
                     <Trash2 className="w-4.5 h-4.5" />
@@ -299,16 +299,16 @@ export default function Cart() {
           </div>
 
           {/* Cart Summary Panel */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm p-6 space-y-6 lg:sticky lg:top-24">
-              <div className="flex items-center justify-between border-b border-neutral-50 pb-4">
-                <h3 className="font-extrabold text-sm uppercase tracking-wider text-neutral-800 flex items-center gap-2">
-                  <PackageCheck className="w-4 h-4 text-[#FF0B01]" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-neutral-100 dark:border-gray-800 shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-6 lg:sticky lg:top-24">
+              <div className="flex items-center justify-between border-b border-neutral-50 dark:border-gray-800 pb-3 sm:pb-4">
+                <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider text-neutral-800 dark:text-white flex items-center gap-1.5 sm:gap-2">
+                  <PackageCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF0B01]" />
                   Order Summary
                 </h3>
                 <button 
                   onClick={handleClearCart}
-                  className="text-[11px] font-bold text-neutral-400 hover:text-[#FF0B01] transition uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                  className="text-[10px] sm:text-[11px] font-bold text-neutral-400 hover:text-[#FF0B01] transition uppercase tracking-wider flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3 h-3" />
                   Clear All
@@ -316,45 +316,45 @@ export default function Cart() {
               </div>
 
               {/* Items Breakdown */}
-              <div className="space-y-3.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2.5 sm:space-y-3.5 max-h-36 sm:max-h-40 overflow-y-auto custom-scrollbar pr-1">
                 {items.map(item => (
                   <div key={item.productId} className="flex justify-between items-center text-xs">
-                    <span className="text-neutral-500 font-medium truncate max-w-[160px]">{item.productName}</span>
-                    <span className="text-neutral-400 font-semibold shrink-0">x{item.quantity}</span>
-                    <span className="text-neutral-700 font-extrabold shrink-0">₹ {item.lineTotal}</span>
+                    <span className="text-neutral-500 dark:text-gray-400 font-medium truncate max-w-[140px] sm:max-w-[160px]">{item.productName}</span>
+                    <span className="text-neutral-400 dark:text-gray-500 font-semibold shrink-0">x{item.quantity}</span>
+                    <span className="text-neutral-700 dark:text-gray-200 font-extrabold shrink-0">₹ {item.lineTotal}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="h-px bg-neutral-100" />
+              <div className="h-px bg-neutral-100 dark:bg-gray-800" />
 
               {/* Fees Breakdown */}
-              <div className="space-y-3 text-xs">
+              <div className="space-y-2.5 sm:space-y-3 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400 font-semibold">Subtotal</span>
-                  <span className="text-neutral-700 font-extrabold">₹ {totalAmount}</span>
+                  <span className="text-neutral-400 dark:text-gray-400 font-semibold">Subtotal</span>
+                  <span className="text-neutral-700 dark:text-gray-200 font-extrabold">₹ {totalAmount}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400 font-semibold">Salon Service / Delivery</span>
-                  <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-sm uppercase text-[9px] tracking-wide border border-green-100">
+                  <span className="text-neutral-400 dark:text-gray-400 font-semibold">Salon Service / Delivery</span>
+                  <span className="text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/30 px-2 py-0.5 rounded-sm uppercase text-[9px] tracking-wide border border-green-100 dark:border-green-900/40">
                     Free Pickup
                   </span>
                 </div>
               </div>
 
-              <div className="h-px bg-neutral-100" />
+              <div className="h-px bg-neutral-100 dark:bg-gray-800" />
 
               {/* Grand Total */}
               <div className="flex justify-between items-center">
-                <span className="text-sm font-black uppercase tracking-wider text-neutral-800">Total Amount</span>
-                <span className="text-xl font-black text-[#FF0B01]">₹ {totalAmount}</span>
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-neutral-800 dark:text-white">Total Amount</span>
+                <span className="text-lg sm:text-xl font-black text-[#FF0B01]">₹ {totalAmount}</span>
               </div>
 
               {/* Checkout CTA */}
               <button 
                 onClick={handleCheckout}
                 disabled={checkoutLoading || hasOutOfStockItems}
-                className="w-full py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-[14px] tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
+                className="w-full py-3 sm:py-4 bg-[#FF0B01] hover:bg-red-700 text-white font-extrabold text-xs sm:text-[14px] tracking-wider rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed disabled:shadow-none"
               >
                 {checkoutLoading ? (
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
@@ -369,9 +369,9 @@ export default function Cart() {
               <button 
                 type="button"
                 onClick={() => navigate('/salons', { state: { purpose: 'products' } })}
-                className="w-full py-3.5 mt-3 border border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-extrabold text-[13px] tracking-wider rounded-2xl shadow-xs transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 sm:py-3.5 mt-2 sm:mt-3 border border-neutral-200 dark:border-gray-700 hover:border-neutral-300 dark:hover:border-gray-600 bg-white dark:bg-gray-900 hover:bg-neutral-50 dark:hover:bg-gray-800 text-neutral-700 dark:text-gray-300 font-extrabold text-xs sm:text-[13px] tracking-wider rounded-xl sm:rounded-2xl shadow-xs transition-all duration-300 uppercase flex items-center justify-center gap-2 cursor-pointer"
               >
-                <ShoppingBag className="w-4 h-4 text-neutral-400" />
+                <ShoppingBag className="w-4 h-4 text-neutral-400 dark:text-gray-400" />
                 Continue Browsing
               </button>
             </div>

@@ -5,7 +5,11 @@ const DarkModeContext = createContext();
 export const DarkModeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
     try {
-      return localStorage.getItem('neoparlour-dark-mode') === 'true';
+      const stored = localStorage.getItem('neoparlour-dark-mode');
+      if (stored !== null) return stored === 'true';
+      const theme = localStorage.getItem('theme');
+      if (theme !== null) return theme === 'dark';
+      return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
     } catch {
       return false;
     }
@@ -13,7 +17,15 @@ export const DarkModeProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('neoparlour-dark-mode', isDark);
+      localStorage.setItem('neoparlour-dark-mode', String(isDark));
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      if (typeof document !== 'undefined') {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
     } catch {}
   }, [isDark]);
 

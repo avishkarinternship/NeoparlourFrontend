@@ -302,6 +302,15 @@ export const fetchDefaultSalon = createAsyncThunk(
       }
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch default salon.');
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { customer } = getState();
+      // Skip if already loaded or currently fetching
+      if (customer.defaultSalon !== undefined && customer.defaultSalon !== null) {
+        return false;
+      }
+    }
   }
 );
 

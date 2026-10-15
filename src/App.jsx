@@ -26,7 +26,7 @@ const App = () => {
 
   return (
     <DarkModeProvider>
-      <div className="app-container overflow-x-hidden font-sans">
+      <div className="app-container overflow-x-clip font-sans">
         <Toaster position="top-right" />
         <MaintenanceOverlay />
         <SubscriptionNoticeModal

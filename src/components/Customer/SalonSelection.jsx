@@ -438,13 +438,6 @@ const SalonSelection = () => {
 
                             {/* Card Body */}
                             <div className="p-6 pt-3 flex flex-col flex-grow text-left">
-                              <span className="text-[9px] font-black tracking-[0.2em] text-[#FF2A14] uppercase mb-1.5 flex items-center gap-1">
-                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192L12 .587z"/>
-                                </svg>
-                                NEOPARLOUR PARTNER
-                              </span>
-
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <h4 className="text-xl font-bold text-gray-900 group-hover:text-[#FF2A14] transition-colors leading-snug uppercase tracking-tight flex-1">
                                   {salon.salonName}
@@ -467,23 +460,6 @@ const SalonSelection = () => {
                               <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-1 ml-5 mb-4">
                                 {salon.address || 'Dhankawadi'}
                               </p>
-
-                              {/* Home Service Badge */}
-                              {salon.homeServiceCharges ? (
-                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                  </svg>
-                                  <span>Home Service (₹{salon.homeServiceCharges})</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 border border-red-100 rounded-full text-[10px] font-bold text-[#FF2A14] w-fit mb-4">
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1-1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                  </svg>
-                                  <span>Home Service (₹50)</span>
-                                </div>
-                              )}
 
                               {/* Card Footer */}
                               <div className="mt-auto pt-4 border-t border-gray-100/60 flex items-center justify-between">

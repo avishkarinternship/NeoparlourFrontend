@@ -3,20 +3,38 @@ import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutCustomerApi } from '../../redux/slices/customerSlice';
+import { openAddressDrawer } from '../../redux/slices/locationSlice';
 import toast from 'react-hot-toast';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
 import { performCleanLogout } from '../../utils/auth';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
-import { MousePointerClick, LogIn, UserPlus, User } from 'lucide-react';
+import { MousePointerClick, LogIn, UserPlus, User, MapPin, Sun, Moon, Globe, ChevronRight } from 'lucide-react';
 
 const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user, profile, isAuthenticated } = useSelector((state) => state.customer);
+    const { activeLocation } = useSelector((state) => state.location || {});
     const isLoggedIn = !!(user || profile) && isAuthenticated;
-    const { isDark } = useDarkMode();
+    const { isDark, toggleDark } = useDarkMode();
+
+    const savedLoc = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('customerLocation'));
+        } catch {
+            return null;
+        }
+    })();
+
+    const city = activeLocation?.cityName || activeLocation?.city || savedLoc?.cityName || savedLoc?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || '';
+    const area = activeLocation?.areaName ?? activeLocation?.area ?? savedLoc?.areaName ?? savedLoc?.area ?? localStorage.getItem('customerCurrentArea') ?? localStorage.getItem('customerArea') ?? '';
+    const label = activeLocation?.label || savedLoc?.label;
+
+    const displayLocationTitle = area || city || label || 'Select Location';
+    const displayLocationSubtitle = city ? `${area ? area + ', ' : ''}${city}` : 'Tap to set your location';
 
     const isIncomplete = (name) => {
         const t = (name || '').trim();
@@ -299,6 +317,127 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
 
                 {/* Navigation Actions List */}
                 <div className={`flex-1 p-5 space-y-4 overflow-y-auto ${isDark ? 'bg-gray-950' : 'bg-gray-50/40'}`}>
+                    
+                    {/* Location Selector Card */}
+                    <div className={`p-3.5 rounded-2xl border transition-all ${
+                        isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200/80 shadow-xs'
+                    }`}>
+                        <div className="flex items-center justify-between mb-2 px-0.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                {t('drawer.current_location', 'Selected Location')}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    dispatch(openAddressDrawer());
+                                    onClose();
+                                }}
+                                className="text-[11px] font-extrabold text-[#FF0B01] hover:underline cursor-pointer flex items-center gap-0.5"
+                            >
+                                <span>{t('drawer.change', 'Change')}</span>
+                                <ChevronRight className="w-3 h-3" />
+                            </button>
+                        </div>
+                        
+                        <button
+                            type="button"
+                            onClick={() => {
+                                dispatch(openAddressDrawer());
+                                onClose();
+                            }}
+                            className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition text-left cursor-pointer ${
+                                isDark ? 'hover:bg-gray-800/80' : 'hover:bg-slate-50'
+                            }`}
+                        >
+                            <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-950/50 text-[#FF0B01] flex items-center justify-center shrink-0 border border-red-200/60 dark:border-red-900/40">
+                                <MapPin className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className={`text-xs font-black truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {displayLocationTitle}
+                                </div>
+                                <div className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                                    {displayLocationSubtitle}
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Quick Preferences Card: Dark Mode & Language */}
+                    <div className={`p-3 rounded-2xl border ${
+                        isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200/80 shadow-xs'
+                    } space-y-2.5`}>
+                        
+                        {/* Dark Mode Toggle */}
+                        <div 
+                            onClick={toggleDark}
+                            className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-colors ${
+                                isDark ? 'hover:bg-gray-800/60' : 'hover:bg-gray-50'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 select-none">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                                    isDark ? 'bg-yellow-500/15 text-yellow-400' : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                    {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                </div>
+                                <div>
+                                    <span className={`text-xs font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {isDark ? t('drawer.dark_mode', 'Dark Mode') : t('drawer.light_mode', 'Light Mode')}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 block">
+                                        {isDark ? 'Currently dark theme' : 'Currently light theme'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleDark();
+                                }}
+                                className={`relative w-12 h-6 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer p-0.5 border-0 ${
+                                    isDark ? 'bg-yellow-500' : 'bg-gray-300'
+                                }`}
+                                aria-label="Toggle dark mode"
+                            >
+                                <span className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${
+                                    isDark ? 'translate-x-6' : 'translate-x-0'
+                                }`}>
+                                    {isDark ? (
+                                        <Sun className="w-3 h-3 text-yellow-600" />
+                                    ) : (
+                                        <Moon className="w-3 h-3 text-gray-500" />
+                                    )}
+                                </span>
+                            </button>
+                        </div>
+
+                        <div className={`h-[1px] ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`} />
+
+                        {/* Language Switcher */}
+                        <div className="flex items-center justify-between p-1">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-950/40 text-[#FF0B01] flex items-center justify-center shrink-0">
+                                    <Globe className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <span className={`text-xs font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {t('drawer.language', 'Language')}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 block">
+                                        English • Hinglish • Minglish
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="shrink-0">
+                                <LanguageSwitcher />
+                            </div>
+                        </div>
+
+                    </div>
                     
                     {/* Upper Action Group */}
                     <div className={cardCls}>

@@ -339,15 +339,15 @@ const Appointments = () => {
     return (
       <div 
         key={app.id || index}
-        className={`py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all duration-300 ${
-          isInProgress ? 'bg-orange-50/30 rounded-2xl px-6 border-l-4 border-orange-500 my-2 shadow-sm' : isRescheduled ? 'bg-amber-50/30 rounded-2xl px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
+        className={`py-4 sm:py-6 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-6 transition-all duration-300 ${
+          isInProgress ? 'bg-orange-50/30 rounded-2xl px-4 sm:px-6 border-l-4 border-orange-500 my-2 shadow-sm' : isRescheduled ? 'bg-amber-50/30 rounded-2xl px-4 sm:px-6 border-l-4 border-amber-500 my-2 shadow-sm' : ''
         }`}
       >
         {/* Customer & Info Card */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-full bg-gray-50 border-[3px] border-white shadow-md overflow-hidden flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-50 border-2 sm:border-[3px] border-white shadow-md overflow-hidden flex items-center justify-center">
               <img 
                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(app.customerName || 'NP')}&backgroundColor=ffebeb&textColor=ff0b01&fontWeight=800&fontSize=34`}
                 alt={app.customerName}
@@ -355,56 +355,56 @@ const Appointments = () => {
               />
             </div>
             {isRescheduled && (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Rescheduled">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Rescheduled">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             )}
             {isInProgress && (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white text-xs select-none" title="In Progress">
+              <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white text-xs select-none" title="In Progress">
                 🔥
               </div>
             )}
           </div>
 
           {/* Text info */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <h3 className="text-base font-black text-gray-900 dark:text-white tracking-tight">{app.customerName}</h3>
+          <div className="space-y-0.5 sm:space-y-1">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <h3 className="text-sm sm:text-base font-black text-gray-900 dark:text-white tracking-tight">{app.customerName}</h3>
               {isRescheduled && (
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
+                <span className="px-1.5 sm:px-2 py-0.5 bg-amber-100 text-amber-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-amber-200">
                   Rescheduled
                 </span>
               )}
               {isInProgress && (
-                <span className="px-2 py-0.5 bg-orange-100 text-orange-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-orange-200">
+                <span className="px-1.5 sm:px-2 py-0.5 bg-orange-100 text-orange-800 text-[8px] font-black tracking-widest uppercase rounded-md shadow-sm border border-orange-200">
                   In Progress
                 </span>
               )}
             </div>
             
-            <p className="text-gray-400 font-bold text-xs uppercase tracking-wider">
+            <p className="text-gray-400 font-bold text-[11px] sm:text-xs uppercase tracking-wider">
               {app.serviceNames?.join(', ') || 'General Grooming'}
             </p>
             
-            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-gray-500 pt-1">
-              <div className="flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-bold text-gray-500 pt-0.5 sm:pt-1">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>{date}</span>
               </div>
               
-              <div className="flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>{time}</span>
               </div>
               
               {app.staffName && (
-                <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-2.5 py-0.5 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
+                <div className="flex items-center gap-1 sm:gap-1.5 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                   <span>Stylist: {app.staffName}</span>
                 </div>
@@ -414,26 +414,26 @@ const Appointments = () => {
         </div>
 
         {/* Price & Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-5">
+        <div className="flex flex-row sm:flex-row items-center justify-between sm:justify-end gap-3 sm:gap-5 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-50 dark:border-gray-800">
           {/* Price Badge */}
-          <div className="text-left sm:text-right pr-4">
-            <span className="text-[10px] font-black text-gray-300 tracking-[0.2em] uppercase block">Final Amount</span>
-            <span className="text-lg font-black text-[#ff0b01]">₹{app.finalAmount?.toFixed(2)}</span>
+          <div className="text-left sm:text-right pr-2 sm:pr-4">
+            <span className="text-[9px] sm:text-[10px] font-black text-gray-300 tracking-[0.2em] uppercase block">Final Amount</span>
+            <span className="text-base sm:text-lg font-black text-[#ff0b01]">₹{app.finalAmount?.toFixed(2)}</span>
           </div>
 
           {/* Action buttons (Only for TODAY, UPCOMING, and PREVIOUS tabs) */}
           {(activeTab === 'TODAY' || activeTab === 'UPCOMING' || activeTab === 'PREVIOUS') && !isInProgress && (
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => handleReschedule(app)}
-                className="flex-1 sm:flex-none px-5 py-3.5 bg-[#ff0b01] text-white font-black tracking-widest text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-[#ff0b01]/10 uppercase"
+                className="px-3.5 sm:px-5 py-2 sm:py-3.5 bg-[#ff0b01] text-white font-black tracking-widest text-[8px] sm:text-[9px] rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all shadow-md shadow-[#ff0b01]/10 uppercase"
               >
                 Reschedule
               </button>
               
               <button
                 onClick={() => handleCancelClick(app)}
-                className="flex-1 sm:flex-none px-5 py-3.5 bg-[#858585] text-white font-black tracking-widest text-[9px] rounded-xl hover:bg-gray-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-md uppercase"
+                className="px-3.5 sm:px-5 py-2 sm:py-3.5 bg-[#858585] text-white font-black tracking-widest text-[8px] sm:text-[9px] rounded-xl hover:bg-gray-700 hover:-translate-y-0.5 active:scale-95 transition-all shadow-md uppercase"
               >
                 Cancel
               </button>
@@ -482,25 +482,25 @@ const Appointments = () => {
     return (
       <>
         {/* Header Container */}
-        <div className="max-w-[1200px] mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="max-w-[1200px] mx-auto px-3.5 sm:px-6 pt-5 sm:pt-10 pb-4 sm:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           
           {/* Left Section with Back and Navigation Title */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={handleBackNavigation}
-              className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all"
+              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all shrink-0"
               title="Go Back"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">
                 {isCustomer ? 'My Bookings' : 'Bookings'}
               </h1>
-              <p className="text-gray-400 font-medium text-sm mt-0.5">
+              <p className="text-gray-400 font-medium text-xs sm:text-sm mt-0.5">
                 {isCustomer ? 'Track your salon sessions and scheduling' : 'Manage and monitor customer slots'}
               </p>
             </div>
@@ -508,8 +508,8 @@ const Appointments = () => {
 
           {/* Search Bar */}
           <div className="relative w-full md:max-w-xs">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
@@ -518,14 +518,14 @@ const Appointments = () => {
               placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
+              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-white dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-gray-800 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
             />
           </div>
         </div>
 
         {/* Main Tabs Container */}
-        <div className="max-w-[1200px] mx-auto px-6">
-          <div className="border-b border-gray-100 dark:border-gray-800 flex gap-8 md:gap-12 bg-white dark:bg-gray-900 px-6 rounded-2xl shadow-sm border border-gray-50/50 dark:border-gray-800 mb-8 overflow-x-auto whitespace-nowrap">
+        <div className="max-w-[1200px] mx-auto px-3.5 sm:px-6">
+          <div className="border-b border-gray-100 dark:border-gray-800 flex gap-4 sm:gap-8 md:gap-12 bg-white dark:bg-gray-900 px-3 sm:px-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-50/50 dark:border-gray-800 mb-4 sm:mb-8 overflow-x-auto whitespace-nowrap">
             {['TODAY', 'UPCOMING', 'PREVIOUS', 'CANCELLED', 'COMPLETED'].map((tab) => (
               <button
                 key={tab}
@@ -533,13 +533,13 @@ const Appointments = () => {
                   setActiveTab(tab);
                   setPage(0);
                 }}
-                className={`py-5 text-xs font-black tracking-[0.25em] transition-all relative ${
+                className={`py-3 sm:py-5 text-[10px] sm:text-xs font-black tracking-[0.2em] transition-all relative ${
                   activeTab === tab ? 'text-gray-900 dark:text-white font-black' : 'text-gray-300 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300'
                 }`}
               >
                 {tab}
                 {activeTab === tab && (
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#ff0b01] rounded-full animate-fade-in" />
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 sm:h-1 bg-[#ff0b01] rounded-full animate-fade-in" />
                 )}
               </button>
             ))}
@@ -547,8 +547,8 @@ const Appointments = () => {
         </div>
 
         {/* List Container */}
-        <div className="max-w-[1200px] mx-auto px-6">
-          <div className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6">
+        <div className="max-w-[1200px] mx-auto px-3.5 sm:px-6 pb-12">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-4 sm:p-6 md:p-10 space-y-4 sm:space-y-6">
             
             {loading ? (
               <div className="divide-y divide-gray-100 dark:divide-gray-800">

@@ -23,6 +23,14 @@ export const fetchCart = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch cart.');
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { cart } = getState();
+      if (cart.loading) {
+        return false;
+      }
+    }
   }
 );
 

@@ -40,8 +40,14 @@
 }
 
 /* Global Typography System */
-*, *::before, *::after {
+html, body, button, input, select, textarea {
   font-family: 'Outfit', 'Jost', system-ui, -apple-system, sans-serif;
+}
+
+/* Ensure blog content and all inner elements inherit the author's configured font */
+.blog-content,
+.blog-content * {
+  font-family: inherit;
 }
 
 /* Hindi (Devanagari) Typography — Inknut Antiqua */

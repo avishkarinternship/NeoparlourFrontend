@@ -63,7 +63,7 @@ export default function OwnerLayout() {
     }`}>
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       <div className="flex flex-1">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isDarkMode={isDarkMode} />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
         <div className="flex-1 flex flex-col min-w-0 p-0">
           <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
           <Outlet context={{ isDarkMode, salon }} />

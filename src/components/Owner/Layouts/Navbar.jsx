@@ -70,6 +70,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
 
   const dropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
 
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -77,6 +79,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
 
   const [query, setQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState({
     staff: [],
     customerSalonVisits: [],
@@ -96,6 +99,9 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
+        setIsMobileSearchOpen(false);
       }
       if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
@@ -263,18 +269,325 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
     };
   }, [query]);
 
+  const handleResultClick = (callback) => {
+    if (callback) callback();
+    setShowDropdown(false);
+    setIsMobileSearchOpen(false);
+  };
+
+  const renderSearchResults = () => {
+    if (
+      searching &&
+      (!searchResults.staff || searchResults.staff.length === 0) &&
+      (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
+      (!searchResults.appointments || searchResults.appointments.length === 0) &&
+      (!searchResults.services || searchResults.services.length === 0) &&
+      (!searchResults.products || searchResults.products.length === 0) &&
+      (!searchResults.offers || searchResults.offers.length === 0)
+    ) {
+      return (
+        <div className="flex items-center justify-center py-6 gap-2">
+          <div className="animate-spin h-4 w-4 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Searching...</span>
+        </div>
+      );
+    }
+
+    if (
+      (!searchResults.staff || searchResults.staff.length === 0) &&
+      (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
+      (!searchResults.appointments || searchResults.appointments.length === 0) &&
+      (!searchResults.services || searchResults.services.length === 0) &&
+      (!searchResults.products || searchResults.products.length === 0) &&
+      (!searchResults.offers || searchResults.offers.length === 0)
+    ) {
+      return (
+        <div className="text-center py-6 text-xs text-gray-400 font-bold">
+          No matching records found.
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {/* Category 1: Staff Stylists */}
+        {searchResults.staff && searchResults.staff.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Team Stylists
+            </h4>
+            <div className="space-y-1.5">
+              {searchResults.staff.map(staff => (
+                <button
+                  key={staff.id}
+                  onClick={() => handleResultClick(() => navigate('/owner/manage/staff', { state: { editStaffId: staff.id } }))}
+                  className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px] border ${
+                      isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-red-50 border-gray-200'
+                    }`}>
+                      {staff.imageUrl || staff.imagePath ? (
+                        <img 
+                          src={staff.imageUrl || staff.imagePath} 
+                          alt={staff.name} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.target.src = staff.gender === 'FEMALE' 
+                              ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                              : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                          }}
+                        />
+                      ) : (
+                        <img 
+                          src={staff.gender === 'FEMALE' 
+                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
+                          alt={staff.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>{staff.name}</div>
+                      <div className="text-[9px] text-gray-400 font-semibold">{staff.phone}</div>
+                    </div>
+                  </div>
+                  <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold capitalize ${
+                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
+                  }`}>
+                    {staff.status}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category 2: Salon Visits */}
+        {searchResults.customerSalonVisits && searchResults.customerSalonVisits.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Salon Visits / Customers
+            </h4>
+            <div className="space-y-1.5">
+              {searchResults.customerSalonVisits.map(visit => (
+                <button
+                  key={visit.id}
+                  onClick={() => handleResultClick(() => navigate('/owner/customers', { state: { customerMobile: visit.customerMobile, customerName: visit.customerName } }))}
+                  className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <span className={`text-xs font-bold group-hover:text-[#ff0b01] transition-colors truncate ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {visit.customerName}
+                    </span>
+                    <span className="text-[9px] font-bold text-gray-400">
+                      {visit.visitCount} Visits
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between w-full mt-1">
+                    <span className="text-[9px] text-gray-400 font-semibold truncate">
+                      {visit.customerMobile}
+                    </span>
+                    <span className="text-[9px] font-bold text-green-600">
+                      ₹ {visit.totalRevenue?.toFixed(2)}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category 3: Appointments */}
+        {searchResults.appointments && searchResults.appointments.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Appointments
+            </h4>
+            <div className="space-y-1.5">
+              {searchResults.appointments.map(appt => (
+                <button
+                  key={appt.id}
+                  onClick={() => handleResultClick(() => navigate('/owner/manage/schedule', { state: { appointmentId: appt.id } }))}
+                  className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <span className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {appt.customerName || appt.customer?.fullName || 'Customer'}
+                    </span>
+                    <span className="text-[9px] font-bold text-gray-400">
+                      ₹ {(appt.finalAmount || appt.totalPrice || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between w-full mt-1">
+                    <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[150px]">
+                      {appt.serviceNames?.join(', ') || appt.serviceName || (appt.services && appt.services.map(s => s.serviceName).join(', ')) || 'Grooming'}
+                    </span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
+                      appt.status === 'booked' 
+                        ? isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
+                        : appt.status === 'completed' 
+                          ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]'
+                          : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {appt.status === 'booked' ? 'scheduled' : appt.status}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category 4: Services */}
+        {searchResults.services && searchResults.services.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Services
+            </h4>
+            <div className="space-y-1.5">
+              {searchResults.services.map(service => (
+                <button
+                  key={service.id}
+                  onClick={() => handleResultClick(() => navigate('/owner/manage/services', { state: { serviceId: service.id } }))}
+                  className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
+                >
+                  <div className="min-w-0 flex-1 pr-2">
+                    <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>{service.name}</div>
+                    <div className="text-[9px] text-gray-400 font-semibold capitalize">{service.category} • {service.duration} mins</div>
+                  </div>
+                  <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                    ₹ {service.price}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category 5: Products */}
+        {searchResults.products && searchResults.products.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Products
+            </h4>
+            <div className="space-y-1.5">
+              {(searchResults.products ?? []).map(product => {
+                const prodNameInitial = product.name?.charAt(0).toUpperCase() || 'P';
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => handleResultClick(() => navigate('/owner/manage/add-products', { state: { editProductId: product.id } }))}
+                    className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-2">
+                      <div className="w-8 h-8 rounded-xl overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '';
+                            }}
+                          />
+                        ) : (
+                          prodNameInitial
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>{product.name}</div>
+                        <div className="text-[9px] text-gray-400 font-semibold">{product.category} • {product.stock} in stock</div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                      ₹ {product.price}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Category 6: Offers */}
+        {searchResults.offers && searchResults.offers.length > 0 && (
+          <div className="space-y-2">
+            <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
+              isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
+            }`}>
+              Offers
+            </h4>
+            <div className="space-y-1.5">
+              {searchResults.offers.map(offer => {
+                const discountLabel = (offer.discountType?.toUpperCase() === 'PERCENTAGE')
+                  ? `${offer.discountValue}% OFF`
+                  : `₹${offer.discountValue} OFF`;
+                return (
+                  <button
+                    key={offer.id}
+                    onClick={() => handleResultClick(() => navigate('/owner/manage/add-offers', { state: { editOfferId: offer.id } }))}
+                    className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>{offer.name}</div>
+                      <div className="text-[9px] text-gray-400 font-semibold">
+                        {discountLabel}
+                      </div>
+                    </div>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
+                      offer.active 
+                        ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]' 
+                        : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {offer.active ? 'active' : 'inactive'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
-    <header className={`h-16 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 border-b ${
+    <header className={`h-16 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 border-b relative ${
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
       {/* Left Logo Area */}
-      <div className={`w-20 md:w-44 lg:w-64 h-full flex items-center px-3 sm:px-4 md:px-6 border-r flex-shrink-0 transition-colors duration-300 ${
+      <div className={`w-auto sm:w-20 md:w-44 lg:w-64 h-full flex items-center px-3 sm:px-4 md:px-6 border-r flex-shrink-0 transition-colors duration-300 ${
         isDarkMode ? 'border-zinc-800' : 'border-gray-200'
       }`}>
         <button
           onClick={onToggleSidebar}
-          className={`mr-3 p-1 transition-colors lg:hidden focus:outline-none ${
+          className={`mr-2.5 sm:mr-3 p-1 transition-colors lg:hidden focus:outline-none ${
             isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
           }`}
           aria-label="Toggle Sidebar"
@@ -311,372 +624,90 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
       </div>
 
       {/* Right Container Elements */}
-      <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2.5 sm:space-x-6 min-w-0">
+      <div className="flex items-center justify-end flex-1 px-3 sm:px-6 space-x-2 sm:space-x-4 min-w-0">
 
-        {/* Pill-Shaped Inline Search Field with Dropdown container */}
+        {/* Desktop Pill-Shaped Inline Search Field */}
         {!isSeoAdmin && (
-        <div ref={dropdownRef} className="relative flex-1 max-w-[140px] sm:max-w-xs md:max-w-md transition-all duration-300">
-          <div className={`border rounded-full p-1 pl-3 sm:pl-4 flex items-center focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200 ${
-            isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white border-gray-300'
-          }`}>
-            <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder={t('owner.navbar.search_placeholder', 'Search...')}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setShowDropdown(true);
-              }}
-              onFocus={() => setShowDropdown(true)}
-              className={`w-full bg-transparent text-[11px] sm:text-xs focus:outline-none ${
-                isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-gray-700 placeholder-gray-400'
-              }`}
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery('');
-                  setShowDropdown(false);
-                }}
-                className={`mr-2 text-[10px] font-bold ${
-                  isDarkMode ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                ✕
-              </button>
-            )}
-            <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
-              {t('buttons.search', 'Search')}
-            </button>
-          </div>
-
-          {/* Absolute Search Dropdown results */}
-          {showDropdown && (query.trim().length > 0 || searching) && (
-            <div className={`absolute top-full right-0 w-[92vw] sm:left-0 sm:w-full mt-2 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4 border ${
-              isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+          <div ref={dropdownRef} className="hidden sm:block relative flex-1 max-w-xs md:max-w-md transition-all duration-300">
+            <div className={`border rounded-full p-1 pl-3 sm:pl-4 flex items-center focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200 ${
+              isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white border-gray-300'
             }`}>
-              {searching &&
-                (!searchResults.staff || searchResults.staff.length === 0) &&
-                (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
-                (!searchResults.appointments || searchResults.appointments.length === 0) &&
-                (!searchResults.services || searchResults.services.length === 0) &&
-                (!searchResults.products || searchResults.products.length === 0) &&
-                (!searchResults.offers || searchResults.offers.length === 0) ? (
-                <div className="flex items-center justify-center py-6 gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Searching...</span>
-                </div>
-              ) : (!searchResults.staff || searchResults.staff.length === 0) &&
-                (!searchResults.customerSalonVisits || searchResults.customerSalonVisits.length === 0) &&
-                (!searchResults.appointments || searchResults.appointments.length === 0) &&
-                (!searchResults.services || searchResults.services.length === 0) &&
-                (!searchResults.products || searchResults.products.length === 0) &&
-                (!searchResults.offers || searchResults.offers.length === 0) ? (
-                <div className="text-center py-6 text-xs text-gray-400 font-bold">
-                  No matching records found.
-                </div>
-              ) : (
-                <>                  {/* Category 1: Staff Stylists */}
-                  {searchResults.staff && searchResults.staff.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Team Stylists
-                      </h4>
-                      <div className="space-y-1.5">
-                        {searchResults.staff.map(staff => {
-                          const nameInitial = staff.name?.charAt(0).toUpperCase() || 'S';
-                          return (
-                            <button
-                              key={staff.id}
-                              onClick={() => {
-                                navigate('/owner/manage/staff', { state: { editStaffId: staff.id } });
-                                setShowDropdown(false);
-                              }}
-                              className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
-                            >
-                              <div className="flex items-center space-x-2.5">
-                                <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px] border ${
-                                  isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-red-50 border-gray-200'
-                                }`}>
-                                  {staff.imageUrl || staff.imagePath ? (
-                                    <img 
-                                      src={staff.imageUrl || staff.imagePath} 
-                                      alt={staff.name} 
-                                      className="w-full h-full object-cover" 
-                                      onError={(e) => {
-                                        e.target.src = staff.gender === 'FEMALE' 
-                                          ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                          : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                      }}
-                                    />
-                                  ) : (
-                                    <img 
-                                      src={staff.gender === 'FEMALE' 
-                                        ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                        : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
-                                      alt={staff.name} 
-                                      className="w-full h-full object-cover" 
-                                    />
-                                  )}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
-                                    isDarkMode ? 'text-white' : 'text-gray-900'
-                                  }`}>{staff.name}</div>
-                                  <div className="text-[9px] text-gray-400 font-semibold">{staff.phone}</div>
-                                </div>
-                              </div>
-                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold capitalize ${
-                                isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                              }`}>
-                                {staff.status}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Category 2: Salon Visits */}
-                  {searchResults.customerSalonVisits && searchResults.customerSalonVisits.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Salon Visits / Customers
-                      </h4>
-                      <div className="space-y-1.5">
-                        {searchResults.customerSalonVisits.map(visit => (
-                          <button
-                            key={visit.id}
-                            onClick={() => {
-                              navigate('/owner/customers', { state: { customerMobile: visit.customerMobile, customerName: visit.customerName } });
-                              setShowDropdown(false);
-                            }}
-                            className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
-                          >
-                            <div className="flex justify-between items-start w-full">
-                              <span className={`text-xs font-bold group-hover:text-[#ff0b01] transition-colors truncate ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}>
-                                {visit.customerName}
-                              </span>
-                              <span className="text-[9px] font-bold text-gray-400">
-                                {visit.visitCount} Visits
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between w-full mt-1">
-                              <span className="text-[9px] text-gray-400 font-semibold truncate">
-                                {visit.customerMobile}
-                              </span>
-                              <span className="text-[9px] font-bold text-green-600">
-                                ₹ {visit.totalRevenue?.toFixed(2)}
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Category 3: Appointments */}
-                  {searchResults.appointments && searchResults.appointments.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Appointments
-                      </h4>
-                      <div className="space-y-1.5">
-                        {searchResults.appointments.map(appt => (
-                          <button
-                            key={appt.id}
-                            onClick={() => {
-                              navigate('/owner/manage/schedule', { state: { appointmentId: appt.id } });
-                              setShowDropdown(false);
-                            }}
-                            className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between"
-                          >
-                            <div className="flex justify-between items-start w-full">
-                              <span className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}>
-                                {appt.customerName || appt.customer?.fullName || 'Customer'}
-                              </span>
-                              <span className="text-[9px] font-bold text-gray-400">
-                                ₹ {(appt.finalAmount || appt.totalPrice || 0).toFixed(2)}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between w-full mt-1">
-                              <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[150px]">
-                                {appt.serviceNames?.join(', ') || appt.serviceName || (appt.services && appt.services.map(s => s.serviceName).join(', ')) || 'Grooming'}
-                              </span>
-                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
-                                appt.status === 'booked' 
-                                  ? isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                                  : appt.status === 'completed' 
-                                    ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]'
-                                    : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {appt.status === 'booked' ? 'scheduled' : appt.status}
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Category 4: Services */}
-                  {searchResults.services && searchResults.services.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Services
-                      </h4>
-                      <div className="space-y-1.5">
-                        {searchResults.services.map(service => (
-                          <button
-                            key={service.id}
-                            onClick={() => {
-                              navigate('/owner/manage/services', { state: { serviceId: service.id } });
-                              setShowDropdown(false);
-                            }}
-                            className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
-                          >
-                            <div className="min-w-0 flex-1 pr-2">
-                              <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                              }`}>{service.name}</div>
-                              <div className="text-[9px] text-gray-400 font-semibold capitalize">{service.category} • {service.duration} mins</div>
-                            </div>
-                            <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
-                              ₹ {service.price}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Category 5: Products */}
-                  {searchResults.products && searchResults.products.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Products
-                      </h4>
-                      <div className="space-y-1.5">
-                        {(searchResults.products ?? []).map(product => {
-                          const prodNameInitial = product.name?.charAt(0).toUpperCase() || 'P';
-                          return (
-                            <button
-                              key={product.id}
-                              onClick={() => {
-                                navigate('/owner/manage/add-products', { state: { editProductId: product.id } });
-                                setShowDropdown(false);
-                              }}
-                              className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group"
-                            >
-                              <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-2">
-                                <div className="w-8 h-8 rounded-xl overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
-                                  {product.imageUrl ? (
-                                    <img
-                                      src={product.imageUrl}
-                                      alt={product.name}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = '';
-                                      }}
-                                    />
-                                  ) : (
-                                    prodNameInitial
-                                  )}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
-                                    isDarkMode ? 'text-white' : 'text-gray-900'
-                                  }`}>{product.name}</div>
-                                  <div className="text-[9px] text-gray-400 font-semibold">{product.category} • {product.stock} in stock</div>
-                                </div>
-                              </div>
-                              <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
-                                ₹ {product.price}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Category 6: Offers */}
-                  {searchResults.offers && searchResults.offers.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className={`text-[9px] font-black uppercase tracking-widest border-b pb-1 ${
-                        isDarkMode ? 'text-zinc-500 border-zinc-800' : 'text-gray-400 border-gray-100'
-                      }`}>
-                        Offers
-                      </h4>
-                      <div className="space-y-1.5">
-                        {searchResults.offers.map(offer => {
-                          const discountLabel = (offer.discountType?.toUpperCase() === 'PERCENTAGE')
-                            ? `${offer.discountValue}% OFF`
-                            : `₹${offer.discountValue} OFF`;
-                          return (
-                            <button
-                              key={offer.id}
-                              onClick={() => {
-                                navigate('/owner/manage/add-offers', { state: { editOfferId: offer.id } });
-                                setShowDropdown(false);
-                              }}
-                              className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between"
-                            >
-                              <div className="min-w-0 flex-1 pr-2">
-                                <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
-                                  isDarkMode ? 'text-white' : 'text-gray-900'
-                                }`}>{offer.name}</div>
-                                <div className="text-[9px] text-gray-400 font-semibold">
-                                  {discountLabel}
-                                </div>
-                              </div>
-                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
-                                offer.active 
-                                  ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]' 
-                                  : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {offer.active ? 'active' : 'inactive'}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
+              <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder={t('owner.navbar.search_placeholder', 'Search...')}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                className={`w-full bg-transparent text-[11px] sm:text-xs focus:outline-none ${
+                  isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-gray-700 placeholder-gray-400'
+                }`}
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setShowDropdown(false);
+                  }}
+                  className={`mr-2 text-[10px] font-bold ${
+                    isDarkMode ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  ✕
+                </button>
               )}
+              <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
+                {t('buttons.search', 'Search')}
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Absolute Search Dropdown results for Desktop */}
+            {showDropdown && (query.trim().length > 0 || searching) && (
+              <div className={`absolute top-full left-0 w-full mt-2 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4 border ${
+                isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+              }`}>
+                {renderSearchResults()}
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Language Switcher */}
-        {!isAdmin && !isSeoAdmin && <LanguageSwitcher />}
+        {/* Mobile Search Icon Button */}
+        {!isSeoAdmin && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileSearchOpen(true);
+              setTimeout(() => mobileSearchInputRef.current?.focus(), 50);
+            }}
+            className={`sm:hidden p-2 rounded-xl transition-colors ${
+              isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+            aria-label="Search"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        )}
 
-        {/* Dark Mode Toggle Button */}
+        {/* Language Switcher (Desktop only - mobile is in sidebar) */}
+        {!isAdmin && !isSeoAdmin && (
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
+        )}
+
+        {/* Dark Mode Toggle Button (Desktop only - mobile is in sidebar) */}
         <button
           onClick={toggleDarkMode}
-          className={`w-11 h-11 rounded-2xl transition border flex items-center justify-center cursor-pointer relative overflow-hidden ${
+          className={`hidden sm:flex w-11 h-11 rounded-2xl transition border items-center justify-center cursor-pointer relative overflow-hidden ${
             isDarkMode 
               ? 'bg-zinc-800 text-amber-400 border-zinc-700 hover:bg-zinc-700' 
               : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -877,6 +908,77 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
           onClose={() => setShowSeoProfileModal(false)}
           onProfileUpdated={(updated) => setSeoAdminUser(updated)}
         />
+      )}
+
+      {/* Mobile Search Overlay Bar */}
+      {!isSeoAdmin && isMobileSearchOpen && (
+        <div 
+          ref={mobileSearchRef}
+          className={`sm:hidden absolute inset-0 z-50 px-3 flex items-center gap-2 transition-all ${
+            isDarkMode ? 'bg-zinc-900 border-b border-zinc-800 text-zinc-100' : 'bg-white border-b border-gray-200 text-gray-900'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileSearchOpen(false);
+              setShowDropdown(false);
+            }}
+            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+              isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
+            aria-label="Back"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+
+          <div className={`flex-1 flex items-center px-3.5 py-1.5 rounded-full border transition-all ${
+            isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-gray-50 border-gray-200 text-gray-900'
+          }`}>
+            <svg className={`w-4 h-4 mr-2 flex-shrink-0 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              ref={mobileSearchInputRef}
+              type="text"
+              placeholder={t('owner.navbar.search_placeholder', 'Search...')}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              className={`w-full bg-transparent text-xs focus:outline-none ${
+                isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
+              }`}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  setShowDropdown(false);
+                }}
+                className={`p-1 text-xs font-bold ${
+                  isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Search Dropdown for Mobile Overlay */}
+          {showDropdown && (query.trim().length > 0 || searching) && (
+            <div className={`fixed top-16 left-2 right-2 rounded-2xl shadow-2xl z-50 max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4 border ${
+              isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+            }`}>
+              {renderSearchResults()}
+            </div>
+          )}
+        </div>
       )}
     </header>
   );

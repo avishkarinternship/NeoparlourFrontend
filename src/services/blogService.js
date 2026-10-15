@@ -17,6 +17,7 @@ export const blogService = {
     formData.append('file', file);
     formData.append('folder', folder);
     return axiosInstance.post('/images/upload', formData, {
+      params: { folder },
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   }

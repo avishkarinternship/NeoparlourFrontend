@@ -218,6 +218,7 @@ const HomeScreen = () => {
     const [searchSalonsList, setSearchSalonsList] = useState([]);
     const [searchDropdownLoading, setSearchDropdownLoading] = useState(false);
     const [isLocationChanged, setIsLocationChanged] = useState(false);
+    const [highlightSearch, setHighlightSearch] = useState(false);
 
     // Click outside dropdowns handler
     useEffect(() => {
@@ -688,23 +689,61 @@ const HomeScreen = () => {
     };
 
     const handleServiceCardClick = (service) => {
+        const serviceName = service.name;
         setSearchData(prev => ({
             ...prev,
-            category: service.name
+            category: serviceName
         }));
 
-        const city = searchData.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity');
-        if (!city) {
-            toast.error("Please select a city first to explore salons!");
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            const city = searchData.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity') || '';
+            const area = searchData.areaName || activeLocation?.areaName || activeLocation?.area || localStorage.getItem('customerCurrentArea') || localStorage.getItem('customerArea') || '';
+            navigate('/salons', {
+                state: {
+                    cityName: city,
+                    areaName: area,
+                    category: serviceName
+                }
+            });
             return;
         }
 
-        handleLocationSearch(service.name);
+        // Move screen smoothly up to the search bar on desktop
+        const searchSection = document.getElementById('search-bar-section');
+        if (searchSection) {
+            searchSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Highlight search bar briefly to give clear visual feedback
+        setHighlightSearch(true);
+        setTimeout(() => setHighlightSearch(false), 2400);
+
+        const city = searchData.cityName || activeLocation?.cityName || activeLocation?.city || localStorage.getItem('customerCurrentCity') || localStorage.getItem('customerCity');
+        if (city) {
+            handleLocationSearch(serviceName);
+        } else {
+            toast(`Selected "${translateServiceName(serviceName, t)}". Select your city or area to find salons.`, {
+                icon: '✂️'
+            });
+        }
     };
 
     const handleLocationSearch = async (forcedCategory = null) => {
         const activeCategory = forcedCategory !== null && typeof forcedCategory === 'string' ? forcedCategory : searchData.category;
         if (!searchData.cityName && !searchData.areaName && !activeCategory) return;
+
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            navigate('/salons', {
+                state: {
+                    cityName: searchData.cityName || activeLocation?.cityName || '',
+                    areaName: searchData.areaName || activeLocation?.areaName || '',
+                    category: activeCategory || ''
+                }
+            });
+            return;
+        }
 
         setSearchDropdownLoading(true);
         setShowSearchDropdown(true);
@@ -957,17 +996,17 @@ const HomeScreen = () => {
 
     if (isPageLoading) {
         return (
-            <div className={`min-h-screen font-sans overflow-x-hidden ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
+            <div className={`min-h-screen font-sans overflow-x-clip ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
                 {/* 1. Hero Section Skeleton */}
-                <section className="relative min-h-[500px] w-full flex flex-col items-center justify-center py-20 px-6 text-center bg-[#f4f4f4] dark:bg-gray-900 space-y-6">
-                    <div className="h-12 w-3/4 max-w-2xl yt-skeleton rounded-2xl mx-auto"></div>
-                    <div className="h-5 w-1/2 max-w-lg yt-skeleton rounded-lg mx-auto"></div>
+                <section className="relative min-h-[360px] md:min-h-[500px] w-full flex flex-col items-center justify-center py-8 sm:py-14 md:py-20 px-4 sm:px-6 text-center bg-[#f4f4f4] dark:bg-gray-900 space-y-4 sm:space-y-6">
+                    <div className="h-8 sm:h-12 w-3/4 max-w-2xl yt-skeleton rounded-2xl mx-auto"></div>
+                    <div className="h-4 sm:h-5 w-1/2 max-w-lg yt-skeleton rounded-lg mx-auto"></div>
                     {/* Search Bar Skeleton */}
-                    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg flex flex-col md:flex-row items-center gap-3 mt-6">
-                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
-                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
-                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
-                        <div className="h-12 yt-skeleton rounded-xl w-full md:w-36"></div>
+                    <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg flex flex-col md:flex-row items-center gap-2 sm:gap-3 mt-3 sm:mt-6">
+                        <div className="h-10 sm:h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-10 sm:h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-10 sm:h-12 yt-skeleton rounded-xl w-full md:w-1/3"></div>
+                        <div className="h-10 sm:h-12 yt-skeleton rounded-xl w-full md:w-36"></div>
                     </div>
                 </section>
 
@@ -1015,10 +1054,10 @@ const HomeScreen = () => {
     }
 
     return (
-        <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
+        <div className={`min-h-screen font-sans overflow-x-clip transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
 
             {/* 2. HERO SECTION - WITH DECORATIVE CORNER IMAGES AND GREY BACKGROUND */}
-            <section className="relative min-h-[540px] w-full flex flex-col items-center justify-center py-20 px-6 text-center overflow-visible bg-[#f4f4f4]">
+            <section className={`relative min-h-[360px] md:min-h-[540px] w-full flex flex-col items-center justify-center py-8 sm:py-14 md:py-20 px-4 sm:px-6 text-center overflow-visible transition-colors duration-300 ${isDark ? 'bg-zinc-950' : 'bg-[#f4f4f4]'}`}>
                 {/* Absolute Wrapper to clip the decorative corner images to the grey region */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
                     {/* Left side: Blow Dryer (Top Left) */}
@@ -1066,24 +1105,29 @@ const HomeScreen = () => {
                     </div>
                 </div>
 
-                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-6">
-                    <div className="text-gray-900 text-sm md:text-base font-black uppercase tracking-wider mb-4">
+                <div className="relative z-40 w-full max-w-5xl mx-auto flex flex-col items-center pb-2 sm:pb-6">
+                    <div className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-wider mb-1.5 sm:mb-4 transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>
                         {t('home.list_your_salon_free', 'List your salon free')}
                     </div>
 
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-6 text-gray-900 tracking-tight leading-tight">
+                    <h1 className={`text-2xl sm:text-4xl md:text-6xl font-black mb-2 sm:mb-6 tracking-tight leading-tight transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {t('home.hero_title_prefix', 'Everything For')} <span className="text-[#FF2A14]">{t('home.hero_title_accent', 'Salon')}</span>
                     </h1>
 
-                    <p className="max-w-2xl mx-auto text-gray-600 mb-10 font-medium text-sm md:text-base leading-relaxed">
+                    <p className={`max-w-2xl mx-auto mb-4 sm:mb-10 font-medium text-xs sm:text-sm md:text-base leading-relaxed transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {t('home.hero_subtitle', 'Not Just A Salon Platform, Your Complete Beauty Ecosystem. Explore Services, Manage Appointments, And Unlock Exclusive Deals, All Under One Roof.')}
                     </p>
 
 
-                    <div className="relative search-dropdown-container w-full max-w-4xl z-50">
-                        <div className={`p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-2 border ${isDark ? 'bg-[#1A1A1A] border-gray-500' : 'bg-white border-gray-100'}`}>
-                            <div className="relative city-dropdown-container flex items-center gap-3 px-4 py-2 w-full md:border-r border-gray-200">
-                                <img src={searchIcon} alt="Search" className="w-5 h-5 object-contain flex-shrink-0" />
+                    <div 
+                        id="search-bar-section" 
+                        className={`relative search-dropdown-container w-full max-w-4xl z-50 scroll-mt-24 sm:scroll-mt-28 transition-all duration-500 rounded-2xl ${
+                            highlightSearch ? 'ring-4 ring-[#FF2A14] ring-offset-2 scale-[1.01] shadow-2xl shadow-[#FF2A14]/20' : ''
+                        }`}
+                    >
+                        <div className={`p-2 sm:p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-1.5 md:gap-2 border transition-colors duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                            <div className={`relative city-dropdown-container flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
+                                <img src={searchIcon} alt="Search" className="w-4 h-4 sm:w-5 sm:h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
                                     placeholder={isDetectingLocation ? t('home.detecting_location', 'DETECTING...') : t('home.select_city', 'SELECT CITY')}
@@ -1100,7 +1144,7 @@ const HomeScreen = () => {
                                         setShowSearchDropdown(false);
                                     }}
                                     onFocus={() => setShowCityDropdown(true)}
-                                    className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`} />
+                                    className={`w-full outline-none text-xs sm:text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`} />
                                 <button
                                     type="button"
                                     onClick={handleDetectLocation}
@@ -1125,7 +1169,7 @@ const HomeScreen = () => {
                                     <span className="text-[11px] font-bold text-gray-600 dark:text-zinc-300 hidden lg:inline">Addresses</span>
                                 </button>
                                 {showCityDropdown && searchData.cityName && (
-                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                    <div className={`absolute left-0 top-full z-45 w-full mt-2 border rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
                                         {isLoadingCities ? (
                                             <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
                                                 <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
@@ -1147,7 +1191,7 @@ const HomeScreen = () => {
                                                     setIsLocationChanged(true);
                                                     isLocationChangedRef.current = true;
                                                     setShowSearchDropdown(false);
-                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">{city.name}</div>
+                                                }} className={`px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-sm text-left ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{city.name}</div>
                                             ))
                                         ) : (
                                             <div className="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">No cities found</div>
@@ -1156,9 +1200,9 @@ const HomeScreen = () => {
                                     )}
                             </div>
 
-                            <div className="relative area-dropdown-container flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
-                                <div className="flex items-center gap-3 w-full">
-                                    <img src={locationIcon} alt="Location" className="w-5 h-5 object-contain flex-shrink-0" />
+                            <div className={`relative area-dropdown-container flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-2`}>
+                                <div className="flex items-center gap-2.5 sm:gap-3 w-full">
+                                    <img src={locationIcon} alt="Location" className="w-4 h-4 sm:w-5 sm:h-5 object-contain flex-shrink-0" />
                                     <input
                                         type="text"
                                         placeholder={t('home.select_area', 'SELECT AREA')}
@@ -1175,12 +1219,12 @@ const HomeScreen = () => {
                                             setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
-                                        className={`w-full outline-none text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
+                                        className={`w-full outline-none text-xs sm:text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
                                     />
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
                                 {showAreaDropdown && searchData.areaName && (
-                                    <div className="absolute left-0 top-full z-45 w-full mt-2 bg-[#ffffff] border border-gray-100 rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2">
+                                    <div className={`absolute left-0 top-full z-45 w-full mt-2 border rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
                                         {isLoadingAreas ? (
                                             <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
                                                 <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
@@ -1201,7 +1245,7 @@ const HomeScreen = () => {
                                                     setIsLocationChanged(true);
                                                     isLocationChangedRef.current = true;
                                                     setShowSearchDropdown(false);
-                                                }} className="px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-gray-700 text-sm text-left">
+                                                }} className={`px-6 py-3 rounded-lg hover:bg-[#FF2A14]/5 hover:text-[#FF2A14] cursor-pointer transition-all font-bold text-sm text-left ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                                                     {area.name} <span className="text-[10px] text-gray-400 font-normal">({area.city})</span>
                                                 </div>
                                             ))
@@ -1213,9 +1257,9 @@ const HomeScreen = () => {
                             </div>
 
                             {/* Category/Service Select Dropdown */}
-                            <div className="relative flex items-center justify-between px-4 py-2 w-full md:border-r border-gray-200 gap-2">
-                                <div className="flex items-center gap-3 w-full pointer-events-none">
-                                    <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                            <div className={`relative flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-2`}>
+                                <div className="flex items-center gap-2.5 sm:gap-3 w-full pointer-events-none">
+                                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                                     <select
                                         value={searchData.category}
                                         onChange={(e) => {
@@ -1225,18 +1269,18 @@ const HomeScreen = () => {
                                             }));
                                             setShowSearchDropdown(false);
                                         }}
-                                        className="w-full outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer appearance-none"
+                                        className={`w-full outline-none text-xs sm:text-sm font-medium bg-transparent cursor-pointer appearance-none ${isDark ? 'text-gray-200' : 'text-gray-700'}`}
                                     >
-                                        <option value="">{t('home.select_service', 'SELECT SERVICE')}</option>
-                                        <option value="Hair Services">{t('home.services_grid.hair_services', 'Hair Services')}</option>
-                                        <option value="Skin Care">{t('home.services_grid.skin_care', 'Skin Care')}</option>
-                                        <option value="Hair Removal">{t('home.services_grid.hair_removal', 'Hair Removal')}</option>
-                                        <option value="Nail Care">{t('home.services_grid.nail_care', 'Nail Care')}</option>
-                                        <option value="Makeup">{t('home.services_grid.makeup', 'Makeup')}</option>
-                                        <option value="Grooming">{t('home.services_grid.grooming', 'Grooming')}</option>
-                                        <option value="Spa & Massage">{t('home.services_grid.spa_massage', 'Spa & Massage')}</option>
-                                        <option value="Bridal Packages">{t('home.services_grid.bridal_packages', 'Bridal Packages')}</option>
-                                        <option value="Hair Treatment">{t('home.services_grid.hair_treatment', 'Hair Treatment')}</option>
+                                        <option value="" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.select_service', 'SELECT SERVICE')}</option>
+                                        <option value="Hair Services" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.hair_services', 'Hair Services')}</option>
+                                        <option value="Skin Care" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.skin_care', 'Skin Care')}</option>
+                                        <option value="Hair Removal" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.hair_removal', 'Hair Removal')}</option>
+                                        <option value="Nail Care" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.nail_care', 'Nail Care')}</option>
+                                        <option value="Makeup" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.makeup', 'Makeup')}</option>
+                                        <option value="Grooming" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.grooming', 'Grooming')}</option>
+                                        <option value="Spa & Massage" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.spa_massage', 'Spa & Massage')}</option>
+                                        <option value="Bridal Packages" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.bridal_packages', 'Bridal Packages')}</option>
+                                        <option value="Hair Treatment" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.hair_treatment', 'Hair Treatment')}</option>
                                     </select>
                                 </div>
                                 <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain opacity-60 pointer-events-none" />
@@ -1267,7 +1311,7 @@ const HomeScreen = () => {
 
                             <button
                                 onClick={handleLocationSearch}
-                                className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
+                                className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-black text-xs sm:text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
                             >
                                 {searchDropdownLoading ? t('buttons.searching', 'SEARCHING...') : t('buttons.search', 'SEARCH')}
                             </button>
@@ -1275,54 +1319,114 @@ const HomeScreen = () => {
 
                         {/* Search Dropdown of Salons in Rows */}
                         {showSearchDropdown && (
-                            <div className="absolute left-0 right-0 top-full mt-2.5 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden max-h-96 overflow-y-auto custom-scrollbar p-3 space-y-2 z-50">
+                            <div className={`absolute left-0 right-0 top-full mt-2.5 rounded-2xl shadow-2xl overflow-hidden max-h-96 overflow-y-auto custom-scrollbar p-2 sm:p-3 border z-50 transition-colors ${
+                                isDark ? 'bg-[#18181b] border-zinc-800 text-white shadow-black/80' : 'bg-white border-gray-100 text-gray-900 shadow-xl'
+                            }`}>
                                 {searchDropdownLoading ? (
                                     <div className="flex items-center justify-center py-8 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
-                                        <div className="h-5 w-5 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
+                                        <div className="h-5 w-5 border-2 border-[#FF2A14]/20 border-t-[#FF2A14] rounded-full animate-spin" />
                                         Searching Salons...
                                     </div>
                                 ) : searchSalonsList.length > 0 ? (
-                                    <div className="divide-y divide-gray-50 text-left">
-                                        {searchSalonsList.map((salon) => (
-                                            <div
-                                                key={salon.id}
-                                                onClick={() => {
-                                                    setShowSearchDropdown(false);
-                                                    handleSalonSelect(salon.originalSalon);
-                                                }}
-                                                className="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer transition rounded-xl"
-                                            >
-                                                <div className="flex items-center gap-3.5 min-w-0">
-                                                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 flex items-center justify-center">
-                                                        {salon.img ? (
-                                                            <img src={salon.img} alt={salon.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-[#FF2A14] text-white font-black text-sm uppercase">
-                                                                {salon.name?.[0]}
+                                    <div>
+                                        {/* Header with Results Count */}
+                                        <div className={`flex items-center justify-between px-3 py-2 border-b mb-1.5 ${
+                                            isDark ? 'border-zinc-800/80 text-zinc-400' : 'border-gray-100 text-gray-400'
+                                        }`}>
+                                            <span className="text-[11px] font-black uppercase tracking-wider">
+                                                Available Salons
+                                            </span>
+                                            <span className="text-[10px] font-bold">
+                                                {searchSalonsList.length} {searchSalonsList.length === 1 ? 'found' : 'found'}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-1 text-left">
+                                            {searchSalonsList.map((salon) => (
+                                                <div
+                                                    key={salon.id}
+                                                    onClick={() => {
+                                                        setShowSearchDropdown(false);
+                                                        handleSalonSelect(salon.originalSalon);
+                                                    }}
+                                                    className={`flex items-center justify-between p-2.5 sm:p-3 cursor-pointer transition-all rounded-xl group border ${
+                                                        isDark
+                                                            ? 'hover:bg-zinc-800/80 border-transparent hover:border-zinc-700/60'
+                                                            : 'hover:bg-gray-50 border-transparent hover:border-gray-200/60'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                        <div className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border flex items-center justify-center ${
+                                                            isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'
+                                                        }`}>
+                                                            {salon.img ? (
+                                                                <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center bg-[#FF2A14] text-white font-black text-sm uppercase">
+                                                                    {salon.name?.[0] || 'S'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 pr-2">
+                                                            <h4 className={`text-sm sm:text-base font-extrabold uppercase tracking-tight truncate group-hover:text-[#FF2A14] transition-colors ${
+                                                                isDark ? 'text-white' : 'text-gray-900'
+                                                            }`}>
+                                                                {salon.name}
+                                                            </h4>
+                                                            <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500 dark:text-zinc-400 font-medium truncate">
+                                                                <MapPin className="w-3.5 h-3.5 text-[#FF2A14] shrink-0" />
+                                                                <span className="truncate">{salon.location || 'Nearby'}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Right side: Neatly stacked Rating & Distance badges */}
+                                                    <div className="flex flex-col items-end gap-1.5 shrink-0 ml-2">
+                                                        <div className={`flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] font-black border shadow-2xs ${
+                                                            isDark
+                                                                ? 'bg-amber-950/40 border-amber-800/40 text-amber-300'
+                                                                : 'bg-amber-50 border-amber-200 text-amber-700'
+                                                        }`}>
+                                                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                                            <span>{salon.rating != null ? parseFloat(salon.rating).toFixed(1) : 'NEW'}</span>
+                                                        </div>
+                                                        {salon.distanceFormatted && (
+                                                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
+                                                                isDark
+                                                                    ? 'bg-emerald-950/40 border-emerald-800/40 text-emerald-300'
+                                                                    : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                                                }`}>
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                <span>{salon.distanceFormatted}</span>
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <h4 className="text-sm font-bold text-gray-900 uppercase truncate tracking-tight">{salon.name}</h4>
-                                                            {salon.distanceFormatted && (
-                                                                <span className="px-2.5 py-0.5 text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-md shrink-0 flex items-center gap-1 shadow-xs">
-                                                                    📍 {salon.distanceFormatted}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-0.5 font-medium">
-                                                            <MapPin className="w-3.5 h-3.5 text-[#FF2A14] flex-shrink-0" />
-                                                            <span className="truncate">{salon.location}</span>
-                                                        </p>
-                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-600 px-2.5 py-1 rounded-full text-[10px] font-black shrink-0">
-                                                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                                                    <span>{salon.rating}</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
+
+                                        {/* Footer link to dedicated /salons page */}
+                                        <div className={`mt-2 pt-2 border-t text-center ${
+                                            isDark ? 'border-zinc-800' : 'border-gray-100'
+                                        }`}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowSearchDropdown(false);
+                                                    navigate('/salons', {
+                                                        state: {
+                                                            cityName: searchData.cityName || activeLocation?.cityName || '',
+                                                            areaName: searchData.areaName || activeLocation?.areaName || '',
+                                                            category: searchData.category || ''
+                                                        }
+                                                    });
+                                                }}
+                                                className="w-full py-2 px-3 text-xs font-bold text-[#FF2A14] hover:bg-[#FF2A14]/10 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                            >
+                                                <span>View all salons on dedicated page</span>
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="py-8 text-center">
@@ -1406,11 +1510,11 @@ const HomeScreen = () => {
             </section> */}
 
             {/* 4. PREMIUM SALONS NEARBY SECTION */}
-            <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto" data-aos="fade-up">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
+            <section className="pt-8 sm:pt-12 pb-6 px-3.5 sm:px-6 max-w-7xl mx-auto" data-aos="fade-up">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 sm:mb-6 gap-3">
                     <div>
-                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{t('home.premium_salons.title', 'Premium Salons Nearby')}</h3>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <h3 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{t('home.premium_salons.title', 'Premium Salons Nearby')}</h3>
+                        <p className="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mt-1 flex flex-wrap items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
                             {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
                                 <>
@@ -1428,30 +1532,30 @@ const HomeScreen = () => {
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                         {/* Radius Filter Pills - Disabled when searching specific city or area */}
                         {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
-                            <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-2xl border transition-all ${
+                            <div className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl border transition-all ${
                                 isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'
                             }`} title="Radius filter is disabled when searching by city or area">
-                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                <span className="text-xs font-bold uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
                                     Radius Disabled for {searchData.cityName || 'City'}
                                 </span>
                             </div>
                         ) : (
-                            <div className={`flex items-center gap-1 p-1 rounded-2xl border transition-colors ${
+                            <div className={`flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-2xl border transition-colors ${
                                 isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'
                             }`}>
-                                <span className="text-[10px] font-bold px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                                    📍 Radius:
+                                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                                    📍 <span className="hidden xs:inline">Radius:</span>
                                 </span>
                                 {[5, 10, 25, 50].map((r) => (
                                     <button
                                         key={r}
                                         type="button"
                                         onClick={() => handleHomeRadiusChange(r)}
-                                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                        className={`px-2 sm:px-3 py-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 cursor-pointer shrink-0 ${
                                             homeRadius === r
                                                 ? 'bg-gradient-to-r from-[#FF2A14] to-[#FF4D3A] text-white shadow-sm shadow-[#FF2A14]/20'
                                                 : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
@@ -1471,23 +1575,23 @@ const HomeScreen = () => {
                                     category: searchData.category
                                 } : undefined
                             })}
-                            className="flex items-center gap-1.5 text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer self-start md:self-auto"
+                            className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#FF2A14] hover:text-[#E02510] transition-colors group cursor-pointer shrink-0"
                         >
-                            {t('buttons.see_more', 'See More')}
-                            <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <span>{t('buttons.see_more', 'See More')}</span>
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6">
                     {isPageLoading ? (
                         Array.from({ length: 4 }).map((_, idx) => (
-                            <div key={idx} className="rounded-xl overflow-hidden border shadow-sm bg-white">
-                                <div className="h-48 yt-skeleton" />
-                                <div className="p-4 space-y-3">
-                                    <div className="h-4 yt-skeleton rounded w-3/4" />
-                                    <div className="h-3 yt-skeleton rounded w-1/2" />
+                            <div key={idx} className="rounded-xl sm:rounded-2xl overflow-hidden border shadow-xs bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+                                <div className="h-32 sm:h-40 md:h-48 yt-skeleton" />
+                                <div className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+                                    <div className="h-3 sm:h-4 yt-skeleton rounded w-3/4" />
+                                    <div className="h-2.5 sm:h-3 yt-skeleton rounded w-1/2" />
                                 </div>
                             </div>
                         ))
@@ -1496,38 +1600,38 @@ const HomeScreen = () => {
                             <div
                                 key={idx}
                                 onClick={() => handleRecommendedCardClick(salon)}
-                                className={`rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-100 bg-white'}`}
+                                className={`rounded-xl sm:rounded-2xl overflow-hidden border shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-100 bg-white'}`}
                             >
-                                <div className="h-48 relative overflow-hidden bg-gray-50 dark:bg-gray-800">
+                                <div className="h-32 sm:h-40 md:h-48 relative overflow-hidden bg-gray-50 dark:bg-gray-800">
                                     {salon.img ? (
                                         <img src={salon.img} alt={salon.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                            <img src={logoIcon} alt="NeoParlour" className="w-10 h-10 object-contain opacity-30" />
-                                            <span className="text-[11px] font-semibold text-gray-400">No image available</span>
+                                        <div className="w-full h-full flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                            <img src={logoIcon} alt="NeoParlour" className="w-7 h-7 sm:w-10 sm:h-10 object-contain opacity-30" />
+                                            <span className="text-[10px] sm:text-[11px] font-semibold text-gray-400">No image available</span>
                                         </div>
                                     )}
 
                                     {/* Prominent Floating Distance Pill */}
                                     {salon.distanceFormatted && (
-                                        <div className="absolute top-3 left-3 backdrop-blur-md bg-emerald-950/85 text-white border border-emerald-400/40 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg z-10">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                            <span className="text-emerald-300 font-extrabold text-xs">{salon.distanceFormatted}</span>
+                                        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 backdrop-blur-md bg-emerald-950/85 text-white border border-emerald-400/40 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 shadow-md z-10">
+                                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="text-emerald-300 font-extrabold text-[10px] sm:text-xs">{salon.distanceFormatted}</span>
                                         </div>
                                     )}
 
-                                    <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow-sm border border-gray-100 dark:border-gray-800 z-10">
+                                    <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-black flex items-center gap-1 shadow-xs border border-gray-100 dark:border-gray-800 z-10">
                                         <span className="text-amber-500">★</span>
                                         <span>{salon.rating != null ? parseFloat(salon.rating).toFixed(1) : 'NEW'}</span>
                                     </div>
                                 </div>
 
-                                <div className="p-4 flex flex-col flex-1">
-                                    <h4 className={`font-extrabold uppercase tracking-tight truncate text-base group-hover:text-[#FF2A14] transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{salon.name}</h4>
+                                <div className="p-2.5 sm:p-3.5 md:p-4 flex flex-col flex-1 min-w-0">
+                                    <h4 className={`font-extrabold uppercase tracking-tight truncate text-xs sm:text-sm md:text-base group-hover:text-[#FF2A14] transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{salon.name}</h4>
                                     
-                                    {/* Prominent Proximity Indicator */}
+                                    {/* Prominent Proximity Indicator (Desktop & Tablet) */}
                                     {salon.distanceFormatted && (
-                                        <div className={`mt-2 mb-2 flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
+                                        <div className={`hidden sm:flex mt-2 mb-2 items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl border transition-colors ${
                                             isDark 
                                                 ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300' 
                                                 : 'bg-emerald-50 border-emerald-200/80 text-emerald-800'
@@ -1547,8 +1651,8 @@ const HomeScreen = () => {
                                         </div>
                                     )}
 
-                                    <div className="flex items-center gap-1.5 mt-auto pt-1 text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
-                                        <MapPin className="w-3.5 h-3.5 text-[#FF2A14] shrink-0" />
+                                    <div className="flex items-center gap-1 sm:gap-1.5 mt-1 sm:mt-auto pt-1 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
+                                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FF2A14] shrink-0" />
                                         <span className="truncate">{salon.location}</span>
                                     </div>
                                 </div>
@@ -1564,35 +1668,48 @@ const HomeScreen = () => {
             </section>
 
             {/* 5. SERVICES GRID */}
-            <section className="pt-6 pb-12 px-6 max-w-7xl mx-auto" data-aos="fade-up">
-                <h3 className="text-2xl font-bold mb-4">{t('home.services_grid.title', 'Services')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section className="pt-6 pb-12 px-3.5 sm:px-6 max-w-7xl mx-auto" data-aos="fade-up">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <div>
+                        <h3 className="text-lg sm:text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{t('home.services_grid.title', 'Services')}</h3>
+                        <p className="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mt-0.5">Explore by category to find specialized salons</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
                     {servicesData.map((service) => (
                         <div
                             key={service.name}
                             onClick={() => handleServiceCardClick(service)}
-                            className="relative h-64 rounded-2xl overflow-hidden group bg-gray-100 cursor-pointer"
+                            className="relative h-32 sm:h-44 md:h-60 rounded-xl sm:rounded-2xl overflow-hidden group bg-gray-100 dark:bg-gray-800 cursor-pointer shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                            title={`Search salons for ${service.name}`}
                         >
-                            <img src={service.img} alt={service.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
-                            <div className="absolute bottom-6 left-6 text-white text-xl font-bold z-10">{translateServiceName(service.name, t)}</div>
+                            <img src={service.img} alt={service.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent group-hover:from-black/85 transition-all"></div>
+                            <div className="absolute bottom-2.5 sm:bottom-5 left-3 sm:left-5 right-3 text-white z-10">
+                                <span className="block text-xs sm:text-base md:text-lg font-black tracking-tight leading-tight drop-shadow-sm truncate">
+                                    {translateServiceName(service.name, t)}
+                                </span>
+                                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] md:text-xs text-white/80 font-semibold mt-1 group-hover:text-white group-hover:translate-x-1 transition-all">
+                                    Search category →
+                                </span>
+                            </div>
                         </div>
                     ))}
                 </div>
             </section>
 
             {/* 6. GROWTH SECTIONS */}
-            <section className={`py-20 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-[#F9FAFB]'}`}>
-                <div className="max-w-7xl mx-auto px-6 space-y-28">
+            <section className={`py-8 sm:py-16 md:py-20 transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-[#F9FAFB]'}`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-16 md:space-y-24">
                     {/* Feature 1 - Manage Inventory & Staff */}
-                    <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
+                    <div className="flex flex-col md:flex-row items-center gap-5 sm:gap-10 lg:gap-16 max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6 md:py-10">
                         {/* Left Container for Staff & Dashboard Composite Image */}
                         <div className="flex-1 w-full" data-aos="fade-right">
                             <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={manageInventoryImg}
                                     alt="Manage Inventory & Staff"
-                                    className="w-full h-auto object-cover max-h-[400px]"
+                                    className="w-full h-auto object-cover max-h-[220px] sm:max-h-[320px] md:max-h-[400px]"
                                 />
                             </div>
                         </div>
@@ -1600,59 +1717,59 @@ const HomeScreen = () => {
                         {/* Right Content Container matching layout and typography hierarchy */}
                         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
-                            <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
+                            <h2 className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wide mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {t('home.inventory_section.title', 'MANAGE INVENTORY & STAFF')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'maximize' and 'profit.' */}
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
+                            <h3 className={`text-base sm:text-2xl md:text-3xl font-bold leading-tight mb-2 sm:mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {t('home.inventory_section.sub_title', 'Control your stock. maximize your profit.')}
                             </h3>
 
                             {/* Paragraph Description */}
-                            <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
+                            <p className={`text-xs sm:text-sm md:text-base font-medium max-w-md mb-3 sm:mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                 {t('home.inventory_section.desc', "Never run out of essentials or overstock products again. Track usage, get low-stock alerts, and manage everything from a single dashboard whether it's shampoos, colors, or retail products.")}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
+                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Left-Aligned Red Circle Checks */}
-                            <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-start">
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                            <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 w-full flex flex-col items-center md:items-start">
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.inventory_section.point1', 'Real-Time Stock Tracking Across Services & Products')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.inventory_section.point2', 'Smart Low-Stock Alerts Before You Run Out')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.inventory_section.point3', 'Product Usage Insights Per Service')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.inventory_section.point4', 'Reduce Wastage & Increase Margins')}</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
-                            <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
+                            <button className="w-full sm:w-auto justify-center bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2 cursor-pointer">
                                 {t('buttons.manage_smarter', 'MANAGE SMARTER →')}
                             </button>
                         </div>
                     </div>
 
                     {/* Feature 2 - Easy Appointments */}
-                    <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
+                    <div className="flex flex-col md:flex-row-reverse items-center gap-5 sm:gap-10 lg:gap-16 max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6 md:py-10">
                         {/* Right Container for Image */}
                         <div className="flex-1 w-full" data-aos="fade-left">
                             <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={easyAppointmentImg}
                                     alt="Easy Appointments"
-                                    className="w-full h-auto object-cover max-h-[400px]"
+                                    className="w-full h-auto object-cover max-h-[220px] sm:max-h-[320px] md:max-h-[400px]"
                                 />
                             </div>
                         </div>
@@ -1660,59 +1777,59 @@ const HomeScreen = () => {
                         {/* Left Content Container styled exactly to the right-aligned design layout */}
                         <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
-                            <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
+                            <h2 className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wide mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {t('home.appointments_section.title', 'EASY APPOINTMENTS')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'calendar,' */}
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
+                            <h3 className={`text-base sm:text-2xl md:text-3xl font-bold leading-tight mb-2 sm:mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {t('home.appointments_section.sub_title', 'Fill your calendar, not your waiting area')}
                             </h3>
 
                             {/* Paragraph Description */}
-                            <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
+                            <p className={`text-xs sm:text-sm md:text-base font-medium max-w-md mb-3 sm:mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                 {t('home.appointments_section.desc', 'Let your customers book instantly, anytime. No calls, no confusion just smooth, automated scheduling that keeps your chairs occupied all day.')}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
+                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Right-Aligned Red Circle Checks */}
-                            <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-end">
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                            <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 w-full flex flex-col items-center md:items-end">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>{t('home.appointments_section.point1', 'Real-Time Sync of Online & Walk-in Appointments')}</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>{t('home.appointments_section.point2', 'Automated WhatsApp Reminders')}</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>{t('home.appointments_section.point3', 'Live Tracking of Staff Schedule & Slots')}</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>{t('home.appointments_section.point4', 'Dramatically Reduce Client No-Shows')}</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
-                            <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
+                            <button className="w-full sm:w-auto justify-center bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2 cursor-pointer">
                                 {t('buttons.start_booking', 'START BOOKING →')}
                             </button>
                         </div>
                     </div>
 
                     {/* Feature 3 - NeoParlour Lead Magnet */}
-                    <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
+                    <div className="flex flex-col md:flex-row items-center gap-5 sm:gap-10 lg:gap-16 max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6 md:py-10">
                         {/* Left Container for Product Dashboard Image */}
                         <div className="flex-1 w-full" data-aos="fade-right">
                             <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                 <img
                                     src={leadMagnetImg}
                                     alt="NeoParlour Lead Magnet"
-                                    className="w-full h-auto object-cover max-h-[400px]"
+                                    className="w-full h-auto object-cover max-h-[220px] sm:max-h-[320px] md:max-h-[400px]"
                                 />
                             </div>
                         </div>
@@ -1720,57 +1837,57 @@ const HomeScreen = () => {
                         {/* Right Content Container matching layout and typography hierarchy */}
                         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full" data-aos="fade-left">
                             {/* Main Section Header */}
-                            <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
+                            <h2 className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wide mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {t('home.lead_magnet_section.title', 'NEOPARLOUR LEAD MAGNET')}
                             </h2>
 
                             {/* Sub-heading with Red Accent on 'paying clients' */}
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
+                            <h3 className={`text-base sm:text-2xl md:text-3xl font-bold leading-tight mb-2 sm:mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {t('home.lead_magnet_section.sub_title', 'Turn searches into paying clients.')}
                             </h3>
 
                             {/* Paragraph Description */}
-                            <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
+                            <p className={`text-xs sm:text-sm md:text-base font-medium max-w-md mb-3 sm:mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                 {t('home.lead_magnet_section.desc', 'Get discovered by people actively looking for salon services near them. NeoParlour brings high-intent customers directly to your business.')}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">{t('labels.key_points', 'Key Points')}</h4>
+                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Left-Aligned Red Circle Checks */}
-                            <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-start">
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                            <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 w-full flex flex-col items-center md:items-start">
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.lead_magnet_section.point1', 'Appear In Local Search Results Instantly')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.lead_magnet_section.point2', 'Get Verified Leads, Not Random Traffic')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.lead_magnet_section.point3', 'Boost Visibility Without Extra Marketing Cost')}</span>
                                 </li>
-                                <li className="flex items-center justify-start gap-3 text-sm text-gray-800 font-semibold">
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                <li className={`flex items-center justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                     <span>{t('home.lead_magnet_section.point4', 'Convert Walk-Ins Into Loyal Customers')}</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
-                            <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
+                            <button className="w-full sm:w-auto justify-center bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2 cursor-pointer">
                                 {t('buttons.get_more_clients', 'GET MORE CLIENTS →')}
                             </button>
                         </div>
                     </div>
 
                     {/* Feature 4 - AI Powered Features */}
-                    <div className="flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-16 max-w-7xl mx-auto px-4 py-12">
+                    <div className="flex flex-col md:flex-row-reverse items-center gap-5 sm:gap-10 lg:gap-16 max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6 md:py-10">
                         {/* Right Container - Compare Slider with Floating Labels */}
                         <div className="flex-1 w-full" data-aos="fade-left">
                             <div className="relative">
                                 {/* Compare Slider */}
-                                <div className={`rounded-2xl overflow-hidden shadow-lg border h-[320px] md:h-[420px] ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
+                                <div className={`rounded-2xl overflow-hidden shadow-lg border h-[240px] sm:h-[320px] md:h-[420px] ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-100 bg-white'}`}>
                                     <ReactCompareSlider
                                         itemOne={
                                             <ReactCompareSliderImage
@@ -1791,8 +1908,8 @@ const HomeScreen = () => {
                                         handle={
                                             <div className="flex flex-col items-center justify-center h-full">
                                                 <div className="w-[3px] h-full bg-white shadow-lg"></div>
-                                                <div className="absolute w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#FF2A14]">
-                                                    <svg className="w-5 h-5 text-[#FF2A14]" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                                                <div className="absolute w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#FF2A14]">
+                                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF2A14]" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                                     </svg>
                                                 </div>
@@ -1801,7 +1918,7 @@ const HomeScreen = () => {
                                     />
                                 </div>
 
-                                {/* Floating AI Feature Labels */}
+                                {/* Floating AI Feature Labels (Desktop & Tablets) */}
                                 {/* Top Left - AI Assistant */}
                                 <div className="hidden md:flex absolute top-8 -left-4 md:-left-8 items-center gap-2 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100 animate-pulse" style={{ animationDuration: '3s' }}>
                                     <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
@@ -1863,65 +1980,45 @@ const HomeScreen = () => {
                             </div>
 
                             {/* Mobile-only AI Feature Checkpoints */}
-                            <div className="grid grid-cols-2 gap-3 mt-6 md:hidden px-2">
+                            <div className="grid grid-cols-2 gap-2 mt-4 md:hidden px-1">
                                 {/* AI Assistant */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                <div className={`flex items-center gap-2 p-2 rounded-xl shadow-xs border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white/95 border-gray-100'}`}>
+                                    <div className="w-5 h-5 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_assistant', 'AI Assistant')}</span>
+                                    <span className={`text-[9px] font-bold tracking-wide uppercase truncate ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>{t('home.ai_badges.ai_assistant', 'AI Assistant')}</span>
                                 </div>
 
                                 {/* Haircut Suggestions */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <div className={`flex items-center gap-2 p-2 rounded-xl shadow-xs border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white/95 border-gray-100'}`}>
+                                    <div className="w-5 h-5 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M9.37 5.51A7.35 7.35 0 009.1 7.5c0 4.08 3.32 7.4 7.4 7.4.68 0 1.35-.09 1.99-.27A7.014 7.014 0 0112 19c-3.86 0-7-3.14-7-7 0-2.93 1.81-5.45 4.37-6.49zM12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase font-sans">{t('home.ai_badges.haircut_suggestions', 'Haircut Suggests')}</span>
+                                    <span className={`text-[9px] font-bold tracking-wide uppercase truncate ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>{t('home.ai_badges.haircut_suggestions', 'Haircut Suggests')}</span>
                                 </div>
 
                                 {/* Beard Suggestions */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <div className={`flex items-center gap-2 p-2 rounded-xl shadow-xs border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white/95 border-gray-100'}`}>
+                                    <div className="w-5 h-5 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.beard_suggestions', 'Beard Suggests')}</span>
+                                    <span className={`text-[9px] font-bold tracking-wide uppercase truncate ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>{t('home.ai_badges.beard_suggestions', 'Beard Suggests')}</span>
                                 </div>
 
                                 {/* Chatbot */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                <div className={`flex items-center gap-2 p-2 rounded-xl shadow-xs border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white/95 border-gray-100'}`}>
+                                    <div className="w-5 h-5 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.ai_chatbot', 'AI Chatbot')}</span>
-                                </div>
-
-                                {/* WhatsApp Booking */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.whatsapp_booking', 'WhatsApp Book')}</span>
-                                </div>
-
-                                {/* Style Matcher */}
-                                <div className="flex items-center gap-2.5 bg-white/95 px-3 py-2.5 rounded-xl shadow-sm border border-gray-100">
-                                    <div className="w-6 h-6 bg-[#FF2A14] rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-gray-800 tracking-wide uppercase">{t('home.ai_badges.style_matcher', 'Style Matcher')}</span>
+                                    <span className={`text-[9px] font-bold tracking-wide uppercase truncate ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>{t('home.ai_badges.ai_chatbot', 'AI Chatbot')}</span>
                                 </div>
                             </div>
                         </div>
@@ -1929,47 +2026,47 @@ const HomeScreen = () => {
                         {/* Content Container styled exactly to the design layout */}
                         <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
-                            <h2 className="text-gray-900 text-2xl md:text-3xl font-black uppercase tracking-wide mb-2">
+                            <h2 className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wide mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 AI POWERED FEATURES
                             </h2>
 
                             {/* Sub-heading with Red Accent */}
-                            <h3 className="text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-4">
+                            <h3 className="text-base sm:text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-2 sm:mb-4">
                                 Smarter Decisions. <br />
                                 <span className="text-gray-500">Higher </span>
                                 <span className="text-[#FF2A14]">Revenue.</span>
                             </h3>
 
                             {/* Paragraph Description */}
-                            <p className="text-sm md:text-base text-gray-800 font-medium max-w-md mb-8 leading-relaxed">
+                            <p className={`text-xs sm:text-sm md:text-base font-medium max-w-md mb-3 sm:mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                 Leverage AI to understand customer behavior, predict demand, and automate growth so you focus on service while we handle intelligence.
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className="text-gray-900 text-lg font-bold mb-4">Key Points</h4>
+                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Key Points</h4>
 
                             {/* Bullet Points with Right-Aligned Red Circle Checks */}
-                            <ul className="space-y-4 mb-8 w-full flex flex-col items-center md:items-end">
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                            <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 w-full flex flex-col items-center md:items-end">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>AI-Driven Customer Insights & Preferences</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>Smart Pricing & Offer Recommendations</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>Predict Peak Hours & Optimize Staff</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
-                                <li className="flex items-center justify-end gap-3 text-sm text-gray-800 font-semibold">
+                                <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
                                     <span>Automated Marketing Suggestions</span>
-                                    <span className="bg-[#FF2A14] text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black flex-shrink-0">✓</span>
+                                    <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
-                            <button className="bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-10 py-4 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2">
+                            <button className="w-full sm:w-auto justify-center bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2 cursor-pointer">
                                 UNLOCK AI GROWTH →
                             </button>
                         </div>
@@ -1978,13 +2075,13 @@ const HomeScreen = () => {
             </section>
 
             {/* 7. PARTNERS SECTION - UPDATED INFINITE MARQUEE WITH 3 ROW LOOPS */}
-            <section className="py-16 bg-white border-b border-gray-100 overflow-hidden select-none">
+            <section className={`py-8 sm:py-14 md:py-16 border-b overflow-hidden select-none transition-colors duration-300 ${isDark ? 'bg-zinc-950 border-zinc-900' : 'bg-white border-gray-100'}`}>
                 <div className="w-full text-center">
-                    <h2 className="text-gray-400 font-bold text-sm tracking-[0.3em] uppercase mb-10 px-6">
+                    <h2 className="text-gray-400 font-bold text-xs sm:text-sm tracking-[0.3em] uppercase mb-5 sm:mb-8 md:mb-10 px-4 sm:px-6">
                         Partners
                     </h2>
 
-                    <div className="flex flex-col gap-10">
+                    <div className="flex flex-col gap-4 sm:gap-8 md:gap-10">
                         {/* First Row - Left to Right */}
                         <Marquee
                             speed={40}
@@ -1996,7 +2093,7 @@ const HomeScreen = () => {
                                     key={idx}
                                     src={partner.src}
                                     alt={partner.alt}
-                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                    className="h-6 sm:h-8 md:h-10 mx-6 sm:mx-8 md:mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
                                 />
                             ))}
                         </Marquee>
@@ -2013,7 +2110,7 @@ const HomeScreen = () => {
                                     key={idx}
                                     src={partner.src}
                                     alt={partner.alt}
-                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                    className="h-6 sm:h-8 md:h-10 mx-6 sm:mx-8 md:mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
                                 />
                             ))}
                         </Marquee>
@@ -2029,7 +2126,7 @@ const HomeScreen = () => {
                                     key={idx}
                                     src={partner.src}
                                     alt={partner.alt}
-                                    className="h-8 sm:h-10 mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
+                                    className="h-6 sm:h-8 md:h-10 mx-6 sm:mx-8 md:mx-10 object-contain opacity-75 hover:opacity-100 transition-opacity"
                                 />
                             ))}
                         </Marquee>
@@ -2038,10 +2135,10 @@ const HomeScreen = () => {
             </section>
 
             {/* 8. REVIEWS & STATS GRAPHIC BANNER */}
-            <section className="relative py-24 bg-[#EAEAEA] overflow-hidden flex items-center justify-center min-h-[340px]">
+            <section className={`relative py-10 sm:py-16 md:py-24 overflow-hidden flex items-center justify-center min-h-[220px] sm:min-h-[300px] md:min-h-[340px] transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-[#EAEAEA] text-gray-900'}`}>
 
-                {/* Floating Decorative SVG Assets Layer */}
-                <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0">
+                {/* Floating Decorative SVG Assets Layer - Hidden on mobile screens to prevent overlapping onto text and numbers */}
+                <div className="hidden md:block absolute inset-0 w-full h-full pointer-events-none select-none z-0">
                     <img src={reviewImgOne} alt="" className="absolute top-10 left-[10%] w-12 h-12 object-contain opacity-90 animate-pulse" />
                     <img src={reviewImgTwo} alt="" className="absolute top-1/4 right-[15%] w-10 h-10 object-contain opacity-90" />
                     <img src={reviewImgThree} alt="" className="absolute bottom-12 left-[18%] w-14 h-14 object-contain opacity-90" />
@@ -2054,50 +2151,67 @@ const HomeScreen = () => {
                 <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col justify-center items-center select-none w-full">
 
                     {/* Reviews Headline Block with Sub 1 & Sub 2 */}
-                    <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 w-full">
-                        <img src={subOneImg} alt="" className="w-6 h-6 sm:w-8 sm:h-8 min-w-[24px] min-h-[24px] sm:min-w-[32px] sm:min-h-[32px] object-contain block" />
-                        <div className="text-gray-400 font-extrabold text-xl md:text-2xl tracking-[0.25em] uppercase whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-1.5 sm:mb-3 w-full">
+                        <img src={subOneImg} alt="" className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 min-w-[20px] min-h-[20px] sm:min-w-[28px] sm:min-h-[28px] object-contain block" />
+                        <div className="text-gray-400 font-extrabold text-xs sm:text-lg md:text-2xl tracking-[0.15em] sm:tracking-[0.25em] uppercase whitespace-nowrap">
                             1.14k Reviews
                         </div>
-                        <img src={subTwoImg} alt="" className="w-6 h-6 sm:w-8 sm:h-8 min-w-[24px] min-h-[24px] sm:min-w-[32px] sm:min-h-[32px] object-contain block" />
+                        <img src={subTwoImg} alt="" className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 min-w-[20px] min-h-[20px] sm:min-w-[28px] sm:min-h-[28px] object-contain block" />
                     </div>
 
                     {/* Salons Headline Block with Sub 3 & Sub 4 */}
-                    <div className="flex items-center justify-center gap-4 sm:gap-6 my-2 w-full">
-                        <img src={subThreeImg} alt="" className="w-8 h-8 sm:w-12 sm:h-12 min-w-[32px] min-h-[32px] sm:min-w-[48px] sm:min-h-[48px] object-contain block" />
-                        <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-gray-900 tracking-tight leading-none whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-2.5 sm:gap-4 md:gap-6 my-1 sm:my-2 w-full">
+                        <img src={subThreeImg} alt="" className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 min-w-[24px] min-h-[24px] sm:min-w-[40px] sm:min-h-[40px] object-contain block" />
+                        <h2 className={`text-3xl sm:text-5xl md:text-7xl font-black tracking-tight leading-none whitespace-nowrap ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             <span className="text-[#FF2A14]">10K</span> SALONS
                         </h2>
-                        <img src={subFourImg} alt="" className="w-8 h-8 sm:w-12 sm:h-12 min-w-[32px] min-h-[32px] sm:min-w-[48px] sm:min-h-[48px] object-contain block" />
+                        <img src={subFourImg} alt="" className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 min-w-[24px] min-h-[24px] sm:min-w-[40px] sm:min-h-[40px] object-contain block" />
                     </div>
 
                     {/* Cities Headline Block with Sub 5 & Sub 6 */}
-                    <div className="flex items-center justify-center gap-3 sm:gap-4 mt-3 w-full">
-                        <img src={subFiveImg} alt="" className="w-6 h-6 sm:w-8 sm:h-8 min-w-[24px] min-h-[24px] sm:min-w-[32px] sm:min-h-[32px] object-contain block" />
-                        <div className="text-gray-400 font-extrabold text-xl md:text-2xl tracking-[0.25em] uppercase whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mt-1.5 sm:mt-3 w-full">
+                        <img src={subFiveImg} alt="" className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 min-w-[20px] min-h-[20px] sm:min-w-[28px] sm:min-h-[28px] object-contain block" />
+                        <div className="text-gray-400 font-extrabold text-xs sm:text-lg md:text-2xl tracking-[0.15em] sm:tracking-[0.25em] uppercase whitespace-nowrap">
                             20k Cities
                         </div>
-                        <img src={subSixImg} alt="" className="w-6 h-6 sm:w-8 sm:h-8 min-w-[24px] min-h-[24px] sm:min-w-[32px] sm:min-h-[32px] object-contain block" />
+                        <img src={subSixImg} alt="" className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 min-w-[20px] min-h-[20px] sm:min-w-[28px] sm:min-h-[28px] object-contain block" />
                     </div>
                 </div>
             </section>
 
-            {/* 9. FAQ SECTION */}
-            <section className="py-16 px-6 max-w-4xl mx-auto">
-                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">{t('home.faq.header', 'FREQUENTLY ASKED QUESTIONS')}</h2>
-                <div className="space-y-4">
+            {/* 9. FAQ SECTION - 2 COLUMNS LAYOUT */}
+            <section className="py-8 sm:py-14 md:py-16 px-3.5 sm:px-6 max-w-5xl mx-auto">
+                <h2 className="text-center text-xs sm:text-base md:text-xl font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-4 sm:mb-8 md:mb-10">
+                    {t('home.faq.header', 'FREQUENTLY ASKED QUESTIONS')}
+                </h2>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-5 items-start">
                     {faqData.map((item, i) => (
-                        <div key={i} className="border-b border-gray-100 pb-4">
+                        <div
+                            key={i}
+                            className={`rounded-xl sm:rounded-2xl border transition-all overflow-hidden ${
+                                isDark ? 'bg-zinc-900/90 border-zinc-800' : 'bg-gray-50 border-gray-100'
+                            }`}
+                        >
                             <div
                                 onClick={() => toggleFaq(i)}
-                                className="flex items-center justify-between p-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100/70 transition-all"
+                                className={`flex items-start justify-between p-2.5 sm:p-4 md:p-5 cursor-pointer transition-all gap-1.5 sm:gap-2.5 ${
+                                    isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-gray-100/70'
+                                }`}
                             >
-                                <span className="font-bold text-gray-700">{i + 1}. {item.q}</span>
-                                <span className={`text-gray-400 text-2xl font-light transform transition-transform duration-200 ${activeFaq === i ? 'rotate-45' : ''}`}>+</span>
+                                <span className={`font-bold text-[11px] sm:text-sm md:text-base leading-snug ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>
+                                    {i + 1}. {item.q}
+                                </span>
+                                <span className={`text-gray-400 text-sm sm:text-xl font-semibold transform transition-transform duration-200 shrink-0 mt-0.5 ${activeFaq === i ? 'rotate-45 text-[#FF2A14]' : ''}`}>
+                                    +
+                                </span>
                             </div>
                             {activeFaq === i && (
-                                <div className="p-6 bg-white text-sm text-gray-500 leading-relaxed transition-all">
-                                    {item.a}
+                                <div className={`px-2.5 pb-2.5 pt-0 sm:px-4 sm:pb-4 md:px-5 md:pb-5 text-[10px] sm:text-xs md:text-sm leading-relaxed transition-all border-t ${
+                                    isDark ? 'border-zinc-800/80 text-zinc-400' : 'border-gray-100 text-gray-600'
+                                }`}>
+                                    <div className="pt-2 sm:pt-3">
+                                        {item.a}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -2106,38 +2220,40 @@ const HomeScreen = () => {
             </section>
 
             {/* 10. TESTIMONIALS */}
-            <section className="py-16 px-6 bg-white overflow-hidden">
-                <h2 className="text-center text-xl font-bold text-gray-400 uppercase tracking-[0.3em] mb-12">{t('home.testimonials.header', 'WHAT OUR USERS SAY')}</h2>
+            <section className={`py-8 sm:py-14 md:py-16 px-3.5 sm:px-6 overflow-hidden transition-colors duration-300 ${isDark ? 'bg-zinc-950 border-t border-zinc-900' : 'bg-white'}`}>
+                <h2 className="text-center text-xs sm:text-base md:text-xl font-bold text-gray-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-6 sm:mb-10 md:mb-12">{t('home.testimonials.header', 'WHAT OUR USERS SAY')}</h2>
                 <div className="w-full overflow-hidden">
                     <Marquee
                         gradient={false}
                         speed={45}
                         pauseOnHover={true}
-                        className="py-10 flex items-center"
+                        className="py-4 sm:py-8 md:py-10 flex items-center"
                     >
                         {homeTestimonials.map((item) => (
                             <div
                                 key={item.id}
-                                className="bg-gray-50 border border-gray-100 hover:border-gray-200/80 rounded-[16px] sm:rounded-[24px] p-4 sm:p-8 flex flex-col justify-between text-left h-[15rem] sm:h-[22rem] w-[42vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 shadow-sm hover:shadow-lg hover:-translate-y-3 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
+                                className={`rounded-[16px] sm:rounded-[24px] p-4 sm:p-6 md:p-8 flex flex-col justify-between text-left h-[13rem] sm:h-[18rem] md:h-[22rem] w-[68vw] sm:w-[20rem] mx-2 sm:mx-4 shrink-0 shadow-sm hover:shadow-lg hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 cursor-pointer border ${
+                                    isDark ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-gray-50 border-gray-100 hover:border-gray-200/80'
+                                }`}
                             >
                                 <div className="min-h-0">
                                     {/* Stars */}
-                                    <div className="text-yellow-500 mb-2 sm:mb-4 flex gap-0.5">
+                                    <div className="text-yellow-500 mb-1.5 sm:mb-3 flex gap-0.5">
                                         {"★".repeat(item.stars).split("").map((star, i) => (
                                             <span key={i} className="text-[10px] sm:text-sm">{star}</span>
                                         ))}
                                     </div>
-                                    <h4 className="font-black text-xs sm:text-base text-gray-900 mb-1.5 sm:mb-3 italic line-clamp-1">
+                                    <h4 className={`font-black text-xs sm:text-base mb-1 sm:mb-2.5 italic line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {item.title}
                                     </h4>
-                                    <p className="text-gray-500 text-[9px] sm:text-xs leading-normal sm:leading-relaxed font-medium line-clamp-4 overflow-hidden">
+                                    <p className={`text-[10px] sm:text-xs leading-normal sm:leading-relaxed font-medium line-clamp-3 sm:line-clamp-4 overflow-hidden ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
                                         {item.quote}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-4 mt-auto">
                                     <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-300/80 shrink-0"></div>
                                     <div>
-                                        <div className="font-bold text-gray-800 text-[10px] sm:text-xs">{item.author}</div>
+                                        <div className={`font-bold text-[10px] sm:text-xs ${isDark ? 'text-zinc-200' : 'text-gray-800'}`}>{item.author}</div>
                                         <div className="text-[8px] sm:text-[10px] text-gray-400 font-semibold">{item.location}</div>
                                     </div>
                                 </div>

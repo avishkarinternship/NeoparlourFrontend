@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   X, 
@@ -25,11 +25,58 @@ export default function AddressDrawer() {
   const { isDrawerOpen, activeLocation, savedAddresses } = useSelector((state) => state.location);
   const { isAuthenticated } = useSelector((state) => state.customer);
 
-  if (!isDrawerOpen) return null;
+  const [isOpenRendered, setIsOpenRendered] = useState(false);
+  const [animateIn, setAnimateIn] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startYRef = useRef(0);
+
+  // Sync open state with smooth entrance
+  useEffect(() => {
+    let timer;
+    if (isDrawerOpen) {
+      setIsOpenRendered(true);
+      setDragOffset(0);
+      setIsDragging(false);
+      timer = setTimeout(() => {
+        setAnimateIn(true);
+      }, 20);
+    } else {
+      setAnimateIn(false);
+      setIsOpenRendered(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isDrawerOpen]);
+
+  // Smooth animated close function (for cross button, backdrop click, Escape key, or swipe down)
+  const handleClose = () => {
+    if (!animateIn) return;
+    setAnimateIn(false);
+    setTimeout(() => {
+      dispatch(closeAddressDrawer());
+      setIsOpenRendered(false);
+      setDragOffset(0);
+    }, 320);
+  };
+
+  useEffect(() => {
+    if (!isOpenRendered) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpenRendered, animateIn]);
+
+  if (!isOpenRendered) return null;
 
   const handleSelectAddress = (addr) => {
     dispatch(setActiveLocation(addr));
-    dispatch(closeAddressDrawer());
+    handleClose();
     toast.success(`Switched location to ${addr.label || addr.areaName || addr.cityName}`);
   };
 
@@ -51,8 +98,10 @@ export default function AddressDrawer() {
   };
 
   const handleAddNew = () => {
-    dispatch(closeAddressDrawer());
-    dispatch(openLocationPicker());
+    handleClose();
+    setTimeout(() => {
+      dispatch(openLocationPicker());
+    }, 320);
   };
 
   const getIcon = (type) => {
@@ -62,20 +111,87 @@ export default function AddressDrawer() {
     return MapPin;
   };
 
+  // Touch gesture handlers for downward swipe dismissal
+  const handleTouchStart = (e) => {
+    const touchY = e.touches[0].clientY;
+    startYRef.current = touchY;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchY - startYRef.current;
+    if (deltaY > 0) {
+      setDragOffset(deltaY);
+    } else {
+      setDragOffset(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragOffset > 75) {
+      handleClose();
+    } else {
+      setDragOffset(0);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[9990] flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div 
+      className={`fixed inset-0 z-[9990] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-300 ease-in-out ${
+        animateIn ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div 
-        className="w-full max-w-md bg-white dark:bg-zinc-900 h-full shadow-2xl flex flex-col border-l border-gray-100 dark:border-zinc-800 animate-in slide-in-from-right duration-200"
+        className={`w-full sm:max-w-lg bg-white dark:bg-zinc-900 max-h-[85vh] sm:max-h-[80vh] rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col border-t sm:border border-gray-100 dark:border-zinc-800 overflow-hidden transform will-change-transform ${
+          isDragging 
+            ? '' 
+            : 'transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'
+        } ${
+          animateIn && !isDragging ? 'translate-y-0' : !isDragging ? 'translate-y-full' : ''
+        }`}
+        style={
+          isDragging && dragOffset > 0
+            ? { transform: `translateY(${dragOffset}px)` }
+            : {}
+        }
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Subtle Drag Handle indicator for bottom sheet with touch gestures */}
+        <div 
+          className="w-full flex items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none select-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400 transition-colors" />
+        </div>
+
         {/* Drawer Header */}
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+        <div 
+          className="px-5 py-3.5 sm:py-4 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between touch-none select-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white text-base">Select Delivery / Salon Location</h3>
             <p className="text-xs text-gray-400 mt-0.5">Choose your saved address or pin a new location</p>
           </div>
           <button 
-            onClick={() => dispatch(closeAddressDrawer())}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-all cursor-pointer active:scale-90"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>

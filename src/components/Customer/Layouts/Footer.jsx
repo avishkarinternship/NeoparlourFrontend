@@ -12,22 +12,27 @@ const Footer = () => {
     return (
         <footer className={`pt-8 pb-4 px-4 md:px-8 font-sans w-full transition-colors duration-300 ${isDark ? 'bg-gray-950 text-gray-200' : 'bg-[#EAEAEA] text-gray-900'}`}>
             {/* Main Footer Container */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-5 items-start">
+            <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-12 gap-x-4 gap-y-6 md:gap-5 items-start">
 
                 {/* Identity Column */}
-                <div className="md:col-span-3 flex items-center space-x-2.5">
-                    <img
-                        src={logoIcon}
-                        alt="NeoParlour Logo"
-                        className="w-8 h-8 object-contain flex-shrink-0"
-                    />
-                    <span className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        NeoParlour
-                    </span>
+                <div className="col-span-2 md:col-span-3 flex flex-col justify-start">
+                    <div className="flex items-center space-x-2.5">
+                        <img
+                            src={logoIcon}
+                            alt="NeoParlour Logo"
+                            className="w-8 h-8 object-contain flex-shrink-0"
+                        />
+                        <span className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            NeoParlour
+                        </span>
+                    </div>
+                    <p className={`text-[11px] font-medium leading-relaxed mt-1 max-w-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Your complete beauty & salon ecosystem.
+                    </p>
                 </div>
 
                 {/* Column 1: Company Info */}
-                <div className="md:col-span-3">
+                <div className="col-span-1 md:col-span-3">
                     <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.our_company', 'Our Company')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
                         <li onClick={() => navigate('/customer/about')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.about_us', 'About Us')}</li>
@@ -41,7 +46,7 @@ const Footer = () => {
                 </div>
 
                 {/* Column 2: Services */}
-                <div className="md:col-span-3">
+                <div className="col-span-1 md:col-span-3">
                     <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.services', 'Services')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
                         <li onClick={() => navigate('/customer/services')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('services.hair', 'Hair Services')}</li>
@@ -57,7 +62,7 @@ const Footer = () => {
                 </div>
 
                 {/* Column 3: Resources */}
-                <div className="md:col-span-3">
+                <div className="col-span-1 md:col-span-3">
                     <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{t('footer.our_resources', 'Our Resources')}</h4>
                     <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
                         <li onClick={() => navigate('/customer/videos')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• {t('footer.videos', 'Videos')}</li>

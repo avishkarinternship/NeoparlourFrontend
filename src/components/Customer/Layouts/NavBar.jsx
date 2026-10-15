@@ -119,13 +119,13 @@ const Navbar = () => {
             }`}>
                 
                 {/* Logo & Location Section */}
-                <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                    <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 md:flex-initial mr-1.5 sm:mr-0">
+                    <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0" title="NeoParlour">
                         <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
-                        <span className={`text-base sm:text-xl font-black tracking-tight max-[360px]:hidden ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
+                        <span className={`text-base sm:text-xl font-black tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
                     </div>
 
-                    <LocationHeaderPill className="flex max-w-[130px] sm:max-w-[200px] md:max-w-[260px]" />
+                    <LocationHeaderPill className="flex min-w-0 flex-1 sm:flex-initial max-w-[230px] sm:max-w-[280px] md:max-w-[320px]" />
                 </div>
 
                 {/* Desktop Navigation Links */}
@@ -141,31 +141,35 @@ const Navbar = () => {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
 
-                    {/* Language Switcher */}
-                    <LanguageSwitcher />
+                    {/* Language Switcher (Desktop/Tablet only - mobile moved to sidebar menu) */}
+                    <div className="hidden md:flex items-center">
+                        <LanguageSwitcher />
+                    </div>
 
-                    {/* Dark Mode Toggle */}
-                    <button
-                        onClick={toggleDark}
-                        data-tooltip={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                        className={`relative w-11 h-6 sm:w-13 sm:h-6.5 md:w-14 md:h-7 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
-                            isDark ? 'bg-gray-700' : 'bg-gray-200'
-                        }`}
-                        aria-label="Toggle dark mode"
-                    >
-                        <span className={`absolute left-0.5 transition-all duration-300 flex items-center justify-center w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full shadow-md ${
-                            isDark
-                                ? 'translate-x-5 sm:translate-x-6 md:translate-x-7 bg-yellow-400'
-                                : 'translate-x-0 bg-white'
-                        }`}>
-                            <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                                isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
-                            }`} />
-                            <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                                isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
-                            }`} />
-                        </span>
-                    </button>
+                    {/* Dark Mode Toggle (Desktop/Tablet only - mobile moved to sidebar menu) */}
+                    <div className="hidden md:flex items-center">
+                        <button
+                            onClick={toggleDark}
+                            data-tooltip={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                            className={`relative w-12 h-6 rounded-full flex items-center transition-colors duration-300 focus:outline-none flex-shrink-0 cursor-pointer border-0 ${
+                                isDark ? 'bg-yellow-500' : 'bg-gray-300'
+                            }`}
+                            aria-label="Toggle dark mode"
+                        >
+                            <span className={`absolute left-0.5 transition-all duration-300 flex items-center justify-center w-5 h-5 rounded-full shadow-md ${
+                                isDark
+                                    ? 'translate-x-6 bg-white'
+                                    : 'translate-x-0 bg-white'
+                            }`}>
+                                <Sun className={`absolute w-3 h-3 text-yellow-800 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                    isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+                                }`} />
+                                <Moon className={`absolute w-3 h-3 text-gray-500 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                    isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                                }`} />
+                            </span>
+                        </button>
+                    </div>
 
                     {isAuthenticated && (user || profile) ? (
                         <div className="flex items-center gap-1.5 sm:gap-3">

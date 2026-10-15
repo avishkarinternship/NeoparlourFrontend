@@ -85,6 +85,14 @@ export const fetchCustomerAddresses = createAsyncThunk(
       // 404 or backend not having endpoint yet is expected during transitional phase
       return rejectWithValue(err.response?.data?.message || 'Addresses not available');
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { location } = getState();
+      if (location?.loadingAddresses || (location?.savedAddresses && location.savedAddresses.length > 0)) {
+        return false;
+      }
+    }
   }
 );
 

@@ -107,78 +107,78 @@ const Support = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-red-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
+        <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-red-500 selection:text-white flex flex-col justify-between overflow-x-clip">
             {/* Main Support Body */}
-            <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-16 lg:py-24">
+            <main className="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 md:px-12 py-6 sm:py-12 lg:py-16">
                 {/* Hero Section */}
-                <div className="text-center max-w-2xl mx-auto mb-16" data-aos="fade-up">
-                    <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-3 flex items-center justify-center gap-1">
+                <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-10" data-aos="fade-up">
+                    <span className="text-[10px] font-black tracking-[0.25em] text-[#FF2A14] uppercase mb-2 flex items-center justify-center gap-1">
                         <Sparkles className="w-3.5 h-3.5" /> Customer Care Portal
                     </span>
-                    <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight uppercase leading-none mb-4">
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight uppercase leading-none mb-2 sm:mb-3">
                         We're Here To <span className="text-[#FF2A14]">Help</span>
                     </h1>
-                    <p className="text-gray-400 font-semibold text-sm leading-relaxed">
+                    <p className="text-gray-400 font-semibold text-xs sm:text-sm leading-relaxed">
                         Have a question about your booking, payment issue, or salon feedback? Submit a support request with optional screenshots.
                     </p>
                 </div>
 
                 {/* Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
                     
                     {/* Left: Contact Info Column */}
-                    <div className="lg:col-span-5 space-y-6" data-aos="fade-right" data-aos-delay="100">
-                        <h2 className="text-xl font-black uppercase text-gray-900 tracking-tight border-b pb-3 mb-6">
+                    <div className="lg:col-span-5 space-y-3 sm:space-y-4" data-aos="fade-right" data-aos-delay="100">
+                        <h2 className="text-base sm:text-lg font-black uppercase text-gray-900 tracking-tight border-b pb-2 mb-3 sm:mb-4">
                             Contact Channels
                         </h2>
 
                         {/* Email Card */}
-                        <div className="flex gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
-                            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
-                                <Mail className="w-5 h-5" />
+                        <div className="flex gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
+                                <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Email Support</h4>
-                                <p className="text-sm font-semibold text-gray-600">support@neopaceinfotech.com</p>
-                                <p className="text-xs text-gray-400 mt-1">We typically reply within 24 hours.</p>
+                                <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider mb-0.5">Email Support</h4>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-600">support@neopaceinfotech.com</p>
+                                <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">We typically reply within 24 hours.</p>
                             </div>
                         </div>
 
                         {/* Phone Card */}
-                        <div className="flex gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
-                            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
-                                <Phone className="w-5 h-5" />
+                        <div className="flex gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
+                                <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Call Helpline</h4>
-                                <p className="text-sm font-semibold text-gray-600">+91 7062 888 812</p>
-                                <p className="text-xs text-gray-400 mt-1">Available 9:00 AM to 9:00 PM IST.</p>
+                                <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider mb-0.5">Call Helpline</h4>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-600">+91 7062 888 812</p>
+                                <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">Available 9:00 AM to 9:00 PM IST.</p>
                             </div>
                         </div>
 
                         {/* Operational Hours Card */}
-                        <div className="flex gap-4 p-5 rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs">
-                            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
-                                <Clock className="w-5 h-5" />
+                        <div className="flex gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100/80 shadow-xs">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
+                                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Operational Hours</h4>
-                                <p className="text-sm font-semibold text-gray-600">Monday - Sunday</p>
-                                <p className="text-xs text-gray-400 mt-1">Our support engineers are active 7 days a week.</p>
+                                <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider mb-0.5">Operational Hours</h4>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-600">Monday - Sunday</p>
+                                <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">Our support engineers are active 7 days a week.</p>
                             </div>
                         </div>
 
                         {/* Account Deletion Card */}
-                        <div className="flex gap-4 p-5 rounded-2xl bg-red-50/30 border border-red-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
-                            <div className="w-12 h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
-                                <Trash2 className="w-5 h-5" />
+                        <div className="flex gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-red-50/30 border border-red-100/80 shadow-xs hover:border-[#FF2A14]/20 transition-all duration-300">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-50 text-[#FF2A14] flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-wider mb-1">Delete Account</h4>
-                                <p className="text-xs font-semibold text-gray-600 mb-3 leading-relaxed">Want to permanently delete your customer or partner account? Verify via OTP.</p>
+                                <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm uppercase tracking-wider mb-0.5">Delete Account</h4>
+                                <p className="text-[11px] sm:text-xs font-semibold text-gray-600 mb-2 sm:mb-3 leading-relaxed">Want to permanently delete your customer or partner account? Verify via OTP.</p>
                                 <button
                                     onClick={() => navigate('/delete-account')}
-                                    className="px-4 py-2 bg-[#FF2A14] hover:bg-[#E01E0A] text-white font-bold text-xs rounded-xl uppercase tracking-wider transition cursor-pointer"
+                                    className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-[#FF2A14] hover:bg-[#E01E0A] text-white font-bold text-[11px] sm:text-xs rounded-lg sm:rounded-xl uppercase tracking-wider transition cursor-pointer"
                                 >
                                     Delete Account
                                 </button>
@@ -187,7 +187,7 @@ const Support = () => {
                     </div>
 
                     {/* Right: Message Form Column / Confirmation Screen */}
-                    <div className="lg:col-span-7 bg-white border border-gray-100 rounded-[32px] p-6 sm:p-8 md:p-10 shadow-2xl shadow-gray-100" data-aos="fade-left" data-aos-delay="200">
+                    <div className="lg:col-span-7 bg-white border border-gray-100 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl shadow-gray-100" data-aos="fade-left" data-aos-delay="200">
                         
                         {submittedRefId ? (
                             /* Confirmation Screen */
@@ -260,10 +260,10 @@ const Support = () => {
                                     </span>
                                 </div>
 
-                                <form onSubmit={handleSubmit} className="space-y-5">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
                                         {/* Name Input */}
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                                 Your Full Name <span className="text-[#FF2A14]">*</span>
                                             </label>
@@ -274,12 +274,12 @@ const Support = () => {
                                                 onChange={handleInputChange}
                                                 placeholder="Full Name"
                                                 required
-                                                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
+                                                className="w-full px-3.5 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
                                             />
                                         </div>
 
                                         {/* Email Input */}
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                                 Email Address
                                             </label>
@@ -289,14 +289,14 @@ const Support = () => {
                                                 value={formData.email}
                                                 onChange={handleInputChange}
                                                 placeholder="email@example.com"
-                                                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
+                                                className="w-full px-3.5 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
                                         {/* Mobile Input */}
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                                 Mobile Number (10 Digits)
                                             </label>
@@ -307,12 +307,12 @@ const Support = () => {
                                                 onChange={handleInputChange}
                                                 placeholder="10-digit number"
                                                 maxLength={10}
-                                                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
+                                                className="w-full px-3.5 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400"
                                             />
                                         </div>
 
                                         {/* Category Selection */}
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                                 Issue Category
                                             </label>
@@ -320,7 +320,7 @@ const Support = () => {
                                                 name="category"
                                                 value={formData.category}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all cursor-pointer"
+                                                className="w-full px-3.5 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all cursor-pointer"
                                             >
                                                 <option value="GENERAL">💬 General Inquiry</option>
                                                 <option value="APPOINTMENT_HELP">📅 Appointment & Booking Help</option>
@@ -335,7 +335,7 @@ const Support = () => {
                                     </div>
 
                                     {/* Description Textarea */}
-                                    <div className="flex flex-col gap-1.5">
+                                    <div className="flex flex-col gap-1">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                             Describe your query or problem <span className="text-[#FF2A14]">*</span>
                                         </label>
@@ -345,13 +345,13 @@ const Support = () => {
                                             onChange={handleInputChange}
                                             placeholder="Write detailed explanation of your issue..."
                                             required
-                                            rows="4"
-                                            className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400 resize-none"
+                                            rows="3"
+                                            className="w-full px-3.5 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold text-gray-700 focus:outline-none focus:border-[#FF2A14] focus:bg-white transition-all placeholder-gray-400 resize-none"
                                         />
                                     </div>
 
                                     {/* Drag & Drop Screenshot Uploader */}
-                                    <div className="flex flex-col gap-1.5">
+                                    <div className="flex flex-col gap-1">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
                                             Attach Screenshots (Optional)
                                         </label>
@@ -367,7 +367,7 @@ const Support = () => {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] disabled:bg-red-400 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-red-500/10 cursor-pointer uppercase tracking-widest text-xs"
+                                        className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] disabled:bg-red-400 disabled:cursor-not-allowed text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer uppercase tracking-widest text-[11px] sm:text-xs"
                                     >
                                         <Send className="w-4 h-4" />
                                         {submitting ? 'Submitting Request...' : 'Submit Support Ticket'}

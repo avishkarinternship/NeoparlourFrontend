@@ -13,12 +13,40 @@ import helpIcon from '../../../assets/Owner/Dashboard/SideBar/help_icon.svg';
 import settingIcon from '../../../assets/Owner/Dashboard/SideBar/setting_icon.svg';
 import logoutIcon from '../../../assets/Owner/Dashboard/SideBar/logout_icon.svg';
 import attendanceIcon from '../../../assets/Owner/Attendance/total_attendance.svg';
-import { FileText, MessageSquareQuote, Globe, ExternalLink, Sparkles, Bot } from 'lucide-react';
+import { FileText, MessageSquareQuote, Globe, ExternalLink, Sparkles, Bot, Sun, Moon, Bell } from 'lucide-react';
+import { LanguageSwitcher } from '../../LanguageSwitcher';
 
-const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
+const Sidebar = ({ isOpen, onClose, isDarkMode = false, toggleDarkMode }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+      if (ownerUser.role === 'ADMIN') {
+        setUnreadCount(0);
+        return;
+      }
+      try {
+        const salonId = localStorage.getItem('activeSalonId') || ownerUser.salonId;
+        if (!salonId || salonId === 'SYSTEM' || salonId === 'null' || isNaN(Number(salonId))) {
+          setUnreadCount(0);
+          return;
+        }
+        const response = await axiosInstance.get(`/notifications/search?salonId=${salonId}&page=0&size=10`);
+        const notifs = response.data.content || [];
+        setUnreadCount(notifs.filter(n => n.status === 'pending').length);
+      } catch (err) {
+        // silent catch
+      }
+    };
+    if (isOpen) {
+      fetchUnreadCount();
+    }
+  }, [isOpen]);
 
   const isManagePath = location.pathname.startsWith('/owner/manage');
   const [showManageDrawer, setShowManageDrawer] = useState(isManagePath);
@@ -67,6 +95,92 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
     const roleStr = String(user.role || user.userRole || '').toUpperCase();
     const isAdmin = roleStr === 'ADMIN';
     const isSupportEngineer = roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT');
+    const isSeoAdmin = roleStr === 'SEO_ADMIN' || roleStr.includes('SEO');
+
+    const renderMobileUtilities = () => {
+      if (!isMobile) return null;
+      return (
+        <div className={`pt-3 mt-3 border-t space-y-2 px-1 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+          <div className={`text-[10px] font-black uppercase tracking-wider px-2.5 ${
+            isDarkMode ? 'text-zinc-500' : 'text-gray-400'
+          }`}>
+            Preferences & Quick Links
+          </div>
+
+          {/* Notifications Shortcut for Mobile */}
+          {!isSeoAdmin && (
+            <button
+              onClick={() => {
+                navigate('/owner/notifications');
+                if (onClose) onClose();
+              }}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-colors duration-150 text-left cursor-pointer ${
+                location.pathname === '/owner/notifications'
+                  ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                  : isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800/80' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Bell className="w-[18px] h-[18px] opacity-75 flex-shrink-0" />
+                <span>{t('notifications.title', 'Notifications')}</span>
+              </div>
+              {unreadCount > 0 ? (
+                <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-xs">
+                  {unreadCount}
+                </span>
+              ) : (
+                <span className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  0
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Dark Mode Toggle */}
+          <div className={`flex items-center justify-between px-3.5 py-2 rounded-xl border ${
+            isDarkMode ? 'bg-zinc-800/40 border-zinc-700/60 text-zinc-300' : 'bg-gray-50 border-gray-100 text-gray-700'
+          }`}>
+            <div className="flex items-center space-x-3 text-[13px] font-bold">
+              {isDarkMode ? (
+                <Moon className="w-[18px] h-[18px] text-amber-400 flex-shrink-0" />
+              ) : (
+                <Sun className="w-[18px] h-[18px] text-amber-500 flex-shrink-0" />
+              )}
+              <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+            </div>
+            {toggleDarkMode && (
+              <button
+                onClick={toggleDarkMode}
+                type="button"
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
+                  isDarkMode ? 'bg-[#FF0B01]' : 'bg-gray-300'
+                }`}
+                aria-label="Toggle theme"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                    isDarkMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            )}
+          </div>
+
+          {/* Language Switcher */}
+          {!isAdmin && !isSeoAdmin && (
+            <div className={`flex items-center justify-between px-3.5 py-2 rounded-xl border ${
+              isDarkMode ? 'bg-zinc-800/40 border-zinc-700/60 text-zinc-300' : 'bg-gray-50 border-gray-100 text-gray-700'
+            }`}>
+              <div className="flex items-center space-x-3 text-[13px] font-bold">
+                <Globe className="w-[18px] h-[18px] text-[#FF0B01] flex-shrink-0" />
+                <span>{t('labels.language', 'Language')}</span>
+              </div>
+              <LanguageSwitcher />
+            </div>
+          )}
+        </div>
+      );
+    };
 
     if (isSupportEngineer) {
       return (
@@ -292,6 +406,8 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 );
               })()}
 
+              {renderMobileUtilities()}
+
               <div className={`pt-2 border-t mt-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
                 <button
                   onClick={handleLogout}
@@ -309,8 +425,6 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
         </>
       );
     }
-
-    const isSeoAdmin = roleStr === 'SEO_ADMIN' || roleStr.includes('SEO');
 
     if (isSeoAdmin) {
       return (
@@ -472,6 +586,8 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 </button>
               );
             })()}
+
+            {renderMobileUtilities()}
 
             {/* Logout button at the end with all elements */}
             <div className={`pt-3 mt-4 border-t ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
@@ -933,6 +1049,8 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
                 );
               })()}
 
+              {renderMobileUtilities()}
+
               <div className={`pt-2 border-t mt-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
                 <button
                   onClick={handleLogout}
@@ -955,9 +1073,11 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
       <>
         {/* Mobile Header with Close Button */}
         {isMobile && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 lg:hidden flex-shrink-0">
-            <span className="text-gray-900 font-bold text-sm">Navigation</span>
-            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-900">
+          <div className={`flex items-center justify-between p-4 border-b lg:hidden flex-shrink-0 ${
+            isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+          }`}>
+            <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Navigation</span>
+            <button onClick={onClose} className={`p-1 ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -1207,6 +1327,8 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false }) => {
               />
               <span>{t('owner.sidebar.settings', 'Settings')}</span>
             </button>
+
+            {renderMobileUtilities()}
 
             {/* Session Termination Area */}
             <div className={`pt-2 border-t mt-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
