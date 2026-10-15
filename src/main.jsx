@@ -6,11 +6,15 @@ import './utils/toastDeduplicator'
 import store from './redux/store'
 import { routes } from './router/NeoParlourRouter'
 import './index.css'
-import i18n from './i18n' // Import i18n configuration
-import { I18nextProvider } from 'react-i18next'
+import i18n from './i18n'
+import { I18nextProvider, useTranslation } from 'react-i18next'
 
-// Safeguard against browser extensions (Google Translate, Grammarly, Autofill) mutating DOM nodes and causing React removeChild crashes
+// Safeguard against missing imports or cached chunks referencing hooks globally
 if (typeof window !== 'undefined') {
+  if (!window.useTranslation) window.useTranslation = useTranslation;
+  if (!window.useRef) window.useRef = React.useRef;
+  if (!window.useState) window.useState = React.useState;
+  if (!window.useEffect) window.useEffect = React.useEffect;
   if (Node.prototype._originalRemoveChild === undefined) {
     Node.prototype._originalRemoveChild = Node.prototype.removeChild;
     Node.prototype.removeChild = function (child) {
