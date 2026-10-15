@@ -779,13 +779,21 @@ const SalonsListing = () => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-6 mt-1 sm:mt-2">
                         <div>
                             <h2 className={`text-lg sm:text-2xl font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Salons near <span className="text-[#FF2A14]">{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</span>
+                                {t('salons_page.salons_near', 'Salons near')} <span className="text-[#FF2A14]">{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</span>
                             </h2>
                             <p className="text-xs sm:text-sm text-gray-400 font-medium mt-0.5">
                                 {cityName?.trim() || areaName?.trim() ? (
-                                    <span>{totalElements} salon{totalElements !== 1 ? 's' : ''} found in <strong className={isDark ? 'text-white' : 'text-gray-800'}>{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</strong> • <span className="text-amber-500 font-semibold lowercase">radius disabled</span></span>
+                                    <span>
+                                        {totalElements === 1
+                                            ? t('salons_page.salons_found_in', '{{count}} salon found in', { count: totalElements })
+                                            : t('salons_page.salons_found_in_plural', '{{count}} salons found in', { count: totalElements })} <strong className={isDark ? 'text-white' : 'text-gray-800'}>{areaName ? `${areaName}, ${searchedCity}` : searchedCity}</strong> • <span className="text-amber-500 font-semibold lowercase">{t('salons_page.radius_disabled', 'radius disabled')}</span>
+                                    </span>
                                 ) : (
-                                    <span>{totalElements} salon{totalElements !== 1 ? 's' : ''} found within {selectedRadius} km</span>
+                                    <span>
+                                        {totalElements === 1
+                                            ? t('salons_page.salons_found_within', '{{count}} salon found within {{radius}} km', { count: totalElements, radius: selectedRadius })
+                                            : t('salons_page.salons_found_within_plural', '{{count}} salons found within {{radius}} km', { count: totalElements, radius: selectedRadius })}
+                                    </span>
                                 )}
                             </p>
                         </div>
@@ -795,10 +803,10 @@ const SalonsListing = () => {
                             {cityName?.trim() || areaName?.trim() ? (
                                 <div className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl border transition-all ${
                                     isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'
-                                }`} title="Radius filter is disabled when searching by city or area">
+                                }`} title={t('salons_page.radius_disabled_title', 'Radius filter is disabled when searching by city or area')}>
                                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500 animate-pulse"></span>
                                     <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                                        Radius Disabled for {cityName || searchedCity}
+                                        {t('salons_page.radius_disabled_for', 'Radius Disabled for {{city}}', { city: cityName || searchedCity })}
                                     </span>
                                 </div>
                             ) : (
@@ -806,7 +814,7 @@ const SalonsListing = () => {
                                     isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'
                                 }`}>
                                     <span className="text-[10px] font-bold px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                                        📍 Radius:
+                                        📍 {t('salons_page.radius_label', 'Radius:')}
                                     </span>
                                     {[5, 10, 25, 50].map((r) => (
                                         <button
@@ -819,7 +827,7 @@ const SalonsListing = () => {
                                                     : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
                                             }`}
                                         >
-                                            {r} km
+                                            {t('salons_page.km', '{{count}} km', { count: r })}
                                         </button>
                                     ))}
                                 </div>
@@ -827,7 +835,7 @@ const SalonsListing = () => {
 
                             {totalPages > 1 && (
                                 <span className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors duration-300 ${isDark ? 'text-gray-300 bg-gray-900' : 'text-gray-400 bg-gray-100'}`}>
-                                    Page {page + 1} of {totalPages}
+                                    {t('salons_page.page_of', 'Page {{current}} of {{total}}', { current: page + 1, total: totalPages })}
                                 </span>
                             )}
                         </div>

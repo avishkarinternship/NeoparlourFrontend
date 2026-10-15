@@ -101,7 +101,14 @@
       "title": "पास के प्रीमियम सलून्स",
       "showing_typed": "आपके दर्ज किए गए शहर और क्षेत्र के नाम के अनुसार सलून्स दिखाए जा रहे हैं",
       "showing_current": "आपकी वर्तमान लोकेशन के अनुसार सलून्स दिखाए जा रहे हैं",
-      "no_salons": "पास में कोई सलून नहीं मिला"
+      "no_salons": "पास में कोई सलून नहीं मिला",
+      "radius_label": "रेडियस:",
+      "km": "{{count}} किमी",
+      "within_km": "{{count}} किमी के दायरे में",
+      "radius_disabled": "रेडियस अक्षम",
+      "radius_disabled_for": "{{city}} के लिए रेडियस अक्षम है",
+      "radius_disabled_title": "शहर या क्षेत्र खोजते समय रेडियस फ़िल्टर अक्षम रहता है",
+      "showing_all_in": "सभी सलून्स दिखाए जा रहे हैं:"
     },
     "services_grid": {
       "title": "सर्विसेस",
@@ -530,7 +537,18 @@
     "no_salons_found": "आपकी सर्च के मुताबिक कोई सलून नहीं मिला।",
     "detect_location": "मेरी लोकेशन डिटेक्ट करें",
     "rating": "रेटिंग",
-    "open_hours": "ओपनिंग अवर्स"
+    "open_hours": "ओपनिंग अवर्स",
+    "radius_label": "रेडियस:",
+    "km": "{{count}} किमी",
+    "salons_near": "सैलून पास में",
+    "radius_disabled": "रेडियस अक्षम",
+    "radius_disabled_for": "{{city}} के लिए रेडियस अक्षम है",
+    "radius_disabled_title": "शहर या क्षेत्र खोजते समय रेडियस फ़िल्टर अक्षम रहता है",
+    "salons_found_in": "{{count}} सलून मिला:",
+    "salons_found_in_plural": "{{count}} सलून्स मिले:",
+    "salons_found_within": "{{radius}} किमी के दायरे में {{count}} सलून मिला",
+    "salons_found_within_plural": "{{radius}} किमी के दायरे में {{count}} सलून्स मिले",
+    "page_of": "पेज {{current}} / {{total}}"
   },
   "subscriptions_page": {
     "title": "सब्सक्रिप्शन प्लान्स",

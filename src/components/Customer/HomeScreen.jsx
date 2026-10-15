@@ -1518,15 +1518,15 @@ const HomeScreen = () => {
                             <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A14] animate-pulse"></span>
                             {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
                                 <>
-                                    <span>Showing all salons in <strong className="text-[#FF2A14]">{searchData.areaName ? `${searchData.areaName}, ` : ''}{searchData.cityName}</strong></span>
+                                    <span>{t('home.premium_salons.showing_all_in', 'Showing all salons in')} <strong className="text-[#FF2A14]">{searchData.areaName ? `${searchData.areaName}, ` : ''}{searchData.cityName}</strong></span>
                                     <span className="text-gray-300 dark:text-gray-600">•</span>
-                                    <span className="text-amber-500 font-semibold lowercase">radius disabled</span>
+                                    <span className="text-amber-500 font-semibold lowercase">{t('home.premium_salons.radius_disabled', 'radius disabled')}</span>
                                 </>
                             ) : (
                                 <>
                                     {t('home.premium_salons.showing_current', 'Showing salons of your current location')}
                                     <span className="text-gray-300 dark:text-gray-600">•</span>
-                                    <span className="text-[#FF2A14] font-semibold lowercase">within {homeRadius} km</span>
+                                    <span className="text-[#FF2A14] font-semibold lowercase">{t('home.premium_salons.within_km', 'within {{count}} km', { count: homeRadius })}</span>
                                 </>
                             )}
                         </p>
@@ -1537,10 +1537,10 @@ const HomeScreen = () => {
                         {isLocationChanged && (searchData.cityName || searchData.areaName) ? (
                             <div className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl border transition-all ${
                                 isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'
-                            }`} title="Radius filter is disabled when searching by city or area">
+                            }`} title={t('home.premium_salons.radius_disabled_title', 'Radius filter is disabled when searching by city or area')}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                 <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                                    Radius Disabled for {searchData.cityName || 'City'}
+                                    {t('home.premium_salons.radius_disabled_for', 'Radius Disabled for {{city}}', { city: searchData.cityName || 'City' })}
                                 </span>
                             </div>
                         ) : (
@@ -1548,7 +1548,7 @@ const HomeScreen = () => {
                                 isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-100 border-gray-200'
                             }`}>
                                 <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0">
-                                    📍 <span className="hidden xs:inline">Radius:</span>
+                                    📍 <span className="hidden xs:inline">{t('home.premium_salons.radius_label', 'Radius:')}</span>
                                 </span>
                                 {[5, 10, 25, 50].map((r) => (
                                     <button
@@ -1561,7 +1561,7 @@ const HomeScreen = () => {
                                                 : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
                                         }`}
                                     >
-                                        {r} km
+                                        {t('home.premium_salons.km', '{{count}} km', { count: r })}
                                     </button>
                                 ))}
                             </div>

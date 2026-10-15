@@ -101,7 +101,14 @@
       "title": "जवळचे प्रीमियम सलून्स",
       "showing_typed": "तुमच्या शहराच्या आणि भागाच्या नावानुसार सलून्स दाखवत आहे",
       "showing_current": "तुमच्या सध्याच्या स्थानाचे सलून्स दाखवत आहे",
-      "no_salons": "जवळ कोणतेही सलून सापडले नाही"
+      "no_salons": "जवळ कोणतेही सलून सापडले नाही",
+      "radius_label": "त्रिज्या:",
+      "km": "{{count}} किमी",
+      "within_km": "{{count}} किमीच्या परिसरात",
+      "radius_disabled": "त्रिज्या अक्षम",
+      "radius_disabled_for": "{{city}} साठी त्रिज्या अक्षम आहे",
+      "radius_disabled_title": "शहर किंवा परिसर शोधताना त्रिज्या फिल्टर अक्षम असते",
+      "showing_all_in": "सर्व सलून्स दाखवत आहे:"
     },
     "services_grid": {
       "title": "सर्व्हिसेस",
@@ -530,7 +537,18 @@
     "no_salons_found": "तुमच्या सर्चनुसार कोणतेही सलून सापडले नाही.",
     "detect_location": "माझी लोकेशन डिटेक्ट करा",
     "rating": "रेटिंग",
-    "open_hours": "ओपनिंग अव्हर्स"
+    "open_hours": "ओपनिंग अव्हर्स",
+    "radius_label": "त्रिज्या:",
+    "km": "{{count}} किमी",
+    "salons_near": "जवळपासचे सलून्स",
+    "radius_disabled": "त्रिज्या अक्षम",
+    "radius_disabled_for": "{{city}} साठी त्रिज्या अक्षम आहे",
+    "radius_disabled_title": "शहर किंवा परिसर शोधताना त्रिज्या फिल्टर अक्षम असते",
+    "salons_found_in": "{{count}} सलून सापडले:",
+    "salons_found_in_plural": "{{count}} सलून्स सापडले:",
+    "salons_found_within": "{{radius}} किमी परिसरात {{count}} सलून सापडले",
+    "salons_found_within_plural": "{{radius}} किमी परिसरात {{count}} सलून्स सापडले",
+    "page_of": "पान {{current}} / {{total}}"
   },
   "subscriptions_page": {
     "title": "सबस्क्रिप्शन प्लॅन्स",

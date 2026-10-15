@@ -101,7 +101,14 @@
       "title": "Premium Salons Nearby",
       "showing_typed": "Showing salons according to your typed city and area name",
       "showing_current": "Showing salons of your current location",
-      "no_salons": "No salons found nearby"
+      "no_salons": "No salons found nearby",
+      "radius_label": "Radius:",
+      "km": "{{count}} km",
+      "within_km": "within {{count}} km",
+      "radius_disabled": "radius disabled",
+      "radius_disabled_for": "Radius Disabled for {{city}}",
+      "radius_disabled_title": "Radius filter is disabled when searching by city or area",
+      "showing_all_in": "Showing all salons in"
     },
     "services_grid": {
       "title": "Services",
@@ -530,7 +537,18 @@
     "no_salons_found": "No Salons Found matching your search.",
     "detect_location": "Detect My Location",
     "rating": "Rating",
-    "open_hours": "Open Hours"
+    "open_hours": "Open Hours",
+    "radius_label": "Radius:",
+    "km": "{{count}} km",
+    "salons_near": "Salons near",
+    "radius_disabled": "radius disabled",
+    "radius_disabled_for": "Radius Disabled for {{city}}",
+    "radius_disabled_title": "Radius filter is disabled when searching by city or area",
+    "salons_found_in": "{{count}} salon found in",
+    "salons_found_in_plural": "{{count}} salons found in",
+    "salons_found_within": "{{count}} salon found within {{radius}} km",
+    "salons_found_within_plural": "{{count}} salons found within {{radius}} km",
+    "page_of": "Page {{current}} of {{total}}"
   },
   "subscriptions_page": {
     "title": "SUBSCRIPTION PLANS",
