@@ -23,7 +23,19 @@ import {
   ShieldCheck,
   Layers,
   Zap,
-  Info
+  Info,
+  ExternalLink,
+  Phone,
+  Mail,
+  MapPin,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  Award,
+  Lock,
+  Unlock,
+  Filter
 } from 'lucide-react';
 
 const toastStyle = {
@@ -46,14 +58,43 @@ export default function AdminSubscriptions() {
   // ==================== State: Contracts (Subscriptions) ====================
   const [subscriptions, setSubscriptions] = useState([]);
   const [loadingContracts, setLoadingContracts] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [planFilter, setPlanFilter] = useState('');
+  const [filters, setFilters] = useState({
+    search: '',
+    salonId: '',
+    salonName: '',
+    salonCode: '',
+    planCode: '',
+    status: '',
+    paymentId: '',
+    razorpaySubscriptionId: '',
+    couponCode: '',
+    fromDate: '',
+    toDate: '',
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: '',
+    salonId: '',
+    salonName: '',
+    salonCode: '',
+    planCode: '',
+    status: '',
+    paymentId: '',
+    razorpaySubscriptionId: '',
+    couponCode: '',
+    fromDate: '',
+    toDate: '',
+  });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
+
+  // ==================== State: Salon Details Modal ====================
+  const [isSalonModalOpen, setIsSalonModalOpen] = useState(false);
+  const [selectedSalonId, setSelectedSalonId] = useState(null);
+  const [selectedSalonDetails, setSelectedSalonDetails] = useState(null);
+  const [loadingSalonDetails, setLoadingSalonDetails] = useState(false);
 
   // ==================== State: Plans ====================
   const [plans, setPlans] = useState([]);
@@ -88,7 +129,7 @@ export default function AdminSubscriptions() {
   const [submittingCoupon, setSubmittingCoupon] = useState(false);
 
   // ==================== Data Fetching ====================
-  const fetchSubscriptions = useCallback(async (currentPage, currentSize, currentSearch, currentStatus, currentPlan) => {
+  const fetchSubscriptions = useCallback(async (currentPage, currentSize, currentAppliedFilters) => {
     setLoadingContracts(true);
     try {
       const params = {
@@ -96,9 +137,28 @@ export default function AdminSubscriptions() {
         size: currentSize,
         sort: 'createdAt,desc'
       };
-      if (currentSearch?.trim()) params.search = currentSearch.trim();
-      if (currentStatus) params.status = currentStatus;
-      if (currentPlan) params.planCode = currentPlan;
+
+      if (currentAppliedFilters?.search?.trim()) params.search = currentAppliedFilters.search.trim();
+      if (currentAppliedFilters?.salonId?.toString().trim()) params.salonId = currentAppliedFilters.salonId.toString().trim();
+      if (currentAppliedFilters?.salonName?.trim()) params.salonName = currentAppliedFilters.salonName.trim();
+      if (currentAppliedFilters?.salonCode?.trim()) params.salonCode = currentAppliedFilters.salonCode.trim();
+      if (currentAppliedFilters?.planCode?.trim()) params.planCode = currentAppliedFilters.planCode.trim();
+      if (currentAppliedFilters?.status?.trim()) params.status = currentAppliedFilters.status.trim();
+      if (currentAppliedFilters?.paymentId?.trim()) params.paymentId = currentAppliedFilters.paymentId.trim();
+      if (currentAppliedFilters?.razorpaySubscriptionId?.trim()) params.razorpaySubscriptionId = currentAppliedFilters.razorpaySubscriptionId.trim();
+      if (currentAppliedFilters?.couponCode?.trim()) params.couponCode = currentAppliedFilters.couponCode.trim();
+      if (currentAppliedFilters?.fromDate?.trim()) {
+        try {
+          params.fromDate = new Date(currentAppliedFilters.fromDate).toISOString();
+        } catch (_) {}
+      }
+      if (currentAppliedFilters?.toDate?.trim()) {
+        try {
+          const d = new Date(currentAppliedFilters.toDate);
+          d.setHours(23, 59, 59, 999);
+          params.toDate = d.toISOString();
+        } catch (_) {}
+      }
 
       const response = await axiosInstance.get('/subscriptions/admin/all', { params });
       const data = response.data;
@@ -127,6 +187,26 @@ export default function AdminSubscriptions() {
       setLoadingContracts(false);
     }
   }, []);
+
+  const handleOpenSalonDetails = async (salonId) => {
+    if (!salonId) return;
+    setSelectedSalonId(salonId);
+    setSelectedSalonDetails(null);
+    setIsSalonModalOpen(true);
+    setLoadingSalonDetails(true);
+
+    try {
+      const response = await axiosInstance.get(`/salons/${salonId}`);
+      if (response.data) {
+        setSelectedSalonDetails(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch salon details:", err);
+      toast.error("Could not load salon details", toastStyle);
+    } finally {
+      setLoadingSalonDetails(false);
+    }
+  };
 
   const fetchPlans = async () => {
     setLoadingPlans(true);
@@ -167,8 +247,8 @@ export default function AdminSubscriptions() {
   };
 
   useEffect(() => {
-    fetchSubscriptions(page, pageSize, searchTerm, statusFilter, planFilter);
-  }, [page, pageSize, searchTerm, statusFilter, planFilter, fetchSubscriptions]);
+    fetchSubscriptions(page, pageSize, appliedFilters);
+  }, [page, pageSize, appliedFilters, fetchSubscriptions]);
 
   useEffect(() => {
     fetchPlans();
@@ -333,23 +413,43 @@ export default function AdminSubscriptions() {
   };
 
   // ==================== Filtering Logic ====================
-  // Filtering is now handled server-side via query params
-  const filteredSubscriptions = subscriptions; // server already filters
+  // Filtering is now handled server-side via JPA Specification query params
+  const filteredSubscriptions = subscriptions;
 
-  const uniquePlans = ['1month', '3month', 'lifetime'];
+  const uniquePlans = Array.from(new Set([
+    '1month', '3month', 'lifetime',
+    ...plans.map(p => (p.planCode || '').toLowerCase()).filter(Boolean)
+  ]));
 
-  const handleSearchSubmit = () => {
+  const handleSearchSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setPage(0);
-    setSearchTerm(searchInput);
+    setAppliedFilters({ ...filters });
   };
 
   const handleSearchReset = () => {
-    setSearchInput('');
-    setSearchTerm('');
-    setStatusFilter('');
-    setPlanFilter('');
+    const emptyFilters = {
+      search: '',
+      salonId: '',
+      salonName: '',
+      salonCode: '',
+      planCode: '',
+      status: '',
+      paymentId: '',
+      razorpaySubscriptionId: '',
+      couponCode: '',
+      fromDate: '',
+      toDate: '',
+    };
+    setFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
     setPage(0);
   };
+
+  const isFilterActive = Object.entries(appliedFilters).some(([_, val]) => val && String(val).trim() !== '');
+  const advancedFiltersActiveCount = [
+    'salonId', 'salonName', 'salonCode', 'paymentId', 'razorpaySubscriptionId', 'couponCode', 'fromDate', 'toDate'
+  ].filter(key => appliedFilters[key] && String(appliedFilters[key]).trim() !== '').length;
 
   const getStatusBadge = (status) => {
     if (!status) return null;
@@ -407,7 +507,7 @@ export default function AdminSubscriptions() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => {
-              if (activeTab === 'contracts') fetchSubscriptions(page, pageSize, searchTerm, statusFilter, planFilter);
+              if (activeTab === 'contracts') fetchSubscriptions(page, pageSize, appliedFilters);
               if (activeTab === 'plans') fetchPlans();
               if (activeTab === 'coupons') fetchCoupons();
             }}
@@ -515,72 +615,247 @@ export default function AdminSubscriptions() {
           </div>
 
           {/* Filters Bar */}
-          <div className={`p-4 rounded-2xl border shadow-sm mb-6 flex flex-col md:flex-row gap-4 ${
+          <div className={`p-4 rounded-2xl border shadow-sm mb-6 ${
             isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
           }`}>
-            <div className="flex-1 relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                <Search className="w-4 h-4" />
+            <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <Search className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  placeholder="Search by Salon Name, Code, ID, Plan, Payment ID, Coupon..."
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800 placeholder-zinc-500' : 'bg-[#FAFAFA] border-gray-100 text-gray-800 focus:bg-white placeholder-gray-400'
+                  }`}
+                />
               </div>
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
-                placeholder="Search by Salon ID, Plan Code, or Payment ID..."
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
-                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800 placeholder-zinc-500' : 'bg-[#FAFAFA] border-gray-100 text-gray-800 focus:bg-white placeholder-gray-400'
-                }`}
-              />
-            </div>
 
-            <div className="w-full md:w-44">
-              <select
-                value={planFilter}
-                onChange={(e) => { setPlanFilter(e.target.value); setPage(0); }}
-                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
-                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
-                }`}
-              >
-                <option value="">All Plans</option>
-                {uniquePlans.map(plan => (
-                  <option key={plan} value={plan}>{plan.toUpperCase()}</option>
-                ))}
-              </select>
-            </div>
+              <div className="w-full md:w-44">
+                <select
+                  value={filters.planCode}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilters(prev => ({ ...prev, planCode: val }));
+                    setAppliedFilters(prev => ({ ...prev, planCode: val }));
+                    setPage(0);
+                  }}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
+                  }`}
+                >
+                  <option value="">All Plans</option>
+                  {uniquePlans.map(plan => (
+                    <option key={plan} value={plan}>{plan.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="w-full md:w-44">
-              <select
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
-                  isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
-                }`}
-              >
-                <option value="">All Statuses</option>
-                <option value="active">Active Only</option>
-                <option value="expired">Expired Only</option>
-                <option value="pending">Pending Only</option>
-                <option value="cancelled">Cancelled Only</option>
-              </select>
-            </div>
+              <div className="w-full md:w-44">
+                <select
+                  value={filters.status}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilters(prev => ({ ...prev, status: val }));
+                    setAppliedFilters(prev => ({ ...prev, status: val }));
+                    setPage(0);
+                  }}
+                  className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500 transition-all border ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-200 focus:bg-zinc-800' : 'bg-[#FAFAFA] border-gray-100 text-gray-600 focus:bg-white'
+                  }`}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="active">Active Only</option>
+                  <option value="expired">Expired Only</option>
+                  <option value="pending">Pending Only</option>
+                  <option value="cancelled">Cancelled Only</option>
+                </select>
+              </div>
 
-            <button
-              onClick={handleSearchSubmit}
-              className="px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 flex-shrink-0"
-            >
-              <Search className="w-3.5 h-3.5" /> Search
-            </button>
-
-            {(searchTerm || statusFilter || planFilter) && (
               <button
-                onClick={handleSearchReset}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 flex-shrink-0 ${
-                  isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                type="button"
+                onClick={() => setShowAdvancedFilters(prev => !prev)}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 border flex-shrink-0 ${
+                  showAdvancedFilters || advancedFiltersActiveCount > 0
+                    ? isDarkMode ? 'bg-zinc-800 border-red-500/50 text-red-400' : 'bg-red-50/70 border-red-200 text-red-600'
+                    : isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
                 }`}
+                title="Toggle specific parameter filters"
               >
-                <X className="w-3.5 h-3.5" /> Clear
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Filters</span>
+                {advancedFiltersActiveCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center">
+                    {advancedFiltersActiveCount}
+                  </span>
+                )}
+                {showAdvancedFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
+
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 flex-shrink-0 shadow-sm"
+              >
+                <Search className="w-3.5 h-3.5" /> Search
+              </button>
+
+              {isFilterActive && (
+                <button
+                  type="button"
+                  onClick={handleSearchReset}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 flex-shrink-0 ${
+                    isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  <X className="w-3.5 h-3.5" /> Clear
+                </button>
+              )}
+            </form>
+
+            {/* Expandable Advanced Filters (JPA Specification parameters) */}
+            {showAdvancedFilters && (
+              <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                    <Filter className="w-3.5 h-3.5" /> Search By Any Parameter (JPA Specification)
+                  </span>
+                  <span className={`text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Match contracts precisely by individual database columns
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Salon Name</label>
+                    <input
+                      type="text"
+                      value={filters.salonName}
+                      onChange={(e) => setFilters(prev => ({ ...prev, salonName: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. Naturals, L'Oreal..."
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Salon Code</label>
+                    <input
+                      type="text"
+                      value={filters.salonCode}
+                      onChange={(e) => setFilters(prev => ({ ...prev, salonCode: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. SLN-101..."
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Salon ID</label>
+                    <input
+                      type="number"
+                      value={filters.salonId}
+                      onChange={(e) => setFilters(prev => ({ ...prev, salonId: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. 42"
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Payment ID</label>
+                    <input
+                      type="text"
+                      value={filters.paymentId}
+                      onChange={(e) => setFilters(prev => ({ ...prev, paymentId: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. pay_..."
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Razorpay Subscription ID</label>
+                    <input
+                      type="text"
+                      value={filters.razorpaySubscriptionId}
+                      onChange={(e) => setFilters(prev => ({ ...prev, razorpaySubscriptionId: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. sub_..."
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Coupon Code</label>
+                    <input
+                      type="text"
+                      value={filters.couponCode}
+                      onChange={(e) => setFilters(prev => ({ ...prev, couponCode: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
+                      placeholder="e.g. DIWALI50..."
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>From Date</label>
+                    <input
+                      type="date"
+                      value={filters.fromDate}
+                      onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>To Date</label>
+                    <input
+                      type="date"
+                      value={filters.toDate}
+                      onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all border ${
+                        isDarkMode ? 'bg-zinc-800/90 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-zinc-800/50">
+                  <button
+                    type="button"
+                    onClick={handleSearchReset}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+                    }`}
+                  >
+                    Reset Fields
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="px-4 py-1.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-xs"
+                  >
+                    Apply Specification Filters
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -594,7 +869,7 @@ export default function AdminSubscriptions() {
                   <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
                     isDarkMode ? 'bg-zinc-900/50 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
                   }`}>
-                    <th className="py-4 px-6">ID / Salon</th>
+                    <th className="py-4 px-6">Salon Details</th>
                     <th className="py-4 px-6">Plan Info</th>
                     <th className="py-4 px-6">Validity Period</th>
                     <th className="py-4 px-6">Transaction Ref</th>
@@ -614,7 +889,7 @@ export default function AdminSubscriptions() {
                       <td colSpan="5" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                         <CreditCard className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-200'}`} />
                         <p className={`font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No subscription contracts found.</p>
-                        {(searchTerm || statusFilter || planFilter) && (
+                        {isFilterActive && (
                           <button onClick={handleSearchReset} className="mt-3 text-xs text-red-500 font-bold hover:underline cursor-pointer">Clear filters</button>
                         )}
                       </td>
@@ -624,25 +899,49 @@ export default function AdminSubscriptions() {
                       <tr key={sub.id} className={`transition-colors ${isDarkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-[#FAFAFA]/70'}`}>
                         <td className="py-4.5 px-6">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              isDarkMode ? 'bg-red-950/50 text-red-400' : 'bg-red-50 text-red-500'
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              isDarkMode ? 'bg-red-950/50 text-red-400 border border-red-900/40' : 'bg-red-50 text-red-500 border border-red-100'
                             }`}>
-                              <Building2 className="w-4 h-4" />
+                              <Building2 className="w-4.5 h-4.5" />
                             </div>
                             <div>
-                              <p className={`font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Salon ID: {sub.salonId}</p>
-                              <p className={`text-[9px] mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Contract Ref: #{sub.id}</p>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSalonDetails(sub.salonId)}
+                                className="text-left font-black leading-tight text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline flex items-center gap-1.5 cursor-pointer group text-xs md:text-sm"
+                                title="Click to view complete salon details"
+                              >
+                                <span>{sub.salonName || `Salon #${sub.salonId}`}</span>
+                                <ExternalLink className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition shrink-0" />
+                              </button>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {sub.salonCode && (
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                                    {sub.salonCode}
+                                  </span>
+                                )}
+                                <span className={`text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                  Salon ID: {sub.salonId} • Ref: #{sub.id}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4.5 px-6">
-                          <div className={`flex items-center gap-1.5 font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
-                            <Tag className="w-3.5 h-3.5 text-gray-400" />
-                            <span className={`px-2.5 py-0.5 rounded-lg text-[10px] ${
-                              isDarkMode ? 'bg-red-950/60 text-red-400 border border-red-900' : 'bg-red-50 text-red-600'
-                            }`}>
-                              {sub.planCode ? sub.planCode.toUpperCase() : 'N/A'}
-                            </span>
+                          <div className="space-y-1">
+                            <div className={`flex items-center gap-1.5 font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
+                              <Tag className="w-3.5 h-3.5 text-gray-400" />
+                              <span className={`px-2.5 py-0.5 rounded-lg text-[10px] ${
+                                isDarkMode ? 'bg-red-950/60 text-red-400 border border-red-900' : 'bg-red-50 text-red-600'
+                              }`}>
+                                {sub.planCode ? sub.planCode.toUpperCase() : 'N/A'}
+                              </span>
+                            </div>
+                            {sub.couponCode && (
+                              <p className="text-[10px] text-amber-500 font-bold flex items-center gap-1">
+                                <Ticket className="w-3 h-3" /> {sub.couponCode}
+                              </p>
+                            )}
                           </div>
                         </td>
                         <td className="py-4.5 px-6">
@@ -1296,6 +1595,233 @@ export default function AdminSubscriptions() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SALON DETAILS POPUP */}
+      {isSalonModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border shadow-2xl p-6 transition-all ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-slate-100 text-slate-900'
+          }`}>
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-5 border-b border-zinc-100 dark:border-zinc-800 gap-4">
+              <div className="flex items-center gap-4">
+                {selectedSalonDetails?.imageUrl ? (
+                  <img
+                    src={selectedSalonDetails.imageUrl}
+                    alt={selectedSalonDetails.salonName || 'Salon'}
+                    className="w-16 h-16 rounded-2xl object-cover border shadow-sm"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/50 text-[#FF2A14] flex items-center justify-center border border-red-200 dark:border-red-900/50 flex-shrink-0">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight">
+                      {selectedSalonDetails?.salonName || `Salon #${selectedSalonId}`}
+                    </h3>
+                    <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                      {selectedSalonDetails?.salonCode || `ID #${selectedSalonId}`}
+                    </span>
+                  </div>
+                  {selectedSalonDetails && (
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {selectedSalonDetails.active ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                          🟢 Active Salon
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-500/15 text-zinc-500 border border-zinc-500/30">
+                          ⚪ Inactive
+                        </span>
+                      )}
+
+                      {selectedSalonDetails.banned ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> Banned
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30 flex items-center gap-1">
+                          <Unlock className="w-3 h-3" /> Normal Status
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSalonModalOpen(false)}
+                className="p-2.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            {loadingSalonDetails ? (
+              <div className="py-16 text-center">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-red-500 mb-3" />
+                <p className="text-sm font-bold text-zinc-400">Loading salon profile from server...</p>
+              </div>
+            ) : !selectedSalonDetails ? (
+              <div className="py-12 text-center text-zinc-400 text-sm">
+                Unable to retrieve salon information.
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5">
+                {/* Contact Channels & Area */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`p-4 rounded-2xl border space-y-2.5 ${
+                    isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                  }`}>
+                    <h4 className="text-[10px] font-black uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5" /> Contact Channels
+                    </h4>
+                    <div className="space-y-1.5 text-xs">
+                      <p className="flex items-center justify-between">
+                        <span className="text-zinc-400 font-semibold">Phone:</span>
+                        <strong className="font-bold">{selectedSalonDetails.phone || 'N/A'}</strong>
+                      </p>
+                      <p className="flex items-center justify-between">
+                        <span className="text-zinc-400 font-semibold">Email:</span>
+                        <strong className="font-bold break-all">{selectedSalonDetails.email || 'N/A'}</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-2xl border space-y-2.5 ${
+                    isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                  }`}>
+                    <h4 className="text-[10px] font-black uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5" /> Area & City
+                    </h4>
+                    <div className="space-y-1.5 text-xs">
+                      <p className="flex items-center justify-between">
+                        <span className="text-zinc-400 font-semibold">Area / Suburb:</span>
+                        <strong className="font-bold">{selectedSalonDetails.areaName || '—'}</strong>
+                      </p>
+                      <p className="flex items-center justify-between">
+                        <span className="text-zinc-400 font-semibold">City & State:</span>
+                        <strong className="font-bold">
+                          {selectedSalonDetails.cityName || '—'}{selectedSalonDetails.stateName ? `, ${selectedSalonDetails.stateName}` : ''}
+                        </strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Street Address & Geolocation */}
+                <div className={`p-4 rounded-2xl border space-y-2 ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">Street Address & Landmark</span>
+                    {selectedSalonDetails.latitude && selectedSalonDetails.longitude && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${selectedSalonDetails.latitude},${selectedSalonDetails.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1"
+                      >
+                        <span>Open in Google Maps</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium leading-relaxed">
+                    {selectedSalonDetails.address || 'No street address provided.'}
+                    {selectedSalonDetails.landmark ? ` (Landmark: ${selectedSalonDetails.landmark})` : ''}
+                  </p>
+                  {selectedSalonDetails.latitude && selectedSalonDetails.longitude && (
+                    <p className="text-[10px] font-mono text-zinc-400 pt-1 border-t border-zinc-800/40">
+                      Coordinates: {selectedSalonDetails.latitude.toFixed(5)}, {selectedSalonDetails.longitude.toFixed(5)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Operational Details Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                    <Clock className="w-4 h-4 mx-auto text-amber-500 mb-1" />
+                    <span className="text-[9px] font-black uppercase text-zinc-400 block">Working Hours</span>
+                    <p className="text-xs font-bold mt-0.5">
+                      {selectedSalonDetails.openingTime && selectedSalonDetails.closingTime
+                        ? `${selectedSalonDetails.openingTime} - ${selectedSalonDetails.closingTime}`
+                        : 'Not set'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                    <Calendar className="w-4 h-4 mx-auto text-red-500 mb-1" />
+                    <span className="text-[9px] font-black uppercase text-zinc-400 block">Weekly Off</span>
+                    <p className="text-xs font-bold mt-0.5">
+                      {selectedSalonDetails.weeklyOffDay || 'None (Open 7d)'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                    <Star className="w-4 h-4 mx-auto text-amber-400 fill-amber-400 mb-1" />
+                    <span className="text-[9px] font-black uppercase text-zinc-400 block">Rating</span>
+                    <p className="text-xs font-bold mt-0.5">
+                      {selectedSalonDetails.rating ? `${Number(selectedSalonDetails.rating).toFixed(1)} / 5.0` : 'Unrated'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                    <Award className="w-4 h-4 mx-auto text-blue-500 mb-1" />
+                    <span className="text-[9px] font-black uppercase text-zinc-400 block">Home Charge</span>
+                    <p className="text-xs font-bold mt-0.5">
+                      {selectedSalonDetails.homeServiceCharges ? `₹${selectedSalonDetails.homeServiceCharges}` : 'None'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tax & Registration Card */}
+                <div className={`p-4 rounded-2xl border space-y-2 text-xs ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-red-600 block">
+                    Tax & Business Registration
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <div>
+                      <span className="text-zinc-400 text-[10px] block uppercase font-bold">GSTIN:</span>
+                      <strong className="font-mono">{selectedSalonDetails.gstin || 'Not registered'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400 text-[10px] block uppercase font-bold">State Code:</span>
+                      <strong className="font-mono">{selectedSalonDetails.stateCode || selectedSalonDetails.state || 'N/A'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400 text-[10px] block uppercase font-bold">GST in Invoice:</span>
+                      <strong>{selectedSalonDetails.includeGstInInvoice ? 'Yes' : 'No'}</strong>
+                    </div>
+                  </div>
+                  {selectedSalonDetails.banReason && (
+                    <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-[11px] font-semibold mt-2">
+                      <strong>Ban Reason:</strong> {selectedSalonDetails.banReason}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setIsSalonModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
