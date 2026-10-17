@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://uat.neoparlour.com/api'
+  ? 'https://sb.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
