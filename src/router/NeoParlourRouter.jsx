@@ -125,7 +125,7 @@ const OwnerRouteGuard = ({ children }) => {
             const u = JSON.parse(savedUserStr);
             const role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
             if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
-                return <Navigate to="/admin/tickets" replace />;
+                return <Navigate to="/admin/support-requests" replace />;
             }
             if ((role === 'SEO_ADMIN' || role.includes('SEO')) && (
                 window.location.pathname === '/owner/dashboard' || 
@@ -174,7 +174,7 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
             } catch (e) {}
         }
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
-            return <Navigate to="/admin/tickets" replace />;
+            return <Navigate to="/admin/support-requests" replace />;
         }
         if (role === 'SEO_ADMIN' || role.includes('SEO')) {
             return <Navigate to="/admin/blogs" replace />;
@@ -207,7 +207,7 @@ const GuestRouteGuard = ({ children }) => {
             } catch (e) {}
         }
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
-            return <Navigate to="/admin/tickets" replace />;
+            return <Navigate to="/admin/support-requests" replace />;
         }
         if (role === 'SEO_ADMIN' || role.includes('SEO')) {
             return <Navigate to="/admin/blogs" replace />;
@@ -729,7 +729,7 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/admin/tickets',
-                        element: <SupportEngineerRouteGuard><SupportTicketsBoard /></SupportEngineerRouteGuard>
+                        element: <Navigate to="/admin/support-requests" replace />
                     },
                     {
                         path: '/admin/support-analytics',

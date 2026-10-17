@@ -94,7 +94,7 @@ const OwnerLogin = () => {
       ).toUpperCase();
 
       if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
-        navigate('/admin/tickets');
+        navigate('/admin/support-requests');
       } else if (roleStr === 'SEO_ADMIN' || roleStr.includes('SEO')) {
         navigate('/admin/blogs');
       } else if (roleStr.includes('STAFF')) {

@@ -23,7 +23,7 @@ export const SupportEngineerRouteGuard = ({ children, isFinancialRoute = false }
         fontWeight: 'bold'
       }
     });
-    return <Navigate to="/admin/tickets" replace />;
+    return <Navigate to="/admin/support-requests" replace />;
   }
 
   return children;

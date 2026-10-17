@@ -151,7 +151,7 @@ const OwnerDashboard = () => {
 
     useEffect(() => {
         if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
-            navigate('/admin/tickets', { replace: true });
+            navigate('/admin/support-requests', { replace: true });
         }
     }, [roleStr, navigate]);
 

@@ -313,39 +313,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false, toggleDarkMode }) => {
               );
             })()}
 
-            {/* Salons & KYC */}
-            {(() => {
-              const isActive = location.pathname === '/admin/salons' || location.pathname === '/owner/salons' || location.pathname === '/owner/kyc';
-              return (
-                <button
-                  onClick={() => {
-                    navigate('/admin/salons');
-                    if (isMobile && onClose) onClose();
-                  }}
-                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
-                    isActive
-                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
-                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
-                  )}
-                  <svg
-                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  <span>Salons & KYC</span>
-                </button>
-              );
-            })()}
-
-            {/* KYC Queue */}
+            {/* KYC Verification Queue */}
             {(() => {
               const isActive = location.pathname === '/admin/kyc-requests' || location.pathname === '/admin/kyc';
               return (
@@ -372,7 +340,7 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false, toggleDarkMode }) => {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
-                  <span>KYC Queue</span>
+                  <span>KYC Verification Queue</span>
                 </button>
               );
             })()}
@@ -686,37 +654,6 @@ const Sidebar = ({ isOpen, onClose, isDarkMode = false, toggleDarkMode }) => {
               );
             })()}
 
-            {/* KYC Verification Queue (Admin) */}
-            {(() => {
-              const isActive = location.pathname === '/admin/kyc-requests' || location.pathname === '/admin/kyc';
-              return (
-                <button
-                  onClick={() => {
-                    navigate('/admin/kyc-requests');
-                    if (isMobile && onClose) onClose();
-                  }}
-                  className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-md text-[13px] font-bold relative text-left transition-colors duration-150 sidebar-btn ${
-                    isActive
-                      ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
-                      : isDarkMode ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
-                  )}
-                  <svg
-                    className={`w-[18px] h-[18px] flex-shrink-0 sidebar-icon ${isActive ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70'}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span>KYC Queue</span>
-                </button>
-              );
-            })()}
 
             {/* Subscriptions */}
             {(() => {

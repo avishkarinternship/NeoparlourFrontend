@@ -602,7 +602,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
             const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
             const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
             if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
-              navigate('/admin/tickets');
+              navigate('/admin/support-requests');
             } else if (roleStr.includes('STAFF')) {
               navigate('/staff/dashboard');
             } else {

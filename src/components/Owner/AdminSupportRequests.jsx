@@ -7,11 +7,12 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, 
   MessageSquare, Info, X, Clock, HelpCircle, UserCheck, 
   Rocket, RefreshCw, CheckCircle2, AlertCircle, Eye, Image as ImageIcon,
-  ChevronDown, MessageCircle
+  ChevronDown, MessageCircle, UserPlus
 } from 'lucide-react';
 import supportService, { getImageUrl } from '../../services/supportService';
 import ImageGalleryModal from '../common/ImageGalleryModal';
 import EscalateToDevModal from '../Admin/EscalateToDevModal';
+import CreateSupportEngineerModal from '../Admin/CreateSupportEngineerModal';
 
 const AdminSupportRequests = () => {
   const outletContext = useOutletContext() || {};
@@ -20,6 +21,14 @@ const AdminSupportRequests = () => {
     : document.documentElement.classList.contains('dark');
 
   const currentUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+  const userRole = String(
+    currentUser?.role || 
+    currentUser?.user?.role || 
+    (Array.isArray(currentUser?.roles) ? currentUser.roles[0] : currentUser?.roles) || 
+    currentUser?.userRole || 
+    ''
+  ).toUpperCase();
+  const isAdmin = userRole === 'ADMIN' || userRole.includes('ADMIN');
 
   // Main Data States
   const [requests, setRequests] = useState([]);
@@ -40,13 +49,14 @@ const AdminSupportRequests = () => {
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
 
-  // Selected Request for Detail Modal & Status Update Modal & Escalation Modal & Lightbox
+  // Selected Request for Detail Modal & Status Update Modal & Escalation Modal & Lightbox & Provision Modal
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [statusModalRequest, setStatusModalRequest] = useState(null);
   const [escalateModalRequest, setEscalateModalRequest] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
   const [showGallery, setShowGallery] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [showCreateEngineerModal, setShowCreateEngineerModal] = useState(false);
 
   // Status Modal form state
   const [newStatus, setNewStatus] = useState('IN_PROGRESS');
@@ -279,6 +289,17 @@ const AdminSupportRequests = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateEngineerModal(true)}
+              className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98]"
+              title="Provision new Support Engineer account"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Add Support Staff</span>
+            </button>
+          )}
+
           <div className={`px-4 py-3 rounded-2xl border shadow-xs flex items-center gap-6 ${
             isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
           }`}>
@@ -867,6 +888,17 @@ const AdminSupportRequests = () => {
         request={escalateModalRequest}
         onClose={() => setEscalateModalRequest(null)}
         onSuccess={() => fetchRequests()}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Provision Support Engineer Modal */}
+      <CreateSupportEngineerModal
+        isOpen={showCreateEngineerModal}
+        onClose={() => setShowCreateEngineerModal(false)}
+        onSuccess={() => {
+          toast.success("Support staff member added successfully!");
+          fetchRequests();
+        }}
         isDarkMode={isDarkMode}
       />
     </div>
