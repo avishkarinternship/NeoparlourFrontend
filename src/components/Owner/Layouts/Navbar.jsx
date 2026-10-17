@@ -225,6 +225,8 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   // Debounced search trigger
   useEffect(() => {
     if (!query.trim()) {
+      setSearching(false);
+      setShowDropdown(false);
       setSearchResults({
         staff: [],
         customerSalonVisits: [],
@@ -276,6 +278,10 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
   };
 
   const renderSearchResults = () => {
+    if (!query.trim()) {
+      return null;
+    }
+
     if (
       searching &&
       (!searchResults.staff || searchResults.staff.length === 0) &&
@@ -640,10 +646,19 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                 placeholder={t('owner.navbar.search_placeholder', 'Search...')}
                 value={query}
                 onChange={(e) => {
-                  setQuery(e.target.value);
-                  setShowDropdown(true);
+                  const val = e.target.value;
+                  setQuery(val);
+                  if (val.trim().length > 0) {
+                    setShowDropdown(true);
+                  } else {
+                    setShowDropdown(false);
+                  }
                 }}
-                onFocus={() => setShowDropdown(true)}
+                onFocus={() => {
+                  if (query.trim().length > 0) {
+                    setShowDropdown(true);
+                  }
+                }}
                 className={`w-full bg-transparent text-[11px] sm:text-xs focus:outline-none ${
                   isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-gray-700 placeholder-gray-400'
                 }`}
@@ -662,13 +677,21 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
                   ✕
                 </button>
               )}
-              <button className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (query.trim().length > 0) {
+                    setShowDropdown(true);
+                  }
+                }}
+                className="hidden sm:block bg-red-600 text-white px-5 py-1.5 text-xs font-bold rounded-full hover:bg-red-700 uppercase tracking-wider transition-colors duration-150 flex-shrink-0 cursor-pointer"
+              >
                 {t('buttons.search', 'Search')}
               </button>
             </div>
 
             {/* Absolute Search Dropdown results for Desktop */}
-            {showDropdown && (query.trim().length > 0 || searching) && (
+            {showDropdown && query.trim().length > 0 && (
               <div className={`absolute top-full left-0 w-full mt-2 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4 border ${
                 isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
               }`}>
@@ -946,10 +969,19 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
               placeholder={t('owner.navbar.search_placeholder', 'Search...')}
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value);
-                setShowDropdown(true);
+                const val = e.target.value;
+                setQuery(val);
+                if (val.trim().length > 0) {
+                  setShowDropdown(true);
+                } else {
+                  setShowDropdown(false);
+                }
               }}
-              onFocus={() => setShowDropdown(true)}
+              onFocus={() => {
+                if (query.trim().length > 0) {
+                  setShowDropdown(true);
+                }
+              }}
               className={`w-full bg-transparent text-xs focus:outline-none ${
                 isDarkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
               }`}
@@ -971,7 +1003,7 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
           </div>
 
           {/* Search Dropdown for Mobile Overlay */}
-          {showDropdown && (query.trim().length > 0 || searching) && (
+          {showDropdown && query.trim().length > 0 && (
             <div className={`fixed top-16 left-2 right-2 rounded-2xl shadow-2xl z-50 max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4 border ${
               isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
             }`}>
