@@ -303,8 +303,9 @@ export default function LocationPickerModal({
       try {
         const results = await searchService.searchExternalLocations(
           searchQuery,
-          'area',
-          addressDetails.cityName || ''
+          'all',
+          '',
+          ''
         );
         setSearchResults(results.slice(0, 6));
         setShowSearchResults(true);
@@ -314,7 +315,7 @@ export default function LocationPickerModal({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, addressDetails.cityName]);
+  }, [searchQuery]);
 
   // When user selects a search suggestion
   const handleSelectSearchResult = async (item) => {
@@ -327,8 +328,8 @@ export default function LocationPickerModal({
     if (!lat || !lng) {
       setIsResolvingAddress(true);
       try {
-        const query = [item.name || item.label, item.city || addressDetails.cityName].filter(Boolean).join(', ');
-        const geo = await searchService.forwardGeocode(query, addressDetails.cityName, addressDetails.stateName);
+        const query = [item.name || item.label, item.city].filter(Boolean).join(', ');
+        const geo = await searchService.forwardGeocode(query);
         if (geo?.latitude && geo?.longitude) {
           lat = geo.latitude;
           lng = geo.longitude;
@@ -356,7 +357,7 @@ export default function LocationPickerModal({
     }
   };
 
-  // Handle enter key in search bar to immediately jump to location
+  // Handle enter key in search bar to immediately jump to location anywhere in India
   const handleSearchKeyDown = async (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -373,7 +374,7 @@ export default function LocationPickerModal({
         setSearchQuery('');
         setIsResolvingAddress(true);
         try {
-          const geo = await searchService.forwardGeocode(queryToSearch, addressDetails.cityName, addressDetails.stateName);
+          const geo = await searchService.forwardGeocode(queryToSearch);
           if (geo?.latitude && geo?.longitude) {
             setCoords({ lat: geo.latitude, lng: geo.longitude });
             if (mapInstanceRef.current) {
@@ -382,7 +383,7 @@ export default function LocationPickerModal({
             }
             resolveCoordinates(geo.latitude, geo.longitude);
           } else {
-            toast.error(`Could not locate "${queryToSearch}". Try searching a nearby landmark or area.`);
+            toast.error(`Could not locate "${queryToSearch}". Try searching a nearby landmark, city, or area.`);
           }
         } catch (err) {
           console.error("Enter key geocode failed:", err);

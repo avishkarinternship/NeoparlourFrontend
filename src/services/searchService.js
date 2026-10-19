@@ -706,7 +706,7 @@ const searchService = {
         }
       }
 
-      // Pre-fill prime areas matching query for selected metro city
+      // Pre-fill prime areas matching query for selected metro city or across all metros in India
       if (featureClass === 'area' && cityName) {
         const primeList = METRO_PRIME_AREAS[normSelectedCity] || [];
         for (const prime of primeList) {
@@ -718,6 +718,28 @@ const searchService = {
             }
           }
         }
+      } else if (featureClass === 'all' || (!cityName && featureClass !== 'city')) {
+        // Pan-India prime areas across all metros (Pune, Mumbai, Bangalore, Delhi, Hyderabad, Kolkata, Jaipur, etc.)
+        Object.values(METRO_PRIME_AREAS).forEach(list => {
+          if (Array.isArray(list)) {
+            for (const prime of list) {
+              if (matchesQueryFuzzy(prime.name, normQuery)) {
+                const key = prime.name.toLowerCase();
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  results.push({ 
+                    name: prime.name,
+                    district: prime.district || '',
+                    city: `${prime.city}${prime.district ? ' (' + prime.district + ')' : ''}`,
+                    type: 'area',
+                    latitude: prime.latitude,
+                    longitude: prime.longitude
+                  });
+                }
+              }
+            }
+          }
+        });
       }
 
       if (!query || query.trim().length < 2) {
@@ -728,7 +750,7 @@ const searchService = {
         if (cleanState) {
           searchQuery = `${query} ${cleanState}`;
         }
-      } else if (featureClass === 'area') {
+      } else if (featureClass === 'area' && cityName) {
         if (cityName && cleanState) {
           searchQuery = `${query} ${cityName} ${cleanState}`;
         } else if (cityName) {
@@ -736,6 +758,10 @@ const searchService = {
         } else if (cleanState) {
           searchQuery = `${query} ${cleanState}`;
         }
+      } else if (cleanState) {
+        searchQuery = `${query} ${cleanState}`;
+      } else {
+        searchQuery = query;
       }
       
       const url = `https://photon.komoot.io/api`;
@@ -889,19 +915,43 @@ const searchService = {
             }
           }
         } else {
-          // Unstructured fallback search
-          if (cleanName) {
-            const city = props.city || props.town || props.district || props.county || '';
-            const label = city ? `${cleanName}, ${city}` : cleanName;
-            if (!seen.has(label.toLowerCase())) {
-              seen.add(label.toLowerCase());
-              results.push({ 
-                label, 
-                city, 
-                area: cleanName,
-                latitude: feature.geometry?.coordinates?.[1] || null,
-                longitude: feature.geometry?.coordinates?.[0] || null
-              });
+          // Pan-India search: areas, suburbs, localities, cities, towns, roads, landmarks anywhere in India
+          const rawName = props.name || '';
+          const cleanName = rawName.split(',')[0].trim();
+          if (!cleanName || cleanName.length < 2) continue;
+
+          // Candidate name: suburb, locality, neighbourhood, village, town, or cleanName
+          const cand = props.suburb || props.locality || props.neighbourhood || props.village || props.hamlet || cleanName;
+
+          // Build clean location subtitle (e.g., "Pune, Maharashtra", "Mumbai, Maharashtra", "New Delhi, Delhi", "Jaipur, Rajasthan")
+          const cityOrTown = props.city || props.town || props.village || props.county || props.district || '';
+          const state = props.state || '';
+
+          const subtitleParts = [
+            props.district && props.district !== cityOrTown && props.district !== cand ? props.district : null,
+            cityOrTown && cityOrTown !== cand ? cityOrTown : null,
+            state
+          ].filter(Boolean);
+          const subtitle = Array.from(new Set(subtitleParts)).join(', ');
+
+          const uniqueKey = cand.toLowerCase();
+          if (!seen.has(uniqueKey)) {
+            seen.add(uniqueKey);
+            results.push({
+              name: cand,
+              label: cand,
+              city: subtitle || cityOrTown || state || 'India',
+              state: state,
+              district: props.district || props.suburb || '',
+              type: props.osm_value || props.type || 'location',
+              latitude: feature.geometry?.coordinates?.[1] || null,
+              longitude: feature.geometry?.coordinates?.[0] || null
+            });
+          } else {
+            const existing = results.find(r => (r.name || r.label || '').toLowerCase() === uniqueKey);
+            if (existing && (!existing.latitude || !existing.longitude) && feature.geometry?.coordinates?.length >= 2) {
+              existing.latitude = feature.geometry.coordinates[1];
+              existing.longitude = feature.geometry.coordinates[0];
             }
           }
         }
