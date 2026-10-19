@@ -131,118 +131,118 @@ export const KNOWN_OTHER_DISTRICTS = {
 // Curated prime areas for instant matching & guaranteed coverage across major metros
 export const METRO_PRIME_AREAS = {
   pune: [
-    { name: 'Hinjawadi', district: 'Mulshi / PCMC', city: 'Pune' },
-    { name: 'Hinjewadi Phase 1', district: 'Mulshi / PCMC', city: 'Pune' },
-    { name: 'Hinjewadi Phase 2', district: 'Mulshi / PCMC', city: 'Pune' },
-    { name: 'Hinjewadi Phase 3', district: 'Mulshi / PCMC', city: 'Pune' },
-    { name: 'Wakad', district: 'PCMC', city: 'Pune' },
-    { name: 'Baner', district: 'PMC', city: 'Pune' },
-    { name: 'Balewadi', district: 'PMC', city: 'Pune' },
-    { name: 'Aundh', district: 'PMC', city: 'Pune' },
-    { name: 'Pashan', district: 'PMC', city: 'Pune' },
-    { name: 'Bavdhan', district: 'PMC', city: 'Pune' },
-    { name: 'Kothrud', district: 'PMC', city: 'Pune' },
-    { name: 'Viman Nagar', district: 'PMC', city: 'Pune' },
-    { name: 'Kalyani Nagar', district: 'PMC', city: 'Pune' },
-    { name: 'Kharadi', district: 'PMC', city: 'Pune' },
-    { name: 'Wagholi', district: 'PMC', city: 'Pune' },
-    { name: 'Hadapsar', district: 'PMC', city: 'Pune' },
-    { name: 'Magarpatta City', district: 'PMC', city: 'Pune' },
-    { name: 'Amanora Park Town', district: 'PMC', city: 'Pune' },
-    { name: 'Pimpri', district: 'PCMC', city: 'Pune' },
-    { name: 'Chinchwad', district: 'PCMC', city: 'Pune' },
-    { name: 'Nigdi', district: 'PCMC', city: 'Pune' },
-    { name: 'Akurdi', district: 'PCMC', city: 'Pune' },
-    { name: 'Ravet', district: 'PCMC', city: 'Pune' },
-    { name: 'Tathawade', district: 'PCMC', city: 'Pune' },
-    { name: 'Punawale', district: 'PCMC', city: 'Pune' },
-    { name: 'Bhosari', district: 'PCMC', city: 'Pune' },
-    { name: 'Moshi', district: 'PCMC', city: 'Pune' },
-    { name: 'Chakan', district: 'Pune District', city: 'Pune' },
-    { name: 'Katraj', district: 'PMC', city: 'Pune' },
-    { name: 'Bibwewadi', district: 'PMC', city: 'Pune' },
-    { name: 'Dhankawadi', district: 'PMC', city: 'Pune' },
+    { name: 'Hinjawadi', district: 'Mulshi / PCMC', city: 'Pune', latitude: 18.5913, longitude: 73.7389 },
+    { name: 'Hinjewadi Phase 1', district: 'Mulshi / PCMC', city: 'Pune', latitude: 18.5913, longitude: 73.7389 },
+    { name: 'Hinjewadi Phase 2', district: 'Mulshi / PCMC', city: 'Pune', latitude: 18.5855, longitude: 73.7198 },
+    { name: 'Hinjewadi Phase 3', district: 'Mulshi / PCMC', city: 'Pune', latitude: 18.5772, longitude: 73.6934 },
+    { name: 'Wakad', district: 'PCMC', city: 'Pune', latitude: 18.5987, longitude: 73.7656 },
+    { name: 'Baner', district: 'PMC', city: 'Pune', latitude: 18.5590, longitude: 73.7868 },
+    { name: 'Balewadi', district: 'PMC', city: 'Pune', latitude: 18.5789, longitude: 73.7707 },
+    { name: 'Aundh', district: 'PMC', city: 'Pune', latitude: 18.5580, longitude: 73.8075 },
+    { name: 'Pashan', district: 'PMC', city: 'Pune', latitude: 18.5414, longitude: 73.7929 },
+    { name: 'Bavdhan', district: 'PMC', city: 'Pune', latitude: 18.5134, longitude: 73.7715 },
+    { name: 'Kothrud', district: 'PMC', city: 'Pune', latitude: 18.5074, longitude: 73.8077 },
+    { name: 'Viman Nagar', district: 'PMC', city: 'Pune', latitude: 18.5679, longitude: 73.9143 },
+    { name: 'Kalyani Nagar', district: 'PMC', city: 'Pune', latitude: 18.5463, longitude: 73.9033 },
+    { name: 'Kharadi', district: 'PMC', city: 'Pune', latitude: 18.5515, longitude: 73.9349 },
+    { name: 'Wagholi', district: 'PMC', city: 'Pune', latitude: 18.5793, longitude: 73.9822 },
+    { name: 'Hadapsar', district: 'PMC', city: 'Pune', latitude: 18.5089, longitude: 73.9260 },
+    { name: 'Magarpatta City', district: 'PMC', city: 'Pune', latitude: 18.5158, longitude: 73.9272 },
+    { name: 'Amanora Park Town', district: 'PMC', city: 'Pune', latitude: 18.5186, longitude: 73.9348 },
+    { name: 'Pimpri', district: 'PCMC', city: 'Pune', latitude: 18.6279, longitude: 73.8009 },
+    { name: 'Chinchwad', district: 'PCMC', city: 'Pune', latitude: 18.6298, longitude: 73.7997 },
+    { name: 'Nigdi', district: 'PCMC', city: 'Pune', latitude: 18.6517, longitude: 73.7714 },
+    { name: 'Akurdi', district: 'PCMC', city: 'Pune', latitude: 18.6493, longitude: 73.7707 },
+    { name: 'Ravet', district: 'PCMC', city: 'Pune', latitude: 18.6534, longitude: 73.7371 },
+    { name: 'Tathawade', district: 'PCMC', city: 'Pune', latitude: 18.6186, longitude: 73.7505 },
+    { name: 'Punawale', district: 'PCMC', city: 'Pune', latitude: 18.6295, longitude: 73.7431 },
+    { name: 'Bhosari', district: 'PCMC', city: 'Pune', latitude: 18.6247, longitude: 73.8488 },
+    { name: 'Moshi', district: 'PCMC', city: 'Pune', latitude: 18.6750, longitude: 73.8447 },
+    { name: 'Chakan', district: 'Pune District', city: 'Pune', latitude: 18.7606, longitude: 73.8617 },
+    { name: 'Katraj', district: 'PMC', city: 'Pune', latitude: 18.4575, longitude: 73.8677 },
+    { name: 'Bibwewadi', district: 'PMC', city: 'Pune', latitude: 18.4721, longitude: 73.8643 },
+    { name: 'Dhankawadi', district: 'PMC', city: 'Pune', latitude: 18.4658, longitude: 73.8540 },
     { name: 'Balaji Nagar', district: 'PMC / Dhankawadi', city: 'Pune', latitude: 18.4552, longitude: 73.8562 },
-    { name: 'Kondhwa', district: 'PMC', city: 'Pune' },
-    { name: 'Wanowrie', district: 'PMC', city: 'Pune' },
-    { name: 'NIBM Road', district: 'PMC', city: 'Pune' },
-    { name: 'Camp', district: 'Cantonment', city: 'Pune' },
-    { name: 'Shivaji Nagar', district: 'PMC', city: 'Pune' },
-    { name: 'Swargate', district: 'PMC', city: 'Pune' },
-    { name: 'Deccan Gymkhana', district: 'PMC', city: 'Pune' },
-    { name: 'Warje', district: 'PMC', city: 'Pune' },
-    { name: 'Sinhagad Road', district: 'PMC', city: 'Pune' },
-    { name: 'Karve Nagar', district: 'PMC', city: 'Pune' },
-    { name: 'Dapodi', district: 'PCMC', city: 'Pune' },
-    { name: 'Pimple Saudagar', district: 'PCMC', city: 'Pune' },
-    { name: 'Pimple Gurav', district: 'PCMC', city: 'Pune' },
-    { name: 'Pimple Nilakh', district: 'PCMC', city: 'Pune' },
-    { name: 'Khadki', district: 'Cantonment', city: 'Pune' },
-    { name: 'Yerawada', district: 'PMC', city: 'Pune' }
+    { name: 'Kondhwa', district: 'PMC', city: 'Pune', latitude: 18.4827, longitude: 73.8943 },
+    { name: 'Wanowrie', district: 'PMC', city: 'Pune', latitude: 18.4988, longitude: 73.8967 },
+    { name: 'NIBM Road', district: 'PMC', city: 'Pune', latitude: 18.4820, longitude: 73.8980 },
+    { name: 'Camp', district: 'Cantonment', city: 'Pune', latitude: 18.5158, longitude: 73.8786 },
+    { name: 'Shivaji Nagar', district: 'PMC', city: 'Pune', latitude: 18.5314, longitude: 73.8446 },
+    { name: 'Swargate', district: 'PMC', city: 'Pune', latitude: 18.5018, longitude: 73.8586 },
+    { name: 'Deccan Gymkhana', district: 'PMC', city: 'Pune', latitude: 18.5167, longitude: 73.8417 },
+    { name: 'Warje', district: 'PMC', city: 'Pune', latitude: 18.4842, longitude: 73.7997 },
+    { name: 'Sinhagad Road', district: 'PMC', city: 'Pune', latitude: 18.4815, longitude: 73.8236 },
+    { name: 'Karve Nagar', district: 'PMC', city: 'Pune', latitude: 18.4913, longitude: 73.8180 },
+    { name: 'Dapodi', district: 'PCMC', city: 'Pune', latitude: 18.5779, longitude: 73.8319 },
+    { name: 'Pimple Saudagar', district: 'PCMC', city: 'Pune', latitude: 18.5987, longitude: 73.7978 },
+    { name: 'Pimple Gurav', district: 'PCMC', city: 'Pune', latitude: 18.5880, longitude: 73.8202 },
+    { name: 'Pimple Nilakh', district: 'PCMC', city: 'Pune', latitude: 18.5772, longitude: 73.7889 },
+    { name: 'Khadki', district: 'Cantonment', city: 'Pune', latitude: 18.5636, longitude: 73.8524 },
+    { name: 'Yerawada', district: 'PMC', city: 'Pune', latitude: 18.5529, longitude: 73.8829 }
   ],
   mumbai: [
-    { name: 'Bandra West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Bandra East', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Andheri West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Andheri East', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Juhu', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Powai', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Borivali West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Borivali East', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Kandivali West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Malad West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Goregaon West', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Ghatkopar East', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Kurla', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Chembur', district: 'Mumbai Suburban', city: 'Mumbai' },
-    { name: 'Dadar', district: 'Mumbai City', city: 'Mumbai' },
-    { name: 'Colaba', district: 'Mumbai City', city: 'Mumbai' },
-    { name: 'Lower Parel', district: 'Mumbai City', city: 'Mumbai' },
-    { name: 'Worli', district: 'Mumbai City', city: 'Mumbai' },
-    { name: 'Thane West', district: 'Thane', city: 'Mumbai' },
-    { name: 'Vashi', district: 'Navi Mumbai', city: 'Mumbai' },
-    { name: 'Nerul', district: 'Navi Mumbai', city: 'Mumbai' }
+    { name: 'Bandra West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.0596, longitude: 72.8295 },
+    { name: 'Bandra East', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.0596, longitude: 72.8488 },
+    { name: 'Andheri West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1363, longitude: 72.8277 },
+    { name: 'Andheri East', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1136, longitude: 72.8697 },
+    { name: 'Juhu', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1075, longitude: 72.8263 },
+    { name: 'Powai', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1176, longitude: 72.9060 },
+    { name: 'Borivali West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.2307, longitude: 72.8427 },
+    { name: 'Borivali East', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.2288, longitude: 72.8631 },
+    { name: 'Kandivali West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.2062, longitude: 72.8347 },
+    { name: 'Malad West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1860, longitude: 72.8360 },
+    { name: 'Goregaon West', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.1630, longitude: 72.8415 },
+    { name: 'Ghatkopar East', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.0790, longitude: 72.9080 },
+    { name: 'Kurla', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.0726, longitude: 72.8845 },
+    { name: 'Chembur', district: 'Mumbai Suburban', city: 'Mumbai', latitude: 19.0522, longitude: 72.8995 },
+    { name: 'Dadar', district: 'Mumbai City', city: 'Mumbai', latitude: 19.0178, longitude: 72.8478 },
+    { name: 'Colaba', district: 'Mumbai City', city: 'Mumbai', latitude: 18.9067, longitude: 72.8147 },
+    { name: 'Lower Parel', district: 'Mumbai City', city: 'Mumbai', latitude: 18.9953, longitude: 72.8285 },
+    { name: 'Worli', district: 'Mumbai City', city: 'Mumbai', latitude: 19.0176, longitude: 72.8181 },
+    { name: 'Thane West', district: 'Thane', city: 'Mumbai', latitude: 19.2183, longitude: 72.9781 },
+    { name: 'Vashi', district: 'Navi Mumbai', city: 'Mumbai', latitude: 19.0771, longitude: 72.9986 },
+    { name: 'Nerul', district: 'Navi Mumbai', city: 'Mumbai', latitude: 19.0330, longitude: 73.0197 }
   ],
   bengaluru: [
-    { name: 'Koramangala', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Indiranagar', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Whitefield', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Electronic City Phase 1', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Electronic City Phase 2', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'HSR Layout', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'BTM Layout', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Jayanagar', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'JP Nagar', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Marathahalli', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Bellandur', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Sarjapur Road', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Hebbal', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Yelahanka', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Malleswaram', district: 'Bengaluru Urban', city: 'Bengaluru' },
-    { name: 'Rajajinagar', district: 'Bengaluru Urban', city: 'Bengaluru' }
+    { name: 'Koramangala', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9352, longitude: 77.6245 },
+    { name: 'Indiranagar', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9784, longitude: 77.6408 },
+    { name: 'Whitefield', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9698, longitude: 77.7500 },
+    { name: 'Electronic City Phase 1', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.8452, longitude: 77.6602 },
+    { name: 'Electronic City Phase 2', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.8398, longitude: 77.6770 },
+    { name: 'HSR Layout', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9121, longitude: 77.6446 },
+    { name: 'BTM Layout', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9166, longitude: 77.6101 },
+    { name: 'Jayanagar', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9308, longitude: 77.5838 },
+    { name: 'JP Nagar', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9063, longitude: 77.5857 },
+    { name: 'Marathahalli', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9591, longitude: 77.6974 },
+    { name: 'Bellandur', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9304, longitude: 77.6784 },
+    { name: 'Sarjapur Road', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9081, longitude: 77.6872 },
+    { name: 'Hebbal', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 13.0358, longitude: 77.5970 },
+    { name: 'Yelahanka', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 13.1007, longitude: 77.5963 },
+    { name: 'Malleswaram', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 13.0031, longitude: 77.5643 },
+    { name: 'Rajajinagar', district: 'Bengaluru Urban', city: 'Bengaluru', latitude: 12.9982, longitude: 77.5530 }
   ],
   delhi: [
-    { name: 'Connaught Place', district: 'Central Delhi', city: 'Delhi' },
-    { name: 'Hauz Khas', district: 'South Delhi', city: 'Delhi' },
-    { name: 'Saket', district: 'South Delhi', city: 'Delhi' },
-    { name: 'Greater Kailash', district: 'South Delhi', city: 'Delhi' },
-    { name: 'Lajpat Nagar', district: 'South Delhi', city: 'Delhi' },
-    { name: 'Vasant Kunj', district: 'South West Delhi', city: 'Delhi' },
-    { name: 'Dwarka', district: 'South West Delhi', city: 'Delhi' },
-    { name: 'Rohini', district: 'North West Delhi', city: 'Delhi' },
-    { name: 'Karol Bagh', district: 'Central Delhi', city: 'Delhi' },
-    { name: 'Janakpuri', district: 'West Delhi', city: 'Delhi' }
+    { name: 'Connaught Place', district: 'Central Delhi', city: 'Delhi', latitude: 28.6315, longitude: 77.2167 },
+    { name: 'Hauz Khas', district: 'South Delhi', city: 'Delhi', latitude: 28.5494, longitude: 77.2001 },
+    { name: 'Saket', district: 'South Delhi', city: 'Delhi', latitude: 28.5244, longitude: 77.2167 },
+    { name: 'Greater Kailash', district: 'South Delhi', city: 'Delhi', latitude: 28.5393, longitude: 77.2345 },
+    { name: 'Lajpat Nagar', district: 'South Delhi', city: 'Delhi', latitude: 28.5677, longitude: 77.2433 },
+    { name: 'Vasant Kunj', district: 'South West Delhi', city: 'Delhi', latitude: 28.5293, longitude: 77.1534 },
+    { name: 'Dwarka', district: 'South West Delhi', city: 'Delhi', latitude: 28.5921, longitude: 77.0460 },
+    { name: 'Rohini', district: 'North West Delhi', city: 'Delhi', latitude: 28.7495, longitude: 77.0565 },
+    { name: 'Karol Bagh', district: 'Central Delhi', city: 'Delhi', latitude: 28.6520, longitude: 77.1906 },
+    { name: 'Janakpuri', district: 'West Delhi', city: 'Delhi', latitude: 28.6219, longitude: 77.0878 }
   ],
   hyderabad: [
-    { name: 'Hitec City', district: 'Cyberabad', city: 'Hyderabad' },
-    { name: 'Madhapur', district: 'Cyberabad', city: 'Hyderabad' },
-    { name: 'Gachibowli', district: 'Cyberabad', city: 'Hyderabad' },
-    { name: 'Kondapur', district: 'Cyberabad', city: 'Hyderabad' },
-    { name: 'Jubilee Hills', district: 'Hyderabad', city: 'Hyderabad' },
-    { name: 'Banjara Hills', district: 'Hyderabad', city: 'Hyderabad' },
-    { name: 'Kukatpally', district: 'Medchal-Malkajgiri', city: 'Hyderabad' },
-    { name: 'Ameerpet', district: 'Hyderabad', city: 'Hyderabad' },
-    { name: 'Secunderabad', district: 'Hyderabad', city: 'Hyderabad' }
+    { name: 'Hitec City', district: 'Cyberabad', city: 'Hyderabad', latitude: 17.4435, longitude: 78.3772 },
+    { name: 'Madhapur', district: 'Cyberabad', city: 'Hyderabad', latitude: 17.4483, longitude: 78.3915 },
+    { name: 'Gachibowli', district: 'Cyberabad', city: 'Hyderabad', latitude: 17.4401, longitude: 78.3489 },
+    { name: 'Kondapur', district: 'Cyberabad', city: 'Hyderabad', latitude: 17.4699, longitude: 78.3578 },
+    { name: 'Jubilee Hills', district: 'Hyderabad', city: 'Hyderabad', latitude: 17.4319, longitude: 78.4073 },
+    { name: 'Banjara Hills', district: 'Hyderabad', city: 'Hyderabad', latitude: 17.4156, longitude: 78.4357 },
+    { name: 'Kukatpally', district: 'Medchal-Malkajgiri', city: 'Hyderabad', latitude: 17.4933, longitude: 78.3914 },
+    { name: 'Ameerpet', district: 'Hyderabad', city: 'Hyderabad', latitude: 17.4375, longitude: 78.4482 },
+    { name: 'Secunderabad', district: 'Hyderabad', city: 'Hyderabad', latitude: 17.4399, longitude: 78.4983 }
   ],
   kolkata: [
     { name: 'Salt Lake Sector 1', district: 'Bidhannagar', city: 'Kolkata' },
@@ -878,6 +878,13 @@ const searchService = {
                   latitude: feature.geometry?.coordinates?.[1] || null,
                   longitude: feature.geometry?.coordinates?.[0] || null
                 });
+              } else {
+                // If already added (e.g. from prime list) without coordinates, attach Photon coordinates
+                const existing = results.find(r => (r.name || '').toLowerCase() === uniqueKey);
+                if (existing && (!existing.latitude || !existing.longitude) && feature.geometry?.coordinates?.length >= 2) {
+                  existing.latitude = feature.geometry.coordinates[1];
+                  existing.longitude = feature.geometry.coordinates[0];
+                }
               }
             }
           }
@@ -888,7 +895,13 @@ const searchService = {
             const label = city ? `${cleanName}, ${city}` : cleanName;
             if (!seen.has(label.toLowerCase())) {
               seen.add(label.toLowerCase());
-              results.push({ label, city, area: cleanName });
+              results.push({ 
+                label, 
+                city, 
+                area: cleanName,
+                latitude: feature.geometry?.coordinates?.[1] || null,
+                longitude: feature.geometry?.coordinates?.[0] || null
+              });
             }
           }
         }
@@ -1694,6 +1707,128 @@ const searchService = {
       console.error('Error searching landmarks via Photon:', error);
       return [];
     }
+  },
+
+  /**
+   * Forward geocode a location/area/landmark query to latitude and longitude
+   * 1. Checks METRO_PRIME_AREAS for instant local matching
+   * 2. Calls Photon API (OSM)
+   * 3. Falls back to Nominatim API
+   * @param {string} query
+   * @param {string} [cityName]
+   * @param {string} [stateName]
+   * @returns {Promise<{latitude: number, longitude: number, name: string, city: string, formattedAddress: string} | null>}
+   */
+  forwardGeocode: async (query = '', cityName = '', stateName = '') => {
+    if (!query || query.trim().length < 2) return null;
+    const normQuery = query.toLowerCase().trim();
+    const cleanCity = cityName ? cityName.trim() : '';
+    const normCity = cleanCity ? normalizeCity(cleanCity) : '';
+    const cleanState = stateName ? getStateDisplayName(stateName) : '';
+
+    // 1. Instant check in METRO_PRIME_AREAS
+    const primeListsToCheck = [];
+    if (normCity && METRO_PRIME_AREAS[normCity]) {
+      primeListsToCheck.push(METRO_PRIME_AREAS[normCity]);
+    } else {
+      Object.values(METRO_PRIME_AREAS).forEach(list => {
+        if (Array.isArray(list)) primeListsToCheck.push(list);
+      });
+    }
+
+    for (const list of primeListsToCheck) {
+      for (const prime of list) {
+        if (prime.latitude && prime.longitude && matchesQueryFuzzy(prime.name, normQuery)) {
+          return {
+            latitude: prime.latitude,
+            longitude: prime.longitude,
+            name: prime.name,
+            city: prime.city || cleanCity,
+            formattedAddress: `${prime.name}, ${prime.city || cleanCity}`
+          };
+        }
+      }
+    }
+
+    // 2. Query Photon Komoot API
+    try {
+      let qStr = query.trim();
+      if (cleanCity && !normQuery.includes(cleanCity.toLowerCase())) {
+        qStr = `${qStr}, ${cleanCity}`;
+      }
+      if (cleanState && !normQuery.includes(cleanState.toLowerCase())) {
+        qStr = `${qStr}, ${cleanState}`;
+      }
+
+      const photonRes = await axios.get('https://photon.komoot.io/api', {
+        params: {
+          q: qStr,
+          countrycode: 'in',
+          limit: 5
+        },
+        timeout: 5000
+      });
+
+      const features = photonRes.data?.features || [];
+      for (const feat of features) {
+        const coords = feat.geometry?.coordinates;
+        if (coords && coords.length >= 2) {
+          const props = feat.properties || {};
+          const name = props.name || query.trim();
+          const city = props.city || cleanCity;
+          const state = props.state || cleanState;
+          const address = [name, props.district || props.suburb || props.locality, city, state].filter(Boolean).join(', ');
+          return {
+            latitude: coords[1],
+            longitude: coords[0],
+            name: name,
+            city: city,
+            formattedAddress: address
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Photon forward geocoding failed:', err?.message || err);
+    }
+
+    // 3. Fallback to OpenStreetMap Nominatim
+    try {
+      let qStr = query.trim();
+      if (cleanCity && !normQuery.includes(cleanCity.toLowerCase())) {
+        qStr = `${qStr}, ${cleanCity}`;
+      }
+      if (cleanState && !normQuery.includes(cleanState.toLowerCase())) {
+        qStr = `${qStr}, ${cleanState}`;
+      }
+
+      const nomRes = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: {
+          q: qStr,
+          format: 'json',
+          limit: 1,
+          countrycodes: 'in'
+        },
+        headers: {
+          'Accept-Language': 'en'
+        },
+        timeout: 5000
+      });
+
+      if (nomRes.data && nomRes.data.length > 0) {
+        const item = nomRes.data[0];
+        return {
+          latitude: parseFloat(item.lat),
+          longitude: parseFloat(item.lon),
+          name: query.trim(),
+          city: cleanCity,
+          formattedAddress: item.display_name
+        };
+      }
+    } catch (err) {
+      console.warn('Nominatim forward geocoding fallback failed:', err?.message || err);
+    }
+
+    return null;
   }
 };
 
@@ -1704,3 +1839,5 @@ export const reverseGeocodeGoogle = searchService.reverseGeocodeGoogle;
 export const reverseGeocodeOla = searchService.reverseGeocodeOla;
 export const reverseGeocodePhoton = searchService.reverseGeocodePhoton;
 export const reverseGeocode = searchService.reverseGeocode;
+export const forwardGeocode = searchService.forwardGeocode;
+

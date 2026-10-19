@@ -21,6 +21,7 @@ export default function LocationPickerModal({
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const isProgrammaticMoveRef = useRef(false);
 
   const [coords, setCoords] = useState({ 
     lat: (initialLat !== null && initialLat !== undefined && !isNaN(Number(initialLat))) ? Number(initialLat) : null, 
@@ -162,12 +163,17 @@ export default function LocationPickerModal({
 
       // On map pan/drag: ONLY update coordinates, DO NOT call API automatically
       map.on('move', () => {
+        if (isProgrammaticMoveRef.current) return;
         setIsPinMoved(true);
       });
 
       map.on('moveend', () => {
         const center = map.getCenter();
         setCoords({ lat: center.lat, lng: center.lng });
+        if (isProgrammaticMoveRef.current) {
+          isProgrammaticMoveRef.current = false;
+          return;
+        }
         setIsPinMoved(true);
       });
 
@@ -195,6 +201,7 @@ export default function LocationPickerModal({
               const { latitude, longitude } = pos.coords;
               setCoords({ lat: latitude, lng: longitude });
               if (mapInstanceRef.current) {
+                isProgrammaticMoveRef.current = true;
                 mapInstanceRef.current.flyTo([latitude, longitude], 17, { animate: true, duration: 1 });
               }
               resolveCoordinates(latitude, longitude);
@@ -269,6 +276,7 @@ export default function LocationPickerModal({
         const { latitude, longitude } = pos.coords;
         setCoords({ lat: latitude, lng: longitude });
         if (mapInstanceRef.current) {
+          isProgrammaticMoveRef.current = true;
           mapInstanceRef.current.flyTo([latitude, longitude], 18, { animate: true, duration: 1 });
         }
         resolveCoordinates(latitude, longitude);
@@ -310,22 +318,80 @@ export default function LocationPickerModal({
   }, [searchQuery, addressDetails.cityName]);
 
   // When user selects a search suggestion
-  const handleSelectSearchResult = (item) => {
+  const handleSelectSearchResult = async (item) => {
     setShowSearchResults(false);
     setSearchQuery('');
 
-    if (item.latitude && item.longitude) {
-      setCoords({ lat: item.latitude, lng: item.longitude });
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.flyTo([item.latitude, item.longitude], 18, { animate: true });
+    let lat = item.latitude;
+    let lng = item.longitude;
+
+    if (!lat || !lng) {
+      setIsResolvingAddress(true);
+      try {
+        const query = [item.name || item.label, item.city || addressDetails.cityName].filter(Boolean).join(', ');
+        const geo = await searchService.forwardGeocode(query, addressDetails.cityName, addressDetails.stateName);
+        if (geo?.latitude && geo?.longitude) {
+          lat = geo.latitude;
+          lng = geo.longitude;
+        }
+      } catch (err) {
+        console.warn('Forward geocode fallback failed:', err);
+      } finally {
+        setIsResolvingAddress(false);
       }
-      resolveCoordinates(item.latitude, item.longitude);
+    }
+
+    if (lat && lng) {
+      setCoords({ lat, lng });
+      if (mapInstanceRef.current) {
+        isProgrammaticMoveRef.current = true;
+        mapInstanceRef.current.flyTo([lat, lng], 18, { animate: true });
+      }
+      resolveCoordinates(lat, lng);
     } else {
       setAddressDetails(prev => ({
         ...prev,
         areaName: item.name || prev.areaName,
         cityName: item.city || prev.cityName
       }));
+    }
+  };
+
+  // Handle enter key in search bar to immediately jump to location
+  const handleSearchKeyDown = async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // If there are search results in the dropdown, select the first match
+      if (searchResults && searchResults.length > 0) {
+        handleSelectSearchResult(searchResults[0]);
+        return;
+      }
+
+      // If user pressed Enter on typed query
+      if (searchQuery && searchQuery.trim().length >= 2) {
+        const queryToSearch = searchQuery.trim();
+        setShowSearchResults(false);
+        setSearchQuery('');
+        setIsResolvingAddress(true);
+        try {
+          const geo = await searchService.forwardGeocode(queryToSearch, addressDetails.cityName, addressDetails.stateName);
+          if (geo?.latitude && geo?.longitude) {
+            setCoords({ lat: geo.latitude, lng: geo.longitude });
+            if (mapInstanceRef.current) {
+              isProgrammaticMoveRef.current = true;
+              mapInstanceRef.current.flyTo([geo.latitude, geo.longitude], 18, { animate: true });
+            }
+            resolveCoordinates(geo.latitude, geo.longitude);
+          } else {
+            toast.error(`Could not locate "${queryToSearch}". Try searching a nearby landmark or area.`);
+          }
+        } catch (err) {
+          console.error("Enter key geocode failed:", err);
+          toast.error("Error finding location. Please try again.");
+        } finally {
+          setIsResolvingAddress(false);
+        }
+      }
     }
   };
 
@@ -428,6 +494,7 @@ export default function LocationPickerModal({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 placeholder="Search area, road, or landmark..."
                 className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-xl text-sm border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-red-500/30"
               />
