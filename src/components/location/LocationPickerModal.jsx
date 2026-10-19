@@ -150,7 +150,9 @@ export default function LocationPickerModal({
         center: [startLat, startLng],
         zoom: startZoom,
         zoomControl: false,
-        scrollWheelZoom: false
+        scrollWheelZoom: 'center',
+        wheelDebounceTime: 40,
+        wheelPxPerZoomLevel: 60
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
@@ -161,9 +163,8 @@ export default function LocationPickerModal({
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      // On map pan/drag: ONLY update coordinates, DO NOT call API automatically
-      map.on('move', () => {
-        if (isProgrammaticMoveRef.current) return;
+      // When user actively drags/pans map with mouse or touch, mark pin as moved
+      map.on('dragstart drag', () => {
         setIsPinMoved(true);
       });
 
@@ -172,9 +173,7 @@ export default function LocationPickerModal({
         setCoords({ lat: center.lat, lng: center.lng });
         if (isProgrammaticMoveRef.current) {
           isProgrammaticMoveRef.current = false;
-          return;
         }
-        setIsPinMoved(true);
       });
 
       mapInstanceRef.current = map;
