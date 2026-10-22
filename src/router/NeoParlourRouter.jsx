@@ -78,7 +78,7 @@ import CaseStudies from '../components/Customer/CaseStudies'
 import SalonsSEO from '../components/Customer/SalonsSEO'
 import SitemapXML from '../components/Customer/SitemapXML'
 import SEOSalons from '../components/Customer/SEOSalons'
-import ServerMaintenance from '../components/Common/ServerMaintenance'
+import ServerMaintenance from '../components/common/ServerMaintenance'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {

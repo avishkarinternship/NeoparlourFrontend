@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './App.css';
-import ServerMaintenance from './components/Common/ServerMaintenance';
+import ServerMaintenance from './components/common/ServerMaintenance';
 
 const App = () => {
   const location = useLocation();
