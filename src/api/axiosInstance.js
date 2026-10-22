@@ -1,5 +1,6 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { getFriendlyToastMessage } from '../utils/errorFeedbackHelper';
 
 // Toggle this boolean to switch between environments:
 // true  => Production API (https://sb.neoparlour.com/api)
@@ -14,21 +15,14 @@ const axiosInstance = axios.create({
   baseURL,
 });
 
-// Request Interceptor to attach tokens dynamically
+// Request Interceptor to attach tokens automatically
 axiosInstance.interceptors.request.use(
   (config) => {
-    // If request has explicitly opted out of attaching stale tokens
-    if (config.skipTokenAttach) {
-      delete config.headers.Authorization;
-      delete config.headers.authorization;
-      return config;
-    }
-
     const customerToken = localStorage.getItem('customerToken');
-    let ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
-    const genericToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+    let ownerToken = localStorage.getItem('ownerStaffToken');
 
-    // Robust fallback: if owner token isn't in localStorage yet, extract it from URL params
+    // Robust fallback: if owner token isn't in localStorage yet (e.g. on first page load/mount race condition),
+    // extract it directly from the URL search parameters.
     if (!ownerToken && typeof window !== 'undefined' && window.location?.search) {
       const queryParams = new URLSearchParams(window.location.search);
       const urlToken = queryParams.get('token');
@@ -37,67 +31,22 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    const currentPathname = typeof window !== 'undefined' ? window.location?.pathname || '' : '';
-    const isAdminOrOwnerPage = currentPathname.startsWith('/admin') || currentPathname.startsWith('/owner') || currentPathname.startsWith('/staff');
-
-    const method = (config.method || 'get').toLowerCase();
-    const isWriteMethod = ['post', 'put', 'delete', 'patch'].includes(method);
-
-    // Platform administrative operations that must use owner/admin token and avoid customer token
-    const isAdministrativeAction = config.url && (
-      (config.url.includes('/blogs') && isWriteMethod) ||
-      (config.url.includes('/testimonials') && isWriteMethod) ||
-      config.url.includes('/images/upload') ||
-      config.url.includes('/admin') ||
-      config.url.includes('/auth/admin')
-    );
-
-    // Prioritization: For staff/owner/admin/subscription/ticket endpoints or when on admin/owner/staff pages, use ownerToken first.
-    const isOwnerOrStaffRequest = isAdminOrOwnerPage || isAdministrativeAction || (config.url && (
-      config.url.includes('/subscriptions') ||
-      config.url.includes('/staff') ||
-      config.url.includes('/appointments/salon') ||
-      config.url.includes('/staff-attendance') ||
-      config.url.includes('/staff-inventory') ||
-      config.url.includes('/kyc') ||
-      config.url.includes('/tickets') ||
-      config.url.includes('/admin') ||
-      config.url.includes('/auth/admin') ||
-      config.url.includes('/blogs') ||
-      config.url.includes('/testimonials') ||
-      config.url.includes('/images/upload') ||
-      config.url.includes('/seo')
-    ));
-
-    const token = isAdministrativeAction
-      ? (ownerToken || genericToken)
-      : isOwnerOrStaffRequest
-      ? (ownerToken || customerToken || genericToken) 
-      : (customerToken || ownerToken || genericToken);
+    // 2. Prioritization: For subscription endpoints, always use the owner token first.
+    // Otherwise, check customer token first.
+    const isSubscriptionRequest = config.url && config.url.includes('/subscriptions');
+    const token = isSubscriptionRequest
+      ? (ownerToken || customerToken)
+      : (customerToken || ownerToken);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      // Explicitly delete headers if token no longer exists in storage
-      delete config.headers.Authorization;
-      delete config.headers.authorization;
     }
 
-    // Attach salonId / tenant headers if available in localStorage (skip for global platform endpoints)
-    const isGlobalPlatformEndpoint = config.url && (
-      config.url.includes('/blogs') ||
-      config.url.includes('/testimonials') ||
-      config.url.includes('/images/upload')
-    );
-    const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
-    if (activeSalonId && !isGlobalPlatformEndpoint) {
+    // Attach salonId headers if available in localStorage
+    const activeSalonId = localStorage.getItem('activeSalonId');
+    if (activeSalonId) {
       config.headers['X-Salon-Id'] = activeSalonId;
       config.headers['salonId'] = activeSalonId;
-      config.headers['X-Tenant-ID'] = activeSalonId;
-    } else {
-      delete config.headers['X-Salon-Id'];
-      delete config.headers['salonId'];
-      delete config.headers['X-Tenant-ID'];
     }
 
     return config;
@@ -108,65 +57,39 @@ axiosInstance.interceptors.request.use(
 // Response Interceptor for Global Error Handling
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Intercept explicit maintenance status checks
-    if (response.config?.url?.includes('/maintenance')) {
-      if (response.data?.enabled === true || response.data?.maintenance === true) {
-        window.dispatchEvent(
-          new CustomEvent('SYSTEM_MAINTENANCE_ACTIVE', { detail: { ...response.data, enabled: true } })
-        );
-      } else if (response.data?.enabled === false || response.data?.maintenance === false) {
-        window.dispatchEvent(
-          new CustomEvent('SYSTEM_MAINTENANCE_CLEARED')
-        );
-      }
-    }
     return response;
   },
   async (error) => {
-    // Intercept 503 Service Unavailable or maintenance flag in error response
-    if (error.response?.status === 503 || error.response?.data?.maintenance === true || error.response?.data?.enabled === true) {
-      const maintenanceData = {
-        enabled: true,
-        is503: true,
-        message: error.response?.data?.message && !error.response.data.message.toLowerCase().includes('operational')
-          ? error.response.data.message
-          : "We're currently performing scheduled backend updates. We will be back shortly!",
-        ...(error.response?.data || {})
-      };
-      window.dispatchEvent(
-        new CustomEvent('SYSTEM_MAINTENANCE_ACTIVE', { detail: maintenanceData })
-      );
-    }
-
-    // Handle 401 Unauthorized globally for stale or expired tokens
+    // Handle 401 Unauthorized globally for stale tokens
     if (error.response?.status === 401) {
-      const isLoginOrPublic = error.config?.url?.includes('/login') || 
-                              error.config?.url?.includes('/send-otp') || 
-                              error.config?.url?.includes('/register');
+      const hasAuthHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
+      const isLoginRequest = error.config?.url?.includes('/customer/login');
 
-      if (!isLoginOrPublic) {
-        console.warn("[axiosInstance] 401 Unauthorized detected. Clearing stale session state.");
-        localStorage.clear();
-        sessionStorage.clear();
-        delete axios.defaults.headers.common['Authorization'];
-        delete axios.defaults.headers.common['authorization'];
+      if (hasAuthHeader && !isLoginRequest) {
+        console.warn("[axiosInstance] Received 401 with Authorization header. Clearing stale token and retrying request...");
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('customerUser');
+        localStorage.removeItem('customerProfile');
+        localStorage.removeItem('ownerStaffToken');
+        localStorage.removeItem('ownerStaffUser');
 
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const targetLogin = (currentPath.includes('/owner') || currentPath.includes('/staff') || currentPath.includes('/admin'))
-          ? '/owner/login'
-          : '/customer/login';
-
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-          window.location.href = targetLogin;
-          return Promise.reject(error);
+        // Remove authorization header
+        if (error.config.headers) {
+          delete error.config.headers.Authorization;
+          delete error.config.headers.authorization;
         }
+
+        // Retry the request
+        return axiosInstance(error.config);
+      } else {
+        console.error("[axiosInstance] Received 401 for request without stale token (or login request). URL:", error.config?.url);
       }
     }
 
     // Handle 403 Forbidden CUD subscription blocking
     if (error.response?.status === 403) {
       const isCUD = ['post', 'put', 'delete', 'patch'].includes(error.config?.method?.toLowerCase());
-      
+
       let errorData = error.response?.data;
       if (errorData instanceof Blob) {
         try {
@@ -176,18 +99,39 @@ axiosInstance.interceptors.response.use(
           // ignore parsing error
         }
       }
-      
+
       const errorMessage = errorData?.message || error.message || '';
       const lowerMessage = errorMessage.toLowerCase();
-      const isSubscriptionMessage = 
-        lowerMessage.includes("buy the subscription") || 
-        lowerMessage.includes("subscription has expired") || 
+      const isSubscriptionMessage =
+        lowerMessage.includes("buy the subscription") ||
+        lowerMessage.includes("subscription has expired") ||
         lowerMessage.includes("explore the services");
 
       if (isCUD && isSubscriptionMessage) {
         showGlobalSubscriptionModal();
         return Promise.reject(error);
       }
+    }
+
+    // Detect when VPS / Server is completely down (Network error, connection refused, timed out, 502/503/504)
+    const status = error.response?.status;
+    const isServerDown =
+      !error.response ||
+      error.code === 'ERR_NETWORK' ||
+      error.code === 'ECONNABORTED' ||
+      status === 502 ||
+      status === 503 ||
+      status === 504;
+
+    if (isServerDown && typeof window !== 'undefined') {
+      // Trigger global maintenance screen overlay
+      window.dispatchEvent(new CustomEvent('server-under-maintenance', {
+        detail: {
+          status: status || 503,
+          message: error.message || 'Server unreachable',
+        }
+      }));
+      return Promise.reject(error);
     }
 
     // Bypass global toast notifications if custom config skipGlobalToast is set
@@ -218,13 +162,8 @@ axiosInstance.interceptors.response.use(
       errorData = { ...errorData, message };
     }
 
-    // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... } or { "error": "Forbidden", "status": 403 }
-    const errorMessage = errorData?.message || 
-      (errorData?.error && error.response?.status === 403 
-        ? "Access Denied (403): You do not have permission to perform this action. Please ensure you are logged in with an authorized Admin or SEO Admin account."
-        : errorData?.error) || 
-      error.message || 
-      'Something went wrong';
+    // Handle the specific error format: { "message": "...", "status": 404, "timeStamp": ... }
+    const errorMessage = getFriendlyToastMessage(error);
 
     // Bypass global toast for switch-tenant errors (so they can show popup instead)
     const isSwitchTenant = error.config?.url?.includes('/customer/switch-tenant');
@@ -254,11 +193,9 @@ axiosInstance.interceptors.response.use(
       },
     };
 
-    // Deduplicate error toasts to prevent stacking multiple alerts
+    // Deduplicate rate limit toasts to prevent stacking multiple alerts
     if (error.response?.status === 429) {
       toastOptions.id = 'rate-limit-exceeded';
-    } else if (errorMessage) {
-      toastOptions.id = `error:${errorMessage}`;
     }
 
     // Show toast notification
@@ -279,7 +216,7 @@ function showGlobalSubscriptionModal() {
 
   const content = document.createElement('div');
   content.className = 'bg-white rounded-[28px] max-w-md w-full p-8 shadow-2xl border border-gray-100 flex flex-col items-center text-center transform scale-95 transition-all duration-300';
-  
+
   content.innerHTML = `
     <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-3xl mb-5 animate-bounce">
       💳
