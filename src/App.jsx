@@ -1,16 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './App.css';
-import { useSubscriptionRecovery } from './hooks/useSubscriptionRecovery';
-import SubscriptionNoticeModal from './components/SubscriptionNoticeModal';
-import MaintenanceOverlay from './components/MaintenanceOverlay';
-import { DarkModeProvider } from './context/DarkModeContext';
+import ServerMaintenance from './components/Common/ServerMaintenance';
 
 const App = () => {
-  const { modalState, closeModal } = useSubscriptionRecovery();
+  const location = useLocation();
+  const [maintenanceError, setMaintenanceError] = useState(null);
 
   useEffect(() => {
     AOS.init({
@@ -24,21 +22,41 @@ const App = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleMaintenanceEvent = (event) => {
+      setMaintenanceError(event.detail || { status: 503 });
+    };
+
+    window.addEventListener('server-under-maintenance', handleMaintenanceEvent);
+    return () => {
+      window.removeEventListener('server-under-maintenance', handleMaintenanceEvent);
+    };
+  }, []);
+
+  const handleRetryConnection = useCallback(async () => {
+    try {
+      setMaintenanceError(null);
+      window.location.reload();
+    } catch {
+      setMaintenanceError({ status: 503 });
+    }
+  }, []);
+
   return (
-    <DarkModeProvider>
-      <div className="app-container overflow-x-clip font-sans">
-        <Toaster position="top-right" />
-        <MaintenanceOverlay />
-        <SubscriptionNoticeModal
-          isOpen={modalState.isOpen}
-          status={modalState.status}
-          orderDetails={modalState.orderDetails}
-          onClose={closeModal}
+    <div className="app-container overflow-x-hidden font-sans">
+      <Toaster position="top-right" />
+      {maintenanceError && (
+        <ServerMaintenance
+          isOverlay={true}
+          status={maintenanceError.status}
+          code={maintenanceError.code}
+          message={maintenanceError.message}
+          onRetry={handleRetryConnection}
         />
-        <Outlet />
-      </div>
-    </DarkModeProvider>
+      )}
+      <Outlet />
+    </div>
   );
-}
+};
 
 export default App;
