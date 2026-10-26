@@ -95,7 +95,7 @@ import subSixImg from '../../assets/Customer/HomeScreen/Review/sub_six_img.svg';
 import footerLogoIcon from '../../assets/Neoparlour_logo.png';
 
 import Marquee from 'react-fast-marquee';
-import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation as NavigationIcon, MousePointerClick, User, Zap, ChevronRight } from 'lucide-react';
+import { MapPin, Clock, Sparkles, ArrowRight, Star, Home, ShieldCheck, Lock, Navigation as NavigationIcon, MousePointerClick, User, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SEOFooter from '../common/SEOFooter';
 
