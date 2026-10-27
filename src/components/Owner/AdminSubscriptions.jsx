@@ -519,26 +519,6 @@ export default function AdminSubscriptions() {
             <RefreshCw className={`w-4 h-4 ${(loadingContracts || loadingPlans || loadingCoupons) ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
-
-          {activeTab === 'plans' && (
-            <button
-              onClick={handleOpenCreatePlan}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl shadow-md shadow-red-500/10 transition text-xs font-extrabold cursor-pointer uppercase tracking-wider"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create Plan</span>
-            </button>
-          )}
-
-          {activeTab === 'coupons' && (
-            <button
-              onClick={handleOpenCreateCoupon}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl shadow-md shadow-red-500/10 transition text-xs font-extrabold cursor-pointer uppercase tracking-wider"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create Coupon</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -1046,9 +1026,9 @@ export default function AdminSubscriptions() {
 
             <button
               onClick={handleOpenCreatePlan}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl font-extrabold text-xs uppercase tracking-wider transition cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl shadow-md shadow-red-500/10 font-extrabold text-xs uppercase tracking-wider transition cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Add Plan
+              <Plus className="w-4 h-4" /> Create Plan
             </button>
           </div>
 
@@ -1172,9 +1152,9 @@ export default function AdminSubscriptions() {
 
             <button
               onClick={handleOpenCreateCoupon}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl font-extrabold text-xs uppercase tracking-wider transition cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#FF2A14] hover:bg-[#E01E0A] text-white rounded-xl shadow-md shadow-red-500/10 font-extrabold text-xs uppercase tracking-wider transition cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Add Coupon
+              <Plus className="w-4 h-4" /> Create Coupon
             </button>
           </div>
 
@@ -1209,7 +1189,7 @@ export default function AdminSubscriptions() {
                       <td colSpan="7" className={`py-12 text-center ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
                         <Ticket className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-200'}`} />
                         <p className={`font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}>No promotional coupons created yet.</p>
-                        <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Click "Add Coupon" above to create discount codes.</p>
+                        <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Click "Create Coupon" above to create discount codes.</p>
                       </td>
                     </tr>
                   ) : (
