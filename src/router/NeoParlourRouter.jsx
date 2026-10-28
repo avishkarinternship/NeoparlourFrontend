@@ -1,6 +1,8 @@
+import ServerMaintenance from '../components/common/ServerMaintenance'
 import React from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
+import RouteErrorElement from '../components/common/RouteErrorElement'
 import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
 import OwnerLogin from '../components/Owner/OwnerLogin'
@@ -54,13 +56,37 @@ import Favourites from '../components/Customer/Favourites'
 import MySalons from '../components/Customer/MySalons'
 import NotificationsScreen from '../components/Owner/NotificationsScreen'
 import AdminSupportRequests from '../components/Owner/AdminSupportRequests'
+import AdminSupportDashboard from '../components/Admin/AdminSupportDashboard'
+import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
 
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
 import Blogs from '../components/Customer/Blogs'
+import BlogListingPage from '../components/Customer/BlogListingPage'
+import BlogPostDetailPage from '../components/Customer/BlogPostDetailPage'
+import TestimonialsComponent from '../components/Customer/TestimonialsComponent'
+import AdminBlogManager from '../components/Owner/AdminBlogManager'
+import AdminTestimonialManager from '../components/Owner/AdminTestimonialManager'
+import AdminSeoDirectory from '../components/Owner/AdminSeoDirectory'
 import StaffAttendance from '../components/Owner/StaffAttendance'
 import Cart from '../components/Customer/Cart'
 import Offers from '../components/Customer/Offers'
+
+// Import Staff Components
+import StaffDashboard from '../components/StaffDashboard'
+import StaffRegister from '../staff/StaffRegister'
+import StaffInvitations from '../components/StaffInvitations'
+import OwnerStaffInvitations from '../components/Owner/OwnerStaffInvitations'
+import OwnerKyc from '../components/Owner/KYC/OwnerKyc'
+import AdminKycDashboard from '../components/Owner/AdminKycDashboard'
+import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard'
+import AdminPayoutQueueDashboard from '../pages/admin/AdminPayoutQueueDashboard'
+import ServerLogs from '../components/Owner/ServerLogs'
+import SupportTicketsBoard from '../components/Admin/SupportTicketsBoard'
+import SupportEngineerAnalytics from '../components/Admin/SupportEngineerAnalytics'
+import DeveloperBugsPage from '../components/Admin/DeveloperBugsPage'
+import NewTicketPage from '../components/Customer/NewTicketPage'
+import { SupportEngineerRouteGuard } from '../components/Admin/AdminRouteGuard'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
@@ -77,8 +103,8 @@ import Updates from '../components/Customer/updates'
 import CaseStudies from '../components/Customer/CaseStudies'
 import SalonsSEO from '../components/Customer/SalonsSEO'
 import SitemapXML from '../components/Customer/SitemapXML'
+import RobotsTxtViewer from '../components/Customer/RobotsTxtViewer'
 import SEOSalons from '../components/Customer/SEOSalons'
-import ServerMaintenance from '../components/common/ServerMaintenance'
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -93,15 +119,70 @@ const OwnerRouteGuard = ({ children }) => {
         // Guest trying to access owner page -> send to owner login
         return <Navigate to="/owner/login" replace />;
     }
+
+    const savedUserStr = localStorage.getItem('ownerStaffUser');
+    if (savedUserStr) {
+        try {
+            const u = JSON.parse(savedUserStr);
+            const role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
+                return <Navigate to="/admin/support-requests" replace />;
+            }
+            if ((role === 'SEO_ADMIN' || role.includes('SEO')) && (
+                window.location.pathname === '/owner/dashboard' || 
+                window.location.pathname.startsWith('/owner/manage') ||
+                window.location.pathname.startsWith('/owner/analytics') ||
+                window.location.pathname.startsWith('/owner/orders') ||
+                window.location.pathname.startsWith('/owner/billing')
+            )) {
+                return <Navigate to="/admin/blogs" replace />;
+            }
+        } catch (e) {}
+    }
+
+    return children;
+};
+
+const StaffRouteGuard = ({ children }) => {
+    const token = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (!token) {
+        if (customerToken) {
+            return <Navigate to="/" replace />;
+        }
+        return <Navigate to="/owner/login" replace />;
+    }
     return children;
 };
 
 const CustomerRouteGuard = ({ children, isPublic = false }) => {
+    // Public routes (such as /seo-salons, /blogs, /sitemap, etc.) are viewable by all users including SEO admins
+    if (isPublic) {
+        return children;
+    }
+
     const ownerToken = localStorage.getItem('ownerStaffToken');
     const customerToken = localStorage.getItem('customerToken');
 
     if (ownerToken) {
-        // Owner trying to access customer page -> send to owner dashboard
+        const savedUserStr = localStorage.getItem('ownerStaffUser');
+        let role = '';
+        if (savedUserStr) {
+            try {
+                const u = JSON.parse(savedUserStr);
+                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            } catch (e) {}
+        }
+        if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
+            return <Navigate to="/admin/support-requests" replace />;
+        }
+        if (role === 'SEO_ADMIN' || role.includes('SEO')) {
+            return <Navigate to="/admin/blogs" replace />;
+        }
+        if (role.includes('STAFF')) {
+            return <Navigate to="/staff/dashboard" replace />;
+        }
         return <Navigate to="/owner/dashboard" replace />;
     }
 
@@ -113,14 +194,51 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
     return children;
 };
 
+const GuestRouteGuard = ({ children }) => {
+    const ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    const customerToken = localStorage.getItem('customerToken');
+
+    if (ownerToken) {
+        const savedUserStr = localStorage.getItem('ownerStaffUser');
+        let role = '';
+        if (savedUserStr) {
+            try {
+                const u = JSON.parse(savedUserStr);
+                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            } catch (e) {}
+        }
+        if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
+            return <Navigate to="/admin/support-requests" replace />;
+        }
+        if (role === 'SEO_ADMIN' || role.includes('SEO')) {
+            return <Navigate to="/admin/blogs" replace />;
+        }
+        if (role.includes('STAFF')) {
+            return <Navigate to="/staff/dashboard" replace />;
+        }
+        return <Navigate to="/owner/dashboard" replace />;
+    }
+
+    if (customerToken) {
+        return <Navigate to="/" replace />;
+    }
+
+    return children;
+};
+
 export let routes = createBrowserRouter([
     {
         path: '/',
         element: <App />,
+        errorElement: <RouteErrorElement />,
         children: [
             {
                 path: '/sitemap.xml',
                 element: <SitemapXML />
+            },
+            {
+                path: '/robots.txt',
+                element: <RobotsTxtViewer />
             },
             {
                 path: '/maintenance',
@@ -129,47 +247,63 @@ export let routes = createBrowserRouter([
             // Standalone customer auth / select salon routes (no layouts)
             {
                 path: '/customer/login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/customer-login',
-                element: <CustomerRouteGuard isPublic={true}><CustomerLogin /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner/login',
-                element: <OwnerLogin />
+                element: <GuestRouteGuard><OwnerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner-login',
-                element: <OwnerLogin />
+                element: <GuestRouteGuard><OwnerLogin /></GuestRouteGuard>
             },
             {
                 path: '/owner/forgot-password',
-                element: <OwnerForgotPassword />
+                element: <GuestRouteGuard><OwnerForgotPassword /></GuestRouteGuard>
             },
             {
                 path: '/owner-forgot-password',
-                element: <OwnerForgotPassword />
+                element: <GuestRouteGuard><OwnerForgotPassword /></GuestRouteGuard>
             },
             {
                 path: '/register',
-                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
             },
             {
                 path: '/signup',
-                element: <CustomerRouteGuard isPublic={true}><CustomerRegister /></CustomerRouteGuard>
+                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
             },
             {
                 path: '/owner/register',
-                element: <OwnerRegister />
+                element: <GuestRouteGuard><OwnerRegister /></GuestRouteGuard>
             },
             {
                 path: '/owner-signup',
-                element: <OwnerRegister />
+                element: <GuestRouteGuard><OwnerRegister /></GuestRouteGuard>
+            },
+            {
+                path: '/staff/dashboard',
+                element: <StaffRouteGuard><StaffDashboard /></StaffRouteGuard>
+            },
+            {
+                path: '/staff/invitations',
+                element: <StaffRouteGuard><StaffInvitations isStandalone={true} /></StaffRouteGuard>
+            },
+            {
+                path: '/staff/login',
+                element: <GuestRouteGuard><StaffRegister /></GuestRouteGuard>
+            },
+            {
+                path: '/staff/register',
+                element: <GuestRouteGuard><StaffRegister /></GuestRouteGuard>
             },
             {
                 path: '/customer/select-salon',
@@ -185,7 +319,15 @@ export let routes = createBrowserRouter([
                 element: <OwnerTermsAndConditions />
             },
             {
+                path: '/owner/:lang/terms-and-conditions',
+                element: <OwnerTermsAndConditions />
+            },
+            {
                 path: '/owner/privacy-policy',
+                element: <PrivacyPolicyScreen />
+            },
+            {
+                path: '/owner/:lang/privacy-policy',
                 element: <PrivacyPolicyScreen />
             },
 
@@ -227,80 +369,216 @@ export let routes = createBrowserRouter([
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
+                        path: 'terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: ':lang/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/:lang/terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
                         path: 'customer/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: ':lang/privacy-policy',
+                        element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/:lang/privacy-policy',
                         element: <CustomerRouteGuard isPublic={true}><PrivacyPolicy /></CustomerRouteGuard>
                     },
                     {
                         path: '/',
                         element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
                     },
+                    {
+                        path: 'customer/home',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/dashboard',
+                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                    },
 
                     {
-                        path: '/features',
+                        path: 'features',
                         element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
                     },
                     {
-                        path: '/about',
+                        path: 'customer/features',
+                        element: <CustomerRouteGuard isPublic={true}><Features /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'about',
                         element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/support',
+                        path: 'customer/about',
+                        element: <CustomerRouteGuard isPublic={true}><AboutUs /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'support',
                         element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
                     },
                     {
-                        path: '/delete-account',
+                        path: 'support/new',
+                        element: <CustomerRouteGuard isPublic={true}><NewTicketPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/support',
+                        element: <CustomerRouteGuard isPublic={true}><Support /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'delete-account',
                         element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
                     },
                     {
-                        path: '/partner-with-us',
+                        path: 'customer/delete-account',
+                        element: <CustomerRouteGuard isPublic={true}><DeleteAccount /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'partner-with-us',
                         element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/salons',
+                        path: 'customer/partner-with-us',
+                        element: <CustomerRouteGuard isPublic={true}><PartnerWithUs /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'salons',
                         element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/influencer-program', 
+                        path: 'customer/salons',
+                        element: <CustomerRouteGuard isPublic={true}><SalonsListing /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'influencer-program',
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
                     },
                     {
-                        path: '/blogs',
+                        path: 'customer/influencer-program',
+                        element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'blogs',
                         element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
                     },
                     {
-                        path: '/leadership',
+                        path: 'customer/blogs',
+                        element: <CustomerRouteGuard isPublic={true}><Blogs /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'blogs/:slug',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'blog/:slug',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'blog/:id',
+                        element: <CustomerRouteGuard isPublic={true}><BlogPostDetailPage /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'testimonials',
+                        element: <CustomerRouteGuard isPublic={true}><TestimonialsComponent isStandalone={true} showHeader={true} /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'leadership',
                         element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
                     },
                     {
-                        path: '/videos',
+                        path: 'customer/leadership',
+                        element: <CustomerRouteGuard isPublic={true}><Leadership /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'videos',
                         element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
                     },
                     {
-                        path: '/security',
+                        path: 'customer/videos',
+                        element: <CustomerRouteGuard isPublic={true}><Videos /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'security',
                         element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
                     },
                     {
-                        path: '/services',
+                        path: 'customer/security',
+                        element: <CustomerRouteGuard isPublic={true}><SecurityPage /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'services',
                         element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
                     },
                     {
-                        path: '/client-testimonials',
+                        path: 'customer/services',
+                        element: <CustomerRouteGuard isPublic={true}><ServicesGrid /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'client-testimonials',
                         element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
                     },
                     {
-                        path: '/sitemap',
+                        path: 'customer/client-testimonials',
+                        element: <CustomerRouteGuard isPublic={true}><ClientTestimonial /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'sitemap',
                         element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
                     },
                     {
-                        path: '/updates',
+                        path: 'customer/sitemap',
+                        element: <CustomerRouteGuard isPublic={true}><Sitemap /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'updates',
                         element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
                     },
                     {
-                        path: '/customer/offers',
+                        path: 'customer/updates',
+                        element: <CustomerRouteGuard isPublic={true}><Updates /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'offers',
                         element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
                     },
-                     {
-                        path: '/case-studies',
+                    {
+                        path: 'customer/offers',
+                        element: <CustomerRouteGuard isPublic={true}><Offers /></CustomerRouteGuard>
+                    },
+
+                    {
+                        path: 'case-studies',
+                        element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/case-studies',
                         element: <CustomerRouteGuard isPublic={true}><CaseStudies /></CustomerRouteGuard>
                     },
                     {
@@ -388,19 +666,23 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/owner/analytics',
-                        element: <OwnerRouteGuard><Analytics /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard isFinancialRoute={true}><Analytics /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/monitoring',
                         element: <OwnerRouteGuard><ServerHealth /></OwnerRouteGuard>
                     },
                     {
+                        path: '/admin/salons',
+                        element: <SupportEngineerRouteGuard><AdminSalons /></SupportEngineerRouteGuard>
+                    },
+                    {
                         path: '/owner/salons',
-                        element: <OwnerRouteGuard><AdminSalons /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard><AdminSalons /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/subscriptions',
-                        element: <OwnerRouteGuard><AdminSubscriptions /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard isFinancialRoute={true}><AdminSubscriptions /></SupportEngineerRouteGuard>
                     },
                     {
                         path: '/owner/orders',
@@ -436,7 +718,147 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/owner/support-requests',
-                        element: <OwnerRouteGuard><AdminSupportRequests /></OwnerRouteGuard>
+                        element: <SupportEngineerRouteGuard><AdminSupportRequests /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/support-requests',
+                        element: <SupportEngineerRouteGuard><AdminSupportRequests /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/support-dashboard',
+                        element: <Navigate to="/admin/support-requests" replace />
+                    },
+                    {
+                        path: '/owner/support-dashboard',
+                        element: <Navigate to="/admin/support-requests" replace />
+                    },
+                    {
+                        path: '/admin/tickets',
+                        element: <Navigate to="/admin/support-requests" replace />
+                    },
+                    {
+                        path: '/admin/support-analytics',
+                        element: <SupportEngineerRouteGuard><SupportEngineerAnalytics /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/admin/developer-bugs',
+                        element: <SupportEngineerRouteGuard><DeveloperBugsPage /></SupportEngineerRouteGuard>
+                    },
+                    {
+                        path: '/owner/maintenance',
+                        element: <OwnerRouteGuard><MaintenanceAdminPage /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/maintenance',
+                        element: <OwnerRouteGuard><MaintenanceAdminPage /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/blogs',
+                        element: <OwnerRouteGuard><AdminBlogManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/blogs',
+                        element: <OwnerRouteGuard><AdminBlogManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/testimonials',
+                        element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/testimonials',
+                        element: <OwnerRouteGuard><AdminTestimonialManager /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/seo-salons',
+                        element: <OwnerRouteGuard><AdminSeoDirectory /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/seo-salons',
+                        element: <OwnerRouteGuard><AdminSeoDirectory /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/sitemap',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/sitemap',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/sitemap.xml',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/sitemap.xml',
+                        element: <OwnerRouteGuard><SitemapXML /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/robots',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/robots',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/robots.txt',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/robots.txt',
+                        element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/staff-invitations',
+                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/manage/invitations',
+                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/kyc',
+                        element: <OwnerRouteGuard><OwnerKyc /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/manage/kyc',
+                        element: <OwnerRouteGuard><OwnerKyc /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/kyc-requests',
+                        element: <OwnerRouteGuard><AdminKycDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/kyc',
+                        element: <OwnerRouteGuard><AdminKycDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/payout-requests',
+                        element: <OwnerRouteGuard><AdminPayoutQueueDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/payouts',
+                        element: <OwnerRouteGuard><AdminPayoutQueueDashboard /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/admin/system/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/logs',
+                        element: <OwnerRouteGuard><ServerLogs /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/staff/payouts',
+                        element: <StaffRouteGuard><StaffPayoutDashboard /></StaffRouteGuard>
+                    },
+                    {
+                        path: '/staff/rewards',
+                        element: <StaffRouteGuard><StaffPayoutDashboard /></StaffRouteGuard>
                     },
                     {
                         path: '/subscription-plans',
