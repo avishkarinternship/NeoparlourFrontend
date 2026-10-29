@@ -191,6 +191,11 @@ export const searchSalonsByLocation = createAsyncThunk(
         }
       }
 
+      // Defensive customer-facing filter: strictly exclude banned or inactive salons
+      if (Array.isArray(results)) {
+        results = results.filter(s => !s.banned && !s.isBanned && s.active !== false);
+      }
+
       // 3. Client-side distance enrichment & proximity ranking (Always calculate if coordinates exist)
       if (Array.isArray(results) && effectiveLat && effectiveLng) {
         results = results.map(salon => {
