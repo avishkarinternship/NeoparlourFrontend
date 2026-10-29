@@ -61,6 +61,7 @@ import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
 
 // Import New Footer Pages
 import InfluencerProgram from '../components/Customer/InfluencerProgram'
+import Careers from '../components/Customer/Careers'
 import Blogs from '../components/Customer/Blogs'
 import BlogListingPage from '../components/Customer/BlogListingPage'
 import BlogPostDetailPage from '../components/Customer/BlogPostDetailPage'
@@ -474,6 +475,14 @@ export let routes = createBrowserRouter([
                     {
                         path: 'customer/influencer-program',
                         element: <CustomerRouteGuard isPublic={true}><InfluencerProgram /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'careers',
+                        element: <CustomerRouteGuard isPublic={true}><Careers /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/careers',
+                        element: <CustomerRouteGuard isPublic={true}><Careers /></CustomerRouteGuard>
                     },
 
                     {
