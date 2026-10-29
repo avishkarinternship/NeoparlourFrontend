@@ -53,12 +53,6 @@ const Footer = ({ isDarkMode = false }) => {
                             • Influencer Program
                         </li>
                         <li 
-                            onClick={() => navigate('/customer/careers')} 
-                            className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-red-600'}`}
-                        >
-                            • Careers
-                        </li>
-                        <li 
                             onClick={() => navigate('/customer/about')} 
                             className={`cursor-pointer transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-red-600'}`}
                         >

@@ -53,15 +53,6 @@ const Footer = () => {
             <li>
               <button 
                 type="button" 
-                onClick={() => navigate('/customer/careers')} 
-                className="hover:text-red-600 transition-colors duration-150 text-left bg-transparent border-0 cursor-pointer p-0 font-semibold"
-              >
-                • Careers
-              </button>
-            </li>
-            <li>
-              <button 
-                type="button" 
                 onClick={() => navigate('/customer/about')} 
                 className="hover:text-red-600 transition-colors duration-150 text-left bg-transparent border-0 cursor-pointer p-0 font-semibold"
               >
