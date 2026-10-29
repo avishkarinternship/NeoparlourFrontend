@@ -106,7 +106,7 @@ const renderAdminIcon = (iconName, className = "w-4 h-4") => {
   }
 };
 
-export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDarkMode }) {
+export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMode = false, toggleDarkMode }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1153,17 +1153,21 @@ export default function Navbar({ onToggleSidebar, isDarkMode = false, toggleDark
     }`}>
 
       {/* Left Logo Area */}
-      <div className={`w-auto sm:w-20 md:w-44 lg:w-64 h-full flex items-center px-3 sm:px-4 md:px-6 border-r flex-shrink-0 transition-colors duration-300 ${
+      <div className={`h-full flex items-center px-3 sm:px-4 md:px-5 border-r flex-shrink-0 transition-all duration-300 ${
+        isSidebarOpen ? 'lg:w-64' : 'w-auto'
+      } ${
         isDarkMode ? 'border-zinc-800' : 'border-gray-200'
       }`}>
         <button
+          type="button"
           onClick={onToggleSidebar}
-          className={`mr-2.5 sm:mr-3 p-1 transition-colors lg:hidden focus:outline-none ${
-            isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+          className={`mr-2.5 sm:mr-3 p-1.5 rounded-xl transition-colors cursor-pointer focus:outline-none flex items-center justify-center ${
+            isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
           }`}
-          aria-label="Toggle Sidebar"
+          title={isSidebarOpen ? "Hide sidebar (Ctrl+B)" : "Show sidebar (Ctrl+B)"}
+          aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>

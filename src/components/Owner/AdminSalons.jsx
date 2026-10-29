@@ -288,7 +288,7 @@ export default function AdminSalons() {
   };
 
   return (
-    <main className={`flex-1 p-4 sm:p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans ${
+    <main className={`flex-1 p-4 sm:p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-[1650px] mx-auto w-full font-sans ${
       isDarkMode ? 'bg-zinc-950 text-white' : 'bg-[#FAFAFA] text-gray-900'
     }`}>
       
@@ -509,18 +509,20 @@ export default function AdminSalons() {
             isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
           }`}>
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[950px]">
+              <table className="w-full text-left border-collapse min-w-[1150px]">
                 <thead>
                   <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
                     isDarkMode ? 'bg-zinc-900/70 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
                   }`}>
-                    <th className="py-4 px-5">Salon & Identity</th>
-                    <th className="py-4 px-5">Contact Details (Phone / Email)</th>
-                    <th className="py-4 px-5">Location (Area, City & Address)</th>
-                    <th className="py-4 px-5">Operating Schedule</th>
-                    <th className="py-4 px-5 text-center">Account & Ban Status</th>
-                    <th className="py-4 px-5 text-center">KYC Docs</th>
-                    <th className="py-4 px-5 text-right">Actions</th>
+                    <th className="py-4 px-5 min-w-[210px]">Salon & Identity</th>
+                    <th className="py-4 px-5 min-w-[200px]">Contact Details (Phone / Email)</th>
+                    <th className="py-4 px-5 min-w-[230px]">Location (Area, City & Address)</th>
+                    <th className="py-4 px-5 min-w-[140px]">Operating Schedule</th>
+                    <th className="py-4 px-5 text-center min-w-[130px]">Account & Ban Status</th>
+                    <th className="py-4 px-5 text-center min-w-[120px]">KYC Docs</th>
+                    <th className={`py-4 px-5 text-right min-w-[165px] sticky right-0 z-10 border-l ${
+                      isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
+                    }`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${isDarkMode ? 'divide-zinc-800/60 text-zinc-300' : 'divide-gray-100 text-gray-700'}`}>
@@ -558,18 +560,34 @@ export default function AdminSalons() {
                                 title={`Click to view full details of ${salon.salonName || 'salon'}`}
                               >
                                 {salon.imageUrl ? (
-                                  <img 
-                                    src={salon.imageUrl} 
-                                    alt={salon.salonName} 
-                                    className={`w-11 h-11 rounded-xl object-cover border shadow-xs shrink-0 group-hover:scale-105 transition-transform ${
-                                      isDarkMode ? 'border-zinc-800' : 'border-gray-100'
-                                    }`} 
-                                  />
+                                  <div className="relative w-11 h-11 shrink-0">
+                                    <img 
+                                      src={salon.imageUrl} 
+                                      alt="" 
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        if (e.currentTarget.nextElementSibling) {
+                                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                                        }
+                                      }}
+                                      className={`w-11 h-11 rounded-xl object-cover border shadow-xs group-hover:scale-105 transition-transform ${
+                                        isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+                                      }`} 
+                                    />
+                                    <div 
+                                      style={{ display: 'none' }}
+                                      className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 group-hover:scale-105 transition-transform font-bold text-sm ${
+                                        isDarkMode ? 'bg-red-950/40 border-red-900/50' : 'bg-red-50 border-red-100'
+                                      }`}
+                                    >
+                                      {(salon.salonName || 'S').charAt(0).toUpperCase()}
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 shrink-0 group-hover:scale-105 transition-transform ${
+                                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 shrink-0 group-hover:scale-105 transition-transform font-bold text-sm ${
                                     isDarkMode ? 'bg-red-950/40 border-red-900/50' : 'bg-red-50 border-red-100'
                                   }`}>
-                                    <Building2 className="w-5 h-5" />
+                                    {(salon.salonName || 'S').charAt(0).toUpperCase()}
                                   </div>
                                 )}
                                 <div>
@@ -628,7 +646,7 @@ export default function AdminSalons() {
                                   isDarkMode ? 'text-zinc-200' : 'text-gray-800'
                                 }`}>
                                   <MapPin className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                                  <span>{salon.areaName || '—'}, {salon.cityName || '—'}</span>
+                                  <span>{salon.areaName || '-'}, {salon.cityName || '-'}</span>
                                 </div>
                                 <p 
                                   className={`text-[10px] font-medium truncate max-w-[220px] ${
@@ -661,7 +679,7 @@ export default function AdminSalons() {
                                   <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                   <span>
                                     {salon.openingTime && salon.closingTime
-                                      ? `${salon.openingTime} – ${salon.closingTime}`
+                                      ? `${salon.openingTime} - ${salon.closingTime}`
                                       : 'Hours not set'}
                                   </span>
                                 </div>
@@ -729,11 +747,15 @@ export default function AdminSalons() {
                             </td>
 
                             {/* 7. Action Controls */}
-                            <td className="py-4.5 px-5 text-right">
+                            <td className={`py-4.5 px-5 text-right sticky right-0 z-10 border-l transition-colors ${
+                              isExpanded 
+                                ? (isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-[#FAFAFA] border-gray-100')
+                                : (isDarkMode ? 'bg-zinc-900 border-zinc-800 group-hover:bg-zinc-800' : 'bg-white border-gray-100 group-hover:bg-[#FAFAFA]')
+                            }`}>
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleOpenDetailsModal(salon)}
-                                  className={`p-2 rounded-xl border text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                                     isDarkMode
                                       ? 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-200'
                                       : 'bg-white hover:bg-gray-100 border-gray-200 text-gray-700'
@@ -741,7 +763,7 @@ export default function AdminSalons() {
                                   title="View complete salon information"
                                 >
                                   <Eye className="w-3.5 h-3.5 text-zinc-400" />
-                                  <span className="hidden sm:inline">Details</span>
+                                  <span className="inline">Details</span>
                                 </button>
 
                                 {salon.banned ? (
@@ -811,7 +833,7 @@ export default function AdminSalons() {
                                       </div>
                                       <div>
                                         <p className="text-[10px] font-semibold uppercase text-zinc-400">Area & City</p>
-                                        <p className="font-bold">{salon.areaName || 'N/A'}, {salon.cityName || 'N/A'}</p>
+                                        <p className="font-bold">{salon.areaName || '-'}, {salon.cityName || '-'}</p>
                                       </div>
                                       <div>
                                         <p className="text-[10px] font-semibold uppercase text-zinc-400">Coordinates</p>
