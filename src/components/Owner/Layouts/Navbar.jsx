@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Sun, Moon, X, Building2, LifeBuoy, Bug, BarChart3, 
   CreditCard, Activity, FileText, AlertTriangle, BookOpen, 
-  MessageSquare, Settings, ArrowRight, ShieldCheck, Search 
+  MessageSquare, Settings, ArrowRight, ShieldCheck, Search,
+  PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import axiosInstance from '../../../api/axiosInstance';
 import supportService from '../../../services/supportService';
@@ -1152,27 +1153,16 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
-      {/* Left Logo Area */}
-      <div className={`h-full flex items-center px-3 sm:px-4 md:px-5 border-r flex-shrink-0 transition-all duration-300 ${
-        isSidebarOpen ? 'lg:w-64' : 'w-auto'
+      {/* Left Logo Area - Perfectly aligned with sidebar width */}
+      <div className={`h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
+        isSidebarOpen 
+          ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-between' 
+          : 'lg:w-20 px-3 justify-center'
       } ${
         isDarkMode ? 'border-zinc-800' : 'border-gray-200'
       }`}>
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className={`mr-2.5 sm:mr-3 p-1.5 rounded-xl transition-colors cursor-pointer focus:outline-none flex items-center justify-center ${
-            isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-          title={isSidebarOpen ? "Hide sidebar (Ctrl+B)" : "Show sidebar (Ctrl+B)"}
-          aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
         <div 
-          className="flex items-center space-x-2.5 cursor-pointer" 
+          className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0" 
           onClick={() => {
             const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
             const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
@@ -1187,15 +1177,35 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
         >
           <img
             src={logoIcon}
-            alt="NeoParlour Logo"
-            className="w-7 h-7 object-contain flex-shrink-0"
+            alt="NeoParlour"
+            className="h-8 w-8 object-contain shrink-0"
           />
-          <span className={`text-base font-bold tracking-tight hidden md:inline ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
+          <span className={`font-extrabold text-base tracking-tight truncate ${
+            isSidebarOpen ? 'hidden sm:inline-block' : 'hidden'
           }`}>
             NeoParlour
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className={`p-1.5 rounded-xl transition-all cursor-pointer focus:outline-none flex items-center justify-center shrink-0 ${
+            isSidebarOpen ? 'ml-2' : ''
+          } ${
+            isDarkMode 
+              ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' 
+              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+          title={isSidebarOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"}
+          aria-label={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+        >
+          {isSidebarOpen ? (
+            <PanelLeftClose className="w-5 h-5 transition-transform hover:scale-105" />
+          ) : (
+            <PanelLeftOpen className="w-5 h-5 text-red-600 transition-transform hover:scale-105" />
+          )}
+        </button>
       </div>
 
       {/* Right Container Elements */}
