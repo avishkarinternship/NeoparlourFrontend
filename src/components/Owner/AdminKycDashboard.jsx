@@ -14,7 +14,7 @@ const getIsDarkMode = (prop) => {
   }
 };
 
-const AdminKycDashboard = ({ isDarkMode: isDarkModeProp }) => {
+const AdminKycDashboard = ({ isDarkMode: isDarkModeProp, onSelectSalon }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => getIsDarkMode(isDarkModeProp));
 
   useEffect(() => {
@@ -151,6 +151,7 @@ const AdminKycDashboard = ({ isDarkMode: isDarkModeProp }) => {
         totalElements={totalElements}
         onPageChange={handlePageChange}
         onVerifyDocument={verifyDocument}
+        onSelectSalon={onSelectSalon}
         isDarkMode={isDarkMode}
       />
 

@@ -42,6 +42,7 @@ const KycSubmissionsTable = ({
   totalElements = 0,
   onPageChange,
   onVerifyDocument,
+  onSelectSalon,
   isDarkMode: isDarkModeProp
 }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => getIsDarkMode(isDarkModeProp));
@@ -142,14 +143,20 @@ const KycSubmissionsTable = ({
               }`}>
                 
                 {/* 1. Salon & Owner Identity Column */}
-                <div className="flex items-center gap-3 min-w-[270px] shrink-0">
-                  <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/50 text-[#FF2A14] flex items-center justify-center shrink-0 border border-red-100 dark:border-red-900/30 font-bold">
+                <div 
+                  onClick={() => onSelectSalon && onSelectSalon(item)}
+                  className={`flex items-center gap-3 min-w-[270px] shrink-0 ${
+                    onSelectSalon ? 'cursor-pointer p-1.5 -m-1.5 rounded-2xl hover:bg-red-500/10 dark:hover:bg-red-500/15 transition-all group' : ''
+                  }`}
+                  title={onSelectSalon ? `Click to view full details of ${salonName}` : undefined}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/50 text-[#FF2A14] flex items-center justify-center shrink-0 border border-red-100 dark:border-red-900/30 font-bold group-hover:scale-105 transition-transform">
                     <Store className="w-5 h-5" />
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-red-600 transition-colors">
                         {salonName}
                       </h3>
                       <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-zinc-700">
