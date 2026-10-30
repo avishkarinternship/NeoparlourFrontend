@@ -649,7 +649,8 @@
       "no_notifications": "No notifications",
       "view_all": "View All",
       "salon_active": "Salon Active",
-      "salon_inactive": "Salon Inactive"
+      "salon_inactive": "Salon Inactive",
+      "admin_search_placeholder": "Search salons, support tickets, KYC, subscriptions..."
     },
     "dashboard": {
       "title": "Salon Owner Dashboard",

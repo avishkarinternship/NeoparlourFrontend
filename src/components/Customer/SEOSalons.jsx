@@ -72,8 +72,9 @@ export default function SEOSalons() {
               category: urlService || undefined
             }
           });
-          const data = response.data?.content || response.data || [];
-          setSalons(Array.isArray(data) ? data : []);
+          const rawData = response.data?.content || response.data || [];
+          const data = (Array.isArray(rawData) ? rawData : []).filter(s => !s.banned && !s.isBanned && s.active !== false);
+          setSalons(data);
         } catch (error) {
           console.error('Error fetching salons direct link', error);
           toast.error('Failed to load salons list.');
@@ -91,8 +92,9 @@ export default function SEOSalons() {
           const response = await axiosInstance.get('/salons/nearby', {
             params: { page: 0, size: 24 }
           });
-          const data = response.data?.content || response.data || [];
-          setSalons(Array.isArray(data) ? data : []);
+          const rawData = response.data?.content || response.data || [];
+          const data = (Array.isArray(rawData) ? rawData : []).filter(s => !s.banned && !s.isBanned && s.active !== false);
+          setSalons(data);
         } catch (error) {
           console.error('Error fetching default salons list', error);
         } finally {

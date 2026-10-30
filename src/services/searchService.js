@@ -644,7 +644,13 @@ const searchService = {
       if (radiusKm) params.radiusKm = radiusKm;
 
       const response = await axiosInstance.get(`/salons/location-search`, { params });
-      return response.data;
+      const data = response.data;
+      if (data && Array.isArray(data.content)) {
+        data.content = data.content.filter(s => !s.banned && !s.isBanned && s.active !== false);
+      } else if (Array.isArray(data)) {
+        return data.filter(s => !s.banned && !s.isBanned && s.active !== false);
+      }
+      return data;
     } catch (error) {
       console.error('Error fetching salons by location:', error);
       throw error;
@@ -670,7 +676,13 @@ const searchService = {
       if (areaName) params.areaName = areaName;
       if (category) params.category = category;
       const response = await axiosInstance.get(`/salons/nearby`, { params });
-      return response.data;
+      const data = response.data;
+      if (data && Array.isArray(data.content)) {
+        data.content = data.content.filter(s => !s.banned && !s.isBanned && s.active !== false);
+      } else if (Array.isArray(data)) {
+        return data.filter(s => !s.banned && !s.isBanned && s.active !== false);
+      }
+      return data;
     } catch (error) {
       console.error('Error fetching nearby salons:', error);
       throw error;

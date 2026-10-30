@@ -31,7 +31,12 @@ import {
   X,
   Eye,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  QrCode,
+  Image as ImageIcon,
+  Star,
+  Percent,
+  Store
 } from 'lucide-react';
 import BanSalonModal from './Modals/BanSalonModal';
 import adminSalonService from '../../services/adminSalonService';
@@ -251,14 +256,39 @@ export default function AdminSalons() {
     }
   };
 
-  // Open Full Details modal and pre-fetch KYC if needed
-  const handleOpenDetailsModal = (salon) => {
+  // Close details modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedSalonForDetails(null);
+      }
+    };
+    if (selectedSalonForDetails) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSalonForDetails]);
+
+  // Open Full Details modal and pre-fetch KYC + enriched details
+  const handleOpenDetailsModal = async (salon) => {
+    if (!salon) return;
+    const salonId = salon.salonId || salon.id;
     setSelectedSalonForDetails(salon);
-    fetchKycDetails(salon.salonId || salon.id);
+    if (salonId) {
+      fetchKycDetails(salonId);
+      try {
+        const res = await adminSalonService.getSalonById(salonId);
+        if (res?.data) {
+          setSelectedSalonForDetails(prev => (prev ? { ...prev, ...res.data } : res.data));
+        }
+      } catch (err) {
+        console.warn("Could not fetch enriched salon details:", err);
+      }
+    }
   };
 
   return (
-    <main className={`flex-1 p-4 sm:p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans ${
+    <main className={`flex-1 p-4 sm:p-6 md:p-8 transition-colors duration-300 overflow-y-auto max-w-[1650px] mx-auto w-full font-sans ${
       isDarkMode ? 'bg-zinc-950 text-white' : 'bg-[#FAFAFA] text-gray-900'
     }`}>
       
@@ -312,7 +342,7 @@ export default function AdminSalons() {
       {/* KYC TAB VIEW */}
       {currentTab === 'kyc' ? (
         <div className="animate-in fade-in duration-200">
-          <AdminKycDashboard isDarkMode={isDarkMode} />
+          <AdminKycDashboard isDarkMode={isDarkMode} onSelectSalon={handleOpenDetailsModal} />
         </div>
       ) : (
         /* SALONS DIRECTORY TAB VIEW */
@@ -479,18 +509,20 @@ export default function AdminSalons() {
             isDarkMode ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white border-gray-100'
           }`}>
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[950px]">
+              <table className="w-full text-left border-collapse min-w-[1150px]">
                 <thead>
                   <tr className={`border-b text-[10px] font-black uppercase tracking-wider ${
                     isDarkMode ? 'bg-zinc-900/70 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
                   }`}>
-                    <th className="py-4 px-5">Salon & Identity</th>
-                    <th className="py-4 px-5">Contact Details (Phone / Email)</th>
-                    <th className="py-4 px-5">Location (Area, City & Address)</th>
-                    <th className="py-4 px-5">Operating Schedule</th>
-                    <th className="py-4 px-5 text-center">Account & Ban Status</th>
-                    <th className="py-4 px-5 text-center">KYC Docs</th>
-                    <th className="py-4 px-5 text-right">Actions</th>
+                    <th className="py-4 px-5 min-w-[210px]">Salon & Identity</th>
+                    <th className="py-4 px-5 min-w-[200px]">Contact Details (Phone / Email)</th>
+                    <th className="py-4 px-5 min-w-[230px]">Location (Area, City & Address)</th>
+                    <th className="py-4 px-5 min-w-[140px]">Operating Schedule</th>
+                    <th className="py-4 px-5 text-center min-w-[130px]">Account & Ban Status</th>
+                    <th className="py-4 px-5 text-center min-w-[120px]">KYC Docs</th>
+                    <th className={`py-4 px-5 text-right min-w-[165px] sticky right-0 z-10 border-l ${
+                      isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-gray-50 border-gray-100 text-gray-400'
+                    }`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${isDarkMode ? 'divide-zinc-800/60 text-zinc-300' : 'divide-gray-100 text-gray-700'}`}>
@@ -522,32 +554,51 @@ export default function AdminSalons() {
                             
                             {/* 1. Salon Details & Identity */}
                             <td className="py-4.5 px-5">
-                              <div className="flex items-start gap-3">
+                              <div 
+                                onClick={() => handleOpenDetailsModal(salon)}
+                                className="flex items-start gap-3 p-1.5 -m-1.5 rounded-2xl cursor-pointer hover:bg-red-500/10 dark:hover:bg-red-500/15 transition-all group"
+                                title={`Click to view full details of ${salon.salonName || 'salon'}`}
+                              >
                                 {salon.imageUrl ? (
-                                  <img 
-                                    src={salon.imageUrl} 
-                                    alt={salon.salonName} 
-                                    className={`w-11 h-11 rounded-xl object-cover border shadow-xs shrink-0 ${
-                                      isDarkMode ? 'border-zinc-800' : 'border-gray-100'
-                                    }`} 
-                                  />
+                                  <div className="relative w-11 h-11 shrink-0">
+                                    <img 
+                                      src={salon.imageUrl} 
+                                      alt="" 
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        if (e.currentTarget.nextElementSibling) {
+                                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                                        }
+                                      }}
+                                      className={`w-11 h-11 rounded-xl object-cover border shadow-xs group-hover:scale-105 transition-transform ${
+                                        isDarkMode ? 'border-zinc-800' : 'border-gray-100'
+                                      }`} 
+                                    />
+                                    <div 
+                                      style={{ display: 'none' }}
+                                      className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 group-hover:scale-105 transition-transform font-bold text-sm ${
+                                        isDarkMode ? 'bg-red-950/40 border-red-900/50' : 'bg-red-50 border-red-100'
+                                      }`}
+                                    >
+                                      {(salon.salonName || 'S').charAt(0).toUpperCase()}
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 shrink-0 ${
+                                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center text-red-500 shrink-0 group-hover:scale-105 transition-transform font-bold text-sm ${
                                     isDarkMode ? 'bg-red-950/40 border-red-900/50' : 'bg-red-50 border-red-100'
                                   }`}>
-                                    <Building2 className="w-5 h-5" />
+                                    {(salon.salonName || 'S').charAt(0).toUpperCase()}
                                   </div>
                                 )}
                                 <div>
-                                  <button
-                                    onClick={() => handleOpenDetailsModal(salon)}
-                                    className={`font-black text-left hover:text-red-600 transition cursor-pointer flex items-center gap-1.5 ${
+                                  <div
+                                    className={`font-black text-left group-hover:text-red-600 transition flex items-center gap-1.5 ${
                                       isDarkMode ? 'text-white' : 'text-gray-900'
                                     }`}
                                   >
                                     <span>{salon.salonName}</span>
-                                    <Eye className="w-3.5 h-3.5 text-zinc-400 hover:text-red-500" />
-                                  </button>
+                                    <Eye className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-500 transition-colors" />
+                                  </div>
                                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                     <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                                       {salon.salonCode || `ID #${salonId}`}
@@ -595,7 +646,7 @@ export default function AdminSalons() {
                                   isDarkMode ? 'text-zinc-200' : 'text-gray-800'
                                 }`}>
                                   <MapPin className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                                  <span>{salon.areaName || '—'}, {salon.cityName || '—'}</span>
+                                  <span>{salon.areaName || '-'}, {salon.cityName || '-'}</span>
                                 </div>
                                 <p 
                                   className={`text-[10px] font-medium truncate max-w-[220px] ${
@@ -628,7 +679,7 @@ export default function AdminSalons() {
                                   <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                   <span>
                                     {salon.openingTime && salon.closingTime
-                                      ? `${salon.openingTime} – ${salon.closingTime}`
+                                      ? `${salon.openingTime} - ${salon.closingTime}`
                                       : 'Hours not set'}
                                   </span>
                                 </div>
@@ -696,11 +747,15 @@ export default function AdminSalons() {
                             </td>
 
                             {/* 7. Action Controls */}
-                            <td className="py-4.5 px-5 text-right">
+                            <td className={`py-4.5 px-5 text-right sticky right-0 z-10 border-l transition-colors ${
+                              isExpanded 
+                                ? (isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-[#FAFAFA] border-gray-100')
+                                : (isDarkMode ? 'bg-zinc-900 border-zinc-800 group-hover:bg-zinc-800' : 'bg-white border-gray-100 group-hover:bg-[#FAFAFA]')
+                            }`}>
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleOpenDetailsModal(salon)}
-                                  className={`p-2 rounded-xl border text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                                     isDarkMode
                                       ? 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-200'
                                       : 'bg-white hover:bg-gray-100 border-gray-200 text-gray-700'
@@ -708,7 +763,7 @@ export default function AdminSalons() {
                                   title="View complete salon information"
                                 >
                                   <Eye className="w-3.5 h-3.5 text-zinc-400" />
-                                  <span className="hidden sm:inline">Details</span>
+                                  <span className="inline">Details</span>
                                 </button>
 
                                 {salon.banned ? (
@@ -778,7 +833,7 @@ export default function AdminSalons() {
                                       </div>
                                       <div>
                                         <p className="text-[10px] font-semibold uppercase text-zinc-400">Area & City</p>
-                                        <p className="font-bold">{salon.areaName || 'N/A'}, {salon.cityName || 'N/A'}</p>
+                                        <p className="font-bold">{salon.areaName || '-'}, {salon.cityName || '-'}</p>
                                       </div>
                                       <div>
                                         <p className="text-[10px] font-semibold uppercase text-zinc-400">Coordinates</p>
@@ -995,7 +1050,12 @@ export default function AdminSalons() {
 
       {/* COMPREHENSIVE SALON FULL DETAILS MODAL */}
       {selectedSalonForDetails && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedSalonForDetails(null);
+          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        >
           <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl p-6 md:p-8 max-h-[92vh] overflow-y-auto custom-scrollbar transition-colors ${
             isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-slate-100 text-slate-900'
           }`}>
@@ -1058,6 +1118,24 @@ export default function AdminSalons() {
             {/* Modal Body: Information Grid */}
             <div className="mt-6 space-y-6">
               
+              {/* Banned Alert Banner (if salon is banned) */}
+              {selectedSalonForDetails.banned && (
+                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-start gap-3">
+                  <Lock className="w-5 h-5 shrink-0 mt-0.5 text-red-600" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-sm">Salon Account is Banned by Admin</p>
+                    <p className="text-zinc-600 dark:text-zinc-300 font-medium">
+                      Reason: <strong className="font-bold text-red-600 dark:text-red-400">{selectedSalonForDetails.banReason || 'Violation of Platform Terms'}</strong>
+                    </p>
+                    {selectedSalonForDetails.bannedAt && (
+                      <p className="text-[10px] text-zinc-400">
+                        Banned On: {new Date(selectedSalonForDetails.bannedAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Section 1: Contact & Physical Location */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-4 rounded-2xl border space-y-2.5 ${
@@ -1122,7 +1200,111 @@ export default function AdminSalons() {
                 <p className="text-xs font-medium leading-relaxed">
                   {selectedSalonForDetails.address || 'No full street address specified.'}
                 </p>
+                {selectedSalonForDetails.landmark && (
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+                    <span className="font-semibold text-zinc-400">Landmark:</span> {selectedSalonForDetails.landmark}
+                  </p>
+                )}
               </div>
+
+              {/* Business, Tax & Charges Specifications */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`p-3.5 rounded-2xl border text-center ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <span className="text-[9px] font-black uppercase text-zinc-400 block">GSTIN</span>
+                  <p className="text-xs font-bold font-mono mt-1 truncate" title={selectedSalonForDetails.gstin || 'Unregistered'}>
+                    {selectedSalonForDetails.gstin || 'Unregistered'}
+                  </p>
+                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded mt-1 inline-block ${
+                    selectedSalonForDetails.includeGstInInvoice 
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                      : 'bg-zinc-500/10 text-zinc-400'
+                  }`}>
+                    {selectedSalonForDetails.includeGstInInvoice ? 'GST in Invoice' : 'No Invoice GST'}
+                  </span>
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border text-center ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <span className="text-[9px] font-black uppercase text-zinc-400 block">State / Region</span>
+                  <p className="text-xs font-bold mt-1 truncate" title={selectedSalonForDetails.stateName || (selectedSalonForDetails.state && typeof selectedSalonForDetails.state === 'string' ? selectedSalonForDetails.state : 'N/A')}>
+                    {selectedSalonForDetails.stateName || (selectedSalonForDetails.state && typeof selectedSalonForDetails.state === 'string' ? selectedSalonForDetails.state : 'N/A')}
+                  </p>
+                  {selectedSalonForDetails.stateCode && (
+                    <span className="text-[9px] font-mono font-bold text-zinc-400">Code: {selectedSalonForDetails.stateCode}</span>
+                  )}
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border text-center ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <span className="text-[9px] font-black uppercase text-zinc-400 block">Customer Rating</span>
+                  <p className="text-xs font-bold mt-1 flex items-center justify-center gap-1 text-amber-500">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span>{selectedSalonForDetails.rating ? Number(selectedSalonForDetails.rating).toFixed(1) : '5.0'} / 5.0</span>
+                  </p>
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border text-center ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <span className="text-[9px] font-black uppercase text-zinc-400 block">Home Service Fee</span>
+                  <p className="text-xs font-bold mt-1 text-emerald-600 dark:text-emerald-400">
+                    {selectedSalonForDetails.homeServiceCharges ? `₹${selectedSalonForDetails.homeServiceCharges}` : 'Free / N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Media & QR Code (if available) */}
+              {(selectedSalonForDetails.qrCodeUrl || (Array.isArray(selectedSalonForDetails.salonImages) && selectedSalonForDetails.salonImages.length > 0)) && (
+                <div className={`p-4 rounded-2xl border space-y-3 ${
+                  isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-100'
+                }`}>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-red-600 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5" /> Media & QR Code
+                  </h4>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {selectedSalonForDetails.qrCodeUrl && (
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white dark:bg-zinc-900 border">
+                        <img 
+                          src={selectedSalonForDetails.qrCodeUrl} 
+                          alt="Salon QR" 
+                          className="w-14 h-14 rounded-lg object-contain" 
+                        />
+                        <div className="text-[10px]">
+                          <p className="font-bold">Salon QR Code</p>
+                          <a 
+                            href={selectedSalonForDetails.qrCodeUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-red-500 hover:underline flex items-center gap-1 mt-0.5"
+                          >
+                            <span>Open QR</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {Array.isArray(selectedSalonForDetails.salonImages) && selectedSalonForDetails.salonImages.map((imgUrl, idx) => (
+                      <a 
+                        key={idx} 
+                        href={imgUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="group relative"
+                      >
+                        <img 
+                          src={imgUrl} 
+                          alt={`Salon Photo ${idx + 1}`} 
+                          className="w-14 h-14 rounded-xl object-cover border group-hover:opacity-80 transition" 
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Section 2: Operating Timings & Registration */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
