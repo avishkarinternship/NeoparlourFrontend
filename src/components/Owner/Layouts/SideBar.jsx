@@ -63,6 +63,32 @@ const Sidebar = ({
 
   const isManagePath = location.pathname.startsWith('/owner/manage');
   const [showManageDrawer, setShowManageDrawer] = useState(isManagePath);
+  const [isManageOpen, setIsManageOpen] = useState(() => {
+    const saved = localStorage.getItem('manageSidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      const saved = localStorage.getItem('manageSidebarOpen');
+      if (saved !== null) {
+        setIsManageOpen(JSON.parse(saved));
+      }
+    };
+    window.addEventListener('manageSidebarOpenRequest', handleSync);
+    window.addEventListener('manageSidebarToggle', handleSync);
+    return () => {
+      window.removeEventListener('manageSidebarOpenRequest', handleSync);
+      window.removeEventListener('manageSidebarToggle', handleSync);
+    };
+  }, []);
+
+  const toggleManageSidebar = () => {
+    const next = !isManageOpen;
+    localStorage.setItem('manageSidebarOpen', JSON.stringify(next));
+    setIsManageOpen(next);
+    window.dispatchEvent(new Event('manageSidebarToggle'));
+  };
 
   useEffect(() => {
     setShowManageDrawer(isManagePath);
@@ -171,6 +197,15 @@ const Sidebar = ({
                 <span className="truncate">{label}</span>
               )}
             </div>
+
+            {/* Manage Salon Arrow Toggle Indicator */}
+            {!isRail && item.hasManageArrow && isManagePath && (
+              <span className="ml-auto flex items-center justify-center pl-2">
+                <svg className={`w-4 h-4 transition-transform duration-200 ${isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            )}
 
             {/* Badge when expanded */}
             {!isRail && badge && (
@@ -634,7 +669,8 @@ const Sidebar = ({
         path: '/owner/manage/schedule',
         icon: <img src={manageIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
         isActive: isManagePath,
-        onClick: () => handleManageClick(isMobile)
+        onClick: () => handleManageClick(isMobile),
+        hasManageArrow: true
       },
       {
         label: t('owner.sidebar.customers', 'Customers'),
@@ -764,14 +800,14 @@ const Sidebar = ({
       )}
 
       {/* Desktop Column: Smooth Collapsible Mini-Rail (w-20) / Expanded (w-64) Column */}
-      <div className={`hidden lg:block lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-20 ${
+      <div className={`hidden lg:block lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-10 ${
         isDesktopOpen 
           ? 'lg:w-64 lg:border-r' 
           : 'lg:w-20 lg:border-r'
       } ${
         isDarkMode ? 'lg:bg-zinc-900 lg:border-zinc-800 text-zinc-100' : 'lg:bg-white lg:border-gray-200 text-gray-900'
       }`}>
-        <aside className={`sticky top-16 h-[calc(100vh-64px)] flex flex-col transition-all duration-300 ease-in-out relative z-20 ${
+        <aside className={`sticky top-16 h-[calc(100vh-64px)] flex flex-col transition-all duration-300 ease-in-out relative z-10 ${
           isDesktopOpen ? 'w-64' : 'w-20'
         }`}>
           {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}

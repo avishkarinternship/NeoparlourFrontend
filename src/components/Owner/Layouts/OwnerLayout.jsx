@@ -107,7 +107,7 @@ export default function OwnerLayout() {
           toggleDarkMode={toggleDarkMode} 
         />
 
-        <div className="flex-1 flex flex-col min-w-0 p-0 transition-all duration-300 ease-in-out relative z-0">
+        <div className="flex-1 flex flex-col min-w-0 p-0 transition-all duration-300 ease-in-out relative z-20">
           <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
           <Outlet context={{ isDarkMode, salon }} />
         </div>
