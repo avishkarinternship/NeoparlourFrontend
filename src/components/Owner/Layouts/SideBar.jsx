@@ -690,7 +690,7 @@ const Sidebar = ({
         <div className={`pt-3 flex-1 space-y-1 overflow-y-auto custom-scrollbar ${isRail ? 'px-2' : 'px-3'}`}>
           {standardOwnerItems.map(item => renderNavButton(item))}
 
-          {/* Manage Submenu Accordion when expanded */}
+          {/* Manage Submenu Accordion - mobile drawer only */}
           {isMobile && showManageDrawer && (
             <div className={`ml-4 pl-3 border-l space-y-1 my-1.5 transition-all ${
               isDarkMode ? 'border-zinc-800' : 'border-gray-200'
