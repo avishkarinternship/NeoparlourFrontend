@@ -84,9 +84,12 @@ const Sidebar = ({
   ];
 
   const handleManageClick = (isMobile = false) => {
-    setShowManageDrawer(!showManageDrawer);
-    if (!isMobile && !isManagePath) {
-      navigate('/owner/manage/schedule');
+    if (isMobile) {
+      setShowManageDrawer(!showManageDrawer);
+    } else {
+      if (!isManagePath) {
+        navigate('/owner/manage/schedule');
+      }
     }
   };
 
@@ -688,7 +691,7 @@ const Sidebar = ({
           {standardOwnerItems.map(item => renderNavButton(item))}
 
           {/* Manage Submenu Accordion when expanded */}
-          {!isRail && showManageDrawer && (
+          {isMobile && showManageDrawer && (
             <div className={`ml-4 pl-3 border-l space-y-1 my-1.5 transition-all ${
               isDarkMode ? 'border-zinc-800' : 'border-gray-200'
             }`}>
@@ -771,7 +774,7 @@ const Sidebar = ({
           <button 
             type="button"
             onClick={onToggleDesktop}
-            className={`absolute top-4 -right-3.5 z-40 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${
+            className={`absolute ${isManagePath ? 'top-16' : 'top-4'} -right-3.5 z-40 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${
               isDarkMode 
                 ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500 shadow-black/40' 
                 : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
