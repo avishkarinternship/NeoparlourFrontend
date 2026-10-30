@@ -152,7 +152,8 @@ const Sidebar = ({
       badgeColor = '',
       onClick = null,
       isActive = null,
-      key = null
+      key = null,
+      hasManageArrow = false
     }) => {
       const active = isActive !== null ? isActive : (path ? location.pathname === path : false);
       const handleClick = () => {
@@ -199,7 +200,7 @@ const Sidebar = ({
             </div>
 
             {/* Manage Salon Arrow Toggle Indicator */}
-            {!isRail && item.hasManageArrow && isManagePath && (
+            {!isRail && hasManageArrow && isManagePath && (
               <span className="ml-auto flex items-center justify-center pl-2">
                 <svg className={`w-4 h-4 transition-transform duration-200 ${isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
