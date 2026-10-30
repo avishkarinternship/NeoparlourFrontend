@@ -90,7 +90,7 @@ const ManageSideBar = () => {
 
   return (
     <div 
-      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-10
+      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-30
         ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white text-gray-800'}
         ${isOpen ? 'w-56 border-r border-gray-200 dark:border-zinc-700' : 'w-0 border-r-0'}`}
     >
@@ -140,9 +140,7 @@ const ManageSideBar = () => {
       {/* Toggle Button */}
       <button 
         onClick={toggleSidebar}
-        title={!isOpen ? "Expand manage menu" : "Collapse manage menu"}
-        aria-label={!isOpen ? "Expand manage menu" : "Collapse manage menu"}
-        className={`absolute top-4 ${isOpen ? '-right-3.5 left-auto' : 'left-2 right-auto'} border rounded-full w-7 h-7 flex items-center justify-center transition-all duration-200 z-40 cursor-pointer hover:scale-110 active:scale-95
+        className={`absolute top-4 -right-3.5 border rounded-full w-7 h-7 flex items-center justify-center transition-all z-40 cursor-pointer
           ${isOpen 
             ? isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 shadow-sm hover:bg-gray-50' 
             : 'bg-[#FF0B01] border-[#FF0B01] shadow-[0_0_6px_rgba(255,11,1,0.35)]'}`}
