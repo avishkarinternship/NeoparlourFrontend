@@ -148,7 +148,7 @@ const ManageSideBar = () => {
       {/* Toggle Button */}
       <button 
         onClick={toggleSidebar}
-        className={`absolute top-16 ${isOpen ? '-right-3.5 left-auto' : 'left-3 right-auto'} border rounded-full w-7 h-7 flex items-center justify-center transition-all duration-200 z-30 cursor-pointer hover:scale-110 active:scale-95
+        className={`absolute top-14 -right-3.5 border rounded-full w-7 h-7 flex items-center justify-center transition-all duration-200 z-30 cursor-pointer hover:scale-110 active:scale-95
           ${isOpen 
             ? isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 shadow-sm hover:bg-gray-50' 
             : 'bg-[#FF0B01] border-[#FF0B01] shadow-[0_0_6px_rgba(255,11,1,0.35)]'}`}
