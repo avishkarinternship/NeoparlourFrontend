@@ -8,7 +8,7 @@ import { getFriendlyToastMessage } from '../utils/errorFeedbackHelper';
 const USE_PRODUCTION = true;
 
 const baseURL = USE_PRODUCTION
-  ? 'https://sb.neoparlour.com/api'
+  ? 'https://uat.neoparlour.com/api'
   : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
