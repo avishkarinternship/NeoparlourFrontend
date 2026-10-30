@@ -760,14 +760,14 @@ const Sidebar = ({
       )}
 
       {/* Desktop Column: Smooth Collapsible Mini-Rail (w-20) / Expanded (w-64) Column */}
-      <div className={`hidden lg:block lg:flex-shrink-0 transition-all duration-300 ease-in-out relative ${
+      <div className={`hidden lg:block lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-20 ${
         isDesktopOpen 
           ? 'lg:w-64 lg:border-r' 
           : 'lg:w-20 lg:border-r'
       } ${
         isDarkMode ? 'lg:bg-zinc-900 lg:border-zinc-800 text-zinc-100' : 'lg:bg-white lg:border-gray-200 text-gray-900'
       }`}>
-        <aside className={`sticky top-16 h-[calc(100vh-64px)] flex flex-col transition-all duration-300 ease-in-out relative ${
+        <aside className={`sticky top-16 h-[calc(100vh-64px)] flex flex-col transition-all duration-300 ease-in-out relative z-20 ${
           isDesktopOpen ? 'w-64' : 'w-20'
         }`}>
           {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}

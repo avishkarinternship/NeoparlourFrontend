@@ -90,7 +90,7 @@ const ManageSideBar = () => {
 
   return (
     <div 
-      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-30
+      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-10
         ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white text-gray-800'}
         ${isOpen ? 'w-56 border-r border-gray-200 dark:border-zinc-700' : 'w-0 border-r-0'}`}
     >
