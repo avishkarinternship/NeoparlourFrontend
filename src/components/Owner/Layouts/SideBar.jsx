@@ -89,6 +89,10 @@ const Sidebar = ({
     } else {
       if (!isManagePath) {
         navigate('/owner/manage/schedule');
+      } else {
+        localStorage.setItem('manageSidebarOpen', 'true');
+        window.dispatchEvent(new Event('manageSidebarOpenRequest'));
+        window.dispatchEvent(new Event('manageSidebarToggle'));
       }
     }
   };
