@@ -22,7 +22,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     setLoading(true);
     try {
       await staffApi.sendForgotPasswordOtp(mobile);
-      toast.success(`OTP sent via WhatsApp to ${mobile}`);
+      toast.success(`OTP sent on SMS to ${mobile}`);
       setStep(2);
     } catch (err) {
       toast.error('Failed to send OTP: ' + (err.response?.data?.message || 'Server error'));

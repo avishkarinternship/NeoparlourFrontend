@@ -25,7 +25,7 @@ const StaffRegister = () => {
       toast.error('Please enter a valid 10-digit mobile number.');
       return;
     }
-    toast.success('Verification OTP code sent!');
+    toast.success('OTP sent on SMS successfully!');
   };
 
   const handleSubmit = (e) => {

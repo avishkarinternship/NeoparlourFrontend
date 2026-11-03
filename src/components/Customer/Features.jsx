@@ -35,7 +35,7 @@ const Features = () => {
               {t('features_page.hero_desc', 'Seamlessly Manage Appointments, Set Custom Availability, And Send Automated Reminders Designed For The Beauty And Selfcare Industry')}
             </p>
             <button 
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/customer/login")}
               className="h-12 px-6 bg-[#FF1100] hover:bg-red-600 text-white text-xs font-bold tracking-wider rounded-lg flex items-center justify-center gap-3 group transition-all duration-200 hover:scale-[1.02] cursor-pointer shadow-lg shadow-red-500/20 uppercase">
               <span>{t('features_page.get_started', 'Get Started Now')}</span>
               <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">

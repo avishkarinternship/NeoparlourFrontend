@@ -417,7 +417,7 @@ const OwnerRegister = () => {
       return;
     }
     dispatch(sendRegisterOtp({ mobile: formData.phone, type: 'OWNER' })).unwrap().then(() => {
-      toast.success('OTP sent successfully!');
+      toast.success('OTP sent on SMS successfully!');
     });
   };
 
@@ -542,7 +542,7 @@ const OwnerRegister = () => {
     dispatch(sendRegisterOtp({ mobile: formData.phone, type: 'OWNER' }))
       .unwrap()
       .then(() => {
-        toast.success('OTP sent successfully!');
+        toast.success('OTP sent on SMS successfully!');
         setCurrentStep(4);
       })
       .catch((err) => {

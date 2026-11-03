@@ -68,7 +68,7 @@ const PasswordResetModal = ({ isOpen, onClose }) => {
         setResetFlow(prev => ({ ...prev, loading: true }));
         try {
             await axiosInstance.post(`/customer/forgot-password/send-otp?mobile=${mobile}`);
-            toast.success("OTP sent successfully to your mobile number");
+            toast.success("OTP sent on SMS successfully to your mobile number");
             setStep(2);
             setResetFlow(prev => ({ ...prev, resendTimer: 60 }));
         } catch (err) {

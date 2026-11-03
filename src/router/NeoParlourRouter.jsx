@@ -245,6 +245,18 @@ export let routes = createBrowserRouter([
             },
             // Standalone customer auth / select salon routes (no layouts)
             {
+                path: '/register',
+                element: <Navigate to="/customer/login" replace />
+            },
+            {
+                path: '/customer/register',
+                element: <Navigate to="/customer/login" replace />
+            },
+            {
+                path: '/signup',
+                element: <Navigate to="/customer/login" replace />
+            },
+            {
                 path: '/customer/login',
                 element: <GuestRouteGuard><CustomerLogin /></GuestRouteGuard>
             },

@@ -89,7 +89,7 @@ const CustomerLogin = () => {
     try {
       const response = await axiosInstance.post(`/customer/send-otp?mobile=${mobile}`);
       if (response.data?.ok) {
-        toast.success(response.data.message || 'OTP sent successfully!', toastStyle);
+        toast.success('OTP sent on SMS successfully!', toastStyle);
         setStep('otp');
         setTimer(30);
       } else {

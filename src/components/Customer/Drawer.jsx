@@ -187,15 +187,6 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
                     </svg>
                 ),
                 action: () => navigate('/customer/login')
-            },
-            { 
-                label: t('navbar.signup', 'Sign Up'), 
-                icon: (
-                    <svg className={`w-5 h-5 ${iconCls}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                ),
-                action: () => navigate('/register')
             }
         ] : []),
     ];
@@ -294,22 +285,14 @@ const Drawer = ({ isOpen, onClose, onProfileClick, onChangePasswordClick }) => {
 
                     {/* Guest Login & Sign Up CTA Buttons inside Hamburger Menu */}
                     {!isLoggedIn && (
-                        <div className="mt-4 grid grid-cols-2 gap-2.5">
+                        <div className="mt-4">
                             <button
                                 type="button"
                                 onClick={() => { navigate('/customer/login'); onClose(); }}
-                                className="py-2.5 px-3 bg-[#FF0B01] hover:bg-red-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/20 active:scale-95 cursor-pointer"
+                                className="w-full py-2.5 px-3 bg-[#FF0B01] hover:bg-red-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/20 active:scale-95 cursor-pointer"
                             >
                                 <LogIn className="w-4 h-4" />
-                                {t('navbar.login', 'Login')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { navigate('/register'); onClose(); }}
-                                className="py-2.5 px-3 border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-700 dark:text-gray-200 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                {t('navbar.signup', 'Sign Up')}
+                                {t('navbar.login', 'Customer Login')}
                             </button>
                         </div>
                     )}
