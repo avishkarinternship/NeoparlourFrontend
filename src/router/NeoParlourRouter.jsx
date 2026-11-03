@@ -7,7 +7,6 @@ import CustomerLanding from '../components/CustomerLanding'
 import CustomerLogin from '../components/Customer/CustomerLogin'
 import OwnerLogin from '../components/Owner/OwnerLogin'
 import OwnerForgotPassword from '../components/Owner/OwnerForgotPassword'
-import CustomerRegister from '../components/Customer/CustomerRegister'
 import OwnerRegister from '../components/Owner/OwnerRegister'
 import SalonSelection from '../components/Customer/SalonSelection'
 import Appointments from '../components/Customer/Appointments'
@@ -272,14 +271,6 @@ export let routes = createBrowserRouter([
             {
                 path: '/owner-forgot-password',
                 element: <GuestRouteGuard><OwnerForgotPassword /></GuestRouteGuard>
-            },
-            {
-                path: '/register',
-                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
-            },
-            {
-                path: '/signup',
-                element: <GuestRouteGuard><CustomerRegister /></GuestRouteGuard>
             },
             {
                 path: '/owner/register',

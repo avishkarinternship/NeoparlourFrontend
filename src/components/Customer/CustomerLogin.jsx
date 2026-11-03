@@ -321,9 +321,6 @@ const CustomerLogin = () => {
               <p className="text-gray-400 font-semibold">
                 Are you an Owner or Staff? <Link to="/owner/login" className="text-[#ff0b01] font-black hover:underline ml-1.5">Owner Login</Link>
               </p>
-              <p className="text-gray-400 font-semibold">
-                Don't have account? <Link to="/register" className="text-[#ff0b01] font-black hover:underline ml-1.5">Create Account</Link>
-              </p>
             </div>
           </div>
         </div>

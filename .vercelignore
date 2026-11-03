@@ -1,0 +1,42 @@
+# Vercel Deployment Ignore File
+# Prevents unnecessary local files, scripts, and documentation from being uploaded to Vercel builds
+
+# Local Dependencies and Builds (Vercel builds fresh in the cloud)
+node_modules
+dist
+dist-ssr
+
+# Local Scratch and Helper Scripts
+scratch/
+*.py
+update.js
+
+# Documentation, Guides, and Large Notes
+*.md
+*.doc
+*.docx
+PRODUCTION_SERVER_HARDENING_AND_SECURITY_GUIDE.*
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local environment overrides
+.env.local
+.env.*.local
+.env.development
+.env.test
