@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Award, Wallet, ArrowUpRight, History, RefreshCw, ShieldCheck } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Award, Wallet, ArrowUpRight, History, RefreshCw, ShieldCheck, ChevronLeft } from 'lucide-react';
 import useMyStaffPayouts from '../../hooks/useMyStaffPayouts';
 import PayoutRequestModal from './components/PayoutRequestModal';
 import PayoutStatusTimeline from './components/PayoutStatusTimeline';
@@ -17,6 +18,8 @@ const getIsDarkMode = (prop) => {
 const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => getIsDarkMode(isDarkModeProp));
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkDark = () => {
@@ -56,6 +59,18 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp }) => {
       isDarkMode ? 'text-zinc-100' : 'text-slate-900'
     }`}>
       
+      {/* Back to dashboard button if accessed standalone */}
+      {location.pathname === '/staff/payouts' && (
+        <button
+          type="button"
+          onClick={() => navigate('/staff/dashboard')}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+        >
+          <ChevronLeft className="w-4 h-4 text-[#FF2A14]" />
+          Back to Staff Dashboard
+        </button>
+      )}
+
       {/* Top Header Card */}
       <div className={`p-6 rounded-2xl border shadow-2xs transition-all ${
         isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'

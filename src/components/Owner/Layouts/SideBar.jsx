@@ -101,6 +101,7 @@ const Sidebar = ({
     { label: t('owner.manage_sidebar.inventory', 'Inventory'), path: '/owner/manage/inventory' },
     { label: t('owner.manage_sidebar.staff', 'Staff'), path: '/owner/manage/staff' },
     { label: t('owner.sidebar.staff_invitations', 'Staff Invitations'), path: '/owner/staff-invitations' },
+    { label: t('owner.sidebar.staff_payouts', 'Staff Payouts & Claims'), path: '/admin/payout-requests' },
     { label: t('owner.manage_sidebar.feedback', 'Feedback'), path: '/owner/manage/feedback' },
     { label: t('owner.manage_sidebar.home_services', 'Home Services'), path: '/owner/manage/home-services' },
     { label: t('owner.manage_sidebar.subscription', 'Subscription'), path: '/owner/manage/subscription' },
@@ -330,6 +331,14 @@ const Sidebar = ({
             </svg>
           ),
           isActive: location.pathname === '/owner/subscriptions' || location.pathname === '/admin/subscriptions'
+        },
+        {
+          label: 'Staff Payout Requests',
+          path: '/admin/payout-requests',
+          badge: 'PAYOUTS',
+          badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+          icon: <CreditCard className="w-[18px] h-[18px] shrink-0" />,
+          isActive: location.pathname === '/admin/payout-requests' || location.pathname === '/admin/payouts'
         },
         {
           label: 'Server Health',
@@ -688,6 +697,14 @@ const Sidebar = ({
         path: '/owner/attendance',
         icon: <img src={attendanceIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
         isActive: location.pathname === '/owner/attendance'
+      },
+      {
+        label: t('owner.sidebar.staff_payouts', 'Staff Payout Requests'),
+        path: '/admin/payout-requests',
+        badge: 'PAYOUTS',
+        badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+        icon: <CreditCard className="w-[18px] h-[18px] shrink-0" />,
+        isActive: location.pathname === '/admin/payout-requests' || location.pathname === '/admin/payouts'
       },
       {
         label: t('owner.sidebar.orders', 'Orders'),

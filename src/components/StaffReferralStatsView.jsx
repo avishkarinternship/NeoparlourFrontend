@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Send, 
   Download, 
@@ -23,10 +24,11 @@ import InvitationFilterBar from './common/InvitationFilterBar';
 import StaffInvitationsTable from './common/StaffInvitationsTable';
 import TablePaginationBar from './common/TablePaginationBar';
 
-export default function StaffReferralStatsView({ staffId, staffList = [], onSelectStaff, isDarkMode }) {
+export default function StaffReferralStatsView({ staffId, staffList = [], onSelectStaff, isDarkMode, onNavigateToPayouts }) {
   const [stats, setStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
   const activeStaffId = staffId || (staffList.length > 0 ? staffList[0].id : null);
   const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
@@ -193,6 +195,13 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
             </span>
             <p className="text-3xl font-black text-amber-900 dark:text-amber-300">{points} <span className="text-xs font-bold">PTS</span></p>
             <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold mt-1">Accumulated from successful customer referrals</p>
+            <button
+              type="button"
+              onClick={() => onNavigateToPayouts ? onNavigateToPayouts() : navigate('/staff/payouts')}
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] uppercase tracking-wider shadow-sm transition active:scale-95 cursor-pointer"
+            >
+              Redeem for Cash Payout →
+            </button>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-600 text-2xl font-black">
             ⭐

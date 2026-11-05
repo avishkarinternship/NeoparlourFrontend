@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Package, UserPlus, LogOut, Lock, CheckCircle2, LogIn, Sparkles, FileText, Scissors, Moon, Sun, TrendingUp } from 'lucide-react';
+import { Calendar, Clock, User, Package, UserPlus, LogOut, Lock, CheckCircle2, LogIn, Sparkles, FileText, Scissors, Moon, Sun, TrendingUp, Wallet } from 'lucide-react';
 import { staffApi } from '../services/staffApi';
 import toast from 'react-hot-toast';
 import { performCleanLogout } from '../utils/auth';
@@ -12,6 +12,7 @@ import StaffInventoryView from './StaffInventoryView';
 import StaffReferralStatsView from './StaffReferralStatsView';
 import WalkInBooking from './Owner/Manage/WalkInBooking';
 import StaffInvitations from './StaffInvitations';
+import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard';
 import ForgotPasswordModal from './ForgotPasswordModal';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -319,6 +320,17 @@ export default function StaffDashboard() {
           </button>
 
           <button
+            onClick={() => setActiveTab('payouts')}
+            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'payouts'
+                ? 'border-[#FF0B01] text-[#FF0B01]'
+                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <Wallet className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Reward Payouts
+          </button>
+
+          <button
             onClick={() => setActiveTab('invitations')}
             className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'invitations'
@@ -366,7 +378,15 @@ export default function StaffDashboard() {
         )}
 
         {activeTab === 'referrals' && (
-          <StaffReferralStatsView staffId={staffId} isDarkMode={isDarkMode} />
+          <StaffReferralStatsView 
+            staffId={staffId} 
+            isDarkMode={isDarkMode} 
+            onNavigateToPayouts={() => setActiveTab('payouts')}
+          />
+        )}
+
+        {activeTab === 'payouts' && (
+          <StaffPayoutDashboard isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'invitations' && (
