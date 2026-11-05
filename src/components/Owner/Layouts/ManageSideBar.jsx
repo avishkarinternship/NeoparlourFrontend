@@ -127,7 +127,7 @@ const ManageSideBar = () => {
       >
 
         {subMenu.map((item, idx) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || (item.path === '/owner/staff-invitations' && location.pathname === '/owner/manage/invitations');
 
           return (
             <button

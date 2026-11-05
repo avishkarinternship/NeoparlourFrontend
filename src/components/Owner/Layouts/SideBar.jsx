@@ -61,7 +61,7 @@ const Sidebar = ({
     }
   }, [isOpen]);
 
-  const isManagePath = location.pathname.startsWith('/owner/manage');
+  const isManagePath = location.pathname.startsWith('/owner/manage') || location.pathname.startsWith('/owner/staff-invitations');
   const [showManageDrawer, setShowManageDrawer] = useState(isManagePath);
   const [isManageOpen, setIsManageOpen] = useState(() => {
     const saved = localStorage.getItem('manageSidebarOpen');

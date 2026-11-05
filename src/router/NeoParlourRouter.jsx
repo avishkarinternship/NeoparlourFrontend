@@ -812,14 +812,6 @@ export let routes = createBrowserRouter([
                         element: <OwnerRouteGuard><RobotsTxtViewer /></OwnerRouteGuard>
                     },
                     {
-                        path: '/owner/staff-invitations',
-                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
-                    },
-                    {
-                        path: '/owner/manage/invitations',
-                        element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
-                    },
-                    {
                         path: '/owner/kyc',
                         element: <OwnerRouteGuard><OwnerKyc /></OwnerRouteGuard>
                     },
@@ -891,6 +883,14 @@ export let routes = createBrowserRouter([
                             {
                                 path: '/owner/manage/staff',
                                 element: <OwnerRouteGuard><Staff /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/manage/invitations',
+                                element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
+                            },
+                            {
+                                path: '/owner/staff-invitations',
+                                element: <OwnerRouteGuard><OwnerStaffInvitations /></OwnerRouteGuard>
                             },
                             {
                                 path: '/owner/manage/feedback',

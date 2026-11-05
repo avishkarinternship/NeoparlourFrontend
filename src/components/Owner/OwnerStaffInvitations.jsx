@@ -69,6 +69,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
     try {
       setLoading(true);
       const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
+      const res = await staffInvitationService.getPaginatedInvitations({ salonId: activeSalonId });
       const fetched = Array.isArray(res.data?.content) ? res.data.content : (Array.isArray(res.data) ? res.data : []);
       setInvitations(fetched);
     } catch (err) {
