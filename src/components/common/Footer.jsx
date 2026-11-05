@@ -96,7 +96,7 @@ const Footer = () => {
             <li>
               <button 
                 type="button" 
-                onClick={() => navigate('/customer/privacy-policy')} 
+                onClick={() => navigate('/owner/privacy-policy')} 
                 className="hover:text-red-600 transition-colors duration-150 text-left bg-transparent border-0 cursor-pointer p-0 font-semibold"
               >
                 • Privacy Policy
@@ -105,7 +105,7 @@ const Footer = () => {
             <li>
               <button 
                 type="button" 
-                onClick={() => navigate('/customer/terms-and-conditions')} 
+                onClick={() => navigate('/owner/terms-and-conditions')} 
                 className="hover:text-red-600 transition-colors duration-150 text-left bg-transparent border-0 cursor-pointer p-0 font-semibold"
               >
                 • Terms Of Service

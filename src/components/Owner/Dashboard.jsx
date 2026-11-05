@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './Layouts/Navbar';
-import Footer from '../common/Footer';
+import Footer from './Layouts/Footer';
 import Sidebar from './Layouts/SideBar';
 import axiosInstance from '../../api/axiosInstance';
 import { useTranslation } from 'react-i18next';
