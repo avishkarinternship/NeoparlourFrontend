@@ -2,23 +2,37 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import staffPayoutService from '../services/staffPayoutService';
 
-export const useMyStaffPayouts = () => {
+export const useMyStaffPayouts = (providedStaffId) => {
   const [payouts, setPayouts] = useState([]);
   const [walletBalance, setWalletBalance] = useState({ availablePoints: 0, totalEarnedPoints: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const resolveStaffId = useCallback(() => {
+    if (providedStaffId) return providedStaffId;
+    try {
+      const userStr = localStorage.getItem('ownerStaffUser');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        if (u.staffId) return u.staffId;
+        if (u.id) return u.id;
+      }
+    } catch (e) {}
+    return localStorage.getItem('staff_id') || localStorage.getItem('staff_user_id') || localStorage.getItem('user_id') || null;
+  }, [providedStaffId]);
+
   const fetchMyPayouts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      const staffId = resolveStaffId();
 
       const [payoutsData, balanceData] = await Promise.all([
-        staffPayoutService.getMyPayoutRequests().catch(err => {
+        staffPayoutService.getMyPayoutRequests(staffId).catch(err => {
           console.warn("Failed to load staff payout requests:", err);
           return [];
         }),
-        staffPayoutService.getWalletBalance().catch(err => {
+        staffPayoutService.getWalletBalance(staffId).catch(err => {
           console.warn("Failed to load staff wallet balance:", err);
           return { availablePoints: 0, totalEarnedPoints: 0 };
         })
@@ -41,7 +55,7 @@ export const useMyStaffPayouts = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolveStaffId]);
 
   useEffect(() => {
     fetchMyPayouts();

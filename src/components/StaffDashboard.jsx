@@ -386,7 +386,7 @@ export default function StaffDashboard() {
         )}
 
         {activeTab === 'payouts' && (
-          <StaffPayoutDashboard isDarkMode={isDarkMode} />
+          <StaffPayoutDashboard staffId={staffId} isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'invitations' && (

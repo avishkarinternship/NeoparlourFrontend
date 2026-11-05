@@ -35,8 +35,13 @@ export const adminPayoutService = {
     params.append('sortBy', filterParams.sortBy || 'createdAt');
     params.append('sortDir', filterParams.sortDir || 'desc');
 
-    const response = await axiosInstance.get(`/admin/payout-requests?${params.toString()}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.get(`/admin/payout-requests?${params.toString()}`, { skipGlobalToast: true });
+      return response.data || { content: [], totalPages: 1, totalElements: 0, number: 0 };
+    } catch (err) {
+      console.warn("admin payout queue endpoint fallback:", err?.message);
+      return { content: [], totalPages: 1, totalElements: 0, number: 0 };
+    }
   },
 
   // 2. Process Payout Request (Approve Transfer or Reject Request)

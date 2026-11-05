@@ -15,7 +15,7 @@ const getIsDarkMode = (prop) => {
   }
 };
 
-const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp }) => {
+const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => getIsDarkMode(isDarkModeProp));
   const [showRequestModal, setShowRequestModal] = useState(false);
   const navigate = useNavigate();
@@ -43,13 +43,22 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp }) => {
     };
   }, [isDarkModeProp]);
 
+  const activeStaffId = propStaffId || (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+      if (u.staffId) return u.staffId;
+      if (u.id) return u.id;
+    } catch (e) {}
+    return localStorage.getItem('staff_id') || localStorage.getItem('staff_user_id') || localStorage.getItem('user_id') || null;
+  })();
+
   const {
     payouts,
     walletBalance,
     loading,
     submitPayoutRequest,
     refresh
-  } = useMyStaffPayouts();
+  } = useMyStaffPayouts(activeStaffId);
 
   const availablePoints = walletBalance?.availablePoints || 0;
   const totalEarnedPoints = walletBalance?.totalEarnedPoints || availablePoints;
