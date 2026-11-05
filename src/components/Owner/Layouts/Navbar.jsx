@@ -1149,7 +1149,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
     : t('owner.navbar.search_placeholder', 'Search staff, bookings, customers, services...');
 
   return (
-    <header className={`h-16 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 border-b relative ${
+    <header className={`h-16 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300 border-b relative ${
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
