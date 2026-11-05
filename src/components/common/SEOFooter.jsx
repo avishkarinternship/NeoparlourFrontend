@@ -4,11 +4,12 @@ import toast from 'react-hot-toast';
 import { MapPin, ChevronRight, Loader2 } from 'lucide-react';
 import searchService from '../../services/searchService';
 import { useDarkMode } from '../../context/DarkModeContext';
+import { isOwnerLoggedIn } from '../../utils/auth';
 
 // In-memory cache for fetched city areas across component lifecycle
 const seoAreasCache = new Map();
 
-export default function SEOFooter() {
+function SEOFooterInner() {
   const navigate = useNavigate();
   const { isDark = false } = useDarkMode() || {};
   const sliderRef = useRef(null);
@@ -682,4 +683,10 @@ export default function SEOFooter() {
       `}</style>
     </div>
   );
+}
+export default function SEOFooter() {
+  if (isOwnerLoggedIn()) {
+    return null;
+  }
+  return <SEOFooterInner />;
 }

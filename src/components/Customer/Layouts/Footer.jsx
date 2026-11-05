@@ -3,11 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
+import OwnerFooter from '../../Owner/Layouts/Footer';
+import { isOwnerLoggedIn } from '../../../utils/auth';
 
 const Footer = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { isDark } = useDarkMode();
+
+    if (isOwnerLoggedIn()) {
+        return <OwnerFooter isDarkMode={isDark} />;
+    }
 
     return (
         <footer className={`pt-8 pb-4 px-4 md:px-8 font-sans w-full transition-colors duration-300 ${isDark ? 'bg-gray-950 text-gray-200' : 'bg-[#EAEAEA] text-gray-900'}`}>

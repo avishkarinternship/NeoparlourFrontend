@@ -73,3 +73,36 @@ export const performCleanLogout = async (redirectTarget = '/customer/login', que
     }
   }
 };
+
+/**
+ * Checks whether the current user is logged in as an Owner / Admin / Staff
+ * @returns {boolean}
+ */
+export const isOwnerLoggedIn = () => {
+  try {
+    const ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+    if (!ownerToken) return false;
+
+    const savedUserStr = localStorage.getItem('ownerStaffUser');
+    if (savedUserStr) {
+      const u = JSON.parse(savedUserStr);
+      const role = String(
+        u?.role || 
+        u?.userRole || 
+        (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || 
+        u?.user?.role || 
+        u?.type || 
+        ''
+      ).toUpperCase();
+
+      if (role === 'CUSTOMER' || role === 'ROLE_CUSTOMER') {
+        return false;
+      }
+      return true;
+    }
+
+    return !!ownerToken;
+  } catch (e) {
+    return false;
+  }
+};
