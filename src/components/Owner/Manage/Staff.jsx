@@ -197,14 +197,8 @@ const Staff = () => {
     const handleDobFocus = (isEdit = false) => {
         if (isEdit) {
             setEditDobFocus(true);
-            if (!editFormData.birthdate) {
-                setEditFormData(prev => ({ ...prev, birthdate: getMax18PlusDate() }));
-            }
         } else {
             setDobFocus(true);
-            if (!formData.birthdate) {
-                setFormData(prev => ({ ...prev, birthdate: getMax18PlusDate() }));
-            }
         }
     };
 
