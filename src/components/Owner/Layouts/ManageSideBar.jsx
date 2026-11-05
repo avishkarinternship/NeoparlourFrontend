@@ -77,11 +77,6 @@ const ManageSideBar = () => {
       path: '/owner/staff-invitations'
     },
     {
-      label: t('owner.manage_sidebar.staff_payouts', 'Staff Payout Requests'),
-      icon: inventoryIcon,
-      path: '/admin/payout-requests'
-    },
-    {
       label: t('owner.manage_sidebar.feedback', 'Feedback'),
       icon: serviceIcon,
       path: '/owner/manage/feedback'

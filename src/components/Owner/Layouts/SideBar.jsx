@@ -101,7 +101,6 @@ const Sidebar = ({
     { label: t('owner.manage_sidebar.inventory', 'Inventory'), path: '/owner/manage/inventory' },
     { label: t('owner.manage_sidebar.staff', 'Staff'), path: '/owner/manage/staff' },
     { label: t('owner.sidebar.staff_invitations', 'Staff Invitations'), path: '/owner/staff-invitations' },
-    { label: t('owner.sidebar.staff_payouts', 'Staff Payouts & Claims'), path: '/admin/payout-requests' },
     { label: t('owner.manage_sidebar.feedback', 'Feedback'), path: '/owner/manage/feedback' },
     { label: t('owner.manage_sidebar.home_services', 'Home Services'), path: '/owner/manage/home-services' },
     { label: t('owner.manage_sidebar.subscription', 'Subscription'), path: '/owner/manage/subscription' },
