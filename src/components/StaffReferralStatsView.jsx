@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Send, 
@@ -16,7 +16,6 @@ import {
   User,
   Users
 } from 'lucide-react';
-import axiosInstance from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 import staffInvitationService from '../services/staffInvitationService';
 import useStaffInvitations from '../hooks/useStaffInvitations';
@@ -24,49 +23,99 @@ import InvitationFilterBar from './common/InvitationFilterBar';
 import StaffInvitationsTable from './common/StaffInvitationsTable';
 import TablePaginationBar from './common/TablePaginationBar';
 
-export default function StaffReferralStatsView({ staffId, staffList = [], onSelectStaff, isDarkMode, onNavigateToPayouts }) {
+export default function StaffReferralStatsView({ 
+  staffId = 'ALL', 
+  staffList = [], 
+  onSelectStaff, 
+  isDarkMode = false, 
+  onNavigateToPayouts 
+}) {
   const [stats, setStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
-  const activeStaffId = staffId || (staffList.length > 0 ? staffList[0].id : null);
+  // If staffId is undefined / null / empty / 'ALL', it's 'ALL'
+  const activeStaffId = staffId === 'ALL' || !staffId ? 'ALL' : staffId;
+  const isAll = activeStaffId === 'ALL';
   const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
 
+  // For table invitations: when 'ALL', pass '' so backend fetches across all staff in salon
+  const tableStaffId = isAll ? '' : String(activeStaffId);
+
   // Custom hook for paginated staff referral invitations
-  const { data, loading: loadingTable, filters, updateFilter, setPage, setSize, resetFilters, refresh } = useStaffInvitations(activeSalonId, activeStaffId || '');
+  const { data, loading: loadingTable, filters, updateFilter, setPage, setSize, resetFilters, refresh } = useStaffInvitations(activeSalonId, tableStaffId);
 
-  useEffect(() => {
-    if (activeStaffId) {
-      updateFilter('staffId', activeStaffId);
-      fetchReferralStats(activeStaffId);
-    } else {
-      fetchReferralStats(null);
-    }
-  }, [activeStaffId]);
+  const fetchReferralStats = useCallback(async (targetId, currentStaffList = staffList) => {
+    const isAllSelected = targetId === 'ALL' || !targetId;
 
-  const fetchReferralStats = async (id) => {
-    if (!id) {
-      setStats({
-        staffId: null,
-        staffName: 'Staff Member',
-        invitesSent: 0,
-        downloads: 0,
-        registrations: 0,
-        bookings: 0,
-        totalPointsEarned: 0,
-        totalRewardsEarned: 0
-      });
-      setLoadingStats(false);
+    if (isAllSelected) {
+      if (!currentStaffList || currentStaffList.length === 0) {
+        setStats({
+          staffId: 'ALL',
+          staffName: 'All Staff Members',
+          invitesSent: 0,
+          downloads: 0,
+          registrations: 0,
+          bookings: 0,
+          totalPointsEarned: 0,
+          totalRewardsEarned: 0
+        });
+        setLoadingStats(false);
+        return;
+      }
+
+      setLoadingStats(true);
+      try {
+        // Call stats API for every staff member concurrently in parallel
+        const results = await Promise.allSettled(
+          currentStaffList.map(st => staffInvitationService.getStaffStats(st.id))
+        );
+
+        let totalInvites = 0;
+        let totalDownloads = 0;
+        let totalRegistrations = 0;
+        let totalBookings = 0;
+        let totalPoints = 0;
+        let totalRewards = 0;
+
+        results.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            const data = res.value.data?.content || res.value.data || {};
+            totalInvites += Number(data.invitesSent ?? data.totalInvitesSent ?? 0);
+            totalDownloads += Number(data.downloads ?? data.totalAppDownloads ?? data.appDownloads ?? 0);
+            totalRegistrations += Number(data.registrations ?? data.totalRegistrations ?? 0);
+            totalBookings += Number(data.bookings ?? data.totalBookings ?? 0);
+            totalPoints += Number(data.totalPointsEarned ?? data.rewardPoints ?? data.points ?? 0);
+            totalRewards += Number(data.totalRewardsEarned ?? data.totalCashEarnings ?? data.rewards ?? 0);
+          }
+        });
+
+        setStats({
+          staffId: 'ALL',
+          staffName: `All Staff Members (${currentStaffList.length})`,
+          invitesSent: totalInvites,
+          downloads: totalDownloads,
+          registrations: totalRegistrations,
+          bookings: totalBookings,
+          totalPointsEarned: totalPoints,
+          totalRewardsEarned: totalRewards
+        });
+      } catch (err) {
+        console.warn("Failed to load aggregated staff stats:", err);
+      } finally {
+        setLoadingStats(false);
+      }
       return;
     }
 
+    // Individual staff member
     setLoadingStats(true);
     try {
-      const response = await staffInvitationService.getStaffStats(id);
+      const response = await staffInvitationService.getStaffStats(targetId);
       const resData = response.data?.content || response.data || null;
       setStats(resData || {
-        staffId: id,
+        staffId: targetId,
         staffName: 'Staff Member',
         invitesSent: 0,
         downloads: 0,
@@ -76,9 +125,9 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
         totalRewardsEarned: 0
       });
     } catch (err) {
-      console.warn("Failed to fetch staff referral stats, using empty stats:", err.message);
+      console.warn("Failed to fetch staff referral stats:", err?.message);
       setStats({
-        staffId: id,
+        staffId: targetId,
         staffName: 'Staff Member',
         invitesSent: 0,
         downloads: 0,
@@ -90,7 +139,12 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [staffList]);
+
+  // Fetch stats whenever activeStaffId or staffList changes
+  useEffect(() => {
+    fetchReferralStats(activeStaffId, staffList);
+  }, [activeStaffId, staffList, fetchReferralStats]);
 
   const referralCode = `STAFF-${activeStaffId || 'REF'}`;
   const referralLink = `https://neoparlour.com/signup?ref=${referralCode}`;
@@ -149,32 +203,44 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
             Staff Referrals Dashboard
           </h2>
           <p className="text-xs font-semibold text-slate-400 dark:text-zinc-400 mt-0.5">
-            Track invitation conversions, customer registrations, points & cash rewards
+            {isAll 
+              ? `Combined referral conversions, registrations, points & earnings across all ${staffList.length} staff members`
+              : `Track invitation conversions, customer registrations, points & cash rewards for ${stats?.staffName || 'Staff Member'}`
+            }
           </p>
         </div>
 
-        {/* Optional Staff Selection Dropdown for Owners */}
+        {/* Staff Selection Dropdown for Owners */}
         {staffList && staffList.length > 0 && onSelectStaff && (
           <div className="flex items-center gap-2 w-full md:w-auto">
-            <User className="w-4 h-4 text-slate-400" />
+            {isAll ? (
+              <Users className="w-4 h-4 text-[#FF0B01]" />
+            ) : (
+              <User className="w-4 h-4 text-slate-400" />
+            )}
             <select
               value={activeStaffId}
-              onChange={(e) => onSelectStaff(Number(e.target.value))}
+              onChange={(e) => {
+                const val = e.target.value;
+                onSelectStaff(val === 'ALL' || val === '' ? 'ALL' : Number(val));
+              }}
               className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition ${
                 isDarkMode 
                   ? 'bg-zinc-900 text-white border-zinc-700 focus:border-[#FF0B01]' 
                   : 'bg-slate-50 text-slate-900 border-slate-200 focus:border-[#FF0B01]'
               }`}
             >
+              <option value="ALL">All Staff Members ({staffList.length})</option>
               {staffList.map((st) => (
                 <option key={st.id} value={st.id}>
-                  {st.name} ({st.phone || `ID: ${st.id}`})
+                  {st.name || st.staffName} ({st.phone || `ID: ${st.id}`})
                 </option>
               ))}
             </select>
             <button
+              type="button"
               onClick={() => {
-                fetchReferralStats(activeStaffId);
+                fetchReferralStats(activeStaffId, staffList);
                 refresh();
               }}
               className="p-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
@@ -265,47 +331,65 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
         </div>
       </div>
 
-      {/* Shareable Referral Code & Link Box */}
-      <div className={`p-5 rounded-3xl border ${
-        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-200'
-      }`}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h4 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#FF0B01]" />
-              Personalized Staff Referral Link
-            </h4>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Share this link with customers to earn reward points on every booking
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={handleCopyLink}
-              className="flex-1 sm:flex-initial px-4 py-2.5 bg-slate-900 hover:bg-black text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
-            </button>
-
-            <button
-              onClick={handleWhatsAppShare}
-              className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Share via WhatsApp</span>
-            </button>
+      {/* Shareable Referral Code & Link Box / Aggregated Info Banner */}
+      {isAll ? (
+        <div className={`p-5 rounded-3xl border ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-200'
+        }`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#FF0B01]" />
+                Salon Staff Referrals Overview ({staffList.length} Staff Members)
+              </h4>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                Displaying aggregated referral performance across all staff members. Select an individual staff member from the dropdown above to view or share their unique referral link.
+              </p>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className={`p-5 rounded-3xl border ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-200'
+        }`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-[#FF0B01]" />
+                Personalized Staff Referral Link
+              </h4>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                Share this link with customers to earn reward points on every booking
+              </p>
+            </div>
 
-        <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono text-slate-600 dark:text-zinc-300 break-all">
-          <span>{referralLink}</span>
-          <span className="px-2.5 py-0.5 bg-red-50 dark:bg-red-950/60 text-[#FF0B01] font-bold rounded-md uppercase ml-2 flex-shrink-0">
-            {referralCode}
-          </span>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleCopyLink}
+                className="flex-1 sm:flex-initial px-4 py-2.5 bg-slate-900 hover:bg-black text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+              </button>
+
+              <button
+                onClick={handleWhatsAppShare}
+                className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share via WhatsApp</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono text-slate-600 dark:text-zinc-300 break-all">
+            <span>{referralLink}</span>
+            <span className="px-2.5 py-0.5 bg-red-50 dark:bg-red-950/60 text-[#FF0B01] font-bold rounded-md uppercase ml-2 flex-shrink-0">
+              {referralCode}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Interactive Search & Filter Bar Component */}
       <InvitationFilterBar
@@ -314,13 +398,14 @@ export default function StaffReferralStatsView({ staffId, staffList = [], onSele
         resetFilters={resetFilters}
         staffList={staffList}
         isDarkMode={isDarkMode}
+        onSelectStaff={onSelectStaff}
       />
 
       {/* Staff Invitations Data Table Component */}
       <StaffInvitationsTable
         data={data.content}
         loading={loadingTable}
-        showStaffColumn={!staffId}
+        showStaffColumn={isAll}
         isDarkMode={isDarkMode}
       />
 

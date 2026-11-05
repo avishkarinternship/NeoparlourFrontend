@@ -15,7 +15,8 @@ const InvitationFilterBar = ({
   updateFilter,
   resetFilters,
   staffList = [],
-  isDarkMode = false
+  isDarkMode = false,
+  onSelectStaff
 }) => {
   return (
     <div className={`p-4 sm:p-5 rounded-3xl border shadow-2xs space-y-4 transition-colors duration-300 ${
@@ -56,10 +57,16 @@ const InvitationFilterBar = ({
               <User className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={filters.staffId || ''}
-                onChange={(e) => updateFilter('staffId', e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateFilter('staffId', val);
+                  if (onSelectStaff) {
+                    onSelectStaff(val === '' || val === 'ALL' ? 'ALL' : Number(val));
+                  }
+                }}
                 className="bg-transparent text-xs font-bold text-slate-800 dark:text-zinc-100 focus:outline-none cursor-pointer"
               >
-                <option value="">All Staff Members</option>
+                <option value="">All Staff Members ({staffList.length})</option>
                 {staffList.map(s => (
                   <option key={s.id} value={s.id} className="dark:bg-zinc-900 text-slate-900 dark:text-white">
                     {s.name || s.staffName}
@@ -103,37 +110,44 @@ const InvitationFilterBar = ({
             />
           </div>
 
-          {/* Reset Filters */}
+          {/* Reset Filters Button */}
           <button
-            type="button"
-            onClick={resetFilters}
-            className="p-2 rounded-2xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition cursor-pointer"
+            onClick={() => {
+              resetFilters();
+              if (onSelectStaff) {
+                onSelectStaff('ALL');
+              }
+            }}
+            className="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 transition-colors"
             title="Reset Filters"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
+
         </div>
 
       </div>
 
-      {/* Status Filter Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none">
-        {STATUS_OPTIONS.map((st) => {
-          const isActive = (filters.status || 'ALL') === st.value;
+      {/* Status Filter Badges */}
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+          <Filter className="w-3 h-3 text-[#FF0B01]" /> Status:
+        </span>
+        {STATUS_OPTIONS.map(opt => {
+          const isSelected = (filters.status || 'ALL') === opt.value;
           return (
             <button
-              key={st.value}
-              type="button"
-              onClick={() => updateFilter('status', st.value)}
-              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition whitespace-nowrap cursor-pointer ${
-                isActive
+              key={opt.value}
+              onClick={() => updateFilter('status', opt.value)}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                isSelected
                   ? 'bg-[#FF0B01] text-white shadow-xs'
                   : isDarkMode
                     ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {st.label}
+              {opt.label}
             </button>
           );
         })}

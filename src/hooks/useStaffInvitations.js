@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { staffInvitationService } from '../services/staffInvitationService';
 
@@ -12,12 +12,13 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
   );
 
   const effectiveSalonId = initialSalonId || reduxSalonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
+  const normalizedInitialStaffId = initialStaffId === 'ALL' || !initialStaffId ? '' : String(initialStaffId);
 
   const [data, setData] = useState({ content: [], totalPages: 0, totalElements: 0, page: 0, size: 10 });
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     salonId: effectiveSalonId,
-    staffId: initialStaffId,
+    staffId: normalizedInitialStaffId,
     status: 'ALL',
     search: '',
     rewardGiven: '',
@@ -29,20 +30,40 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
     sortDir: 'desc'
   });
 
-  // Sync Redux salonId if filters.salonId is empty
+  const lastParamsRef = useRef('');
+  const inFlightRef = useRef(false);
+
+  // Sync Redux/storage salonId only if changed
   useEffect(() => {
-    if (effectiveSalonId && (!filters.salonId || filters.salonId !== effectiveSalonId)) {
-      setFilters(prev => ({ ...prev, salonId: effectiveSalonId }));
+    if (effectiveSalonId) {
+      setFilters(prev => {
+        if (prev.salonId === effectiveSalonId) return prev;
+        return { ...prev, salonId: effectiveSalonId };
+      });
     }
   }, [effectiveSalonId]);
 
-  const fetchInvitations = useCallback(async () => {
+  // Sync initialStaffId only if changed
+  useEffect(() => {
+    const target = initialStaffId === 'ALL' || !initialStaffId ? '' : String(initialStaffId);
+    setFilters(prev => {
+      if (prev.staffId === target) return prev;
+      return { ...prev, staffId: target, page: 0 };
+    });
+  }, [initialStaffId]);
+
+  const fetchInvitations = useCallback(async (force = false) => {
+    const currentParams = JSON.stringify(filters);
+    if (!force && inFlightRef.current && lastParamsRef.current === currentParams) {
+      return;
+    }
+    inFlightRef.current = true;
+    lastParamsRef.current = currentParams;
+
     setLoading(true);
     try {
       const res = await staffInvitationService.getPaginatedStaffInvitations(filters);
       
-      // Backend response format:
-      // { content: [...], page: { size, number, totalElements, totalPages } }
       const contentList = Array.isArray(res.data?.content) ? res.data.content : (Array.isArray(res.data) ? res.data : []);
       const pageInfo = res.data?.page || {};
 
@@ -58,6 +79,7 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
       setData({ content: [], totalPages: 0, totalElements: 0, page: 0, size: filters.size });
     } finally {
       setLoading(false);
+      inFlightRef.current = false;
     }
   }, [filters]);
 
@@ -65,22 +87,33 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
     fetchInvitations();
   }, [fetchInvitations]);
 
-  const updateFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 0 }));
-  };
+  const updateFilter = useCallback((key, value) => {
+    setFilters(prev => {
+      if (prev[key] === value && (key !== 'page' || prev.page === 0)) {
+        return prev;
+      }
+      return { ...prev, [key]: value, page: 0 };
+    });
+  }, []);
 
-  const setPage = (newPage) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
-  };
+  const setPage = useCallback((newPage) => {
+    setFilters(prev => {
+      if (prev.page === newPage) return prev;
+      return { ...prev, page: newPage };
+    });
+  }, []);
 
-  const setSize = (newSize) => {
-    setFilters(prev => ({ ...prev, size: newSize, page: 0 }));
-  };
+  const setSize = useCallback((newSize) => {
+    setFilters(prev => {
+      if (prev.size === newSize) return prev;
+      return { ...prev, size: newSize, page: 0 };
+    });
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters({
       salonId: effectiveSalonId,
-      staffId: initialStaffId,
+      staffId: normalizedInitialStaffId,
       status: 'ALL',
       search: '',
       rewardGiven: '',
@@ -91,9 +124,9 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
       sortBy: 'createdAt',
       sortDir: 'desc'
     });
-  };
+  }, [effectiveSalonId, normalizedInitialStaffId]);
 
-  return { data, loading, filters, updateFilter, setPage, setSize, resetFilters, refresh: fetchInvitations };
+  return { data, loading, filters, updateFilter, setPage, setSize, resetFilters, refresh: () => fetchInvitations(true) };
 };
 
 export default useStaffInvitations;

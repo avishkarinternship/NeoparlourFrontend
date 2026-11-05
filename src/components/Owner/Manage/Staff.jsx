@@ -56,7 +56,7 @@ const Staff = () => {
 
     // Active Navigation Tab
     const [activeTab, setActiveTab] = useState('manage'); // 'manage' | 'referrals'
-    const [selectedReferralStaffId, setSelectedReferralStaffId] = useState(null);
+    const [selectedReferralStaffId, setSelectedReferralStaffId] = useState('ALL');
     const [showPassword, setShowPassword] = useState(false);
     const [dobFocus, setDobFocus] = useState(false);
     const [editDobFocus, setEditDobFocus] = useState(false);
@@ -401,7 +401,7 @@ const Staff = () => {
 
                     {activeTab === 'referrals' ? (
                         <StaffReferralStatsView
-                            staffId={selectedReferralStaffId || (staffList.length > 0 ? staffList[0].id : null)}
+                            staffId={selectedReferralStaffId ?? 'ALL'}
                             staffList={staffList}
                             onSelectStaff={(id) => setSelectedReferralStaffId(id)}
                             isDarkMode={isDarkMode}
