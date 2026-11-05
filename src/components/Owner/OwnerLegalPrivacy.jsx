@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import Navbar from "./Layouts/Navbar";
 import Footer from "./Layouts/Footer";
 
 const PrivacyPolicyScreen = () => {
@@ -474,6 +475,7 @@ const PrivacyPolicyScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-between">
+      <Navbar isSidebarOpen={true} />
       <div className="flex-1 py-6 px-4">
       <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden">
         

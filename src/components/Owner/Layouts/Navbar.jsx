@@ -4,7 +4,7 @@ import {
   Sun, Moon, X, Building2, LifeBuoy, Bug, BarChart3, 
   CreditCard, Activity, FileText, AlertTriangle, BookOpen, 
   MessageSquare, Settings, ArrowRight, ShieldCheck, Search,
-  PanelLeftClose, PanelLeftOpen
+
 } from 'lucide-react';
 import axiosInstance from '../../../api/axiosInstance';
 import supportService from '../../../services/supportService';
@@ -1156,7 +1156,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
       {/* Left Logo Area - Perfectly aligned with sidebar width */}
       <div className={`h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
         isSidebarOpen 
-          ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-between' 
+          ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-start' 
           : 'lg:w-20 px-3 justify-center'
       } ${
         isDarkMode ? 'border-zinc-800' : 'border-gray-200'
@@ -1186,26 +1186,6 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
             NeoParlour
           </span>
         </div>
-
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className={`p-1.5 rounded-xl transition-all cursor-pointer focus:outline-none flex items-center justify-center shrink-0 ${
-            isSidebarOpen ? 'ml-2' : ''
-          } ${
-            isDarkMode 
-              ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' 
-              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-          }`}
-          title={isSidebarOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"}
-          aria-label={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-        >
-          {isSidebarOpen ? (
-            <PanelLeftClose className="w-5 h-5 transition-transform hover:scale-105" />
-          ) : (
-            <PanelLeftOpen className="w-5 h-5 text-red-600 transition-transform hover:scale-105" />
-          )}
-        </button>
       </div>
 
       {/* Right Container Elements */}

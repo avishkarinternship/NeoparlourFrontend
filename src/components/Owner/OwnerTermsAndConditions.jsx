@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, FileText, Download, Scale, Search, CheckCircle } from 'lucide-react';
+import Navbar from './Layouts/Navbar';
 import Footer from './Layouts/Footer';
 
 export default function OwnerTermsAndConditions() {
@@ -408,6 +409,7 @@ export default function OwnerTermsAndConditions() {
 
     return (
         <div className="w-full min-h-screen bg-gray-50 text-gray-800 font-sans antialiased flex flex-col justify-between print:bg-white">
+            <Navbar isSidebarOpen={true} />
             <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 print:py-0">
 
             {/* Upper Brand Identification Branding Layout Card */}

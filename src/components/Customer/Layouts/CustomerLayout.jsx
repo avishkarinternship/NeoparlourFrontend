@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './NavBar';
 import SearchNavBar from './SearchNavBar';
 import Footer from './Footer';
+import OwnerNavbar from '../../Owner/Layouts/Navbar';
 import { DarkModeProvider, useDarkMode } from '../../../context/DarkModeContext';
+import { isOwnerLoggedIn } from '../../../utils/auth';
 
 function CustomerLayoutInner() {
   const location = useLocation();
-  const { isDark } = useDarkMode();
+  const { isDark, toggleDark } = useDarkMode();
+  const [isOwner, setIsOwner] = useState(isOwnerLoggedIn);
+
+  useEffect(() => {
+    setIsOwner(isOwnerLoggedIn());
+  }, [location.pathname]);
 
   const searchRoutes = [
     '/customer/product-search',
@@ -26,7 +33,13 @@ function CustomerLayoutInner() {
   return (
     <div className={`w-full min-h-screen font-sans antialiased flex flex-col justify-between transition-colors duration-300 ${isDark ? 'dark dark-mode bg-black text-white' : 'bg-white text-gray-900'}`}>
       <div className="sticky top-0 z-50 w-full">
-        {isSearchRoute ? <SearchNavBar /> : <Navbar />}
+        {isOwner ? (
+          <OwnerNavbar isDarkMode={isDark} toggleDarkMode={toggleDark} isSidebarOpen={true} />
+        ) : isSearchRoute ? (
+          <SearchNavBar />
+        ) : (
+          <Navbar />
+        )}
       </div>
       <main className="flex-1 w-full overflow-x-clip">
         <Outlet />
