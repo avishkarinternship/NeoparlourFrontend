@@ -162,11 +162,75 @@ const Staff = () => {
         return () => clearTimeout(handler);
     }, [fetchStaff]);
 
+    const validateAndSetBirthdate = (value, isEdit = false) => {
+        if (!value) {
+            if (isEdit) {
+                setEditFormData(prev => ({ ...prev, birthdate: '' }));
+            } else {
+                setFormData(prev => ({ ...prev, birthdate: '' }));
+            }
+            return;
+        }
+
+        const parts = value.split('-');
+        const year = parseInt(parts[0], 10);
+        const today = new Date();
+        const maxYear = today.getFullYear() - 18;
+
+        if (year > maxYear || !is18OrOlder(value)) {
+            toast.error("Child workers not allowed", { id: 'child-worker-toast', ...toastStyle });
+            if (isEdit) {
+                setEditFormData(prev => ({ ...prev, birthdate: '' }));
+            } else {
+                setFormData(prev => ({ ...prev, birthdate: '' }));
+            }
+            return;
+        }
+
+        if (isEdit) {
+            setEditFormData(prev => ({ ...prev, birthdate: value }));
+        } else {
+            setFormData(prev => ({ ...prev, birthdate: value }));
+        }
+    };
+
+    const handleDobFocus = (isEdit = false) => {
+        if (isEdit) {
+            setEditDobFocus(true);
+            if (!editFormData.birthdate) {
+                setEditFormData(prev => ({ ...prev, birthdate: getMax18PlusDate() }));
+            }
+        } else {
+            setDobFocus(true);
+            if (!formData.birthdate) {
+                setFormData(prev => ({ ...prev, birthdate: getMax18PlusDate() }));
+            }
+        }
+    };
+
+    const handleDobBlur = (isEdit = false) => {
+        if (isEdit) {
+            setEditDobFocus(false);
+            if (editFormData.birthdate && !is18OrOlder(editFormData.birthdate)) {
+                toast.error("Child workers not allowed", { id: 'child-worker-toast', ...toastStyle });
+                setEditFormData(prev => ({ ...prev, birthdate: '' }));
+            }
+        } else {
+            setDobFocus(false);
+            if (formData.birthdate && !is18OrOlder(formData.birthdate)) {
+                toast.error("Child workers not allowed", { id: 'child-worker-toast', ...toastStyle });
+                setFormData(prev => ({ ...prev, birthdate: '' }));
+            }
+        }
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === 'phone') {
             const val = value.replace(/\D/g, '').slice(0, 10);
             setFormData(prev => ({ ...prev, phone: val }));
+        } else if (name === 'birthdate') {
+            validateAndSetBirthdate(value, false);
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -196,7 +260,7 @@ const Staff = () => {
             return;
         }
         if (!is18OrOlder(formData.birthdate)) {
-            toast.error("Staff member must be at least 18 years old", toastStyle);
+            toast.error("Child workers not allowed", { id: 'child-worker-toast', ...toastStyle });
             return;
         }
 
@@ -258,7 +322,7 @@ const Staff = () => {
             return;
         }
         if (editFormData.birthdate && !is18OrOlder(editFormData.birthdate)) {
-            toast.error("Staff member must be at least 18 years old", toastStyle);
+            toast.error("Child workers not allowed", { id: 'child-worker-toast', ...toastStyle });
             return;
         }
 
@@ -458,9 +522,10 @@ const Staff = () => {
                                         name="birthdate" 
                                         value={formData.birthdate} 
                                         max={getMax18PlusDate()}
+                                        min="1940-01-01"
                                         onChange={handleInputChange} 
-                                        onFocus={() => setDobFocus(true)}
-                                        onBlur={() => setDobFocus(false)}
+                                        onFocus={() => handleDobFocus(false)}
+                                        onBlur={() => handleDobBlur(false)}
                                         placeholder="Date of Birth (DD/MM/YYYY)" 
                                         className={`w-full text-sm outline-none bg-transparent ${
                                             isDarkMode ? 'text-white placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
@@ -741,9 +806,10 @@ const Staff = () => {
                                                     name="birthdate" 
                                                     value={editFormData.birthdate} 
                                                     max={getMax18PlusDate()}
-                                                    onChange={(e) => setEditFormData(prev => ({ ...prev, birthdate: e.target.value }))} 
-                                                    onFocus={() => setEditDobFocus(true)}
-                                                    onBlur={() => setEditDobFocus(false)}
+                                                    min="1940-01-01"
+                                                    onChange={(e) => validateAndSetBirthdate(e.target.value, true)} 
+                                                    onFocus={() => handleDobFocus(true)}
+                                                    onBlur={() => handleDobBlur(true)}
                                                     placeholder="Date of Birth (DD/MM/YYYY)" 
                                                     className={`w-full text-sm outline-none bg-transparent ${
                                                         isDarkMode ? 'text-white placeholder-zinc-500' : 'text-gray-800 placeholder-gray-400'
