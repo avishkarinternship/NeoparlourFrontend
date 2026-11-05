@@ -31,13 +31,14 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
   });
 
   const lastParamsRef = useRef('');
+  const lastFetchedAtRef = useRef(0);
   const inFlightRef = useRef(false);
 
   // Sync Redux/storage salonId only if changed
   useEffect(() => {
     if (effectiveSalonId) {
       setFilters(prev => {
-        if (prev.salonId === effectiveSalonId) return prev;
+        if (String(prev.salonId || '') === String(effectiveSalonId || '')) return prev;
         return { ...prev, salonId: effectiveSalonId };
       });
     }
@@ -47,18 +48,27 @@ export const useStaffInvitations = (initialSalonId = '', initialStaffId = '') =>
   useEffect(() => {
     const target = initialStaffId === 'ALL' || !initialStaffId ? '' : String(initialStaffId);
     setFilters(prev => {
-      if (prev.staffId === target) return prev;
+      if (String(prev.staffId || '') === String(target || '')) return prev;
       return { ...prev, staffId: target, page: 0 };
     });
   }, [initialStaffId]);
 
   const fetchInvitations = useCallback(async (force = false) => {
     const currentParams = JSON.stringify(filters);
-    if (!force && inFlightRef.current && lastParamsRef.current === currentParams) {
-      return;
+    const now = Date.now();
+
+    // Prevent duplicate calls: if same query is in-flight OR was fetched in the last 1500ms
+    if (!force) {
+      if (inFlightRef.current && lastParamsRef.current === currentParams) {
+        return;
+      }
+      if (lastParamsRef.current === currentParams && now - lastFetchedAtRef.current < 1500) {
+        return;
+      }
     }
     inFlightRef.current = true;
     lastParamsRef.current = currentParams;
+    lastFetchedAtRef.current = now;
 
     setLoading(true);
     try {

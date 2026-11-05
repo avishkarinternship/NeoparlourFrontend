@@ -50,24 +50,49 @@ export default function StaffReferralStatsView({
     const isAllSelected = targetId === 'ALL' || !targetId;
 
     if (isAllSelected) {
-      if (!currentStaffList || currentStaffList.length === 0) {
-        setStats({
-          staffId: 'ALL',
-          staffName: 'All Staff Members',
-          invitesSent: 0,
-          downloads: 0,
-          registrations: 0,
-          bookings: 0,
-          totalPointsEarned: 0,
-          totalRewardsEarned: 0
-        });
-        setLoadingStats(false);
-        return;
-      }
-
       setLoadingStats(true);
       try {
-        // Call stats API for every staff member concurrently in parallel
+        let statsData = null;
+        if (activeSalonId) {
+          try {
+            const res = await staffInvitationService.getSalonStaffStats(activeSalonId);
+            statsData = res.data?.content || res.data;
+          } catch (apiErr) {
+            console.warn("Single salon staff stats endpoint fallback:", apiErr?.message);
+          }
+        }
+
+        if (statsData) {
+          setStats({
+            staffId: 'ALL',
+            staffName: `All Staff Members${currentStaffList?.length ? ` (${currentStaffList.length})` : ''}`,
+            invitesSent: Number(statsData.invitesSent ?? statsData.totalInvitesSent ?? 0),
+            downloads: Number(statsData.downloads ?? statsData.totalAppDownloads ?? statsData.appDownloads ?? 0),
+            registrations: Number(statsData.registrations ?? statsData.totalRegistrations ?? 0),
+            bookings: Number(statsData.bookings ?? statsData.totalBookings ?? 0),
+            totalPointsEarned: Number(statsData.totalPointsEarned ?? statsData.rewardPoints ?? statsData.points ?? 0),
+            totalRewardsEarned: Number(statsData.totalRewardsEarned ?? statsData.totalCashEarnings ?? statsData.rewards ?? 0)
+          });
+          setLoadingStats(false);
+          return;
+        }
+
+        if (!currentStaffList || currentStaffList.length === 0) {
+          setStats({
+            staffId: 'ALL',
+            staffName: 'All Staff Members',
+            invitesSent: 0,
+            downloads: 0,
+            registrations: 0,
+            bookings: 0,
+            totalPointsEarned: 0,
+            totalRewardsEarned: 0
+          });
+          setLoadingStats(false);
+          return;
+        }
+
+        // Parallel fallback if single endpoint unavailable
         const results = await Promise.allSettled(
           currentStaffList.map(st => staffInvitationService.getStaffStats(st.id))
         );
@@ -139,7 +164,7 @@ export default function StaffReferralStatsView({
     } finally {
       setLoadingStats(false);
     }
-  }, [staffList]);
+  }, [staffList, activeSalonId]);
 
   // Fetch stats whenever activeStaffId or staffList changes
   useEffect(() => {

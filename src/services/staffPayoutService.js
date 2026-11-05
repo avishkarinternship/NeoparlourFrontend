@@ -46,7 +46,23 @@ export const staffPayoutService = {
       return { availablePoints: 0, totalEarnedPoints: 0 };
     }
 
-    // A. Priority 1: Official staff referral stats endpoint (/staff-invitations/stats/{staffId})
+    // A. Priority 1: Official wallet balance endpoint (/staff-invitations/wallet-balance)
+    try {
+      const param = id ? `?staffId=${id}` : '';
+      const response = await axiosInstance.get(`/staff-invitations/wallet-balance${param}`, { skipGlobalToast: true });
+      const data = response.data?.content || response.data || {};
+      const pts = Number(data.availablePoints ?? data.points ?? data.totalPointsEarned ?? 0);
+      const total = Number(data.totalEarnedPoints ?? data.totalPointsEarned ?? pts);
+      return {
+        availablePoints: pts,
+        totalEarnedPoints: total,
+        stats: data
+      };
+    } catch (err0) {
+      console.warn('staff wallet-balance endpoint fallback:', err0?.message);
+    }
+
+    // B. Priority 2: Staff referral stats endpoint (/staff-invitations/stats/{staffId})
     try {
       const response = await axiosInstance.get(`/staff-invitations/stats/${id}`, { skipGlobalToast: true });
       const data = response.data?.content || response.data || {};

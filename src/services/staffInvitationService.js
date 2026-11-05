@@ -84,6 +84,15 @@ export const staffInvitationService = {
     return axiosInstance.get(`/staff-invitations/stats/${Number(staffId)}`);
   },
 
+  // 3b. Fetch Aggregated Staff Referral Stats for entire salon
+  // GET /staff-invitations/stats/salon/{salonId}
+  getSalonStaffStats: (salonId) => {
+    if (!salonId || isNaN(salonId)) {
+      return Promise.reject(new Error("Invalid salonId"));
+    }
+    return axiosInstance.get(`/staff-invitations/stats/salon/${Number(salonId)}`);
+  },
+
   // 4. Fetch Salon Staff Leaderboard
   // GET /staff-invitations/leaderboard/{salonId}
   getSalonLeaderboard: (salonId) => {
