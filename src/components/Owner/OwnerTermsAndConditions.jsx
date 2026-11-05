@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, FileText, Download, Scale, Search, CheckCircle } from 'lucide-react';
+import Footer from './Layouts/Footer';
 
 export default function OwnerTermsAndConditions() {
     const { i18n } = useTranslation();
@@ -406,7 +407,8 @@ export default function OwnerTermsAndConditions() {
     const tData = content[lang] || content.en;
 
     return (
-        <div className="w-full min-h-screen bg-gray-50 text-gray-800 font-sans antialiased py-10 px-4 sm:px-6 lg:px-8 print:bg-white print:py-0">
+        <div className="w-full min-h-screen bg-gray-50 text-gray-800 font-sans antialiased flex flex-col justify-between print:bg-white">
+            <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 print:py-0">
 
             {/* Upper Brand Identification Branding Layout Card */}
             <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-8 print:border-0 print:shadow-none">
@@ -710,6 +712,8 @@ export default function OwnerTermsAndConditions() {
                     </div>
                 )}
             </div>
+            </div>
+            <Footer />
         </div>
     );
 }

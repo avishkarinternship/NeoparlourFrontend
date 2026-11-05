@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import Footer from "./Layouts/Footer";
 
 const PrivacyPolicyScreen = () => {
   const { i18n } = useTranslation();
@@ -472,7 +473,8 @@ const PrivacyPolicyScreen = () => {
   const tData = content[lang] || content.en;
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-between">
+      <div className="flex-1 py-6 px-4">
       <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden">
         
         {/* Header */}
@@ -623,6 +625,8 @@ const PrivacyPolicyScreen = () => {
 
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };
