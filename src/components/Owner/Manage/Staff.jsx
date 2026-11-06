@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Users, TrendingUp, Award, Share2, Eye, EyeOff } from 'lucide-react';
@@ -155,7 +155,13 @@ const Staff = () => {
         }
     }, [filters]);
 
+    const initialStaffFetchDone = useRef(false);
     useEffect(() => {
+        if (!initialStaffFetchDone.current) {
+            initialStaffFetchDone.current = true;
+            fetchStaff();
+            return;
+        }
         const handler = setTimeout(() => {
             fetchStaff();
         }, 300);

@@ -1,6 +1,15 @@
 import axiosInstance from '../api/axiosInstance';
 
+// In-flight request deduplication map and short-lived query cache
+const inFlightRequests = new Map();
+const recentResponseCache = new Map();
+
 export const staffInvitationService = {
+  // Clear cached invitation responses (e.g. on manual refresh or mutation)
+  clearInvitationsCache: () => {
+    inFlightRequests.clear();
+    recentResponseCache.clear();
+  },
   // ==================== UNIFIED STAFF INVITATIONS APIS (/staff-invitations) ====================
 
   // 1. Fetch Paginated Invitations with Search & Filters
@@ -58,7 +67,32 @@ export const staffInvitationService = {
     params.append('sortBy', filterParams.sortBy || 'createdAt');
     params.append('sortDir', filterParams.sortDir || 'desc');
 
-    return axiosInstance.get(`/staff-invitations?${params.toString()}`);
+    const queryString = params.toString();
+    const cacheKey = `/staff-invitations?${queryString}`;
+
+    // 1. Return recent cached result if fetched within last 2500ms
+    const cached = recentResponseCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < 2500)) {
+      return Promise.resolve(cached.data);
+    }
+
+    // 2. Return in-flight promise if exact same request is already pending
+    if (inFlightRequests.has(cacheKey)) {
+      return inFlightRequests.get(cacheKey);
+    }
+
+    const reqPromise = axiosInstance.get(cacheKey)
+      .then(res => {
+        recentResponseCache.set(cacheKey, { timestamp: Date.now(), data: res });
+        setTimeout(() => { recentResponseCache.delete(cacheKey); }, 3000);
+        return res;
+      })
+      .finally(() => {
+        inFlightRequests.delete(cacheKey);
+      });
+
+    inFlightRequests.set(cacheKey, reqPromise);
+    return reqPromise;
   },
 
   // Alias for backward compatibility

@@ -162,16 +162,21 @@ const ManageSideBar = () => {
         onClick={toggleSidebar}
         className={`absolute border rounded-full w-7 h-7 flex items-center justify-center transition-all duration-200 z-40 cursor-pointer hover:scale-110 active:scale-95 ${
           isOpen 
-            ? `top-14 -right-3.5 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 shadow-sm hover:bg-gray-50'}` 
-            : 'top-16 left-3 bg-[#FF0B01] border-[#FF0B01] shadow-[0_0_8px_rgba(255,11,1,0.4)]'
+            ? `top-14 -right-3.5 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 shadow-sm hover:bg-gray-50 text-gray-500 hover:text-gray-700'}` 
+            : `top-28 left-2.5 shadow-md ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-red-500' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-red-600 hover:border-red-500'}`
         }`}
+        title={isOpen ? "Collapse Manage Sidebar" : "Expand Manage Sidebar"}
+        aria-label={isOpen ? "Collapse Manage Sidebar" : "Expand Manage Sidebar"}
       >
         <svg
-          className={`w-3.5 h-3.5 transition-all duration-300
-            ${isOpen ? (isDarkMode ? 'text-zinc-300' : 'text-gray-400') : 'text-white rotate-180'}`}
+          className={`w-3.5 h-3.5 transition-all duration-300 ${
+            isOpen 
+              ? (isDarkMode ? 'text-zinc-300' : 'text-gray-500') 
+              : 'text-red-600 rotate-180'
+          }`}
           fill="none"
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="2.5"
           viewBox="0 0 24 24"
         >
           <path

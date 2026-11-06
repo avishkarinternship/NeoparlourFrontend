@@ -155,6 +155,36 @@ const StaffRouteGuard = ({ children }) => {
     return children;
 };
 
+const RootRouteGuard = ({ children }) => {
+    const ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
+
+    if (ownerToken) {
+        const savedUserStr = localStorage.getItem('ownerStaffUser');
+        let role = '';
+        if (savedUserStr) {
+            try {
+                const u = JSON.parse(savedUserStr);
+                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+            } catch (e) {}
+        }
+        if (role === 'CUSTOMER' || role === 'ROLE_CUSTOMER') {
+            return children;
+        }
+        if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
+            return <Navigate to="/admin/support-requests" replace />;
+        }
+        if (role === 'SEO_ADMIN' || role.includes('SEO')) {
+            return <Navigate to="/admin/blogs" replace />;
+        }
+        if (role.includes('STAFF')) {
+            return <Navigate to="/staff/dashboard" replace />;
+        }
+        return <Navigate to="/owner/dashboard" replace />;
+    }
+
+    return children;
+};
+
 const CustomerRouteGuard = ({ children, isPublic = false }) => {
     // Public routes (such as /seo-salons, /blogs, /sitemap, etc.) are viewable by all users including SEO admins
     if (isPublic) {
@@ -401,15 +431,15 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/',
-                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                        element: <RootRouteGuard><HomeScreen /></RootRouteGuard>
                     },
                     {
                         path: 'customer/home',
-                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                        element: <RootRouteGuard><HomeScreen /></RootRouteGuard>
                     },
                     {
                         path: 'customer/dashboard',
-                        element: <CustomerRouteGuard isPublic={true}><HomeScreen /></CustomerRouteGuard>
+                        element: <RootRouteGuard><HomeScreen /></RootRouteGuard>
                     },
 
                     {

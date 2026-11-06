@@ -52,31 +52,6 @@ export default function StaffReferralStatsView({
     if (isAllSelected) {
       setLoadingStats(true);
       try {
-        let statsData = null;
-        if (activeSalonId) {
-          try {
-            const res = await staffInvitationService.getSalonStaffStats(activeSalonId);
-            statsData = res.data?.content || res.data;
-          } catch (apiErr) {
-            console.warn("Single salon staff stats endpoint fallback:", apiErr?.message);
-          }
-        }
-
-        if (statsData) {
-          setStats({
-            staffId: 'ALL',
-            staffName: `All Staff Members${currentStaffList?.length ? ` (${currentStaffList.length})` : ''}`,
-            invitesSent: Number(statsData.invitesSent ?? statsData.totalInvitesSent ?? 0),
-            downloads: Number(statsData.downloads ?? statsData.totalAppDownloads ?? statsData.appDownloads ?? 0),
-            registrations: Number(statsData.registrations ?? statsData.totalRegistrations ?? 0),
-            bookings: Number(statsData.bookings ?? statsData.totalBookings ?? 0),
-            totalPointsEarned: Number(statsData.totalPointsEarned ?? statsData.rewardPoints ?? statsData.points ?? 0),
-            totalRewardsEarned: Number(statsData.totalRewardsEarned ?? statsData.totalCashEarnings ?? statsData.rewards ?? 0)
-          });
-          setLoadingStats(false);
-          return;
-        }
-
         if (!currentStaffList || currentStaffList.length === 0) {
           setStats({
             staffId: 'ALL',
@@ -92,7 +67,7 @@ export default function StaffReferralStatsView({
           return;
         }
 
-        // Parallel fallback if single endpoint unavailable
+        // Call the stats API for all the staff members in parallel and aggregate
         const results = await Promise.allSettled(
           currentStaffList.map(st => staffInvitationService.getStaffStats(st.id))
         );
@@ -164,7 +139,7 @@ export default function StaffReferralStatsView({
     } finally {
       setLoadingStats(false);
     }
-  }, [staffList, activeSalonId]);
+  }, [staffList]);
 
   // Fetch stats whenever activeStaffId or staffList changes
   useEffect(() => {
@@ -265,6 +240,7 @@ export default function StaffReferralStatsView({
             <button
               type="button"
               onClick={() => {
+                staffInvitationService.clearInvitationsCache();
                 fetchReferralStats(activeStaffId, staffList);
                 refresh();
               }}
