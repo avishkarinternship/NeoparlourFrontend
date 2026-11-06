@@ -109,20 +109,13 @@ const Sidebar = ({
     { label: t('owner.manage_sidebar.add_packages', 'Add Packages'), path: '/owner/manage/add-package' },
   ];
 
-  const handleManageClick = (isMobile = false) => {
-    if (isMobile) {
-      setShowManageDrawer(!showManageDrawer);
-    } else {
-      if (!isManagePath) {
-        localStorage.setItem('manageSidebarOpen', 'true');
-        setIsManageOpen(true);
-        window.dispatchEvent(new Event('manageSidebarOpenRequest'));
-        window.dispatchEvent(new Event('manageSidebarToggle'));
-        navigate('/owner/manage/schedule');
-      } else {
-        toggleManageSidebar();
-      }
+  const handleManageClick = (isMobileParam = false) => {
+    if (isRail && onToggleDesktop) {
+      onToggleDesktop();
+      setIsManageOpen(true);
+      return;
     }
+    toggleManageSidebar();
   };
 
   const handleLogout = (e) => {
@@ -175,7 +168,7 @@ const Sidebar = ({
             className={`w-full flex items-center rounded-xl text-[13px] font-bold relative transition-all duration-150 cursor-pointer sidebar-btn ${
               isRail
                 ? 'justify-center p-2.5 h-11'
-                : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? 'pr-9' : ''}`
+                : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? '' : ''}`
             } ${
               active
                 ? isDarkMode ? 'bg-red-500/15 text-[#FF0B01] font-black shadow-xs' : 'bg-red-50 text-[#FF0B01] font-black shadow-xs'
@@ -201,6 +194,19 @@ const Sidebar = ({
               )}
             </div>
 
+            {/* Manage Salon Accordion Chevron Indicator */}
+            {!isRail && hasManageArrow && (
+              <span 
+                className={`ml-auto flex items-center justify-center p-1 rounded-md transition-transform duration-200 ${
+                  isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            )}
+
             {/* Badge when expanded */}
             {!isRail && badge && (
               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ml-1.5 ${
@@ -216,37 +222,7 @@ const Sidebar = ({
             )}
           </button>
 
-          {/* Manage Salon Circular Arrow Toggle Button (inside the manage salon div) */}
-          {!isRail && hasManageArrow && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleManageClick(isMobile);
-              }}
-              className={`absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 ${
-                isManagePath && isManageOpen
-                  ? 'bg-[#FF0B01] border-[#FF0B01] text-white shadow-[0_0_8px_rgba(255,11,1,0.4)]'
-                  : isDarkMode 
-                    ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500' 
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
-              }`}
-              title={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
-              aria-label={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
-            >
-              <svg 
-                className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                  isManagePath && isManageOpen ? 'rotate-180' : 'rotate-0'
-                }`} 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2.5" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
+          
 
           {/* Modern Floating Hover Tooltip in Collapsed Mode */}
           {isRail && (
@@ -770,35 +746,46 @@ const Sidebar = ({
         )}
 
         <div className={`pt-3 flex-1 space-y-1 overflow-y-auto custom-scrollbar ${isRail ? 'px-2' : 'px-3'}`}>
-          {standardOwnerItems.map(item => renderNavButton(item))}
+          {standardOwnerItems.map((item, idx) => (
+            <React.Fragment key={item.key || item.path || item.label || idx}>
+              {renderNavButton(item)}
 
-          {/* Manage Submenu Accordion - mobile drawer only */}
-          {isMobile && showManageDrawer && (
-            <div className={`ml-4 pl-3 border-l space-y-1 my-1.5 transition-all ${
-              isDarkMode ? 'border-zinc-800' : 'border-gray-200'
-            }`}>
-              {subMenu.map((item, idx) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      navigate(item.path);
-                      if (onClose) onClose();
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left transition-colors cursor-pointer ${
-                      isActive
-                        ? isDarkMode ? 'bg-red-500/15 text-[#FF0B01] font-bold' : 'bg-red-50 text-[#FF0B01] font-bold'
-                        : isDarkMode ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+              {/* Option A: Clean Inline Accordion Directly Under Manage Salon */}
+              {item.hasManageArrow && !isRail && isManageOpen && (
+                <div className={`ml-4 pl-3 border-l-2 space-y-1 my-1.5 transition-all duration-200 ${
+                  isDarkMode ? 'border-zinc-800' : 'border-red-100'
+                }`}>
+                  {subMenu.map((sub, sIdx) => {
+                    const isSubActive = location.pathname === sub.path || (sub.path === '/owner/staff-invitations' && location.pathname === '/owner/manage/invitations');
+                    return (
+                      <button
+                        key={sIdx}
+                        type="button"
+                        onClick={() => {
+                          navigate(sub.path);
+                          if (isMobile && onClose) onClose();
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left transition-all cursor-pointer ${
+                          isSubActive
+                            ? isDarkMode
+                              ? 'bg-red-500/15 text-[#FF0B01] font-bold shadow-xs'
+                              : 'bg-red-50 text-[#FF0B01] font-bold shadow-xs'
+                            : isDarkMode
+                              ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                        }`}
+                      >
+                        <span className="truncate">{sub.label}</span>
+                        {isSubActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] shrink-0 ml-1"></span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
         <div className={`p-2 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
