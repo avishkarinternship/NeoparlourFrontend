@@ -175,7 +175,7 @@ const Sidebar = ({
             className={`w-full flex items-center rounded-xl text-[13px] font-bold relative transition-all duration-150 cursor-pointer sidebar-btn ${
               isRail
                 ? 'justify-center p-2.5 h-11'
-                : 'space-x-3.5 px-3.5 py-2.5 text-left justify-between'
+                : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? 'pr-8' : ''}`
             } ${
               active
                 ? isDarkMode ? 'bg-red-500/15 text-[#FF0B01] font-black shadow-xs' : 'bg-red-50 text-[#FF0B01] font-black shadow-xs'
@@ -201,22 +201,6 @@ const Sidebar = ({
               )}
             </div>
 
-            {/* Manage Salon Arrow Toggle Indicator */}
-            {!isRail && hasManageArrow && (
-              <span 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleManageClick(isMobile);
-                }}
-                className="ml-auto flex items-center justify-center p-1 rounded-md transition-all cursor-pointer hover:bg-gray-200/60 dark:hover:bg-zinc-700/60"
-                title={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
-              >
-                <svg className={`w-4 h-4 transition-transform duration-200 ${isManagePath && isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            )}
-
             {/* Badge when expanded */}
             {!isRail && badge && (
               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ml-1.5 ${
@@ -231,6 +215,38 @@ const Sidebar = ({
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF0B01] ring-2 ring-white dark:ring-zinc-800"></span>
             )}
           </button>
+
+          {/* Manage Salon Circular Arrow Toggle Button (protrudes outside manage salon div a bit) */}
+          {!isRail && hasManageArrow && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleManageClick(isMobile);
+              }}
+              className={`absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 ${
+                isManagePath && isManageOpen
+                  ? 'bg-[#FF0B01] border-[#FF0B01] text-white shadow-[0_0_8px_rgba(255,11,1,0.4)]'
+                  : isDarkMode 
+                    ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500' 
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
+              }`}
+              title={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
+              aria-label={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
+            >
+              <svg 
+                className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                  isManagePath && isManageOpen ? 'rotate-180' : 'rotate-0'
+                }`} 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
 
           {/* Modern Floating Hover Tooltip in Collapsed Mode */}
           {isRail && (
