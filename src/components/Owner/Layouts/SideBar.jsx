@@ -114,11 +114,13 @@ const Sidebar = ({
       setShowManageDrawer(!showManageDrawer);
     } else {
       if (!isManagePath) {
-        navigate('/owner/manage/schedule');
-      } else {
         localStorage.setItem('manageSidebarOpen', 'true');
+        setIsManageOpen(true);
         window.dispatchEvent(new Event('manageSidebarOpenRequest'));
         window.dispatchEvent(new Event('manageSidebarToggle'));
+        navigate('/owner/manage/schedule');
+      } else {
+        toggleManageSidebar();
       }
     }
   };
@@ -200,9 +202,16 @@ const Sidebar = ({
             </div>
 
             {/* Manage Salon Arrow Toggle Indicator */}
-            {!isRail && hasManageArrow && isManagePath && (
-              <span className="ml-auto flex items-center justify-center pl-2">
-                <svg className={`w-4 h-4 transition-transform duration-200 ${isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            {!isRail && hasManageArrow && (
+              <span 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleManageClick(isMobile);
+                }}
+                className="ml-auto flex items-center justify-center p-1 rounded-md transition-all cursor-pointer hover:bg-gray-200/60 dark:hover:bg-zinc-700/60"
+                title={isManagePath && isManageOpen ? "Collapse Manage Menu" : "Expand Manage Menu"}
+              >
+                <svg className={`w-4 h-4 transition-transform duration-200 ${isManagePath && isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </span>
