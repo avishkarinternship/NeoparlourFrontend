@@ -62,7 +62,6 @@ const Sidebar = ({
   }, [isOpen]);
 
   const isManagePath = location.pathname.startsWith('/owner/manage') || location.pathname.startsWith('/owner/staff-invitations');
-  const [showManageDrawer, setShowManageDrawer] = useState(isManagePath);
   const [isManageOpen, setIsManageOpen] = useState(() => {
     const saved = localStorage.getItem('manageSidebarOpen');
     return saved !== null ? JSON.parse(saved) : true;
@@ -72,7 +71,9 @@ const Sidebar = ({
     const handleSync = () => {
       const saved = localStorage.getItem('manageSidebarOpen');
       if (saved !== null) {
-        setIsManageOpen(JSON.parse(saved));
+        try {
+          setIsManageOpen(JSON.parse(saved));
+        } catch (e) {}
       }
     };
     window.addEventListener('manageSidebarOpenRequest', handleSync);
@@ -90,10 +91,6 @@ const Sidebar = ({
     window.dispatchEvent(new Event('manageSidebarToggle'));
   };
 
-  useEffect(() => {
-    setShowManageDrawer(isManagePath);
-  }, [location.pathname, isManagePath]);
-
   const subMenu = [
     { label: t('owner.manage_sidebar.schedule', 'Schedule'), path: '/owner/manage/schedule' },
     { label: t('owner.manage_sidebar.walk_in', 'Walk-in Booking'), path: '/owner/manage/walk-in' },
@@ -109,10 +106,13 @@ const Sidebar = ({
     { label: t('owner.manage_sidebar.add_packages', 'Add Packages'), path: '/owner/manage/add-package' },
   ];
 
-  const handleManageClick = (isMobileParam = false) => {
-    if (isRail && onToggleDesktop) {
-      onToggleDesktop();
+  const handleManageClick = (isMobileParam = false, isRailParam = false) => {
+    if (isRailParam) {
+      if (onToggleDesktop) {
+        onToggleDesktop();
+      }
       setIsManageOpen(true);
+      localStorage.setItem('manageSidebarOpen', 'true');
       return;
     }
     toggleManageSidebar();
@@ -151,13 +151,13 @@ const Sidebar = ({
       hasManageArrow = false
     }) => {
       const active = isActive !== null ? isActive : (path ? location.pathname === path : false);
-      const handleClick = () => {
+      const handleClick = (e) => {
         if (onClick) {
           onClick();
         } else if (path) {
           navigate(path);
         }
-        if (isMobile && onClose) onClose();
+        if (isMobile && onClose && !hasManageArrow) onClose();
       };
 
       return (
@@ -676,10 +676,10 @@ const Sidebar = ({
       },
       {
         label: t('owner.sidebar.manage', 'Manage'),
-        path: '/owner/manage/schedule',
+        key: 'manage-salon-item',
         icon: <img src={manageIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
         isActive: isManagePath,
-        onClick: () => handleManageClick(isMobile),
+        onClick: () => handleManageClick(isMobile, isRail),
         hasManageArrow: true
       },
       {
@@ -751,9 +751,13 @@ const Sidebar = ({
               {renderNavButton(item)}
 
               {/* Option A: Clean Inline Accordion Directly Under Manage Salon */}
-              {item.hasManageArrow && !isRail && isManageOpen && (
-                <div className={`ml-4 pl-3 border-l-2 space-y-1 my-1.5 transition-all duration-200 ${
+              {item.hasManageArrow && !isRail && (
+                <div className={`ml-4 pl-3 border-l-2 space-y-1 transition-all duration-300 ease-in-out overflow-hidden ${
                   isDarkMode ? 'border-zinc-800' : 'border-red-100'
+                } ${
+                  isManageOpen 
+                    ? 'max-h-[800px] opacity-100 my-1.5' 
+                    : 'max-h-0 opacity-0 my-0 pointer-events-none'
                 }`}>
                   {subMenu.map((sub, sIdx) => {
                     const isSubActive = location.pathname === sub.path || (sub.path === '/owner/staff-invitations' && location.pathname === '/owner/manage/invitations');
