@@ -175,7 +175,7 @@ const Sidebar = ({
             className={`w-full flex items-center rounded-xl text-[13px] font-bold relative transition-all duration-150 cursor-pointer sidebar-btn ${
               isRail
                 ? 'justify-center p-2.5 h-11'
-                : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? 'pr-8' : ''}`
+                : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? 'pr-9' : ''}`
             } ${
               active
                 ? isDarkMode ? 'bg-red-500/15 text-[#FF0B01] font-black shadow-xs' : 'bg-red-50 text-[#FF0B01] font-black shadow-xs'
@@ -216,7 +216,7 @@ const Sidebar = ({
             )}
           </button>
 
-          {/* Manage Salon Circular Arrow Toggle Button (protrudes outside manage salon div a bit) */}
+          {/* Manage Salon Circular Arrow Toggle Button (inside the manage salon div) */}
           {!isRail && hasManageArrow && (
             <button
               type="button"
@@ -224,7 +224,7 @@ const Sidebar = ({
                 e.stopPropagation();
                 handleManageClick(isMobile);
               }}
-              className={`absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 ${
+              className={`absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 ${
                 isManagePath && isManageOpen
                   ? 'bg-[#FF0B01] border-[#FF0B01] text-white shadow-[0_0_8px_rgba(255,11,1,0.4)]'
                   : isDarkMode 
