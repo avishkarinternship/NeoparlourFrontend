@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { sendRegisterOtp, registerWithOtp, loginOwner, clearOwnerStaffError, resetRegistration } from '../../redux/slices/ownerStaffSlice';
 import { toast } from 'react-hot-toast';
-import { User, UserCheck, Calendar, ChevronDown, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, Navigation as NavigationIcon, Eye, EyeOff, Camera, UploadCloud, X, FileText, Store, Building, Clock, Upload, Compass } from 'lucide-react';
+import { User, UserCheck, Calendar, ChevronDown, Mail, Phone, Lock, ShieldCheck, Sparkles, MapPin, LocateFixed, Eye, EyeOff, Camera, UploadCloud, X, FileText, Store, Building, Clock, Upload, Compass } from 'lucide-react';
 import searchService from '../../services/searchService';
 import { compressImage } from '../../utils/imageCompressor';
 import { GstStateInput, StateSelector, GstinInput } from '../common/GstStateInput';
@@ -929,7 +929,7 @@ const OwnerRegister = () => {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="p-1.5 rounded-lg bg-amber-500 text-white flex-shrink-0 shadow-xs">
-                            <NavigationIcon className="w-3.5 h-3.5 -rotate-45" />
+                            <LocateFixed className="w-3.5 h-3.5" />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -971,7 +971,7 @@ const OwnerRegister = () => {
                               </>
                             ) : (
                               <>
-                                <NavigationIcon className="w-3 h-3 -rotate-45" />
+                                <LocateFixed className="w-3 h-3" />
                                 <span>Auto-Detect</span>
                               </>
                             )}
@@ -1030,7 +1030,7 @@ const OwnerRegister = () => {
                           {isDetectingLocation ? (
                             <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
                           ) : (
-                            <NavigationIcon className="w-4 h-4 -rotate-45" />
+                            <LocateFixed className="w-4 h-4" />
                           )}
                         </button>
                         {showCityDropdown && formData.cityName && (
@@ -1713,7 +1713,7 @@ const OwnerRegister = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-[#8a1a16]/95 via-[#8a1a16]/50 to-transparent"></div>
           
-          <div className="absolute bottom-24 left-24 text-white max-w-xl" data-aos="fade-up" data-aos-delay="600">
+          <div className="absolute bottom-12 lg:bottom-16 xl:bottom-24 left-8 lg:left-14 xl:left-24 text-white max-w-xl z-10" data-aos="fade-up" data-aos-delay="600">
             <h2 className="text-5xl font-black mb-6 leading-tight tracking-tighter">
               Join the NeoParlour Network.
             </h2>
