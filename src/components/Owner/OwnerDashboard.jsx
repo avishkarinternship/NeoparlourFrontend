@@ -13,6 +13,7 @@ import {
     IndianRupee,
     CreditCard
 } from 'lucide-react';
+import Way2SmartGatewayWidget from '../Admin/Way2SmartGatewayWidget';
 
 // Asset Imports
 import upcomingAppointmentIcon from '../../assets/Owner/Dashboard/CenterScreen/upcoming_appointment_icon.svg';
@@ -824,6 +825,11 @@ const OwnerDashboard = () => {
                             <span className="group-hover:translate-x-1.5 transition-transform">→</span>
                         </p>
                     </div>
+                </div>
+
+                {/* Way2Smart Messaging & OTP Gateway Monitor Widget */}
+                <div className="mb-8">
+                    <Way2SmartGatewayWidget isDarkMode={isDarkMode} />
                 </div>
 
                 {/* Welcome Card & Info Banner */}

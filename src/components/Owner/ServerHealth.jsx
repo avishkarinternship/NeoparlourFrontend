@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
+import Way2SmartGatewayWidget from '../Admin/Way2SmartGatewayWidget';
 
 const toastStyle = {
   style: {
@@ -122,6 +123,11 @@ export default function ServerHealth() {
             </svg>
           </button>
         </div>
+      </div>
+
+      {/* Live Way2Smart Messaging & OTP Gateway Monitor Widget */}
+      <div className="mb-8">
+        <Way2SmartGatewayWidget isDarkMode={isDarkMode} />
       </div>
 
       {isEditing ? (
