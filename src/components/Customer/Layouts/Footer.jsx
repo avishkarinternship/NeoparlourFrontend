@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
-import { useActiveSalon, getSalonImageSrc } from '../../../utils/whiteLabelHelper';
+import { useActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../../utils/whiteLabelHelper';
 import { MapPin, Phone } from 'lucide-react';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
@@ -28,18 +28,7 @@ const Footer = () => {
                     {isWhiteLabeled ? (
                         <>
                             <div className="flex items-center space-x-2.5">
-                                {activeSalon.logo ? (
-                                    <img
-                                        src={getSalonImageSrc(activeSalon.logo)}
-                                        alt={activeSalon.name}
-                                        className="w-8 h-8 rounded-lg object-cover border border-gray-200 dark:border-zinc-700 shadow-xs shrink-0"
-                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                    />
-                                ) : (
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0">
-                                        {activeSalon.name ? activeSalon.name.charAt(0).toUpperCase() : 'S'}
-                                    </div>
-                                )}
+                                <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="w-8 h-8 rounded-lg" />
                                 <span className={`text-xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {activeSalon.name}
                                 </span>

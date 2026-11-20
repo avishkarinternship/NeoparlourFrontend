@@ -13,7 +13,7 @@ import { fetchCart } from '../../../redux/slices/cartSlice';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
-import { useActiveSalon, getSalonImageSrc } from '../../../utils/whiteLabelHelper';
+import { useActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../../utils/whiteLabelHelper';
 import LocationHeaderPill from '../../location/LocationHeaderPill';
 import AddressDrawer from '../../location/AddressDrawer';
 import LocationPickerModal from '../../location/LocationPickerModal';
@@ -124,18 +124,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 md:flex-initial mr-1.5 sm:mr-0">
                     {isWhiteLabeled ? (
                         <div onClick={() => navigate('/salon')} className="flex items-center gap-2 cursor-pointer flex-shrink-0 min-w-0" title={activeSalon.name}>
-                            {activeSalon.logo ? (
-                                <img
-                                    src={getSalonImageSrc(activeSalon.logo)}
-                                    alt={activeSalon.name}
-                                    className="h-8 w-8 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0"
-                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                />
-                            ) : (
-                                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-sm shrink-0">
-                                    {activeSalon.name ? activeSalon.name.charAt(0).toUpperCase() : 'S'}
-                                </div>
-                            )}
+                            <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="h-8 w-8 rounded-xl" />
                             <div className="flex flex-col min-w-0">
                                 <span className={`text-sm sm:text-base md:text-lg font-black tracking-tight truncate max-w-[130px] sm:max-w-[200px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {activeSalon.name}

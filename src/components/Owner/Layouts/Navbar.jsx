@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Sun, Moon, X, Building2, LifeBuoy, Bug, BarChart3, 
@@ -16,6 +16,7 @@ import profileIcon from '../../../assets/Owner/profile.jpg';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import SeoAdminProfileModal from './SeoAdminProfileModal';
+import { extractPaletteFromImage, applySalonTheme } from '../../../utils/whiteLabelHelper';
 
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
   const [src, setSrc] = useState(null);
@@ -29,23 +30,32 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
       return;
     }
 
-    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
-      setSrc(imagePath);
+    const str = String(imagePath).trim();
+    if (str.startsWith('data:') || str.startsWith('http') || str.startsWith('blob:')) {
+      setSrc(str);
       setLoading(false);
       return;
     }
+
+    const cleanPath = str.startsWith('/images/')
+      ? str.replace(/^\/images\//, '')
+      : str.startsWith('images/')
+      ? str.replace(/^images\//, '')
+      : str.startsWith('/')
+      ? str.slice(1)
+      : str;
 
     const fetchImage = async () => {
       setLoading(true);
       setError(false);
       try {
-        const response = await axiosInstance.get(`/images/${imagePath}`, {
+        const response = await axiosInstance.get(`/images/${cleanPath}`, {
           responseType: 'blob',
         });
         const blobUrl = URL.createObjectURL(response.data);
         setSrc(blobUrl);
       } catch (err) {
-        console.error(`Failed to load image from API: ${imagePath}`, err);
+        console.warn(`Failed to load image from API: ${cleanPath}`, err.message);
         setError(true);
       } finally {
         setLoading(false);
@@ -64,9 +74,10 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
   }
 
   if (error || !src) {
+    const initialChar = fallbackText ? String(fallbackText).trim().charAt(0).toUpperCase() : 'S';
     return (
-      <div className={`bg-red-50 dark:bg-red-950/40 text-[#ff0b01] flex items-center justify-center font-bold text-xs uppercase ${className}`}>
-        {fallbackText ? fallbackText.charAt(0) : '?'}
+      <div className={`bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center font-extrabold text-xs uppercase shadow-xs ${className}`}>
+        {initialChar || 'S'}
       </div>
     );
   }
@@ -281,16 +292,58 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
   const fetchSalonProfile = async () => {
     if (isAdmin) return;
     try {
-      const response = await axiosInstance.get("/salons/profile");
+      const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+      let salonData = null;
 
-      setSalonProfile({
-        salonName: response.data.salonName,
-        imageUrl:
-          response.data.imageUrl ||
-          (response.data.salonImages?.length > 0
-            ? response.data.salonImages[0].imageUrl
-            : null)
-      });
+      try {
+        const response = await axiosInstance.get("/salons/profile");
+        salonData = response.data;
+      } catch (err) {
+        if (activeSalonId && activeSalonId !== 'SYSTEM' && !isNaN(Number(activeSalonId))) {
+          const res = await axiosInstance.get(`/salons/${activeSalonId}`);
+          salonData = res.data;
+        }
+      }
+
+      if (salonData) {
+        const resolvedLogo =
+          salonData.imageUrl ||
+          salonData.logo ||
+          salonData.logoUrl ||
+          (salonData.salonImages?.length > 0 ? salonData.salonImages[0].imageUrl : null) ||
+          (salonData.images?.length > 0 ? salonData.images[0] : null) ||
+          localStorage.getItem('activeSalonLogo') ||
+          localStorage.getItem('salon_logo');
+
+        const resolvedName =
+          salonData.salonName ||
+          salonData.name ||
+          localStorage.getItem('activeSalonName') ||
+          localStorage.getItem('salon_name') ||
+          '';
+
+        if (resolvedLogo) {
+          localStorage.setItem('activeSalonLogo', resolvedLogo);
+          localStorage.setItem('salon_logo', resolvedLogo);
+          // Automatically extract 2 colors from salon logo: darkest as primary, light as theme accent!
+          extractPaletteFromImage(resolvedLogo).then((palette) => {
+            if (palette) {
+              localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
+              applySalonTheme(palette);
+            }
+          });
+        }
+
+        if (resolvedName) {
+          localStorage.setItem('activeSalonName', resolvedName);
+          localStorage.setItem('salon_name', resolvedName);
+        }
+
+        setSalonProfile({
+          salonName: resolvedName,
+          imageUrl: resolvedLogo
+        });
+      }
     } catch (error) {
       console.error("Salon profile fetch failed:", error);
     }
@@ -1153,7 +1206,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
-      {/* Left Logo Area - White-labeled for Salon Owner & Staff */}
+      {/* Left Logo Area - White-labeled with Salon Logo and Name */}
       <div className={`h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
         isSidebarOpen 
           ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-start' 
@@ -1177,18 +1230,12 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
         >
           {!isAdmin && !isSeoAdmin && !isSupport ? (
             <>
-              {salonProfile.imageUrl ? (
-                <img
-                  src={salonProfile.imageUrl}
-                  alt={salonProfile.salonName || 'Salon'}
-                  className="h-8 w-8 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-zinc-700 shadow-xs"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0">
-                  {salonProfile.salonName ? salonProfile.salonName.charAt(0).toUpperCase() : 'S'}
-                </div>
-              )}
+              <AsyncImage
+                imagePath={salonProfile.imageUrl}
+                alt={salonProfile.salonName || 'Salon'}
+                className="h-8 w-8 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-zinc-700 shadow-xs"
+                fallbackText={salonProfile.salonName || 'S'}
+              />
               <div className={`min-w-0 ${isSidebarOpen ? 'hidden sm:flex flex-col' : 'hidden'}`}>
                 <span className="font-extrabold text-sm tracking-tight truncate max-w-[140px]">
                   {salonProfile.salonName || localStorage.getItem('salon_name') || 'Salon Portal'}
@@ -1494,31 +1541,23 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
           </div>
         ) : (
           <div className="flex items-center space-x-2 sm:space-x-3.5 pl-1 sm:pl-2">
-            {/* User Profile Avatar */}
+            {/* User Profile Avatar - Shows owner/staff personal avatar */}
             <div className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden border border-gray-200 dark:border-zinc-700 shrink-0">
-              {salonProfile.imageUrl ? (
-                <img
-                  src={salonProfile.imageUrl}
-                  alt={salonProfile.salonName}
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                <img
-                  src={profileIcon}
-                  alt="Default Profile"
-                  className="h-full w-full rounded-full object-cover"
-                />
-              )}
+              <img
+                src={profileIcon}
+                alt="User Profile"
+                className="h-full w-full rounded-full object-cover"
+              />
             </div>
 
-            {/* Salon Name */}
+            {/* User Identity - Shows User Name & Role, NOT duplicate salon name */}
             <div className="hidden sm:flex flex-col">
-              <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
-                {salonProfile.salonName || localStorage.getItem('salon_name') || 'Salon Portal'}
+              <span className={`text-xs font-bold truncate max-w-[130px] ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
+                {ownerUser?.name || ownerUser?.fullName || ownerUser?.username || 'Salon Owner'}
               </span>
 
-              <span className={`text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
-                Salon Owner
+              <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                {ownerUser?.role === 'STAFF' ? 'Staff Member' : 'Salon Owner'}
               </span>
             </div>
           </div>

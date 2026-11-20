@@ -5,6 +5,7 @@ import Sidebar from './SideBar';
 import Footer from './Footer';
 import SalonBanBanner from './SalonBanBanner';
 import axiosInstance from '../../../api/axiosInstance';
+import { extractPaletteFromImage, applySalonTheme } from '../../../utils/whiteLabelHelper';
 
 export default function OwnerLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -83,7 +84,20 @@ export default function OwnerLayout() {
     const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
     if (activeSalonId && activeSalonId !== 'SYSTEM' && activeSalonId !== 'null' && !isNaN(Number(activeSalonId))) {
       axiosInstance.get(`/salons/${activeSalonId}`)
-        .then(res => setSalon(res.data))
+        .then(res => {
+          setSalon(res.data);
+          const logo = res.data?.imageUrl || res.data?.logo || res.data?.logoUrl || (res.data?.images && res.data.images[0]);
+          if (logo) {
+            localStorage.setItem('salon_logo', logo);
+            localStorage.setItem('activeSalonLogo', logo);
+            extractPaletteFromImage(logo).then(palette => {
+              if (palette) {
+                localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
+                applySalonTheme(palette);
+              }
+            });
+          }
+        })
         .catch(err => console.warn('Could not fetch active salon info for ban check:', err.message));
     }
   }, []);
