@@ -72,55 +72,55 @@ const Way2SmartGatewayWidget = ({ isDarkMode = false }) => {
   const isCritical = daysRemaining <= 5;
 
   return (
-    <div className={`rounded-3xl border transition-all duration-200 overflow-hidden ${
+    <div className={`rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden ${
       isDarkMode 
-        ? 'bg-zinc-900/90 border-zinc-800/90 shadow-xl' 
-        : 'bg-white border-slate-200/80 shadow-sm shadow-slate-100'
+        ? 'bg-zinc-900/90 border-zinc-800 shadow-xl' 
+        : 'bg-white border-gray-200 shadow-xs'
     }`}>
       {/* Top Header */}
-      <div className={`p-5 sm:p-6 border-b flex flex-wrap items-center justify-between gap-4 ${
-        isDarkMode ? 'border-zinc-800/80 bg-zinc-900/50' : 'border-slate-100 bg-slate-50/50'
+      <div className={`p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 ${
+        isDarkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-gray-100 bg-gray-50/60'
       }`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0 shadow-inner">
-            <MessageSquare className="w-5 h-5" />
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className={`text-sm sm:text-base font-black tracking-tight ${
-                isDarkMode ? 'text-white' : 'text-slate-900'
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className={`text-xs sm:text-sm font-black tracking-tight uppercase ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Way2Smart Messaging & OTP Gateway
               </h3>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 {wa.status || 'CONNECTED'}
               </span>
             </div>
-            <p className={`text-xs mt-0.5 flex items-center gap-2 ${
-              isDarkMode ? 'text-zinc-400' : 'text-slate-500'
+            <p className={`text-[11px] mt-0.5 truncate flex items-center gap-2 ${
+              isDarkMode ? 'text-zinc-400' : 'text-gray-500'
             }`}>
-              <span>Sender ID: <strong className="font-semibold text-slate-700 dark:text-zinc-200">{sms.senderId || 'NEOPCE'}</strong></span>
+              <span>Sender: <strong className="font-semibold text-gray-700 dark:text-zinc-200">{sms.senderId || 'NEOPCE'}</strong></span>
               <span>•</span>
-              <span>WABA: <strong className="font-semibold text-slate-700 dark:text-zinc-200">{wa.verifiedName || 'Neopace Infotech'}</strong> ({wa.displayPhoneNumber || '+91 91195 20396'})</span>
+              <span className="truncate">WABA: <strong className="font-semibold text-gray-700 dark:text-zinc-200">{wa.verifiedName || 'Neopace Infotech'}</strong> ({wa.displayPhoneNumber || '+91 91195 20396'})</span>
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 ml-auto">
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           <button
             type="button"
             onClick={() => fetchStatus(true)}
             disabled={refreshing}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+            className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border ${
               isDarkMode 
                 ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-700' 
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-2xs'
             } ${refreshing ? 'opacity-60 cursor-not-allowed' : ''}`}
             title="Refresh Live Balances"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
             <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
 
@@ -128,86 +128,86 @@ const Way2SmartGatewayWidget = ({ isDarkMode = false }) => {
             href={rechargeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer bg-[#FF0B01] hover:bg-red-700 text-white shadow-sm shadow-red-500/20 hover:scale-[1.02] active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer bg-red-600 hover:bg-red-700 text-white shadow-xs hover:scale-[1.02] active:scale-95"
           >
             <span>Buy Credits</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       </div>
 
       {/* Main Grid: 3 Metric Cards */}
-      <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+      <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
         
         {/* Card 1: WhatsApp Reminders Balance */}
-        <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-          isDarkMode ? 'bg-zinc-800/40 border-zinc-800/80' : 'bg-slate-50/80 border-slate-200/60'
+        <div className={`p-4 rounded-xl sm:rounded-2xl border transition-all ${
+          isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-gray-50/70 border-gray-200/80'
         }`}>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-2">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-zinc-400 mb-1.5">
             <span className="flex items-center gap-1.5">
               <MessageSquare className="w-3.5 h-3.5 text-emerald-500" /> WhatsApp Reminders
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               {wa.qualityRating || 'GREEN'} Quality
             </span>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className={`text-2xl sm:text-3xl font-black ${
-              isDarkMode ? 'text-white' : 'text-slate-900'
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-xl sm:text-2xl font-black ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               {(wa.creditsRemaining || 3450).toLocaleString('en-IN')}
             </span>
-            <span className="text-xs font-bold text-slate-400">credits</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase">credits</span>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-zinc-700/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
-            <span>Approved Templates: <strong>{wa.approvedTemplatesCount || 15}</strong></span>
-            <span>Throughput: <strong className="uppercase">{wa.throughput || 'STANDARD'}</strong></span>
+          <div className="mt-2.5 pt-2.5 border-t border-gray-200/70 dark:border-zinc-700/60 flex items-center justify-between text-[10px] text-gray-500 dark:text-zinc-400">
+            <span>Templates: <strong className="text-gray-700 dark:text-zinc-200">{wa.approvedTemplatesCount || 15}</strong></span>
+            <span>Speed: <strong className="uppercase text-gray-700 dark:text-zinc-200">{wa.throughput || 'STANDARD'}</strong></span>
           </div>
         </div>
 
         {/* Card 2: SMS OTP Gateway Balance */}
-        <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-          isDarkMode ? 'bg-zinc-800/40 border-zinc-800/80' : 'bg-slate-50/80 border-slate-200/60'
+        <div className={`p-4 rounded-xl sm:rounded-2xl border transition-all ${
+          isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-gray-50/70 border-gray-200/80'
         }`}>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-2">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-zinc-400 mb-1.5">
             <span className="flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5 text-blue-500" /> SMS / DLT OTP Balance
+              <Smartphone className="w-3.5 h-3.5 text-blue-500" /> SMS / DLT Balance
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400">
               {sms.status || 'ACTIVE'}
             </span>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className={`text-2xl sm:text-3xl font-black ${
-              isDarkMode ? 'text-white' : 'text-slate-900'
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-xl sm:text-2xl font-black ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               {(sms.creditsRemaining || 1200).toLocaleString('en-IN')}
             </span>
-            <span className="text-xs font-bold text-slate-400">credits</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase">credits</span>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-zinc-700/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
-            <span>Sender: <strong className="font-mono">{sms.senderId || 'NEOPCE'}</strong></span>
-            <span>Route: <strong>DLT High-Priority</strong></span>
+          <div className="mt-2.5 pt-2.5 border-t border-gray-200/70 dark:border-zinc-700/60 flex items-center justify-between text-[10px] text-gray-500 dark:text-zinc-400">
+            <span>Sender: <strong className="font-mono text-gray-700 dark:text-zinc-200">{sms.senderId || 'NEOPCE'}</strong></span>
+            <span>Route: <strong className="text-gray-700 dark:text-zinc-200">DLT Priority</strong></span>
           </div>
         </div>
 
         {/* Card 3: Burn Rate & Runway */}
-        <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+        <div className={`p-4 rounded-xl sm:rounded-2xl border transition-all ${
           isCritical
             ? 'bg-red-500/10 border-red-500/30'
             : isWarning
               ? 'bg-amber-500/10 border-amber-500/30'
-              : isDarkMode ? 'bg-zinc-800/40 border-zinc-800/80' : 'bg-slate-50/80 border-slate-200/60'
+              : isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-gray-50/70 border-gray-200/80'
         }`}>
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-2">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-zinc-400 mb-1.5">
             <span className="flex items-center gap-1.5">
               <Flame className="w-3.5 h-3.5 text-amber-500" /> Estimated Runway
             </span>
-            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${
+            <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
               isCritical
                 ? 'bg-red-500 text-white'
                 : isWarning
@@ -218,55 +218,50 @@ const Way2SmartGatewayWidget = ({ isDarkMode = false }) => {
             </span>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className={`text-2xl sm:text-3xl font-black ${
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-xl sm:text-2xl font-black ${
               isCritical
                 ? 'text-red-500'
                 : isWarning
                   ? 'text-amber-500'
-                  : isDarkMode ? 'text-white' : 'text-slate-900'
+                  : isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               ~{burnRate}
             </span>
-            <span className="text-xs font-bold text-slate-400">msgs / day burn rate</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase">msgs / day burn</span>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-zinc-700/60 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 dark:text-zinc-400">Health State:</span>
+          <div className="mt-2.5 pt-2.5 border-t border-gray-200/70 dark:border-zinc-700/60 flex items-center justify-between text-[10px]">
+            <span className="text-gray-500 dark:text-zinc-400">Status:</span>
             <strong className={`${isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-emerald-500'}`}>
-              {isCritical ? '🚨 CRITICAL (Top Up Now)' : isWarning ? '⚠️ Low Balance' : '🟢 Healthy Runway'}
+              {isCritical ? '🚨 Critical' : isWarning ? '⚠️ Low' : '🟢 Healthy Runway'}
             </strong>
           </div>
         </div>
 
       </div>
 
-      {/* Bottom Smart Recommendation Box */}
-      <div className={`mx-5 sm:mx-6 mb-5 sm:mb-6 p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-200' : 'bg-purple-50 border-purple-200/80 text-purple-950'
+      {/* Slim Smart Recommendation Bar */}
+      <div className={`mx-4 sm:mx-5 mb-4 sm:mb-5 px-3.5 py-2.5 rounded-xl border flex items-center justify-between gap-3 ${
+        isDarkMode ? 'bg-purple-950/20 border-purple-800/40 text-purple-200' : 'bg-purple-50/80 border-purple-200 text-purple-950'
       }`}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-purple-500/20 text-purple-500 shrink-0">
-            <Zap className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="text-xs sm:text-sm font-black tracking-tight">
-              Recommended Purchase: {recommendedCount.toLocaleString('en-IN')} Credits (~₹{recommendedBudget.toLocaleString('en-IN')})
-            </h4>
-            <p className="text-[11px] opacity-80 mt-0.5">
-              Purchasing this recommended pack ensures an uninterrupted 30-day runway for salon appointment reminders & login OTPs.
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="p-1 rounded-lg bg-purple-500/20 text-purple-500 shrink-0">
+            <Zap className="w-3.5 h-3.5" />
+          </span>
+          <p className="text-[11px] truncate">
+            <span className="font-bold">Smart Recommendation:</span> Purchase {recommendedCount.toLocaleString('en-IN')} Credits (~₹{recommendedBudget.toLocaleString('en-IN')}) for uninterrupted 30-day runway.
+          </p>
         </div>
 
         <a
           href={rechargeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="self-start sm:self-auto px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-1.5 shadow-sm shadow-purple-600/30 shrink-0 active:scale-95"
+          className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline shrink-0 flex items-center gap-1"
         >
-          <span>Top Up on Way2Smart</span>
-          <ExternalLink className="w-3.5 h-3.5" />
+          <span>Top Up</span>
+          <ExternalLink className="w-3 h-3" />
         </a>
       </div>
     </div>

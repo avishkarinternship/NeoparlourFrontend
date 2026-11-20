@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './SideBar';
 import Footer from './Footer';
@@ -13,10 +13,12 @@ export default function OwnerLayout() {
     return saved !== null ? saved === 'true' : true;
   });
 
+  const navigate = useNavigate();
   const [salon, setSalon] = useState(null);
   // Detect SEO Admin role
   const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
   const userRole = String(ownerUser?.role || ownerUser?.userRole || (Array.isArray(ownerUser?.roles) ? ownerUser.roles[0] : ownerUser?.roles) || '').toUpperCase();
+  const isAdmin = userRole === 'ADMIN';
   const isSeoAdmin = userRole === 'SEO_ADMIN' || userRole.includes('SEO');
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -119,7 +121,28 @@ export default function OwnerLayout() {
         </div>
       </div>
       
-      <Footer isDarkMode={isDarkMode} />
+      {isAdmin ? (
+        <footer className={`py-3.5 px-6 md:px-8 border-t text-xs transition-colors duration-200 ${
+          isDarkMode ? 'bg-zinc-950 border-zinc-900 text-zinc-500' : 'bg-white border-gray-200 text-gray-500'
+        }`}>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className={`font-black tracking-tight text-[11px] uppercase ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>NeoParlour Admin Engine</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">ALL SYSTEMS LIVE</span>
+            </div>
+            <div className="flex items-center gap-4 text-[11px]">
+              <span>Confidential • Internal Portal</span>
+              <span>•</span>
+              <button onClick={() => navigate('/owner/privacy-policy')} className="hover:underline cursor-pointer">Privacy Policy</button>
+              <span>•</span>
+              <button onClick={() => navigate('/owner/terms-and-conditions')} className="hover:underline cursor-pointer">Terms</button>
+            </div>
+          </div>
+        </footer>
+      ) : (
+        <Footer isDarkMode={isDarkMode} />
+      )}
     </div>
   );
 }
