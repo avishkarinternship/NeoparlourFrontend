@@ -103,11 +103,11 @@ export const getActiveSalon = () => {
 
 /**
  * Injects dynamic CSS rules to customize website colors based on extracted salon logo palette.
- * - Primary: Darkest dominant brand color from logo
- * - Secondary / Light: Lighter accent / theme color from logo
+ * - Primary: Brightest vibrant brand color from logo (e.g. golden, vibrant cyan, coral)
+ * - Secondary / Light: Complementary accent / theme color from logo
  */
 export const applySalonTheme = (palette) => {
-  if (!palette || !palette.primaryDark || typeof document === 'undefined') return;
+  if (!palette || (!palette.primary && !palette.primaryDark && !palette.primaryBright) || typeof document === 'undefined') return;
   try {
     const head = document.head || document.getElementsByTagName('head')[0];
     if (!head) return;
@@ -119,13 +119,15 @@ export const applySalonTheme = (palette) => {
       head.appendChild(styleEl);
     }
 
-    const darkRgb = palette.darkRgb || '255, 11, 1';
-    const lightRgb = palette.lightRgb || '255, 235, 235';
+    const primaryColor = palette.primary || palette.primaryBright || palette.primaryDark;
+    const secondaryColor = palette.themeLight || palette.secondary || primaryColor;
+    const darkRgb = palette.primaryRgb || palette.brightRgb || palette.darkRgb || '255, 11, 1';
+    const lightRgb = palette.lightRgb || palette.secondaryRgb || '255, 235, 235';
 
     styleEl.innerHTML = `
       :root {
-        --salon-primary: ${palette.primaryDark};
-        --salon-secondary: ${palette.themeLight || palette.primaryDark};
+        --salon-primary: ${primaryColor};
+        --salon-secondary: ${secondaryColor};
         --salon-primary-rgb: ${darkRgb};
         --salon-secondary-rgb: ${lightRgb};
         --salon-theme-light-bg: rgba(${darkRgb}, 0.08);
@@ -285,38 +287,47 @@ export const extractPaletteFromImage = async (imageUrl) => {
           const items = Object.values(clusters);
           if (items.length === 0) return finish(null);
 
-          // Score clusters: prefer vibrant brand presence
+          // Score clusters: prefer vibrant brand presence (boost colorful pixels)
           items.forEach(item => {
-            item.score = item.count * (1 + item.sat * 2);
+            item.score = item.count * (1 + item.sat * 2.5);
           });
           items.sort((a, b) => b.score - a.score);
 
           // Take top candidates
           const candidates = items.slice(0, 8);
-          // Darkest candidate = lowest brightness (Primary Colour)
-          candidates.sort((a, b) => a.brightness - b.brightness);
-          const darkCandidate = candidates[0];
 
-          // Lighter candidate = higher brightness with noticeable separation (Theme Colour)
-          let lightCandidate = candidates.find(c => c.brightness >= darkCandidate.brightness + 35) || candidates[candidates.length - 1];
+          // Filter for colorful candidates (ignore non-vibrant off-white/gray background noise)
+          const colorful = candidates.filter(c => c.sat >= 0.15);
+          const pool = colorful.length > 0 ? colorful : candidates;
+
+          // Select brightest candidate among vibrant colors (e.g. radiant golden, bright orange, bright cyan)
+          pool.sort((a, b) => b.brightness - a.brightness);
+          const brightCandidate = pool[0];
+
+          // Secondary/darker accent candidate with noticeable contrast/separation
+          let secondaryCandidate = candidates.find(c => Math.abs(c.brightness - brightCandidate.brightness) >= 30) || candidates[candidates.length - 1];
 
           const toHex = (n) => Math.min(255, Math.max(0, Math.round(n))).toString(16).padStart(2, '0');
-          const darkHex = `#${toHex(darkCandidate.r)}${toHex(darkCandidate.g)}${toHex(darkCandidate.b)}`;
-          let lightHex = `#${toHex(lightCandidate.r)}${toHex(lightCandidate.g)}${toHex(lightCandidate.b)}`;
+          const brightHex = `#${toHex(brightCandidate.r)}${toHex(brightCandidate.g)}${toHex(brightCandidate.b)}`;
+          let secondaryHex = `#${toHex(secondaryCandidate.r)}${toHex(secondaryCandidate.g)}${toHex(secondaryCandidate.b)}`;
 
-          // If dark and light are almost the same shade, generate lighter tint
-          if (Math.abs(darkCandidate.brightness - lightCandidate.brightness) < 30) {
-            const lr = Math.min(255, darkCandidate.r + 65);
-            const lg = Math.min(255, darkCandidate.g + 65);
-            const lb = Math.min(255, darkCandidate.b + 65);
-            lightHex = `#${toHex(lr)}${toHex(lg)}${toHex(lb)}`;
+          // If bright and secondary are almost identical, generate a deeper tone
+          if (Math.abs(brightCandidate.brightness - secondaryCandidate.brightness) < 25) {
+            const dr = Math.max(0, brightCandidate.r - 50);
+            const dg = Math.max(0, brightCandidate.g - 50);
+            const db = Math.max(0, brightCandidate.b - 50);
+            secondaryHex = `#${toHex(dr)}${toHex(dg)}${toHex(db)}`;
           }
 
           const palette = {
-            primaryDark: darkHex,
-            themeLight: lightHex,
-            darkRgb: `${darkCandidate.r}, ${darkCandidate.g}, ${darkCandidate.b}`,
-            lightRgb: `${lightCandidate.r}, ${lightCandidate.g}, ${lightCandidate.b}`
+            primary: brightHex,
+            primaryBright: brightHex,
+            primaryDark: brightHex, // Backward compatibility for components reading primaryDark
+            themeLight: secondaryHex,
+            brightRgb: `${brightCandidate.r}, ${brightCandidate.g}, ${brightCandidate.b}`,
+            primaryRgb: `${brightCandidate.r}, ${brightCandidate.g}, ${brightCandidate.b}`,
+            darkRgb: `${brightCandidate.r}, ${brightCandidate.g}, ${brightCandidate.b}`,
+            lightRgb: `${secondaryCandidate.r}, ${secondaryCandidate.g}, ${secondaryCandidate.b}`
           };
           finish(palette);
         } catch (err) {
