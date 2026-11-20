@@ -118,6 +118,16 @@ const renderAdminIcon = (iconName, className = "w-4 h-4") => {
   }
 };
 
+const getSafeOwnerUser = () => {
+  try {
+    const raw = localStorage.getItem('ownerStaffUser');
+    if (!raw || raw === 'undefined' || raw === 'null') return {};
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+};
+
 export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMode = false, toggleDarkMode }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -161,7 +171,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
     imageUrl: null
   });
 
-  const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+  const ownerUser = getSafeOwnerUser();
   const userRole = String(
     ownerUser?.role || 
     ownerUser?.userRole || 
@@ -216,7 +226,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
   }, [isAdmin, isSeoAdmin]);
 
   const fetchNotifications = async () => {
-    const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    const ownerUser = getSafeOwnerUser();
     if (ownerUser.role === 'ADMIN') {
       setNotifications([]);
       setUnreadCount(0);
@@ -1217,7 +1227,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
         <div 
           className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0" 
           onClick={() => {
-            const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+            const user = getSafeOwnerUser();
             const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
             if (roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT')) {
               navigate('/admin/support-requests');

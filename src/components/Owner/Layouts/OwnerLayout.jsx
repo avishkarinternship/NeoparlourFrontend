@@ -17,7 +17,15 @@ export default function OwnerLayout() {
   const navigate = useNavigate();
   const [salon, setSalon] = useState(null);
   // Detect SEO Admin role
-  const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+  let ownerUser = {};
+  try {
+    const rawUser = localStorage.getItem('ownerStaffUser');
+    if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
+      ownerUser = JSON.parse(rawUser) || {};
+    }
+  } catch (e) {
+    console.warn('Failed to parse ownerStaffUser:', e);
+  }
   const userRole = String(ownerUser?.role || ownerUser?.userRole || (Array.isArray(ownerUser?.roles) ? ownerUser.roles[0] : ownerUser?.roles) || '').toUpperCase();
   const isAdmin = userRole === 'ADMIN';
   const isSeoAdmin = userRole === 'SEO_ADMIN' || userRole.includes('SEO');
