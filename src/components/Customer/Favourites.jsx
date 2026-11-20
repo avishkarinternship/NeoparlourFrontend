@@ -6,6 +6,7 @@ import { switchTenant, fetchDefaultSalon, setDefaultSalon } from '../../redux/sl
 import toast from 'react-hot-toast';
 import { Heart, Trash2, MapPin, Star, Clock, ChevronRight, Crown } from 'lucide-react';
 import SEOFooter from '../common/SEOFooter';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 
 const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -76,6 +77,7 @@ const Favourites = () => {
 
     // Navigate to Salon
     const handleSalonClick = (fav) => {
+        setActiveSalon(fav);
         const salonId = fav.salonId;
         const salonName = fav.salonName || 'Selected Salon';
         

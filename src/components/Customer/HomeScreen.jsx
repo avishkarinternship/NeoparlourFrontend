@@ -15,6 +15,7 @@ import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -802,6 +803,7 @@ const HomeScreen = () => {
     };
 
     const handleSalonSelect = (salon) => {
+        setActiveSalon(salon);
         const salonId = salon.salonId || salon.id;
         const salonName = salon.salonName || salon.name || 'Selected Salon';
         localStorage.setItem('activeSalonId', salonId);
@@ -1470,6 +1472,7 @@ const HomeScreen = () => {
                             </div>
                             <button
                                 onClick={() => {
+                                    setActiveSalon(defaultSalon);
                                     const salonId = defaultSalon.salonId;
                                     const salonName = defaultSalon.salonName || 'Default Salon';
                                     localStorage.setItem('activeSalonId', salonId);

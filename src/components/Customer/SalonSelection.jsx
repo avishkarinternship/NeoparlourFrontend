@@ -16,6 +16,7 @@ import logoIcon from '../../assets/Neoparlour_logo.png';
 import mobileIcon from '../../assets/CustomerRegister/mobile_icon.svg';
 import rightBackground from '../../assets/CustomerRegister/right_background.jpg';
 import SEOFooter from '../common/SEOFooter';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 
 const SalonSelection = () => {
   const dispatch = useDispatch();

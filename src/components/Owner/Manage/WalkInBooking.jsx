@@ -778,8 +778,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
-                title: salon?.name || 'Neoparlour Salon',
-                text: `Book appointment at ${salon?.name || 'Neoparlour'}`,
+                title: salon?.name || salon?.salonName || 'Salon Booking',
+                text: `Book appointment at ${salon?.name || salon?.salonName || 'our salon'}`,
                 url: window.location.href,
             }).catch(console.error);
         } else {

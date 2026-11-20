@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
+import { SalonLogoImage } from '../../../utils/whiteLabelHelper';
 
 const Footer = ({ isDarkMode = false }) => {
     const navigate = useNavigate();
@@ -31,9 +32,11 @@ const Footer = ({ isDarkMode = false }) => {
                                 onClick={() => navigate('/owner/dashboard')} 
                                 className="flex items-center space-x-2.5 cursor-pointer group"
                             >
-                                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                    {activeSalonName.charAt(0).toUpperCase()}
-                                </div>
+                                <SalonLogoImage
+                                    logo={localStorage.getItem('activeSalonLogo') || localStorage.getItem('salon_logo')}
+                                    name={activeSalonName}
+                                    className="w-8 h-8 rounded-xl shadow-xs shrink-0 group-hover:scale-105 transition-transform"
+                                />
                                 <span className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                     {activeSalonName}
                                 </span>

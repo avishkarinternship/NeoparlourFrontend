@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link, useParams } from 'react-router-dom';
 import { Sparkles, MapPin, Star, Scissors, ChevronRight } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import SEOFooter from '../common/SEOFooter';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { switchTenant } from '../../redux/slices/customerSlice';
@@ -188,6 +189,7 @@ export default function SEOSalons() {
 
   // Handle Book Now - Switch tenant and navigate
   const handleBookNow = (salon) => {
+    setActiveSalon(salon);
     const salonId = salon.salonId || salon.id;
     const salonName = salon.salonName || salon.name;
     localStorage.setItem('activeSalonId', salonId);

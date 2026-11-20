@@ -6,6 +6,7 @@ import axiosInstance from '../../api/axiosInstance';
 import { searchSalonsByLocation, switchTenant } from '../../redux/slices/customerSlice';
 import SEOFooter from '../common/SEOFooter';
 import { updateSEOMetadata, injectJSONLD } from '../../utils/seoHelper';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 import toast from 'react-hot-toast';
 
 export default function SalonsSEO() {
@@ -193,6 +194,7 @@ export default function SalonsSEO() {
 
   // Book now handler
   const handleBookNow = (salon) => {
+    setActiveSalon(salon);
     const salonId = salon.salonId || salon.id;
     const salonName = salon.salonName || salon.name;
     localStorage.setItem('activeSalonId', salonId);

@@ -739,7 +739,16 @@ const Sidebar = ({
           <div className={`flex items-center justify-between p-4 border-b lg:hidden flex-shrink-0 ${
             isDarkMode ? 'border-zinc-800' : 'border-gray-100'
           }`}>
-            <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Navigation</span>
+            <div className="flex items-center space-x-2 min-w-0">
+              {activeSalonName ? (
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-xs flex items-center justify-center shrink-0">
+                  {activeSalonName.charAt(0).toUpperCase()}
+                </div>
+              ) : null}
+              <span className={`font-bold text-sm truncate max-w-[150px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {activeSalonName || 'Menu'}
+              </span>
+            </div>
             <button onClick={onClose} className={`p-1 ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -820,6 +829,12 @@ const Sidebar = ({
               isActive: false
             })}
           </div>
+
+          {!isRail && (
+            <div className="pt-2 pb-1 text-center">
+              <span className="text-[10px] font-semibold text-gray-400">Powered by NeoParlour</span>
+            </div>
+          )}
         </div>
       </div>
     );

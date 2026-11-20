@@ -5,6 +5,7 @@ import { MapPin, ChevronRight, Loader2 } from 'lucide-react';
 import searchService from '../../services/searchService';
 import { useDarkMode } from '../../context/DarkModeContext';
 import { isOwnerLoggedIn } from '../../utils/auth';
+import { useActiveSalon } from '../../utils/whiteLabelHelper';
 
 // In-memory cache for fetched city areas across component lifecycle
 const seoAreasCache = new Map();
@@ -690,7 +691,8 @@ function SEOFooterInner() {
   );
 }
 export default function SEOFooter() {
-  if (isOwnerLoggedIn()) {
+  const { isWhiteLabeled } = useActiveSalon();
+  if (isOwnerLoggedIn() || isWhiteLabeled) {
     return null;
   }
   return <SEOFooterInner />;

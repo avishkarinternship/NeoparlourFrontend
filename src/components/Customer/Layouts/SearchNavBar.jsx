@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
-import { Search, MapPin, ChevronDown, Calendar, MousePointerClick, User, Sun, Moon, X, Scissors, Sparkles } from 'lucide-react';
+import { Search, MapPin, ChevronDown, Calendar, MousePointerClick, User, Sun, Moon, X, Scissors, Sparkles, Phone } from 'lucide-react';
 import { fetchCart } from '../../../redux/slices/cartSlice';
 import Drawer from '../Drawer';
 import ProfilePopup from '../ProfilePopup';
@@ -242,7 +242,7 @@ const SearchNavBar = () => {
               onFocus={() => {
                 if (searchQuery.trim()) setShowSearchDropdown(true);
               }}
-              placeholder={t('navbar.search_placeholder', 'Search services, salons...')} 
+              placeholder={isWhiteLabeled && activeSalon?.name ? `Search services at ${activeSalon.name}...` : t('navbar.search_placeholder', 'Search services, salons...')} 
               className={`w-full text-xs sm:text-[13px] outline-none placeholder-[#8D8D8D] bg-transparent ${isDark ? 'text-white' : 'text-gray-900'}`}
             />
             {searchQuery && (
@@ -259,13 +259,13 @@ const SearchNavBar = () => {
             )}
           </div>
           
-          <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
+          <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isWhiteLabeled ? 'hidden' : isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
             <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
             <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
             <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
           </div>
 
-          <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
+          <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isWhiteLabeled ? 'hidden' : isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
             <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
             <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
             <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
@@ -350,6 +350,20 @@ const SearchNavBar = () => {
 
       {/* Session Profiles / Control Triggers Block */}
       <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+
+        {/* Salon Phone Call Button when white-labeled */}
+        {isWhiteLabeled && activeSalon?.phone && (
+          <a
+            href={`tel:${activeSalon.phone}`}
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
+              isDark ? 'border-zinc-800 hover:bg-zinc-800 text-gray-300 hover:text-white' : 'border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+            }`}
+            title={`Call ${activeSalon.name}`}
+          >
+            <Phone className="w-3.5 h-3.5 text-red-500" />
+            <span className="hidden lg:inline">{activeSalon.phone}</span>
+          </a>
+        )}
 
         {/* Language Switcher (Desktop/Tablet only - mobile moved to sidebar menu) */}
         <div className="flex items-center">

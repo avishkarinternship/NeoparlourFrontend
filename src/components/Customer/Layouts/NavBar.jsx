@@ -8,7 +8,7 @@ import PasswordResetModal from '../PasswordResetModal';
 import logoIcon from '../../../assets/Neoparlour_logo.png'; 
 import signupIcon from '../../../assets/Customer/Navbar/signup_icon.svg';
 import loginIcon from '../../../assets/Customer/Navbar/login_icon.svg';
-import { Sparkles, MousePointerClick, User, ShoppingCart, Sun, Moon } from 'lucide-react';
+import { Sparkles, MousePointerClick, User, ShoppingCart, Sun, Moon, MapPin, Phone } from 'lucide-react';
 import { fetchCart } from '../../../redux/slices/cartSlice';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
@@ -124,7 +124,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 md:flex-initial mr-1.5 sm:mr-0">
                     {isWhiteLabeled ? (
                         <div onClick={() => navigate('/salon')} className="flex items-center gap-2 cursor-pointer flex-shrink-0 min-w-0" title={activeSalon.name}>
-                            <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="h-8 w-8 rounded-xl" />
+                            <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl shadow-xs shrink-0" />
                             <div className="flex flex-col min-w-0">
                                 <span className={`text-sm sm:text-base md:text-lg font-black tracking-tight truncate max-w-[130px] sm:max-w-[200px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {activeSalon.name}
@@ -153,17 +153,41 @@ const Navbar = () => {
                         </div>
                     )}
 
-                    <LocationHeaderPill className="flex min-w-0 flex-1 sm:flex-initial max-w-[230px] sm:max-w-[280px] md:max-w-[320px]" />
+                    {!isWhiteLabeled && (
+                        <LocationHeaderPill className="flex min-w-0 flex-1 sm:flex-initial max-w-[230px] sm:max-w-[280px] md:max-w-[320px]" />
+                    )}
                 </div>
 
                 {/* Desktop Navigation Links */}
-                <div className={`hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>{t('navbar.home', 'HOME')}</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>{t('navbar.about', 'ABOUT')}</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>{t('navbar.features', 'FEATURES')}</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>{t('navbar.partner', 'PARTNER WITH US')}</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>{t('navbar.salons', 'SALONS')}</a>
-
+                <div className={`hidden lg:flex items-center gap-6 text-xs font-bold tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {isWhiteLabeled ? (
+                        <>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/salon'); }} className={navLinkClass(['/salon', '/customer/salon'])}>SERVICES & PRICING</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/book-service'); }} className={navLinkClass(['/book-service', '/customer/book-service'])}>BOOK APPOINTMENT</a>
+                            {activeSalon.phone && (
+                                <a href={`tel:${activeSalon.phone}`} className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold transition-colors ${
+                                    isDark ? 'border-zinc-800 hover:bg-zinc-800 text-gray-300 hover:text-white' : 'border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                                }`}>
+                                    <Phone className="w-3.5 h-3.5 text-red-500" />
+                                    <span>{activeSalon.phone}</span>
+                                </a>
+                            )}
+                            {activeSalon.address && (
+                                <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium max-w-[200px] truncate" title={activeSalon.address}>
+                                    <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                    <span className="truncate">{activeSalon.address}</span>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/home'); }} className={navLinkClass(['/customer/home', '/customer/dashboard', '/'])}>{t('navbar.home', 'HOME')}</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/about'); }} className={navLinkClass(['/customer/about', '/about'])}>{t('navbar.about', 'ABOUT')}</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/features'); }} className={navLinkClass(['/customer/features', '/features'])}>{t('navbar.features', 'FEATURES')}</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/partner-with-us'); }} className={navLinkClass(['/customer/partner-with-us'])}>{t('navbar.partner', 'PARTNER WITH US')}</a>
+                            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/customer/salons'); }} className={navLinkClass(['/customer/salons'])}>{t('navbar.salons', 'SALONS')}</a>
+                        </>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
