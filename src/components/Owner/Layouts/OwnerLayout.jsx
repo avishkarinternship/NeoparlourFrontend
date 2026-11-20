@@ -118,7 +118,8 @@ export default function OwnerLayout() {
         onToggleSidebar={toggleSidebar} 
         isSidebarOpen={isDesktopSidebarOpen}
         isDarkMode={isDarkMode} 
-        toggleDarkMode={toggleDarkMode} 
+        toggleDarkMode={toggleDarkMode}
+        salon={salon} 
       />
       
       <div className="flex flex-1 relative min-h-0">

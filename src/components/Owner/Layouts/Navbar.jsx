@@ -16,7 +16,7 @@ import profileIcon from '../../../assets/Owner/profile.jpg';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import SeoAdminProfileModal from './SeoAdminProfileModal';
-import { extractPaletteFromImage, applySalonTheme } from '../../../utils/whiteLabelHelper';
+import { extractPaletteFromImage, applySalonTheme, SalonLogoImage } from '../../../utils/whiteLabelHelper';
 
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
   const [src, setSrc] = useState(null);
@@ -128,7 +128,7 @@ const getSafeOwnerUser = () => {
   }
 };
 
-export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMode = false, toggleDarkMode }) {
+export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMode = false, toggleDarkMode, salon = null }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,10 +166,23 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
   });
 
   const [searching, setSearching] = useState(false);
-  const [salonProfile, setSalonProfile] = useState({
-    salonName: "",
-    imageUrl: null
-  });
+  const [salonProfile, setSalonProfile] = useState(() => ({
+    salonName: salon?.salonName || salon?.name || localStorage.getItem('salon_name') || localStorage.getItem('activeSalonName') || "",
+    imageUrl: salon?.imageUrl || salon?.logo || salon?.logoUrl || localStorage.getItem('activeSalonLogo') || localStorage.getItem('salon_logo') || null
+  }));
+
+  useEffect(() => {
+    if (salon) {
+      const resolvedLogo = salon.imageUrl || salon.logo || salon.logoUrl || (salon.images && salon.images[0]) || null;
+      const resolvedName = salon.salonName || salon.name || '';
+      if (resolvedName || resolvedLogo) {
+        setSalonProfile(prev => ({
+          salonName: resolvedName || prev.salonName,
+          imageUrl: resolvedLogo || prev.imageUrl
+        }));
+      }
+    }
+  }, [salon]);
 
   const ownerUser = getSafeOwnerUser();
   const userRole = String(
@@ -1240,11 +1253,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
         >
           {!isAdmin && !isSeoAdmin && !isSupport ? (
             <>
-              <AsyncImage
-                imagePath={salonProfile.imageUrl}
-                alt={salonProfile.salonName || 'Salon'}
-                className="h-8 w-8 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-zinc-700 shadow-xs"
-                fallbackText={salonProfile.salonName || 'S'}
+              <SalonLogoImage
+                logo={salonProfile.imageUrl || localStorage.getItem('activeSalonLogo') || localStorage.getItem('salon_logo')}
+                name={salonProfile.salonName || localStorage.getItem('salon_name') || 'Salon'}
+                className="h-8 w-8 rounded-xl shrink-0"
               />
               <div className={`min-w-0 ${isSidebarOpen ? 'hidden sm:flex flex-col' : 'hidden'}`}>
                 <span className="font-extrabold text-sm tracking-tight truncate max-w-[140px]">
@@ -1560,15 +1572,31 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
               />
             </div>
 
-            {/* User Identity - Shows User Name & Role, NOT duplicate salon name */}
-            <div className="hidden sm:flex flex-col">
-              <span className={`text-xs font-bold truncate max-w-[130px] ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
-                {ownerUser?.name || ownerUser?.fullName || ownerUser?.username || 'Salon Owner'}
-              </span>
-
-              <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
-                {ownerUser?.role === 'STAFF' ? 'Staff Member' : 'Salon Owner'}
-              </span>
+            {/* User Identity on Right: NO duplicate salon name */}
+            <div className="hidden sm:flex flex-col text-left">
+              {ownerUser?.name && 
+               ownerUser.name.trim().toLowerCase() !== (salonProfile.salonName || '').trim().toLowerCase() &&
+               ownerUser.name.trim().toLowerCase() !== (localStorage.getItem('salon_name') || '').trim().toLowerCase() &&
+               ownerUser.name.trim().toLowerCase() !== 'neoparlour salon' &&
+               ownerUser.name.trim().toLowerCase() !== 'neoparlour' ? (
+                <>
+                  <span className={`text-xs font-bold truncate max-w-[130px] ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
+                    {ownerUser.name}
+                  </span>
+                  <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    {ownerUser?.role === 'STAFF' ? 'Staff' : 'Salon Owner'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
+                    {ownerUser?.role === 'STAFF' ? 'Staff Member' : 'Salon Owner'}
+                  </span>
+                  <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Account
+                  </span>
+                </>
+              )}
             </div>
           </div>
         )}
