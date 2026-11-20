@@ -4,6 +4,9 @@ import logoIcon from '../../../assets/Neoparlour_logo.png';
 
 const Footer = ({ isDarkMode = false }) => {
     const navigate = useNavigate();
+    const ownerUser = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
+    const activeSalonName = localStorage.getItem('salon_name') || localStorage.getItem('activeSalonName') || ownerUser?.salonName || '';
+    const isSystemAdmin = ownerUser?.role === 'ADMIN';
 
     const handleWhatsApp = () => {
         window.open('https://wa.me/917062888812?text=Hello%20NeoParlour%20Support,%20I%20need%20assistance.', '_blank', 'noopener,noreferrer');
@@ -20,24 +23,58 @@ const Footer = ({ isDarkMode = false }) => {
             {/* Main Footer Container */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 items-start">
 
-                {/* Identity Column */}
+                {/* Identity Column - White-labeled for Salon Owner */}
                 <div className="md:col-span-4 flex flex-col items-start space-y-2">
-                    <div 
-                        onClick={() => navigate('/owner/dashboard')} 
-                        className="flex items-center space-x-2.5 cursor-pointer group"
-                    >
-                        <img
-                            src={logoIcon}
-                            alt="NeoParlour Logo"
-                            className="w-8 h-8 object-contain flex-shrink-0 group-hover:scale-105 transition-transform"
-                        />
-                        <span className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            NeoParlour
-                        </span>
-                    </div>
-                    <p className={`text-xs font-medium leading-relaxed max-w-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
-                        All-in-one salon operating system for appointments, inventory, staff payouts, and verified customer growth.
-                    </p>
+                    {!isSystemAdmin && activeSalonName ? (
+                        <>
+                            <div 
+                                onClick={() => navigate('/owner/dashboard')} 
+                                className="flex items-center space-x-2.5 cursor-pointer group"
+                            >
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                    {activeSalonName.charAt(0).toUpperCase()}
+                                </div>
+                                <span className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                    {activeSalonName}
+                                </span>
+                            </div>
+                            <p className={`text-xs font-medium leading-relaxed max-w-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+                                Dedicated operating portal for {activeSalonName}. Manage staff, appointments, client retention and revenue.
+                            </p>
+                            {/* Prominent Powered by NeoParlour Badge */}
+                            <div className="flex items-center gap-1.5 pt-2">
+                                <span className="text-xs font-medium text-gray-400">Platform:</span>
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 shadow-xs">
+                                    <img src={logoIcon} alt="NeoParlour" className="w-3.5 h-3.5 object-contain" />
+                                    <span className="text-xs font-black text-[#ff0b01]">Powered by NeoParlour</span>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div 
+                                onClick={() => navigate('/owner/dashboard')} 
+                                className="flex items-center space-x-2.5 cursor-pointer group"
+                            >
+                                <img
+                                    src={logoIcon}
+                                    alt="NeoParlour Logo"
+                                    className="w-8 h-8 object-contain flex-shrink-0 group-hover:scale-105 transition-transform"
+                                />
+                                <span className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                    NeoParlour
+                                </span>
+                            </div>
+                            <p className={`text-xs font-medium leading-relaxed max-w-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+                                All-in-one salon operating system for appointments, inventory, staff payouts, and verified customer growth.
+                            </p>
+                            <div className="flex items-center gap-1.5 pt-1">
+                                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-xs font-bold text-[#ff0b01]">
+                                    <span>Enterprise Salon OS</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Column 1: Company Info */}
@@ -138,11 +175,17 @@ const Footer = ({ isDarkMode = false }) => {
             {/* Bottom Separator */}
             <hr className={`my-8 max-w-7xl mx-auto ${isDarkMode ? 'border-zinc-700/60' : 'border-gray-400/60'}`} />
 
-            {/* Copyright and Social Media Icons */}
+            {/* Copyright and Social Media Icons - White-labeled */}
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>
-                    copyright@neopaceinfotech.com
-                </span>
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                    <span className={`uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+                        © {new Date().getFullYear()} {!isSystemAdmin && activeSalonName ? activeSalonName : 'NeoParlour'}. All rights reserved.
+                    </span>
+                    <span className="text-gray-400">•</span>
+                    <span className="flex items-center gap-1 text-gray-500 font-semibold lowercase">
+                        powered by <strong className="text-red-600 font-black">NeoParlour</strong>
+                    </span>
+                </div>
 
                 <div className="flex items-center gap-4">
                     {/* Instagram */}

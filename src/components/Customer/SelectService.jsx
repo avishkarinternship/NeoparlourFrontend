@@ -27,6 +27,7 @@ import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 
 // Imported Layout Components
 import BillDetails from './BillDetails.jsx';
@@ -407,6 +408,7 @@ const SelectService = () => {
             try {
                 const salonRes = await axiosInstance.get(`/salons/${activeSalonId}`);
                 setSalon(salonRes.data);
+                setActiveSalon(salonRes.data);
             } catch (error) {
                 console.error("Error loading salon details:", error);
             } finally {

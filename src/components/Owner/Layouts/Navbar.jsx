@@ -1153,7 +1153,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
-      {/* Left Logo Area - Perfectly aligned with sidebar width */}
+      {/* Left Logo Area - White-labeled for Salon Owner & Staff */}
       <div className={`h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
         isSidebarOpen 
           ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-start' 
@@ -1175,16 +1175,43 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
             }
           }}
         >
-          <img
-            src={logoIcon}
-            alt="NeoParlour"
-            className="h-8 w-8 object-contain shrink-0"
-          />
-          <span className={`font-extrabold text-base tracking-tight truncate ${
-            isSidebarOpen ? 'hidden sm:inline-block' : 'hidden'
-          }`}>
-            NeoParlour
-          </span>
+          {!isAdmin && !isSeoAdmin && !isSupport ? (
+            <>
+              {salonProfile.imageUrl ? (
+                <img
+                  src={salonProfile.imageUrl}
+                  alt={salonProfile.salonName || 'Salon'}
+                  className="h-8 w-8 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-zinc-700 shadow-xs"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0">
+                  {salonProfile.salonName ? salonProfile.salonName.charAt(0).toUpperCase() : 'S'}
+                </div>
+              )}
+              <div className={`min-w-0 ${isSidebarOpen ? 'hidden sm:flex flex-col' : 'hidden'}`}>
+                <span className="font-extrabold text-sm tracking-tight truncate max-w-[140px]">
+                  {salonProfile.salonName || localStorage.getItem('salon_name') || 'Salon Portal'}
+                </span>
+                <span className="text-[9px] font-bold text-gray-400 tracking-wider uppercase -mt-0.5">
+                  Management
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <img
+                src={logoIcon}
+                alt="NeoParlour"
+                className="h-8 w-8 object-contain shrink-0"
+              />
+              <span className={`font-extrabold text-base tracking-tight truncate ${
+                isSidebarOpen ? 'hidden sm:inline-block' : 'hidden'
+              }`}>
+                NeoParlour
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -1487,7 +1514,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
             {/* Salon Name */}
             <div className="hidden sm:flex flex-col">
               <span className={`text-xs font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>
-                {salonProfile.salonName || "NeoParlour"}
+                {salonProfile.salonName || localStorage.getItem('salon_name') || 'Salon Portal'}
               </span>
 
               <span className={`text-[10px] ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>

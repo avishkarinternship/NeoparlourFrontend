@@ -25,6 +25,7 @@ import {
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import { updateSEOMetadata, injectJSONLD, generateSalonSlug } from '../../utils/seoHelper';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
 import { calculateDistanceKm, formatDistance } from '../../services/searchService';
@@ -386,6 +387,7 @@ const SalonPage = () => {
                     const id = matched.salonId || matched.id;
                     localStorage.setItem('activeSalonId', id);
                     localStorage.setItem('activeSalonName', matched.salonName || matched.name);
+                    setActiveSalon(matched);
                     setResolvedSalonId(id);
                 } else {
                     toast.error('Salon not found. Redirecting...');
@@ -411,6 +413,7 @@ const SalonPage = () => {
                 const salonRes = await axiosInstance.get(`/salons/${resolvedSalonId}`);
                 const salonData = salonRes.data;
                 setSalon(salonData);
+                setActiveSalon(salonData);
 
                 // Dynamically update SEO metadata with exact salon name & location
                 const salonName = salonData.salonName || salonData.name || 'Salon';

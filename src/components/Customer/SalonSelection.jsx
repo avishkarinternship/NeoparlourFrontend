@@ -192,6 +192,7 @@ const SalonSelection = () => {
 
     localStorage.setItem('activeSalonId', salonId);
     localStorage.setItem('activeSalonName', salonName);
+    setActiveSalon(salon);
 
     if (!token) {
       navigate('/salon');

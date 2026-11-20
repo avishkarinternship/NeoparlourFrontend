@@ -140,6 +140,7 @@ const Sidebar = ({
     const isSupportEngineer = roleStr === 'SUPPORT_ENGINEER' || roleStr.includes('SUPPORT');
     const isSeoAdmin = roleStr === 'SEO_ADMIN' || roleStr.includes('SEO');
     const isRail = isCollapsed && !isMobile;
+    const activeSalonName = localStorage.getItem('salon_name') || localStorage.getItem('activeSalonName') || user?.salonName || '';
 
     const renderNavButton = ({
       path,
@@ -430,7 +431,7 @@ const Sidebar = ({
             <div className={`flex items-center justify-between p-4 border-b lg:hidden flex-shrink-0 ${
               isDarkMode ? 'border-zinc-800' : 'border-gray-100'
             }`}>
-              <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Navigation</span>
+              <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{activeSalonName || 'Salon Menu'}</span>
               <button onClick={onClose} className={`p-1 ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

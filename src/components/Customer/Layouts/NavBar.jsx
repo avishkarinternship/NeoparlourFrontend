@@ -13,6 +13,7 @@ import { fetchCart } from '../../../redux/slices/cartSlice';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { useActiveSalon, getSalonImageSrc } from '../../../utils/whiteLabelHelper';
 import LocationHeaderPill from '../../location/LocationHeaderPill';
 import AddressDrawer from '../../location/AddressDrawer';
 import LocationPickerModal from '../../location/LocationPickerModal';
@@ -30,6 +31,7 @@ const Navbar = () => {
     const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
     const { isPickerOpen, activeLocation } = useSelector((state) => state.location);
     const { isDark, toggleDark } = useDarkMode();
+    const { salon: activeSalon, isWhiteLabeled, clearActiveSalon } = useActiveSalon();
 
     const handleConfirmLocation = (loc) => {
         dispatch(setActiveLocation(loc));
@@ -118,12 +120,49 @@ const Navbar = () => {
                 isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'
             }`}>
                 
-                {/* Logo & Location Section */}
+                {/* Logo & Location Section - White-labeled when salon selected */}
                 <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 md:flex-initial mr-1.5 sm:mr-0">
-                    <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0" title="NeoParlour">
-                        <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
-                        <span className={`text-base sm:text-xl font-black tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
-                    </div>
+                    {isWhiteLabeled ? (
+                        <div onClick={() => navigate('/salon')} className="flex items-center gap-2 cursor-pointer flex-shrink-0 min-w-0" title={activeSalon.name}>
+                            {activeSalon.logo ? (
+                                <img
+                                    src={getSalonImageSrc(activeSalon.logo)}
+                                    alt={activeSalon.name}
+                                    className="h-8 w-8 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
+                            ) : (
+                                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-sm shrink-0">
+                                    {activeSalon.name ? activeSalon.name.charAt(0).toUpperCase() : 'S'}
+                                </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                                <span className={`text-sm sm:text-base md:text-lg font-black tracking-tight truncate max-w-[130px] sm:max-w-[200px] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {activeSalon.name}
+                                </span>
+                                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                    <span className="truncate max-w-[100px] sm:max-w-[150px]">{activeSalon.address || 'Salon Portal'}</span>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            clearActiveSalon();
+                                            navigate('/customer/salons');
+                                        }}
+                                        className="text-[9px] font-bold text-red-500 hover:text-red-600 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 uppercase"
+                                        title="Explore all salons"
+                                    >
+                                        All Salons
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div onClick={() => navigate('/')} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer flex-shrink-0" title="NeoParlour">
+                            <img src={logoIcon} alt="NeoParlour" className="h-7 sm:h-8 object-contain" />
+                            <span className={`text-base sm:text-xl font-black tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-gray-900'}`}>NeoParlour</span>
+                        </div>
+                    )}
 
                     <LocationHeaderPill className="flex min-w-0 flex-1 sm:flex-initial max-w-[230px] sm:max-w-[280px] md:max-w-[320px]" />
                 </div>

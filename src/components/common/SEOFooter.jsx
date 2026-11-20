@@ -670,6 +670,11 @@ function SEOFooterInner() {
         </div>
 
 
+      
+        {/* Powered by NeoParlour Footer Attribution */}
+        <div className={`mt-4 pt-3 border-t text-center text-xs font-semibold ${isDark ? 'border-zinc-800 text-zinc-500' : 'border-gray-200 text-gray-500'}`}>
+          <span>Powered by <strong className="text-red-600 font-black">NeoParlour</strong> • India's Leading Salon Network</span>
+        </div>
       </div>
 
       <style>{`

@@ -11,6 +11,7 @@ import { useDarkMode } from '../../../context/DarkModeContext';
 import LanguageSwitcher from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../../api/axiosInstance';
+import { useActiveSalon, getSalonImageSrc } from '../../../utils/whiteLabelHelper';
 
 const DEFAULT_SERVICES = [
   { id: 101, name: 'Hair Cut', category: 'Hair Services', duration: 10, price: 250 },
@@ -35,6 +36,7 @@ const SearchNavBar = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
   const { isDark, toggleDark } = useDarkMode();
+  const { salon: activeSalon, isWhiteLabeled, clearActiveSalon } = useActiveSalon();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -182,16 +184,60 @@ const SearchNavBar = () => {
         mounted ? 'opacity-100' : 'opacity-0'
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
-      {/* Brand Vector Identity Block */}
-      <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
-        <div className="text-[#EF3E23] flex items-center justify-center flex-shrink-0">
-          <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fillRule="evenodd" clipRule="evenodd" d="M50.8159 0.709961C51.5247 5.9279 50.2046 10.2438 46.635 13.6787C42.6288 17.5384 38.4736 21.2409 34.4058 25.0377C33.8973 25.5096 33.6303 25.5411 33.1526 25.0167C31.9918 23.7423 30.8002 22.4994 29.5573 21.3143C28.9769 20.7584 29.0797 20.4699 29.619 19.9822C36.0392 14.1665 42.4388 8.32455 48.8435 2.4878C49.4393 1.94765 50.0352 1.41793 50.821 0.71521L50.8159 0.709961Z" fill="#878787"/>
-            <path fillRule="evenodd" clipRule="evenodd" d="M45.0678 28.0037C41.2002 25.6019 36.5264 25.6071 32.7513 27.9932C25.3244 20.4993 17.9181 12.995 10.5272 5.46437C8.79117 3.6866 7.13224 1.83021 5.43217 0C5.16509 0.298917 5.08808 0.340875 5.07781 0.398561C4.24062 5.39624 4.98529 9.97435 8.60628 13.7344C10.5015 15.701 12.479 17.5889 14.4101 19.5187C17.0347 22.1303 19.6593 24.7419 22.2839 27.3535C25.2423 30.6783 27.9747 33.7461 30.8201 36.9398C31.1642 36.085 31.3697 35.4819 31.6368 34.9155C33.5783 30.8513 38.4268 29.1418 42.4124 31.1031C45.2989 32.5243 47.1582 35.5921 46.9065 38.791C46.6446 42.1577 44.9343 44.6225 41.7961 45.8391C38.5655 47.0872 35.5146 46.4737 33.1519 43.9145C29.0327 39.457 25.0934 34.8265 21.0256 30.3165C18.3702 27.364 14.9802 25.927 11.0305 26.2994C5.66839 26.8081 1.59038 30.458 0.337159 35.571C-0.859562 40.4533 1.19996 45.6871 5.39619 48.4141C9.84409 51.3088 15.119 51.1304 19.4847 47.7794C20.5839 46.9299 21.3132 46.7569 22.0374 48.0103C22.0374 48.3207 26.3312 50.5694 29.3512 50.2285C26.1463 46.6048 23.1724 43.2486 20.0959 39.7612C19.7518 40.637 19.5514 41.2558 19.2741 42.1031C17.3531 45.7657 12.8847 47.4386 8.87851 45.7447C5.05208 44.1243 3.09517 39.6668 4.47165 35.6917C6.44907 29.9442 13.8144 28.4233 18.0209 32.9909C22.0887 37.4013 25.946 42.0057 29.9984 46.4318C33.229 50.9611 37.2917 51.1881 41.9348 49.9924C46.7679 48.7496 50.3323 44.7326 50.8356 39.9499C51.3749 34.8159 49.4746 30.7359 45.0729 28.0037H45.0678ZM27.1375 28.6645C26.362 28.7432 25.6121 27.9776 25.5915 27.1647C25.5813 26.3729 26.3208 25.6176 27.0964 25.6281C27.8874 25.6386 28.6424 26.399 28.5757 27.1909C28.5038 28.0666 27.9799 28.5806 27.1375 28.6645Z" fill="#EF3E23"/>
-          </svg>
+      {/* Brand Vector Identity Block - White-labeled when salon selected */}
+      {isWhiteLabeled ? (
+        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer flex-shrink-0 min-w-0" onClick={() => navigate('/salon')}>
+          {activeSalon.logo ? (
+            <img 
+              src={getSalonImageSrc(activeSalon.logo)} 
+              alt={activeSalon.name} 
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          ) : (
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white font-black text-sm flex items-center justify-center shadow-sm shrink-0">
+              {activeSalon.name ? activeSalon.name.charAt(0).toUpperCase() : <Scissors className="w-4 h-4" />}
+            </div>
+          )}
+          <div className="flex flex-col min-w-0">
+            <span className={`text-sm sm:text-base md:text-lg font-black tracking-tight truncate max-w-[130px] sm:max-w-[200px] md:max-w-xs ${isDark ? 'text-white' : 'text-[#242424]'}`}>
+              {activeSalon.name}
+            </span>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold text-gray-400 truncate">
+              {activeSalon.address ? (
+                <span className="truncate max-w-[120px] sm:max-w-[180px] flex items-center gap-0.5">
+                  <MapPin className="w-2.5 h-2.5 shrink-0 text-red-500" />
+                  {activeSalon.address}
+                </span>
+              ) : (
+                <span className="text-red-500 font-bold">Salon Portal</span>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearActiveSalon();
+                  navigate('/customer/salons');
+                }}
+                className="hidden sm:inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-500 hover:text-red-500 transition-colors ml-1 cursor-pointer"
+                title="Explore and switch to another salon"
+              >
+                All Salons
+              </button>
+            </div>
+          </div>
         </div>
-        <span className={`text-base sm:text-[24px] font-bold tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-[#242424]'}`}>NeoParlour</span>
-      </div>
+      ) : (
+        <div className="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
+          <div className="text-[#EF3E23] flex items-center justify-center flex-shrink-0">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" clipRule="evenodd" d="M50.8159 0.709961C51.5247 5.9279 50.2046 10.2438 46.635 13.6787C42.6288 17.5384 38.4736 21.2409 34.4058 25.0377C33.8973 25.5096 33.6303 25.5411 33.1526 25.0167C31.9918 23.7423 30.8002 22.4994 29.5573 21.3143C28.9769 20.7584 29.0797 20.4699 29.619 19.9822C36.0392 14.1665 42.4388 8.32455 48.8435 2.4878C49.4393 1.94765 50.0352 1.41793 50.821 0.71521L50.8159 0.709961Z" fill="#878787"/>
+              <path fillRule="evenodd" clipRule="evenodd" d="M45.0678 28.0037C41.2002 25.6019 36.5264 25.6071 32.7513 27.9932C25.3244 20.4993 17.9181 12.995 10.5272 5.46437C8.79117 3.6866 7.13224 1.83021 5.43217 0C5.16509 0.298917 5.08808 0.340875 5.07781 0.398561C4.24062 5.39624 4.98529 9.97435 8.60628 13.7344C10.5015 15.701 12.479 17.5889 14.4101 19.5187C17.0347 22.1303 19.6593 24.7419 22.2839 27.3535C25.2423 30.6783 27.9747 33.7461 30.8201 36.9398C31.1642 36.085 31.3697 35.4819 31.6368 34.9155C33.5783 30.8513 38.4268 29.1418 42.4124 31.1031C45.2989 32.5243 47.1582 35.5921 46.9065 38.791C46.6446 42.1577 44.9343 44.6225 41.7961 45.8391C38.5655 47.0872 35.5146 46.4737 33.1519 43.9145C29.0327 39.457 25.0934 34.8265 21.0256 30.3165C18.3702 27.364 14.9802 25.927 11.0305 26.2994C5.66839 26.8081 1.59038 30.458 0.337159 35.571C-0.859562 40.4533 1.19996 45.6871 5.39619 48.4141C9.84409 51.3088 15.119 51.1304 19.4847 47.7794C20.5839 46.9299 21.3132 46.7569 22.0374 48.0103C22.0374 48.3207 26.3312 50.5694 29.3512 50.2285C26.1463 46.6048 23.1724 43.2486 20.0959 39.7612C19.7518 40.637 19.5514 41.2558 19.2741 42.1031C17.3531 45.7657 12.8847 47.4386 8.87851 45.7447C5.05208 44.1243 3.09517 39.6668 4.47165 35.6917C6.44907 29.9442 13.8144 28.4233 18.0209 32.9909C22.0887 37.4013 25.946 42.0057 29.9984 46.4318C33.229 50.9611 37.2917 51.1881 41.9348 49.9924C46.7679 48.7496 50.3323 44.7326 50.8356 39.9499C51.3749 34.8159 49.4746 30.7359 45.0729 28.0037H45.0678ZM27.1375 28.6645C26.362 28.7432 25.6121 27.9776 25.5915 27.1647C25.5813 26.3729 26.3208 25.6176 27.0964 25.6281C27.8874 25.6386 28.6424 26.399 28.5757 27.1909C28.5038 28.0666 27.9799 28.5806 27.1375 28.6645Z" fill="#EF3E23"/>
+            </svg>
+          </div>
+          <span className={`text-base sm:text-[24px] font-bold tracking-tight hidden sm:inline ${isDark ? 'text-white' : 'text-[#242424]'}`}>NeoParlour</span>
+        </div>
+      )}
 
       {/* Global Hub Navigation Search & Filter Bar Group */}
       <div ref={searchContainerRef} className="relative flex-1 max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-2xl mx-1.5 sm:mx-4">

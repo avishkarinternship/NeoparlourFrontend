@@ -1,0 +1,188 @@
+import { useState, useEffect } from 'react';
+import axiosInstance from '../api/axiosInstance';
+
+export const WHITE_LABEL_EVENT = 'np_active_salon_changed';
+
+/**
+ * Resolves full URL for salon logos and images.
+ */
+export const getSalonImageSrc = (imageUrl, fallbackImg = '') => {
+  if (!imageUrl) return fallbackImg;
+  if (
+    imageUrl.startsWith('http://') ||
+    imageUrl.startsWith('https://') ||
+    imageUrl.startsWith('blob:') ||
+    imageUrl.startsWith('data:')
+  ) {
+    return imageUrl;
+  }
+  const base = axiosInstance?.defaults?.baseURL || 'https://sb.neoparlour.com/api';
+  let cleanedUrl = imageUrl;
+  if (cleanedUrl.startsWith('/api')) {
+    const domain = base.replace(/\/api$/, '');
+    return `${domain}${cleanedUrl}`;
+  }
+  if (cleanedUrl.startsWith('api')) {
+    const domain = base.replace(/\/api$/, '');
+    return `${domain}/${cleanedUrl}`;
+  }
+  return `${base}${cleanedUrl.startsWith('/') ? '' : '/'}${cleanedUrl}`;
+};
+
+/**
+ * Normalizes and returns the currently active salon from localStorage.
+ */
+export const getActiveSalon = () => {
+  try {
+    const id = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '';
+    const name = localStorage.getItem('activeSalonName') || localStorage.getItem('salon_name') || '';
+    const logo = localStorage.getItem('activeSalonLogo') || localStorage.getItem('salon_logo') || '';
+    const address = localStorage.getItem('activeSalonAddress') || localStorage.getItem('salon_address') || '';
+    const phone = localStorage.getItem('activeSalonPhone') || localStorage.getItem('salon_phone') || '';
+    const rating = localStorage.getItem('activeSalonRating') || '';
+
+    // If activeSalonInfo JSON is present, merge it
+    const infoRaw = localStorage.getItem('activeSalonInfo');
+    const info = infoRaw ? JSON.parse(infoRaw) : {};
+
+    const effectiveId = id || info.id || info.salonId || '';
+    const effectiveName = name || info.name || info.salonName || '';
+    const effectiveLogo = logo || info.logo || info.imageUrl || info.logoUrl || '';
+    const effectiveAddress = address || info.address || info.cityName || '';
+    const effectivePhone = phone || info.phone || info.contactNumber || '';
+    const effectiveRating = rating || info.rating || info.avgRating || '';
+
+    const isWhiteLabeled = Boolean(
+      effectiveId &&
+      effectiveId !== 'SYSTEM' &&
+      effectiveId !== 'null' &&
+      effectiveId !== 'undefined' &&
+      effectiveName &&
+      effectiveName !== 'null' &&
+      effectiveName !== 'undefined'
+    );
+
+    return {
+      id: effectiveId,
+      name: effectiveName,
+      logo: effectiveLogo,
+      address: effectiveAddress,
+      phone: effectivePhone,
+      rating: effectiveRating,
+      isWhiteLabeled
+    };
+  } catch (err) {
+    console.error('Error reading active salon from localStorage:', err);
+    return {
+      id: '',
+      name: '',
+      logo: '',
+      address: '',
+      phone: '',
+      rating: '',
+      isWhiteLabeled: false
+    };
+  }
+};
+
+/**
+ * Updates localStorage and dispatches event so all components react immediately.
+ */
+export const setActiveSalon = (salonData) => {
+  if (!salonData) return;
+  try {
+    const id = salonData.salonId || salonData.id || '';
+    const name = salonData.salonName || salonData.name || '';
+    const logo = salonData.logo || salonData.logoUrl || salonData.imageUrl || (salonData.images && salonData.images[0]) || '';
+    const address = salonData.address 
+      ? `${salonData.address}${salonData.cityName ? ', ' + salonData.cityName : ''}` 
+      : (salonData.cityName || salonData.areaName || '');
+    const phone = salonData.contactNumber || salonData.phone || '';
+    const rating = salonData.rating || salonData.avgRating || '';
+
+    if (id) {
+      localStorage.setItem('activeSalonId', String(id));
+      localStorage.setItem('salon_id', String(id));
+    }
+    if (name) {
+      localStorage.setItem('activeSalonName', String(name));
+      localStorage.setItem('salon_name', String(name));
+    }
+    if (logo) {
+      localStorage.setItem('activeSalonLogo', String(logo));
+      localStorage.setItem('salon_logo', String(logo));
+    }
+    if (address) {
+      localStorage.setItem('activeSalonAddress', String(address));
+      localStorage.setItem('salon_address', String(address));
+    }
+    if (phone) {
+      localStorage.setItem('activeSalonPhone', String(phone));
+      localStorage.setItem('salon_phone', String(phone));
+    }
+    if (rating) {
+      localStorage.setItem('activeSalonRating', String(rating));
+    }
+
+    const info = { id, name, logo, address, phone, rating };
+    localStorage.setItem('activeSalonInfo', JSON.stringify(info));
+
+    window.dispatchEvent(new CustomEvent(WHITE_LABEL_EVENT, { detail: info }));
+    window.dispatchEvent(new Event('activeSalonChanged'));
+  } catch (err) {
+    console.error('Error setting active salon in localStorage:', err);
+  }
+};
+
+/**
+ * Clears active salon and resets to marketplace/directory view.
+ */
+export const clearActiveSalon = () => {
+  try {
+    localStorage.removeItem('activeSalonId');
+    localStorage.removeItem('activeSalonName');
+    localStorage.removeItem('activeSalonLogo');
+    localStorage.removeItem('activeSalonAddress');
+    localStorage.removeItem('activeSalonPhone');
+    localStorage.removeItem('activeSalonRating');
+    localStorage.removeItem('activeSalonInfo');
+
+    window.dispatchEvent(new CustomEvent(WHITE_LABEL_EVENT, { detail: null }));
+    window.dispatchEvent(new Event('activeSalonChanged'));
+  } catch (err) {
+    console.error('Error clearing active salon:', err);
+  }
+};
+
+/**
+ * React hook to subscribe to white-labeled active salon updates.
+ */
+export const useActiveSalon = () => {
+  const [activeSalon, setActiveSalonState] = useState(getActiveSalon);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setActiveSalonState(getActiveSalon());
+    };
+
+    window.addEventListener(WHITE_LABEL_EVENT, handleUpdate);
+    window.addEventListener('activeSalonChanged', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    // Initial check in case storage changed before mount
+    handleUpdate();
+
+    return () => {
+      window.removeEventListener(WHITE_LABEL_EVENT, handleUpdate);
+      window.removeEventListener('activeSalonChanged', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  return {
+    salon: activeSalon,
+    isWhiteLabeled: activeSalon.isWhiteLabeled,
+    setActiveSalon,
+    clearActiveSalon
+  };
+};

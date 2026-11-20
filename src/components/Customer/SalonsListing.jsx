@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { searchSalonsByLocation, switchTenant, fetchCustomerProfile } from '../../redux/slices/customerSlice';
+import { setActiveSalon } from '../../utils/whiteLabelHelper';
 import { setActiveLocation } from '../../redux/slices/locationSlice';
 import searchService from '../../services/searchService';
 import axiosInstance from '../../api/axiosInstance';
@@ -519,6 +520,7 @@ const SalonsListing = () => {
         const salonName = salon.salonName || salon.name || 'Selected Salon';
         localStorage.setItem('activeSalonId', salonId);
         localStorage.setItem('activeSalonName', salonName);
+        setActiveSalon(salon);
 
         const hasCategory = !!category;
         const targetPath = isFromProducts 
