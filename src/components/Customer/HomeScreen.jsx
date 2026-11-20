@@ -2028,47 +2028,47 @@ const HomeScreen = () => {
                         <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right w-full" data-aos="fade-right">
                             {/* Main Section Header */}
                             <h2 className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-wide mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                AI POWERED FEATURES
+                                {t('home.ai_features_section.title', 'AI POWERED FEATURES')}
                             </h2>
 
                             {/* Sub-heading with Red Accent */}
                             <h3 className="text-base sm:text-2xl md:text-3xl font-bold text-gray-400 leading-tight mb-2 sm:mb-4">
-                                Smarter Decisions. <br />
-                                <span className="text-gray-500">Higher </span>
-                                <span className="text-[#FF2A14]">Revenue.</span>
+                                {t('home.ai_features_section.sub_title_1', 'Smarter Decisions.')} <br />
+                                <span className="text-gray-500">{t('home.ai_features_section.sub_title_higher', 'Higher ')}</span>
+                                <span className="text-[#FF2A14]">{t('home.ai_features_section.sub_title_revenue', 'Revenue.')}</span>
                             </h3>
 
                             {/* Paragraph Description */}
                             <p className={`text-xs sm:text-sm md:text-base font-medium max-w-md mb-3 sm:mb-6 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Leverage AI to understand customer behavior, predict demand, and automate growth so you focus on service while we handle intelligence.
+                                {t('home.ai_features_section.desc', 'Leverage AI to understand customer behavior, predict demand, and automate growth so you focus on service while we handle intelligence.')}
                             </p>
 
                             {/* Key Points Header */}
-                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Key Points</h4>
+                            <h4 className={`text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('labels.key_points', 'Key Points')}</h4>
 
                             {/* Bullet Points with Right-Aligned Red Circle Checks */}
                             <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 w-full flex flex-col items-center md:items-end">
                                 <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                                    <span>AI-Driven Customer Insights & Preferences</span>
+                                    <span>{t('home.ai_features_section.point1', 'AI-Driven Customer Insights & Preferences')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                                    <span>Smart Pricing & Offer Recommendations</span>
+                                    <span>{t('home.ai_features_section.point2', 'Smart Pricing & Offer Recommendations')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                                    <span>Predict Peak Hours & Optimize Staff</span>
+                                    <span>{t('home.ai_features_section.point3', 'Predict Peak Hours & Optimize Staff')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                                 <li className={`flex items-center justify-end gap-2 sm:gap-3 text-xs sm:text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                                    <span>Automated Marketing Suggestions</span>
+                                    <span>{t('home.ai_features_section.point4', 'Automated Marketing Suggestions')}</span>
                                     <span className="bg-[#FF2A14] text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[9px] sm:text-[10px] font-black flex-shrink-0">✓</span>
                                 </li>
                             </ul>
 
                             {/* CTA Button */}
                             <button className="w-full sm:w-auto justify-center bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-extrabold text-xs tracking-widest transition-all duration-150 shadow-md uppercase flex items-center gap-2 cursor-pointer">
-                                UNLOCK AI GROWTH →
+                                {t('buttons.unlock_ai_growth', 'UNLOCK AI GROWTH →')}
                             </button>
                         </div>
                     </div>

@@ -45,7 +45,10 @@
     "view_all": "VIEW ALL",
     "add": "Add",
     "added": "Added",
-    "proceed_to_book": "Proceed to Book"
+    "proceed_to_book": "Proceed to Book",
+    "manage_smarter": "MANAGE SMARTER →",
+    "get_more_clients": "GET MORE CLIENTS →",
+    "unlock_ai_growth": "UNLOCK AI GROWTH →"
   },
   "labels": {
     "services": "Services",
@@ -156,7 +159,10 @@
       "point1": "AI-Driven Customer Insights & Preferences",
       "point2": "Smart Pricing & Offer Recommendations",
       "point3": "Predict Peak Hours & Optimize Staff",
-      "point4": "Automated Marketing Suggestions"
+      "point4": "Automated Marketing Suggestions",
+      "sub_title_1": "Smarter Decisions.",
+      "sub_title_higher": "Higher ",
+      "sub_title_revenue": "Revenue."
     },
     "ai_badges": {
       "ai_assistant": "AI Assistant",
