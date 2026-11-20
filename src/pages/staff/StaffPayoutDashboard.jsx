@@ -48,7 +48,9 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
       const u = JSON.parse(localStorage.getItem('ownerStaffUser') || '{}');
       if (u.staffId) return u.staffId;
       if (u.id) return u.id;
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to parse user for staffId:", e);
+    }
     return localStorage.getItem('staff_id') || localStorage.getItem('staff_user_id') || localStorage.getItem('user_id') || null;
   })();
 

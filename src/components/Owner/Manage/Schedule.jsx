@@ -74,6 +74,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
+  const [lastActionTime, setLastActionTime] = useState(0);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [rewardAnimationStatus, setRewardAnimationStatus] = useState('success');
   const [rewardAnimationMsg, setRewardAnimationMsg] = useState('');

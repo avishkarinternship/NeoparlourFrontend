@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './NavBar';
 import SearchNavBar from './SearchNavBar';
@@ -42,7 +42,13 @@ function CustomerLayoutInner() {
         )}
       </div>
       <main className="flex-1 w-full overflow-x-clip">
-        <Outlet />
+        <Suspense fallback={
+          <div className="min-h-[50vh] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
+          </div>
+        }>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </div>

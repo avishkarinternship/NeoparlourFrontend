@@ -73,7 +73,9 @@ const Sidebar = ({
       if (saved !== null) {
         try {
           setIsManageOpen(JSON.parse(saved));
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Failed to parse manageSidebarOpen:", e);
+        }
       }
     };
     window.addEventListener('manageSidebarOpenRequest', handleSync);

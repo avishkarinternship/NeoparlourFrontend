@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './SideBar';
@@ -109,7 +109,13 @@ export default function OwnerLayout() {
 
         <div className="flex-1 flex flex-col min-w-0 p-0 transition-all duration-300 ease-in-out relative z-10">
           <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
-          <Outlet context={{ isDarkMode, salon }} />
+          <Suspense fallback={
+            <div className="min-h-[50vh] flex items-center justify-center">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
+            </div>
+          }>
+            <Outlet context={{ isDarkMode, salon }} />
+          </Suspense>
         </div>
       </div>
       

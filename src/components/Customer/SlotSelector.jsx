@@ -9,7 +9,7 @@ export function SlotSelector({
   onSlotSelect,
   selectedSlotTime = null,
   isDarkMode = false
-}) => {
+}) {
   const { slots, loading, isRefetching, error, refetch } = useTimeSlots(salonId, staffId, selectedDate);
   const [selectedSlot, setSelectedSlot] = useState(selectedSlotTime);
 

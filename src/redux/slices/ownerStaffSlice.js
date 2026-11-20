@@ -8,7 +8,7 @@ export const loginOwner = createAsyncThunk(
     try {
       let usernameInput = (credentials?.username || '').trim();
       // If user provided a phone number formatted with spaces, +91, hyphens, normalize it
-      if (/^[\d\s+\-\(\)]+$/.test(usernameInput)) {
+      if (/^[\d\s+()-]+$/.test(usernameInput)) {
         const digitsOnly = usernameInput.replace(/\D/g, '');
         if (digitsOnly.length === 10) {
           usernameInput = digitsOnly;

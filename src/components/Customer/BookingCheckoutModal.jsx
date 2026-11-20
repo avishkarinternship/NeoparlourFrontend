@@ -11,7 +11,7 @@ export function BookingCheckoutModal({
   onSuccess, 
   onSlotConflict,
   isDarkMode = false 
-}) => {
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conflictError, setConflictError] = useState(null);
 

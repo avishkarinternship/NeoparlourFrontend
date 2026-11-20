@@ -95,7 +95,7 @@ axiosInstance.interceptors.response.use(
         try {
           const text = await errorData.text();
           errorData = JSON.parse(text);
-        } catch (e) {
+        } catch (_err) {
           // ignore parsing error
         }
       }
@@ -151,7 +151,7 @@ axiosInstance.interceptors.response.use(
       try {
         const text = await errorData.text();
         errorData = JSON.parse(text);
-      } catch (e) {
+      } catch (_err) {
         // Fallback if parsing fails
       }
     }

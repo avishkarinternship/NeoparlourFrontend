@@ -3,107 +3,119 @@ import React from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '../App'
 import RouteErrorElement from '../components/common/RouteErrorElement'
-import CustomerLanding from '../components/CustomerLanding'
-import CustomerLogin from '../components/Customer/CustomerLogin'
-import OwnerLogin from '../components/Owner/OwnerLogin'
-import OwnerForgotPassword from '../components/Owner/OwnerForgotPassword'
-import OwnerRegister from '../components/Owner/OwnerRegister'
-import SalonSelection from '../components/Customer/SalonSelection'
-import Appointments from '../components/Customer/Appointments'
-import SubscriptionPlans from '../components/Owner/SubscriptionPlans'
-import PublicSubscriptionPlans from '../components/PublicSubscriptionPlans'
-import OwnerDashboard from '../components/Owner/OwnerDashboard'
-import ManageSideBar from '../components/Owner/Layouts/ManageSideBar'
-import Analytics from '../components/Owner/Analytics'
-import Orders from '../components/Owner/Orders'
-import Billing from '../components/Owner/Billing'
-import Settings from '../components/Owner/Settings'
-import ServerHealth from '../components/Owner/ServerHealth'
-import AdminSalons from '../components/Owner/AdminSalons'
-import AdminSubscriptions from '../components/Owner/AdminSubscriptions'
-import Schedule from '../components/Owner/Manage/Schedule'
-import Services from '../components/Owner/Manage/Services'
-import Inventory from '../components/Owner/Manage/Inventory'
-import Staff from '../components/Owner/Manage/Staff'
-import Feedback from '../components/Owner/Manage/Feedback'
-import HomeServices from '../components/Owner/Manage/HomeServices'
-import Subscription from '../components/Owner/Manage/Subscription'
-import AddOffers from '../components/Owner/Manage/AddOffers'
-import AddProducts from '../components/Owner/Manage/AddProducts'
-import AddPackages from '../components/Owner/Manage/AddPackages'
-import WalkInBooking from '../components/Owner/Manage/WalkInBooking'
-import Features from '../components/Customer/Features'
-import HomeScreen from '../components/Customer/HomeScreen'
-import AboutUs from '../components/Customer/AboutUs'
-import SalonPage from '../components/Customer/SalonPage'
-import SelectService from '../components/Customer/SelectService'
-import ProductSearch from '../components/Customer/ProductSearch'
-import ProductDetails from '../components/Customer/ProductDetails'
-import AppointmentSuccess from '../components/Customer/AppointmentSuccess'
-import OrderSuccess from '../components/Customer/OrderSuccess'
-import MyOrders from '../components/Customer/MyOrders'
-import OwnerTermsAndConditions from '../components/Owner/OwnerTermsAndConditions'
-import CustomerTermsAndConditions from '../components/Customer/CustomerTermsAndConditions'
-import PrivacyPolicy from '../components/Customer/CustomerLegalPrivacy'
-import PrivacyPolicyScreen from '../components/Owner/OwnerLegalPrivacy'
-import Support from '../components/Customer/Support'
-import DeleteAccount from '../components/Customer/DeleteAccount'
-import PartnerWithUs from '../components/Customer/PartnerWithUs'
-import SalonsListing from '../components/Customer/SalonsListing'
-import Customers from '../components/Owner/Customers'
-import Favourites from '../components/Customer/Favourites'
-import MySalons from '../components/Customer/MySalons'
-import NotificationsScreen from '../components/Owner/NotificationsScreen'
-import AdminSupportRequests from '../components/Owner/AdminSupportRequests'
-import AdminSupportDashboard from '../components/Admin/AdminSupportDashboard'
-import MaintenanceAdminPage from '../components/Owner/MaintenanceAdminPage'
+const CustomerLanding = React.lazy(() => import('../components/CustomerLanding'));
+const CustomerLogin = React.lazy(() => import('../components/Customer/CustomerLogin'));
+const OwnerLogin = React.lazy(() => import('../components/Owner/OwnerLogin'));
+const OwnerForgotPassword = React.lazy(() => import('../components/Owner/OwnerForgotPassword'));
+const OwnerRegister = React.lazy(() => import('../components/Owner/OwnerRegister'));
+const SalonSelection = React.lazy(() => import('../components/Customer/SalonSelection'));
+const Appointments = React.lazy(() => import('../components/Customer/Appointments'));
+const SubscriptionPlans = React.lazy(() => import('../components/Owner/SubscriptionPlans'));
+const PublicSubscriptionPlans = React.lazy(() => import('../components/PublicSubscriptionPlans'));
+const OwnerDashboard = React.lazy(() => import('../components/Owner/OwnerDashboard'));
+const Analytics = React.lazy(() => import('../components/Owner/Analytics'));
+const Orders = React.lazy(() => import('../components/Owner/Orders'));
+const Billing = React.lazy(() => import('../components/Owner/Billing'));
+const Settings = React.lazy(() => import('../components/Owner/Settings'));
+const ServerHealth = React.lazy(() => import('../components/Owner/ServerHealth'));
+const AdminSalons = React.lazy(() => import('../components/Owner/AdminSalons'));
+const AdminSubscriptions = React.lazy(() => import('../components/Owner/AdminSubscriptions'));
+const Schedule = React.lazy(() => import('../components/Owner/Manage/Schedule'));
+const Services = React.lazy(() => import('../components/Owner/Manage/Services'));
+const Inventory = React.lazy(() => import('../components/Owner/Manage/Inventory'));
+const Staff = React.lazy(() => import('../components/Owner/Manage/Staff'));
+const Feedback = React.lazy(() => import('../components/Owner/Manage/Feedback'));
+const HomeServices = React.lazy(() => import('../components/Owner/Manage/HomeServices'));
+const Subscription = React.lazy(() => import('../components/Owner/Manage/Subscription'));
+const AddOffers = React.lazy(() => import('../components/Owner/Manage/AddOffers'));
+const AddProducts = React.lazy(() => import('../components/Owner/Manage/AddProducts'));
+const AddPackages = React.lazy(() => import('../components/Owner/Manage/AddPackages'));
+const WalkInBooking = React.lazy(() => import('../components/Owner/Manage/WalkInBooking'));
+const Features = React.lazy(() => import('../components/Customer/Features'));
+const HomeScreen = React.lazy(() => import('../components/Customer/HomeScreen'));
+const AboutUs = React.lazy(() => import('../components/Customer/AboutUs'));
+const SalonPage = React.lazy(() => import('../components/Customer/SalonPage'));
+const SelectService = React.lazy(() => import('../components/Customer/SelectService'));
+const ProductSearch = React.lazy(() => import('../components/Customer/ProductSearch'));
+const ProductDetails = React.lazy(() => import('../components/Customer/ProductDetails'));
+const AppointmentSuccess = React.lazy(() => import('../components/Customer/AppointmentSuccess'));
+const OrderSuccess = React.lazy(() => import('../components/Customer/OrderSuccess'));
+const MyOrders = React.lazy(() => import('../components/Customer/MyOrders'));
+const OwnerTermsAndConditions = React.lazy(() => import('../components/Owner/OwnerTermsAndConditions'));
+const CustomerTermsAndConditions = React.lazy(() => import('../components/Customer/CustomerTermsAndConditions'));
+const PrivacyPolicy = React.lazy(() => import('../components/Customer/CustomerLegalPrivacy'));
+const PrivacyPolicyScreen = React.lazy(() => import('../components/Owner/OwnerLegalPrivacy'));
+const Support = React.lazy(() => import('../components/Customer/Support'));
+const DeleteAccount = React.lazy(() => import('../components/Customer/DeleteAccount'));
+const PartnerWithUs = React.lazy(() => import('../components/Customer/PartnerWithUs'));
+const SalonsListing = React.lazy(() => import('../components/Customer/SalonsListing'));
+const Customers = React.lazy(() => import('../components/Owner/Customers'));
+const Favourites = React.lazy(() => import('../components/Customer/Favourites'));
+const MySalons = React.lazy(() => import('../components/Customer/MySalons'));
+const NotificationsScreen = React.lazy(() => import('../components/Owner/NotificationsScreen'));
+const AdminSupportRequests = React.lazy(() => import('../components/Owner/AdminSupportRequests'));
+const AdminSupportDashboard = React.lazy(() => import('../components/Admin/AdminSupportDashboard'));
+const MaintenanceAdminPage = React.lazy(() => import('../components/Owner/MaintenanceAdminPage'));
 
 // Import New Footer Pages
-import InfluencerProgram from '../components/Customer/InfluencerProgram'
-import Blogs from '../components/Customer/Blogs'
-import BlogListingPage from '../components/Customer/BlogListingPage'
-import BlogPostDetailPage from '../components/Customer/BlogPostDetailPage'
-import TestimonialsComponent from '../components/Customer/TestimonialsComponent'
-import AdminBlogManager from '../components/Owner/AdminBlogManager'
-import AdminTestimonialManager from '../components/Owner/AdminTestimonialManager'
-import AdminSeoDirectory from '../components/Owner/AdminSeoDirectory'
-import StaffAttendance from '../components/Owner/StaffAttendance'
-import Cart from '../components/Customer/Cart'
-import Offers from '../components/Customer/Offers'
+const InfluencerProgram = React.lazy(() => import('../components/Customer/InfluencerProgram'));
+const Blogs = React.lazy(() => import('../components/Customer/Blogs'));
+const BlogListingPage = React.lazy(() => import('../components/Customer/BlogListingPage'));
+const BlogPostDetailPage = React.lazy(() => import('../components/Customer/BlogPostDetailPage'));
+const TestimonialsComponent = React.lazy(() => import('../components/Customer/TestimonialsComponent'));
+const AdminBlogManager = React.lazy(() => import('../components/Owner/AdminBlogManager'));
+const AdminTestimonialManager = React.lazy(() => import('../components/Owner/AdminTestimonialManager'));
+const AdminSeoDirectory = React.lazy(() => import('../components/Owner/AdminSeoDirectory'));
+const StaffAttendance = React.lazy(() => import('../components/Owner/StaffAttendance'));
+const Cart = React.lazy(() => import('../components/Customer/Cart'));
+const Offers = React.lazy(() => import('../components/Customer/Offers'));
 
 // Import Staff Components
-import StaffDashboard from '../components/StaffDashboard'
-import StaffRegister from '../staff/StaffRegister'
-import StaffInvitations from '../components/StaffInvitations'
-import OwnerStaffInvitations from '../components/Owner/OwnerStaffInvitations'
-import OwnerKyc from '../components/Owner/KYC/OwnerKyc'
-import AdminKycDashboard from '../components/Owner/AdminKycDashboard'
-import StaffPayoutDashboard from '../pages/staff/StaffPayoutDashboard'
-import AdminPayoutQueueDashboard from '../pages/admin/AdminPayoutQueueDashboard'
-import ServerLogs from '../components/Owner/ServerLogs'
-import SupportTicketsBoard from '../components/Admin/SupportTicketsBoard'
-import SupportEngineerAnalytics from '../components/Admin/SupportEngineerAnalytics'
-import DeveloperBugsPage from '../components/Admin/DeveloperBugsPage'
-import NewTicketPage from '../components/Customer/NewTicketPage'
+const StaffDashboard = React.lazy(() => import('../components/StaffDashboard'));
+const StaffRegister = React.lazy(() => import('../staff/StaffRegister'));
+const StaffInvitations = React.lazy(() => import('../components/StaffInvitations'));
+const OwnerStaffInvitations = React.lazy(() => import('../components/Owner/OwnerStaffInvitations'));
+const OwnerKyc = React.lazy(() => import('../components/Owner/KYC/OwnerKyc'));
+const AdminKycDashboard = React.lazy(() => import('../components/Owner/AdminKycDashboard'));
+const StaffPayoutDashboard = React.lazy(() => import('../pages/staff/StaffPayoutDashboard'));
+const AdminPayoutQueueDashboard = React.lazy(() => import('../pages/admin/AdminPayoutQueueDashboard'));
+const ServerLogs = React.lazy(() => import('../components/Owner/ServerLogs'));
+const SupportTicketsBoard = React.lazy(() => import('../components/Admin/SupportTicketsBoard'));
+const SupportEngineerAnalytics = React.lazy(() => import('../components/Admin/SupportEngineerAnalytics'));
+const DeveloperBugsPage = React.lazy(() => import('../components/Admin/DeveloperBugsPage'));
+const NewTicketPage = React.lazy(() => import('../components/Customer/NewTicketPage'));
 import { SupportEngineerRouteGuard } from '../components/Admin/AdminRouteGuard'
 
 // Import layouts
 import CustomerLayout from '../components/Customer/Layouts/CustomerLayout'
 import OwnerLayout from '../components/Owner/Layouts/OwnerLayout'
 import OwnerManageLayout from '../components/Owner/Layouts/OwnerManageLayout'
-import ProductPaymentMethod from '../components/Customer/ProductPaymentMethod'
-import Leadership from '../components/Customer/Leadership'
-import Videos from '../components/Customer/Videos'
-import SecurityPage from '../components/Customer/Security'
-import ServicesGrid from '../components/Customer/Services'
-import ClientTestimonial from '../components/Customer/ClientTestimonial'
-import Sitemap from '../components/Customer/SiteMap'
-import Updates from '../components/Customer/updates'
-import CaseStudies from '../components/Customer/CaseStudies'
-import SalonsSEO from '../components/Customer/SalonsSEO'
-import SitemapXML from '../components/Customer/SitemapXML'
-import RobotsTxtViewer from '../components/Customer/RobotsTxtViewer'
-import SEOSalons from '../components/Customer/SEOSalons'
+const ProductPaymentMethod = React.lazy(() => import('../components/Customer/ProductPaymentMethod'));
+const Leadership = React.lazy(() => import('../components/Customer/Leadership'));
+const Videos = React.lazy(() => import('../components/Customer/Videos'));
+const SecurityPage = React.lazy(() => import('../components/Customer/Security'));
+const ServicesGrid = React.lazy(() => import('../components/Customer/Services'));
+const ClientTestimonial = React.lazy(() => import('../components/Customer/ClientTestimonial'));
+const Sitemap = React.lazy(() => import('../components/Customer/SiteMap'));
+const Updates = React.lazy(() => import('../components/Customer/updates'));
+const CaseStudies = React.lazy(() => import('../components/Customer/CaseStudies'));
+const SalonsSEO = React.lazy(() => import('../components/Customer/SalonsSEO'));
+const SitemapXML = React.lazy(() => import('../components/Customer/SitemapXML'));
+const RobotsTxtViewer = React.lazy(() => import('../components/Customer/RobotsTxtViewer'));
+const SEOSalons = React.lazy(() => import('../components/Customer/SEOSalons'));
+
+// Helper to read and extract stored role reliably
+const getStoredUserRole = () => {
+    const savedUserStr = localStorage.getItem('ownerStaffUser');
+    if (!savedUserStr) return '';
+    try {
+        const u = JSON.parse(savedUserStr);
+        return String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
+    } catch (e) {
+        console.warn('Failed to parse ownerStaffUser:', e);
+        return '';
+    }
+};
 
 // --- Route Guards ---
 const OwnerRouteGuard = ({ children }) => {
@@ -111,32 +123,21 @@ const OwnerRouteGuard = ({ children }) => {
     const customerToken = localStorage.getItem('customerToken');
 
     if (!ownerToken) {
-        if (customerToken) {
-            // Customer trying to access owner page -> send to customer home
-            return <Navigate to="/" replace />;
-        }
-        // Guest trying to access owner page -> send to owner login
-        return <Navigate to="/owner/login" replace />;
+        return customerToken ? <Navigate to="/" replace /> : <Navigate to="/owner/login" replace />;
     }
 
-    const savedUserStr = localStorage.getItem('ownerStaffUser');
-    if (savedUserStr) {
-        try {
-            const u = JSON.parse(savedUserStr);
-            const role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
-            if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
-                return <Navigate to="/admin/support-requests" replace />;
-            }
-            if ((role === 'SEO_ADMIN' || role.includes('SEO')) && (
-                window.location.pathname === '/owner/dashboard' || 
-                window.location.pathname.startsWith('/owner/manage') ||
-                window.location.pathname.startsWith('/owner/analytics') ||
-                window.location.pathname.startsWith('/owner/orders') ||
-                window.location.pathname.startsWith('/owner/billing')
-            )) {
-                return <Navigate to="/admin/blogs" replace />;
-            }
-        } catch (e) {}
+    const role = getStoredUserRole();
+    if ((role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) && window.location.pathname === '/owner/dashboard') {
+        return <Navigate to="/admin/support-requests" replace />;
+    }
+    if ((role === 'SEO_ADMIN' || role.includes('SEO')) && (
+        window.location.pathname === '/owner/dashboard' || 
+        window.location.pathname.startsWith('/owner/manage') ||
+        window.location.pathname.startsWith('/owner/analytics') ||
+        window.location.pathname.startsWith('/owner/orders') ||
+        window.location.pathname.startsWith('/owner/billing')
+    )) {
+        return <Navigate to="/admin/blogs" replace />;
     }
 
     return children;
@@ -147,10 +148,7 @@ const StaffRouteGuard = ({ children }) => {
     const customerToken = localStorage.getItem('customerToken');
 
     if (!token) {
-        if (customerToken) {
-            return <Navigate to="/" replace />;
-        }
-        return <Navigate to="/owner/login" replace />;
+        return customerToken ? <Navigate to="/" replace /> : <Navigate to="/owner/login" replace />;
     }
     return children;
 };
@@ -159,14 +157,7 @@ const RootRouteGuard = ({ children }) => {
     const ownerToken = localStorage.getItem('ownerStaffToken') || localStorage.getItem('user_token');
 
     if (ownerToken) {
-        const savedUserStr = localStorage.getItem('ownerStaffUser');
-        let role = '';
-        if (savedUserStr) {
-            try {
-                const u = JSON.parse(savedUserStr);
-                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
-            } catch (e) {}
-        }
+        const role = getStoredUserRole();
         if (role === 'CUSTOMER' || role === 'ROLE_CUSTOMER') {
             return children;
         }
@@ -186,7 +177,6 @@ const RootRouteGuard = ({ children }) => {
 };
 
 const CustomerRouteGuard = ({ children, isPublic = false }) => {
-    // Public routes (such as /seo-salons, /blogs, /sitemap, etc.) are viewable by all users including SEO admins
     if (isPublic) {
         return children;
     }
@@ -195,14 +185,7 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
     const customerToken = localStorage.getItem('customerToken');
 
     if (ownerToken) {
-        const savedUserStr = localStorage.getItem('ownerStaffUser');
-        let role = '';
-        if (savedUserStr) {
-            try {
-                const u = JSON.parse(savedUserStr);
-                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
-            } catch (e) {}
-        }
+        const role = getStoredUserRole();
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
             return <Navigate to="/admin/support-requests" replace />;
         }
@@ -215,8 +198,7 @@ const CustomerRouteGuard = ({ children, isPublic = false }) => {
         return <Navigate to="/owner/dashboard" replace />;
     }
 
-    if (!isPublic && !customerToken) {
-        // Guest trying to access private customer page -> send to customer login
+    if (!customerToken) {
         return <Navigate to="/customer/login" replace />;
     }
 
@@ -228,14 +210,7 @@ const GuestRouteGuard = ({ children }) => {
     const customerToken = localStorage.getItem('customerToken');
 
     if (ownerToken) {
-        const savedUserStr = localStorage.getItem('ownerStaffUser');
-        let role = '';
-        if (savedUserStr) {
-            try {
-                const u = JSON.parse(savedUserStr);
-                role = String(u?.role || u?.user?.role || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.userRole || u?.type || '').toUpperCase();
-            } catch (e) {}
-        }
+        const role = getStoredUserRole();
         if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
             return <Navigate to="/admin/support-requests" replace />;
         }
@@ -959,12 +934,4 @@ export let routes = createBrowserRouter([
     }
 ])
 
-const NeoParlourRouter = () => {
-    return (
-        <div>
-            {/* This component can be used to wrap the router if needed, but 'routes' is the main export */}
-        </div>
-    )
-}
-
-export default NeoParlourRouter
+export default routes;

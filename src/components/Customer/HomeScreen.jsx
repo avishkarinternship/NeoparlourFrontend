@@ -120,28 +120,6 @@ const recommendedSalons = [
 ];
 
 const HomeScreen = () => {
-    if (isOwnerLoggedIn()) {
-        const savedUserStr = localStorage.getItem('ownerStaffUser');
-        let role = '';
-        if (savedUserStr) {
-            try {
-                const u = JSON.parse(savedUserStr);
-                role = String(u?.role || u?.userRole || (Array.isArray(u?.roles) ? u.roles[0] : u?.roles) || u?.user?.role || u?.type || '').toUpperCase();
-            } catch (e) {}
-        }
-        if (role !== 'CUSTOMER' && role !== 'ROLE_CUSTOMER') {
-            if (role.includes('STAFF')) {
-                return <Navigate to="/staff/dashboard" replace />;
-            }
-            if (role === 'SUPPORT_ENGINEER' || role.includes('SUPPORT')) {
-                return <Navigate to="/admin/support-requests" replace />;
-            }
-            if (role === 'SEO_ADMIN' || role.includes('SEO')) {
-                return <Navigate to="/admin/blogs" replace />;
-            }
-            return <Navigate to="/owner/dashboard" replace />;
-        }
-    }
     const { t } = useTranslation();
     const { isDark } = useDarkMode();
     const dispatch = useDispatch();

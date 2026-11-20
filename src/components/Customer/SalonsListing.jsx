@@ -57,7 +57,9 @@ const SalonsListing = () => {
             if (savedLat && savedLng && !isNaN(Number(savedLat)) && !isNaN(Number(savedLng))) {
                 return { latitude: Number(savedLat), longitude: Number(savedLng) };
             }
-        } catch {}
+        } catch (e) {
+            console.warn("Failed to parse saved customer coords:", e);
+        }
         return { latitude: null, longitude: null };
     };
 

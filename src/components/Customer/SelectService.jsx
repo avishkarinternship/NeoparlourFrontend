@@ -158,6 +158,7 @@ const SelectService = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+    const dispatch = useDispatch();
     const activeSalonId = localStorage.getItem('activeSalonId');
     const { isAuthenticated, token } = useSelector((state) => state.customer);
     const { isDark } = useDarkMode();

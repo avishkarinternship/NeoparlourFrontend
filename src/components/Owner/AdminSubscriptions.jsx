@@ -148,16 +148,17 @@ export default function AdminSubscriptions() {
       if (currentAppliedFilters?.razorpaySubscriptionId?.trim()) params.razorpaySubscriptionId = currentAppliedFilters.razorpaySubscriptionId.trim();
       if (currentAppliedFilters?.couponCode?.trim()) params.couponCode = currentAppliedFilters.couponCode.trim();
       if (currentAppliedFilters?.fromDate?.trim()) {
-        try {
-          params.fromDate = new Date(currentAppliedFilters.fromDate).toISOString();
-        } catch (_) {}
+        const d = new Date(currentAppliedFilters.fromDate);
+        if (!isNaN(d.getTime())) {
+          params.fromDate = d.toISOString();
+        }
       }
       if (currentAppliedFilters?.toDate?.trim()) {
-        try {
-          const d = new Date(currentAppliedFilters.toDate);
+        const d = new Date(currentAppliedFilters.toDate);
+        if (!isNaN(d.getTime())) {
           d.setHours(23, 59, 59, 999);
           params.toDate = d.toISOString();
-        } catch (_) {}
+        }
       }
 
       const response = await axiosInstance.get('/subscriptions/admin/all', { params });

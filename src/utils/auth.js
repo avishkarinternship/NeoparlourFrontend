@@ -10,10 +10,13 @@ import axiosInstance from '../api/axiosInstance';
  */
 export const performCleanLogout = async (redirectTarget = '/customer/login', queryClient = null) => {
   // ================= STEP 1: STOP BACKGROUND POLLING & TIMERS =================
-  // Clear all global interval and timeout timers to stop background API calls
-  for (let i = 1; i < 99999; i++) {
-    window.clearInterval(i);
-    window.clearTimeout(i);
+  // Clear any active timers up to the highest allocated timer ID
+  if (typeof window !== 'undefined') {
+    const highestTimerId = window.setTimeout(() => {}, 0);
+    for (let i = 1; i <= highestTimerId; i++) {
+      window.clearTimeout(i);
+      window.clearInterval(i);
+    }
   }
 
   // ================= STEP 2: CALL BACKEND LOGOUT API (OPTIONAL) =================

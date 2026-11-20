@@ -26,7 +26,9 @@ export const DarkModeProvider = ({ children }) => {
           document.documentElement.classList.remove('dark');
         }
       }
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to persist theme:", e);
+    }
   }, [isDark]);
 
   const toggleDark = () => setIsDark((prev) => !prev);

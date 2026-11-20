@@ -83,7 +83,9 @@ export const searchSalonsByLocation = createAsyncThunk(
               effectiveLng = Number(savedLng);
             }
           }
-        } catch {}
+        } catch (e) {
+          console.warn("Failed to parse customer coordinates from cache:", e);
+        }
       }
 
       // Fallback 2: if areaName or cityName is provided and we still don't have coords, resolve coordinates of the area
@@ -94,7 +96,9 @@ export const searchSalonsByLocation = createAsyncThunk(
             effectiveLat = Number(areaResults[0].latitude);
             effectiveLng = Number(areaResults[0].longitude);
           }
-        } catch {}
+        } catch (e) {
+          console.warn("Failed to geocode area/city fallback:", e);
+        }
       }
 
       const hasCityOrArea = Boolean(cityName?.trim() || areaName?.trim());
@@ -187,6 +191,7 @@ export const searchSalonsByLocation = createAsyncThunk(
           pageNumber = rawData?.page?.number ?? rawData?.number ?? (page ?? 0);
           pageSize = rawData?.page?.size ?? rawData?.size ?? (size ?? 10);
         } catch (err) {
+          console.warn("Failed to fetch salons by location:", err);
           results = [];
         }
       }

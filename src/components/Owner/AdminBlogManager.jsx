@@ -179,7 +179,9 @@ const AdminBlogManager = () => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       tokenRole = payload.role || (Array.isArray(payload.roles) ? payload.roles[0] : '') || payload.authorities?.[0] || '';
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to decode token role:", e);
+    }
   }
   const rawRole = currentUser?.role || currentUser?.userRole || (Array.isArray(currentUser?.roles) ? currentUser.roles[0] : currentUser?.roles) || tokenRole || '';
   const userRole = String(rawRole).toUpperCase();
@@ -1821,8 +1823,8 @@ const AdminBlogManager = () => {
                     {isContentLongEnough ? <Check className="w-3.5 h-3.5" /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
                     Length ({wordCount} words)
                   </span>
-                  <span className={`flex items-center gap-1 ${Boolean(formData.imageUrl) ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {Boolean(formData.imageUrl) ? <Check className="w-3.5 h-3.5" /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
+                  <span className={`flex items-center gap-1 ${formData.imageUrl ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {formData.imageUrl ? <Check className="w-3.5 h-3.5" /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
                     Cover Image
                   </span>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AOS from 'aos';
@@ -54,7 +54,13 @@ const App = () => {
           onRetry={handleRetryConnection}
         />
       )}
-      <Outlet />
+      <Suspense fallback={
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
+        </div>
+      }>
+        <Outlet />
+      </Suspense>
     </div>
   );
 };
