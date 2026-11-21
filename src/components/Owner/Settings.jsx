@@ -7,8 +7,10 @@ import { GstStateInput, StateSelector, GstinInput } from "../common/GstStateInpu
 import { BillingSummaryCard } from "../common/BillingSummaryCard";
 import { getStateFromCityName, getStateFromStateName, getGstInvoiceNotice, getStateDisplayName, INDIAN_STATES } from "../../constants/indianStates";
 import searchService from "../../services/searchService";
-import { MapPin, Navigation as NavigationIcon, Compass, Building } from "lucide-react";
+import { MapPin, Navigation as NavigationIcon, Compass, Building, Palette } from "lucide-react";
 import LocationPickerModal from "../location/LocationPickerModal";
+import BrandingThemeSettings from "./BrandingThemeSettings";
+import { extractBrandPaletteFromLogo, saveSalonTheme } from "../../utils/themeGenerator";
 
 const is18OrOlder = (birthdateString) => {
   if (!birthdateString) return false;
@@ -347,7 +349,7 @@ const Settings = () => {
         return () => clearTimeout(delayDebounce);
     }, [salonProfile.landmark, salonProfile.areaName, salonProfile.cityName, salonProfile.state, salonProfile.areaDistrict, isUserTypingLandmark]);
 
-    const handleLogoUpload = (e) => {
+        const handleLogoUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         
@@ -362,6 +364,18 @@ const Settings = () => {
             setLogoPreview(URL.createObjectURL(file));
         };
         reader.readAsDataURL(file);
+
+        // Automatically extract brand colors and update website theme dynamically
+        try {
+            const salonId = salonProfile?.id || salonProfile?.salonId || localStorage.getItem('salon_id');
+            const extractedPalette = await extractBrandPaletteFromLogo(file);
+            if (extractedPalette) {
+                saveSalonTheme(salonId, extractedPalette);
+                toast.success("Theme automatically generated and applied from your salon logo!");
+            }
+        } catch (err) {
+            console.warn("Could not auto-extract palette from logo:", err);
+        }
     };
 
     const handleGalleryUpload = (e) => {
@@ -643,9 +657,25 @@ const Settings = () => {
                         Salon Profile
                     </button>
                 )}
+                {!isAdmin && (
+                    <button
+                        className={`pb-3 px-4 font-semibold text-lg transition-colors flex items-center gap-2 ${
+                            activeTab === 'theme' 
+                                ? 'border-b-2 border-red-500 text-red-500' 
+                                : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                        onClick={() => setActiveTab('theme')}
+                    >
+                        <Palette className="w-5 h-5" />
+                        <span>Branding & Theme</span>
+                    </button>
+                )}
             </div>
 
-            <div className={`rounded-2xl shadow-md border p-8 max-w-4xl mx-auto transition-colors ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'}`}>
+            {activeTab === 'theme' ? (
+                <BrandingThemeSettings salon={salonProfile} isDarkMode={isDarkMode} />
+            ) : (
+                <div className={`rounded-2xl shadow-md border p-8 max-w-4xl mx-auto transition-colors ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'}`}>
                 {activeTab === 'owner' && (
                     <div>
                         <div className="flex items-center justify-between mb-6">
@@ -1655,6 +1685,7 @@ const Settings = () => {
                             </div>
                         )}
                     </div>
+            )}
 
                     {showPopup && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50">
