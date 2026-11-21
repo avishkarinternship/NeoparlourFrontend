@@ -847,12 +847,18 @@ export const applyDynamicTheme = (palette) => {
         color: var(--color-text-primary);
       }
 
-      /* Page & layout backgrounds */
+      /* Page & layout backgrounds (ensures all page containers use the brand-driven background) */
+      html:not(.dark) body,
       html:not(.dark) .bg-\\[\\#FAFAFA\\],
       html:not(.dark) .bg-gray-50,
       html:not(.dark) .bg-slate-50,
       html:not(.dark) .bg-zinc-50,
-      html:not(.dark) main {
+      html:not(.dark) main,
+      html:not(.dark) main.bg-white,
+      html:not(.dark) main.bg-\\[\\#FAFAFA\\],
+      html:not(.dark) main.bg-gray-50,
+      html:not(.dark) .owner-page-canvas,
+      html:not(.dark) .owner-main-content {
         background-color: var(--color-background) !important;
         color: var(--color-text-primary) !important;
       }
@@ -872,14 +878,31 @@ export const applyDynamicTheme = (palette) => {
         border-color: var(--color-border) !important;
       }
 
-      /* Cards & Surfaces */
-      html:not(.dark) .bg-white,
+      /* Cards & Surfaces (only internal cards/surfaces, not page root containers) */
+      html:not(.dark) .bg-white:not(main):not(header):not(aside):not(body),
       html:not(.dark) .rounded-xl.bg-white,
       html:not(.dark) .rounded-2xl.bg-white,
-      html:not(.dark) .rounded-3xl.bg-white {
+      html:not(.dark) .rounded-3xl.bg-white,
+      html:not(.dark) .card,
+      html:not(.dark) .dashboard-card {
         background-color: var(--color-surface) !important;
         border-color: var(--color-border) !important;
         color: var(--color-text-primary) !important;
+      }
+
+      /* Elevated card depth & subtle border aesthetics */
+      html:not(.dark) .rounded-2xl.border,
+      html:not(.dark) .rounded-xl.border,
+      html:not(.dark) .rounded-3xl.border {
+        border-color: var(--color-border) !important;
+        box-shadow: 0 4px 20px -2px rgba(var(--color-primary-rgb), 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+      }
+
+      html.dark .rounded-2xl.border,
+      html.dark .rounded-xl.border,
+      html.dark .rounded-3xl.border {
+        border-color: var(--color-border) !important;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
       }
 
       /* Inputs, Search Bars & Selects */
@@ -932,10 +955,16 @@ export const applyDynamicTheme = (palette) => {
       }
 
       /* Dark page backgrounds */
+      html.dark body,
       html.dark .bg-zinc-950,
       html.dark.bg-zinc-950,
       html.dark .bg-black,
-      html.dark main {
+      html.dark main,
+      html.dark main.bg-white,
+      html.dark main.bg-black,
+      html.dark main.bg-zinc-950,
+      html.dark .owner-page-canvas,
+      html.dark .owner-main-content {
         background-color: var(--color-background) !important;
         color: var(--color-text-primary) !important;
       }

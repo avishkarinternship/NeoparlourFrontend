@@ -376,7 +376,7 @@ const Staff = () => {
     return (
         <>
                 <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
-                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
                 }`}>
                     {/* Top Section Tab Navigation */}
                     <div className={`flex items-center gap-3 border-b mb-8 pb-1 overflow-x-auto ${

@@ -502,7 +502,7 @@ const Appointments = () => {
               placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-white dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-gray-800 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-sm placeholder:font-medium placeholder-gray-400"
+              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-3xs placeholder:font-medium placeholder-gray-400"
             />
           </div>
         </div>
@@ -518,7 +518,7 @@ const Appointments = () => {
                   setPage(0);
                 }}
                 className={`py-3 sm:py-5 text-[10px] sm:text-xs font-black tracking-[0.2em] transition-all relative ${
-                  activeTab === tab ? 'text-gray-900 dark:text-white font-black' : 'text-gray-300 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300'
+                  activeTab === tab ? 'text-gray-900 dark:text-white font-black' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-zinc-200 font-bold'
                 }`}
               >
                 {tab}
@@ -556,12 +556,25 @@ const Appointments = () => {
               </div>
             ) : (
               <div className="text-center py-24">
-                <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-sm">
-                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 border border-amber-500/20 rounded-[28px] flex items-center justify-center mx-auto mb-5 shadow-xs">
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <p className="text-gray-300 font-black tracking-[0.4em] text-xs uppercase">No Bookings Found</p>
+                <h4 className="text-base sm:text-lg font-black tracking-tight text-gray-900 dark:text-white">No {activeTab.toLowerCase()} bookings found</h4>
+                <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-zinc-400 max-w-sm mx-auto mt-1 mb-6">
+                  {activeTab === 'TODAY' 
+                    ? 'No appointments booked for today yet. Use walk-in booking to quickly record customer slots.' 
+                    : `There are currently no ${activeTab.toLowerCase()} bookings recorded in this salon system.`}
+                </p>
+                {!isCustomer && (
+                  <button 
+                    onClick={() => navigate('/owner/manage/walk-in')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff0b01] text-white text-xs font-bold shadow-md hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span>+ Book Walk-in Appointment</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -860,9 +873,9 @@ const Appointments = () => {
   }
 
   return (
-    <main className="flex-1 p-6 md:p-8 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 overflow-auto pb-16">
+    <div className="flex-1 p-4 sm:p-6 md:p-8 bg-transparent min-w-0 pb-16">
       {renderMainContent()}
-    </main>
+    </div>
   );
 };
 

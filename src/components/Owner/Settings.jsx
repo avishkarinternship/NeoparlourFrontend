@@ -217,12 +217,18 @@ const Settings = () => {
             const coords = await searchService.detectCoordinates(10000);
             const { latitude, longitude, isIpFallback } = coords;
 
-            const result = await searchService.reverseGeocode(latitude, longitude, { preferGoogle: true, provider: 'google' });
-            if (result.city || result.area) {
+            const result = await searchService.reverseGeocode(latitude, longitude, { provider: 'olamaps', preferOla: true });
+            if (result.city || result.area || result.formattedAddress) {
                 setIsUserTypingCity(false);
                 setIsUserTypingArea(false);
                 setIsUserTypingLandmark(false);
                 const resolvedLandmark = (typeof result.landmark === 'object' ? (result.landmark?.title || result.landmark?.name || '') : (result.landmark || ''));
+                const autoSpecificAddress = result.formattedAddress || [
+                    result.houseNumber,
+                    result.building,
+                    result.street
+                ].filter(Boolean).join(', ');
+
                 setSalonProfile(prev => ({
                     ...prev,
                     latitude: latitude,
@@ -230,7 +236,8 @@ const Settings = () => {
                     state: result.stateEnum || prev.state,
                     cityName: result.city || prev.cityName,
                     areaName: result.area || prev.areaName,
-                    landmark: resolvedLandmark || prev.landmark
+                    landmark: resolvedLandmark || prev.landmark,
+                    specificAddress: prev.specificAddress || autoSpecificAddress || ''
                 }));
 
                 if (result.nearbyLandmarks && result.nearbyLandmarks.length > 0) {
@@ -238,7 +245,8 @@ const Settings = () => {
                 }
 
                 const stateName = result.stateEnum ? getStateDisplayName(result.stateEnum) : result.stateName;
-                toast.success(`📍 Salon location detected${isIpFallback ? ' (via network)' : ''}! State: ${stateName || 'Detected'}, City: ${result.city || 'Detected'}, Area: ${result.area || 'Detected'}${result.landmark ? `, Landmark: ${result.landmark}` : ''}`);
+                const sourceName = result.source === 'olamaps' ? 'Ola Maps' : (isIpFallback ? 'Network GPS' : 'Device GPS');
+                toast.success(`📍 Salon location detected (${sourceName})! State: ${stateName || 'Detected'}, City: ${result.city || 'Detected'}, Area: ${result.area || 'Detected'}${result.landmark ? `, Landmark: ${result.landmark}` : ''}`);
             } else {
                 toast.error("Could not determine your location. Please enter it manually.");
             }

@@ -1156,8 +1156,8 @@ const OwnerDashboard = () => {
                                             onClick={() => handleViewTypeChange(type)}
                                             className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
                                                 viewType === type
-                                                    ? 'bg-[#ff0b01] text-white'
-                                                    : isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                                                    ? 'bg-[#ff0b01] text-white shadow-xs'
+                                                    : isDarkMode ? 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700/60' : 'bg-slate-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200/80 shadow-3xs'
                                             }`}
                                         >
                                             {type}
@@ -1207,7 +1207,8 @@ const OwnerDashboard = () => {
                                         <svg className={`w-10 h-10 mb-2 ${isDarkMode ? 'text-slate-600' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                                         </svg>
-                                        <p className={`text-[12px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No revenue data available</p>
+                                        <p className={`text-xs font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>No revenue data available</p>
+                                        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Billed customer sessions will appear here in real-time</p>
                                     </div>
                                 ) : (
                                     <ResponsiveContainer width="100%" height="100%">
@@ -1260,9 +1261,10 @@ const OwnerDashboard = () => {
                                 </div>
                                 <button 
                                     onClick={() => navigate('/owner/manage/schedule')}
-                                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
                                 >
-                                    More
+                                    <span>More</span>
+                                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
                                 </button>
                             </div>
 
@@ -1275,7 +1277,7 @@ const OwnerDashboard = () => {
                                     <img
                                         src={upcomingAppointmentIcon}
                                         alt="Upcoming Appointments Icon"
-                                        className="w-12 opacity-80 dark:invert"
+                                        className="w-10 h-10 object-contain opacity-70 dark:invert"
                                     />
                                     <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>Your Schedule Is Empty</h4>
                                     <p className={`text-[11px] font-semibold max-w-[240px] mt-1.5 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>

@@ -230,8 +230,8 @@ export default function LocationPickerModal({
     setIsResolvingAddress(true);
     try {
       const res = await searchService.reverseGeocode(lat, lng, { 
-        preferGoogle: isOwnerMode, 
-        provider: isOwnerMode ? 'google' : 'olamaps' 
+        preferOla: true, 
+        provider: 'olamaps' 
       });
       
       const landmarksList = res?.nearbyLandmarks || [];
@@ -244,15 +244,19 @@ export default function LocationPickerModal({
 
       setAddressDetails(prev => ({
         ...prev,
-        areaName: res.area || '',
-        cityName: res.city || '',
-        stateName: res.stateName || '',
-        landmark: primaryLm || firstLmTitle || '',
+        areaName: res.area || prev.areaName || '',
+        cityName: res.city || prev.cityName || '',
+        stateName: res.stateName || prev.stateName || '',
+        pincode: res.pincode || prev.pincode || '',
+        landmark: primaryLm || firstLmTitle || prev.landmark || '',
+        houseFlatNo: prev.houseFlatNo || res.houseNumber || '',
+        buildingName: prev.buildingName || res.building || res.street || '',
         formattedAddress: res.formattedAddress || `${res.area ? res.area + ', ' : ''}${res.city || ''}`
       }));
 
-      if (res.area || res.city) {
-        toast.success(`Address fetched: ${res.area || ''} ${res.city ? '(' + res.city + ')' : ''}`, { id: 'loc-toast', icon: '📍' });
+      if (res.area || res.city || res.formattedAddress) {
+        const sourceLabel = res.source === 'olamaps' ? 'Ola Maps' : 'GPS';
+        toast.success(`Address fetched (${sourceLabel}): ${res.area || res.city || 'Location Pin'}`, { id: 'loc-toast', icon: '📍' });
       }
     } catch (err) {
       console.error("Error resolving coordinates:", err);

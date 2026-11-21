@@ -85,7 +85,7 @@ const HomeServices = () => {
     };
 
     return (
-                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900 md:border-l md:border-zinc-800' : 'bg-white md:border-l md:border-gray-200'}`}>
+                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${isDarkMode ? 'bg-zinc-900' : 'bg-transparent'}`}>
                     {/* Header */}
                     <div className="mb-10">
                         <div className="inline-block border-b-2 border-red-600 pb-1 mb-3">

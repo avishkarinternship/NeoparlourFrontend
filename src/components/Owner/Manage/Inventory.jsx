@@ -464,7 +464,7 @@ const Inventory = () => {
     return (
         <>
                 <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-auto transition-colors duration-300 ${
-                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
                 }`}>
                     <div className="max-w-7xl mx-auto">
                         <h1 className={`text-3xl font-light tracking-tight mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Inventory Management</h1>

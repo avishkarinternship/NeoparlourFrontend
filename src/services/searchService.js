@@ -489,10 +489,10 @@ export const matchesQueryFuzzy = (targetText, queryText) => {
  */
 class OlaRateLimiter {
   constructor() {
-    this.maxRequestsPerMinute = 4; // 4 requests per minute
+    this.maxRequestsPerMinute = 30; // Elevated to allow smooth pin adjustments during salon location selection
     this.windowMs = 60000; // 60 seconds rolling window
     this.requestTimestamps = [];
-    this.minIntervalMs = 1000; // Enforce at least 1s gap between outbound calls
+    this.minIntervalMs = 500; // Enforce at least 500ms gap between outbound calls
     this.lastRequestTime = 0;
     this.circuitBreakerCooldownMs = 20000; // 20s cooldown on 429
     this.circuitBreakerUntil = 0;
@@ -1295,6 +1295,10 @@ const searchService = {
           let compAdmin2 = ''; // District (e.g. Ahmednagar, Pune)
           let compSublocality = '';
           let compNeighborhood = '';
+          let compPremise = '';
+          let compSubpremise = '';
+          let compStreetNumber = '';
+          let compRoute = '';
 
           for (const comp of res.address_components || []) {
             const types = comp.types || [];
@@ -1303,6 +1307,10 @@ const searchService = {
             if (types.includes('administrative_area_level_2')) compAdmin2 = comp.long_name;
             if (types.includes('sublocality_level_1') || types.includes('sublocality')) compSublocality = comp.long_name;
             if (types.includes('neighborhood') || types.includes('sublocality_level_2')) compNeighborhood = comp.long_name;
+            if (types.includes('premise') || types.includes('building')) compPremise = comp.long_name;
+            if (types.includes('subpremise') || types.includes('room')) compSubpremise = comp.long_name;
+            if (types.includes('street_number')) compStreetNumber = comp.long_name;
+            if (types.includes('route') || types.includes('street_address')) compRoute = comp.long_name;
 
             if (!state && types.includes('administrative_area_level_1')) {
               state = comp.long_name;
@@ -1338,6 +1346,9 @@ const searchService = {
           area: area.trim(),
           landmark: landmark.trim(),
           nearbyLandmarks: landmarkItems,
+          houseNumber: compStreetNumber || compSubpremise || '',
+          building: compPremise || '',
+          street: compRoute || '',
           stateName: state.trim(),
           stateEnum: stateEnum,
           pincode: pincode.trim(),
@@ -1347,7 +1358,7 @@ const searchService = {
           source: 'olamaps'
         };
 
-        if (cacheKey && (resultObj.city || resultObj.area)) {
+        if (cacheKey && (resultObj.city || resultObj.area || resultObj.formattedAddress)) {
           olaRateLimiter.setCached(cacheKey, resultObj);
         }
 
@@ -1612,25 +1623,34 @@ const searchService = {
         return await searchService.reverseGeocodePhoton(lat, lng);
       }
 
-      // 2. Try Google if key configured and preferred
+      const olaApiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_OLA_MAPS_API_KEY : null;
       const googleApiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_GOOGLE_MAPS_API_KEY : null;
+
+      // 2. Try Google ONLY if key configured AND explicitly preferred
       if (googleApiKey && (options.provider === 'google' || options.preferGoogle || options.useGoogle)) {
         const gRes = await searchService.reverseGeocodeGoogle(lat, lng, googleApiKey);
-        if (gRes && (gRes.city || gRes.area)) {
+        if (gRes && (gRes.city || gRes.area || gRes.formattedAddress)) {
           return gRes;
         }
       }
 
-      // 3. Try Ola Maps if key configured or provider is explicitly 'olamaps'
-      const olaApiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_OLA_MAPS_API_KEY : null;
-      if (olaApiKey && (options.provider === 'olamaps' || !options.provider)) {
+      // 3. Try Ola Maps if key configured (preferred, requested 'olamaps', or if Google key not present or failed)
+      if (olaApiKey && (options.provider === 'olamaps' || options.preferOla || !googleApiKey || !options.provider || options.provider === 'google')) {
         const olaRes = await searchService.reverseGeocodeOla(lat, lng, olaApiKey);
-        if (olaRes && (olaRes.city || olaRes.area)) {
+        if (olaRes && (olaRes.city || olaRes.area || olaRes.formattedAddress)) {
           return olaRes;
         }
       }
 
-      // 4. Fallback to free Photon Komoot
+      // 4. Try Google as secondary fallback if not tried yet and key configured
+      if (googleApiKey && options.provider !== 'google' && !options.preferGoogle) {
+        const gRes = await searchService.reverseGeocodeGoogle(lat, lng, googleApiKey);
+        if (gRes && (gRes.city || gRes.area || gRes.formattedAddress)) {
+          return gRes;
+        }
+      }
+
+      // 5. Ultimate fallback to free Photon Komoot
       return await searchService.reverseGeocodePhoton(lat, lng);
     } catch (err) {
       console.error('Error in reverseGeocode:', err);
@@ -1812,7 +1832,39 @@ const searchService = {
       }
     }
 
-    // 2. Query Photon Komoot API
+    // 2. Try Ola Maps Geocoding API if key configured
+    const olaApiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_OLA_MAPS_API_KEY : null;
+    if (olaApiKey && olaRateLimiter.canMakeRequest()) {
+      try {
+        let qStr = query.trim();
+        if (cleanCity && !normQuery.includes(cleanCity.toLowerCase())) {
+          qStr = `${qStr}, ${cleanCity}`;
+        }
+        if (cleanState && !normQuery.includes(cleanState.toLowerCase())) {
+          qStr = `${qStr}, ${cleanState}`;
+        }
+
+        const olaRes = await axios.get('https://api.olamaps.io/places/v1/geocode', {
+          params: { address: qStr, api_key: olaApiKey },
+          timeout: 5000
+        });
+
+        const geocoded = olaRes.data?.geocodingResults?.[0] || olaRes.data?.results?.[0];
+        if (geocoded?.geometry?.location) {
+          return {
+            latitude: geocoded.geometry.location.lat,
+            longitude: geocoded.geometry.location.lng,
+            name: query.trim(),
+            city: cleanCity,
+            formattedAddress: geocoded.formatted_address || qStr
+          };
+        }
+      } catch (err) {
+        // Fall through to Photon on error/timeout
+      }
+    }
+
+    // 3. Query Photon Komoot API
     try {
       let qStr = query.trim();
       if (cleanCity && !normQuery.includes(cleanCity.toLowerCase())) {

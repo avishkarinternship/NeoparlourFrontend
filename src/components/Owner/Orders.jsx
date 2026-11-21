@@ -193,7 +193,7 @@ const Orders = () => {
 
     return (
                 <main className={`flex-1 min-w-0 p-6 md:p-8 space-y-6 transition-colors duration-300 ${
-                    isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-l md:border-zinc-800' : 'bg-white text-slate-800 md:border-l md:border-gray-200'
+                    isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
                 }`}>
                     
                     {/* Header Title Section Line Block */}

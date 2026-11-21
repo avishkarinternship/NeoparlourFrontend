@@ -46,7 +46,7 @@ const Billing = () => {
     };
 
     return (
-                <main className="flex-1 min-w-0 p-6 md:p-8 bg-white border-l border-gray-200 space-y-8">
+                <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 bg-transparent space-y-8">
                     
                     {/* Header Action Section Block Tab Trigger */}
                     <div className="max-w-4xl mx-auto border-b border-gray-100 pb-2">
@@ -285,7 +285,7 @@ const Billing = () => {
                         </table>
                     </div>
 
-                </main>
+                </div>
     );
 }
 
