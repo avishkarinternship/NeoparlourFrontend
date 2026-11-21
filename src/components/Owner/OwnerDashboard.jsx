@@ -27,7 +27,18 @@ import {
     Sparkles,
     CalendarRange,
     ChevronRight,
-    SlidersHorizontal
+    SlidersHorizontal,
+    Scissors,
+    Users,
+    UserCheck,
+    Package,
+    Tag,
+    Plus,
+    ArrowRight,
+    LayoutGrid,
+    Receipt,
+    CalendarPlus,
+    AlertCircle
 } from 'lucide-react';
 import Way2SmartGatewayWidget from '../Admin/Way2SmartGatewayWidget';
 
@@ -320,7 +331,16 @@ const OwnerDashboard = () => {
     const [selectedStaffMap, setSelectedStaffMap] = useState({});
     const [assigningMap, setAssigningMap] = useState({});
 
+    // Dashboard View Mode & Unified Tab states
+    const [dashboardViewMode, setDashboardViewMode] = useState('grid'); // 'grid' | 'tabbed'
+    const [activeApptTab, setActiveApptTab] = useState('upcoming'); // 'upcoming' | 'unallocated' | 'completed' | 'cancelled'
 
+    // Active Salon Name for White-labeling
+    const activeSalonName = localStorage.getItem('salon_name') || 
+                            localStorage.getItem('activeSalonName') || 
+                            user?.salonName || 
+                            user?.name || 
+                            'Salon Owner';
 
     // Stylist availability list states
     const [staffStatusList, setStaffStatusList] = useState([]);
@@ -1122,457 +1142,1005 @@ const OwnerDashboard = () => {
         );
     }
 
-    return (
-        <main className={`flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+    // --- RENDER HELPERS FOR 6 SPACE-OPTIMIZED CARDS ---
+
+    const renderRevenueCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
         }`}>
-                    {/* Workspace Header Title */}
-                    <h1 className={`text-[22px] font-bold mb-6 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Dashboard</h1>
+            <div>
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Revenue</h3>
+                        <p className={`text-[11px] font-medium capitalize ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{viewType} view</p>
+                    </div>
+                    <div className="text-right">
+                        <p className={`text-[10px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total Revenue</p>
+                        <p className="text-lg sm:text-xl font-black text-[#ff0b01]">₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                </div>
 
-                    {/* Responsive Workspace Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pill-shaped Time Filter Tabs */}
+                <div className="flex gap-1.5 mb-3 flex-wrap">
+                    {VIEW_TYPES.map((type) => (
+                        <button
+                            key={type}
+                            onClick={() => handleViewTypeChange(type)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
+                                viewType === type
+                                    ? 'bg-[#ff0b01] text-white shadow-xs'
+                                    : isDarkMode ? 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700/60' : 'bg-slate-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200/80 shadow-3xs'
+                            }`}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
 
-                        {/* 1. Revenue Graph Card (Upgraded UI) */}
-                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[350px] transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <div>
-                                <div className="flex justify-between items-start mb-1">
-                                    <div>
-                                        <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Revenue</h3>
-                                        <p className={`text-[11px] font-medium capitalize ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{viewType} view</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total Revenue</p>
-                                        <p className="text-2xl font-black text-[#ff0b01]">₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
-                                    </div>
-                                </div>
+                {viewType === 'custom' && (
+                    <div className={`flex items-center space-x-2 mb-3 border p-2 rounded-xl max-w-sm ${
+                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                        <div className="flex-1 min-w-0">
+                            <label className={`text-[8px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From</label>
+                            <input 
+                                type="date"
+                                value={customStartDate}
+                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none focus:border-[#ff0b01] ${
+                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
+                                }`}
+                            />
+                        </div>
+                        <div className={`text-[10px] mt-3 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>to</div>
+                        <div className="flex-1 min-w-0">
+                            <label className={`text-[8px] font-black uppercase tracking-widest block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To</label>
+                            <input 
+                                type="date"
+                                value={customEndDate}
+                                onChange={(e) => setCustomEndDate(e.target.value)}
+                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none focus:border-[#ff0b01] ${
+                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
+                                }`}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
 
-                                {/* Pill-shaped Time Filter Tabs */}
-                                <div className="flex gap-2 mb-6 mt-3 flex-wrap">
-                                    {VIEW_TYPES.map((type) => (
-                                        <button
-                                            key={type}
-                                            onClick={() => handleViewTypeChange(type)}
-                                            className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase transition-all duration-200 ${
-                                                viewType === type
-                                                    ? 'bg-[#ff0b01] text-white shadow-xs'
-                                                    : isDarkMode ? 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700/60' : 'bg-slate-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200/80 shadow-3xs'
-                                            }`}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
-                                </div>
+            {/* Revenue Chart */}
+            <div className="h-[145px] w-full mt-1">
+                {revenueLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                        <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    </div>
+                ) : revenueData.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                        <svg className={`w-8 h-8 mb-1.5 ${isDarkMode ? 'text-zinc-700' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <p className={`text-xs font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>No revenue data available</p>
+                        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Billed customer sessions will appear here in real-time</p>
+                    </div>
+                ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
+                                    <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#f5f5f5'} vertical={false} />
+                            <XAxis
+                                dataKey="label"
+                                tickFormatter={(val) => formatLabel(val, viewType)}
+                                tick={{ fontSize: 9, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
+                                axisLine={{ stroke: isDarkMode ? '#334155' : '#e5e7eb' }}
+                                tickLine={false}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                tickFormatter={(val) => `₹${val}`}
+                                tick={{ fontSize: 9, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip content={<CustomTooltip viewType={viewType} />} />
+                            <Area
+                                type="monotone"
+                                dataKey="revenue"
+                                stroke="#ff0b01"
+                                strokeWidth={2.5}
+                                fill="url(#revenueGradient)"
+                                dot={{ r: 3, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 1.5 }}
+                                activeDot={{ r: 5, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                )}
+            </div>
+        </div>
+    );
 
-                                {viewType === 'custom' && (
-                                    <div className={`flex items-center space-x-3 mb-6 border p-3 rounded-2xl max-w-md ${
-                                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-gray-50 border-gray-200'
-                                    }`}>
-                                        <div className="flex-1">
-                                            <label className={`text-[9px] font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From</label>
-                                            <input 
-                                                type="date"
-                                                value={customStartDate}
-                                                onChange={(e) => setCustomStartDate(e.target.value)}
-                                                className={`w-full border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] ${
-                                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
-                                                }`}
-                                            />
-                                        </div>
-                                        <div className={`text-xs mt-4 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>to</div>
-                                        <div className="flex-1">
-                                            <label className={`text-[9px] font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To</label>
-                                            <input 
-                                                type="date"
-                                                value={customEndDate}
-                                                onChange={(e) => setCustomEndDate(e.target.value)}
-                                                className={`w-full border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none focus:border-[#ff0b01] ${
-                                                    isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
-                                                }`}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+    const renderUpcomingAppointmentsCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upcoming Appointments</h3>
+                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked sessions status</p>
+                </div>
+                <button 
+                    onClick={() => navigate('/owner/manage/schedule')}
+                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                >
+                    <span>More</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                </button>
+            </div>
+
+            {upcomingLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                </div>
+            ) : upcomingAppointments.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
+                    <img
+                        src={upcomingAppointmentIcon}
+                        alt="Upcoming Appointments Icon"
+                        className="w-8 h-8 object-contain opacity-70 dark:invert mb-1.5"
+                    />
+                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>Your Schedule Is Empty</h4>
+                    <p className={`text-[11px] font-medium max-w-[220px] mt-0.5 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                        No upcoming booked slots found.
+                    </p>
+                    <button
+                        onClick={() => navigate('/owner/manage/walk-in')}
+                        className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ff0b01] text-white text-[11px] font-bold shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                    >
+                        <span>+ Book Walk-in</span>
+                    </button>
+                </div>
+            ) : (
+                <div className={`divide-y flex-1 overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                    {upcomingAppointments.slice(0, 4).map((appt) => (
+                        <div key={appt.id} className="flex justify-between items-center py-2.5 first:pt-0 last:pb-0">
+                            <div className="min-w-0 pr-2">
+                                <h4 className={`text-[12px] sm:text-[13px] font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.customerName}</h4>
+                                <p className={`text-[10px] sm:text-[11px] font-semibold truncate mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                    {appt.serviceNames?.join(', ') || 'Service'} • {appt.staffName || 'Any Stylist'}
+                                </p>
+                                <p className={`text-[9px] sm:text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                    {formatAppointmentTime(appt.appointmentAt)}
+                                </p>
                             </div>
-
-                            {/* Revenue Chart */}
-                            <div className="h-[200px] w-full mt-2">
-                                {revenueLoading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                    </div>
-                                ) : revenueData.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-center">
-                                        <svg className={`w-10 h-10 mb-2 ${isDarkMode ? 'text-slate-600' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                                        </svg>
-                                        <p className={`text-xs font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>No revenue data available</p>
-                                        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Billed customer sessions will appear here in real-time</p>
-                                    </div>
-                                ) : (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
-                                                    <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#f5f5f5'} vertical={false} />
-                                            <XAxis
-                                                dataKey="label"
-                                                tickFormatter={(val) => formatLabel(val, viewType)}
-                                                tick={{ fontSize: 10, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
-                                                axisLine={{ stroke: isDarkMode ? '#334155' : '#e5e7eb' }}
-                                                tickLine={false}
-                                                interval="preserveStartEnd"
-                                            />
-                                            <YAxis
-                                                tickFormatter={(val) => `₹${val}`}
-                                                tick={{ fontSize: 10, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
-                                                axisLine={false}
-                                                tickLine={false}
-                                            />
-                                            <Tooltip content={<CustomTooltip viewType={viewType} />} />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="revenue"
-                                                stroke="#ff0b01"
-                                                strokeWidth={3}
-                                                fill="url(#revenueGradient)"
-                                                dot={{ r: 4, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2 }}
-                                                activeDot={{ r: 6, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2, className: 'animate-pulse' }}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                )}
+                            <div className="text-right shrink-0">
+                                <p className="text-[12px] sm:text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                <span className={`inline-block text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 capitalize ${
+                                    appt.status === 'in_progress' 
+                                        ? 'bg-orange-50 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400' 
+                                        : 'bg-red-50 dark:bg-red-950/70 text-[#ff0b01]'
+                                }`}>
+                                    {appt.status === 'in_progress' ? 'In Progress' : appt.status}
+                                </span>
                             </div>
                         </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 
-                        {/* 2. Upcoming Appointments (Booked) */}
-                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upcoming Appointments</h3>
-                                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked sessions status</p>
-                                </div>
-                                <button 
-                                    onClick={() => navigate('/owner/manage/schedule')}
-                                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
-                                >
-                                    <span>More</span>
-                                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                                </button>
-                            </div>
+    const renderUnallocatedAppointmentsCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Unallocated Appointments</h3>
+                        {unallocatedAppointments.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                {unallocatedAppointments.length}
+                            </span>
+                        )}
+                    </div>
+                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Appointments waiting for staff allocation</p>
+                </div>
+            </div>
 
-                            {upcomingLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+            {unallocatedLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                </div>
+            ) : unallocatedAppointments.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-1.5 opacity-80" />
+                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>All Staff Allocated</h4>
+                    <p className={`text-[11px] font-medium max-w-[220px] mt-0.5 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                        There are no appointments waiting for staff allocation.
+                    </p>
+                </div>
+            ) : (
+                <div className={`divide-y flex-1 overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                    {unallocatedAppointments.map((appt) => (
+                        <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 first:pt-0 last:pb-0 gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-1.5">
+                                    <h4 className={`text-[12px] sm:text-[13px] font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{appt.customerName || 'Customer'}</h4>
+                                    {appt.customerMobile && (
+                                        <>
+                                            <span className="text-[9px] text-gray-400 font-semibold">•</span>
+                                            <p className="text-[10px] text-gray-500 font-semibold truncate">{appt.customerMobile}</p>
+                                        </>
+                                    )}
                                 </div>
-                            ) : upcomingAppointments.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
-                                    <img
-                                        src={upcomingAppointmentIcon}
-                                        alt="Upcoming Appointments Icon"
-                                        className="w-10 h-10 object-contain opacity-70 dark:invert"
-                                    />
-                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>Your Schedule Is Empty</h4>
-                                    <p className={`text-[11px] font-semibold max-w-[240px] mt-1.5 leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
-                                        No upcoming booked slots found.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
-                                    {upcomingAppointments.slice(0, 3).map((appt) => (
-                                        <div key={appt.id} className="flex justify-between items-center py-3">
-                                            <div>
-                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.customerName}</h4>
-                                                <p className={`text-[11px] font-semibold mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
-                                                    {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
-                                                </p>
-                                                <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
-                                                    {formatAppointmentTime(appt.appointmentAt)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
-                                                    appt.status === 'in_progress' 
-                                                        ? 'bg-orange-50 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400' 
-                                                        : 'bg-red-50 dark:bg-red-950/70 text-[#ff0b01]'
-                                                }`}>
-                                                    {appt.status === 'in_progress' ? 'In Progress' : appt.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 3. Completed Appointments Activity Log */}
-                        <div className={`p-6 rounded-2xl border shadow-sm min-h-[350px] flex flex-col transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <div>
-                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Completed Appointments</h3>
-                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Feed of successful sessions</p>
-                            </div>
-
-                            {completedLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : completedAppointments.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
-                                    <img src={appointmentActivityIcon} alt="Log Icon" className="w-10 opacity-40 dark:invert" />
-                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Completed Sessions</h4>
-                                    <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>Mark sessions as completed to see activity.</p>
-                                </div>
-                            ) : (
-                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${isDarkMode ? 'divide-slate-800' : 'divide-gray-100'}`}>
-                                    {completedAppointments.slice(0, 3).map((appt) => (
-                                        <div key={appt.id} className="flex justify-between items-center py-3">
-                                            <div>
-                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.serviceNames?.join(', ') || 'Service'}</h4>
-                                                <div className="flex items-center space-x-1.5 mt-0.5">
-                                                    <img
-                                                        src={appointmentActivityIcon}
-                                                        alt="Log Icon"
-                                                        className="w-3.5 h-3.5 object-contain flex-shrink-0 opacity-70"
-                                                    />
-                                                    <p className={`text-[11px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{appt.customerName} • {formatAppointmentTime(appt.appointmentAt)}</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className={`text-[13px] font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className="inline-block text-[9px] bg-[#E3F9EC] dark:bg-emerald-950/70 text-[#299764] dark:text-emerald-400 font-bold px-2 py-0.5 rounded-md mt-1.5">Completed</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 4. Unallocated Appointments Panel */}
-                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Unallocated Appointments</h3>
-                            <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Appointments waiting for staff allocation</p>
-
-                            {unallocatedLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : unallocatedAppointments.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
-                                    <img
-                                        src={todaysAppointmentIcon}
-                                        alt="No Unallocated Appointments Icon"
-                                        className="w-12 h-12 object-contain opacity-50"
-                                    />
-                                    <h4 className="text-[14px] font-bold text-gray-800 mt-3">All Staff Allocated</h4>
-                                    <p className="text-[11px] font-semibold text-gray-400 max-w-[240px] mt-1.5 leading-relaxed">
-                                        There are no appointments waiting for staff allocation.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100 flex-1 overflow-y-auto max-h-[260px] pr-1">
-                                    {unallocatedAppointments.map((appt) => (
-                                        <div key={appt.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 first:pt-0 last:pb-0 gap-3">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center space-x-2">
-                                                    <h4 className="text-[13px] font-bold text-gray-900 truncate">{appt.customerName || 'Customer'}</h4>
-                                                    {appt.customerMobile && (
-                                                        <>
-                                                            <span className="text-[10px] text-gray-400 font-semibold">•</span>
-                                                            <p className="text-[11px] text-gray-500 font-semibold">{appt.customerMobile}</p>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
-                                                    {appt.serviceNames?.join(', ') || 'Service'}
-                                                </p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5">
-                                                    {formatAppointmentTime(appt.appointmentAt)} • <strong className="text-gray-600">₹{(appt.finalAmount || appt.totalPrice || 0).toFixed(2)}</strong>
-                                                </p>
-                                            </div>
-                                            
-                                            <div className="flex items-center gap-2">
-                                                <select
-                                                    value={selectedStaffMap[appt.id] || ''}
-                                                    onChange={(e) => setSelectedStaffMap(prev => ({ ...prev, [appt.id]: e.target.value }))}
-                                                    onFocus={() => fetchAvailableStaff(appt.id, appt.appointmentAt, appt.durationMinutes)}
-                                                    className="text-[11px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#ff0b01] font-semibold text-gray-700 min-w-[130px] h-9"
-                                                >
-                                                    {staffDropdownLoadingMap[appt.id] ? (
-                                                        <option value="">Loading staff...</option>
-                                                    ) : (
-                                                        <>
-                                                            <option value="">-- Select Staff --</option>
-                                                            {availableStaffMap[appt.id]?.length === 0 ? (
-                                                                <option value="" disabled>No staff available</option>
-                                                            ) : (
-                                                                availableStaffMap[appt.id]?.map((staff) => {
-                                                                    const staffId = staff.id || staff.staffId;
-                                                                    const staffName = staff.name || staff.staffName;
-                                                                    return (
-                                                                        <option key={staffId} value={staffId}>
-                                                                            {staffName}
-                                                                        </option>
-                                                                    );
-                                                                })
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </select>
-                                                
-                                                <button
-                                                    onClick={() => handleAssignStaff(appt.id)}
-                                                    disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
-                                                    className="bg-[#ff0b01] hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 h-9 rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-[#ff0b01]"
-                                                >
-                                                    {assigningMap[appt.id] ? 'Assigning...' : 'Assign'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 5. Stylist Status & Availability */}
-                        <div className={`p-6 rounded-2xl border shadow-sm min-h-[350px] flex flex-col transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <div>
-                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Stylist Status & Availability</h3>
-                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Real-time team active status</p>
+                                <p className="text-[10px] text-gray-400 font-semibold truncate mt-0.5">
+                                    {appt.serviceNames?.join(', ') || 'Service'} • ₹{(appt.finalAmount || appt.totalPrice || 0).toFixed(0)}
+                                </p>
+                                <p className="text-[9px] text-gray-400 font-medium mt-0.5">
+                                    {formatAppointmentTime(appt.appointmentAt)}
+                                </p>
                             </div>
                             
-                            {staffAvailabilityLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : staffStatusList.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-4">
-                                    <svg className={`w-10 h-10 mb-2 ${isDarkMode ? 'text-zinc-700' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                    </svg>
-                                    <p className={`text-[12px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>No staff status available</p>
-                                </div>
-                            ) : (
-                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${
-                                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
-                                }`}>
-                                    {staffStatusList.map((staff, idx) => (
-                                        <div key={staff.id || idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
-                                            <div className="flex items-center space-x-3">
-                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border shadow-sm overflow-hidden flex-shrink-0 ${
-                                                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-gray-50 border-gray-200 text-gray-800'
-                                                }`}>
-                                                    {staff.imageUrl || staff.imagePath ? (
-                                                        <img 
-                                                            src={staff.imageUrl || staff.imagePath} 
-                                                            alt={staff.name} 
-                                                            className="w-full h-full object-cover" 
-                                                            onError={(e) => {
-                                                                e.target.src = staff.gender === 'FEMALE' 
-                                                                    ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                    : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <img 
-                                                            src={staff.gender === 'FEMALE' 
-                                                                ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
-                                                                : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'} 
-                                                            alt={staff.name} 
-                                                            className="w-full h-full object-cover" 
-                                                        />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{staff.name || 'Stylist'}</h4>
-                                                    <p className={`text-[10px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
-                                                        {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? 'No rating yet' : `★ ${Number(staff.rating).toFixed(1)}`}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
-                                                    staff.status === 'Available' ? (isDarkMode ? 'bg-[#E3F9EC]/10 text-[#299764]' : 'bg-[#E3F9EC] text-[#299764]') :
-                                                    staff.status === 'In Session' ? (isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]') :
-                                                    staff.status === 'On Leave' ? (isDarkMode ? 'bg-amber-950/30 text-amber-500' : 'bg-amber-50 text-amber-600') :
-                                                    isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
-                                                }`}>
-                                                    {staff.status || 'Offline'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 6. Cancelled Appointments Panel */}
-                        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col min-h-[350px] transition-colors duration-300 ${
-                            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
-                        }`}>
-                            <div>
-                                <h3 className={`text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cancelled Appointments</h3>
-                                <p className={`text-[11px] font-medium mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked slots cancelled for today</p>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <select
+                                    value={selectedStaffMap[appt.id] || ''}
+                                    onChange={(e) => setSelectedStaffMap(prev => ({ ...prev, [appt.id]: e.target.value }))}
+                                    onFocus={() => fetchAvailableStaff(appt.id, appt.appointmentAt, appt.durationMinutes)}
+                                    className={`text-[10px] border rounded-lg px-2 py-1 focus:outline-none focus:border-[#ff0b01] font-semibold min-w-[110px] h-7 ${
+                                        isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-700'
+                                    }`}
+                                >
+                                    {staffDropdownLoadingMap[appt.id] ? (
+                                        <option value="">Loading...</option>
+                                    ) : (
+                                        <>
+                                            <option value="">Select Staff</option>
+                                            {availableStaffMap[appt.id]?.length === 0 ? (
+                                                <option value="" disabled>No staff available</option>
+                                            ) : (
+                                                availableStaffMap[appt.id]?.map((staff) => {
+                                                    const staffId = staff.id || staff.staffId;
+                                                    const staffName = staff.name || staff.staffName;
+                                                    return (
+                                                        <option key={staffId} value={staffId}>
+                                                            {staffName}
+                                                        </option>
+                                                    );
+                                                })
+                                            )}
+                                        </>
+                                    )}
+                                </select>
+                                
+                                <button
+                                    onClick={() => handleAssignStaff(appt.id)}
+                                    disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
+                                    className="bg-[#ff0b01] hover:bg-red-700 text-white text-[10px] font-bold px-2.5 h-7 rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-[#ff0b01] cursor-pointer"
+                                >
+                                    {assigningMap[appt.id] ? '...' : 'Assign'}
+                                </button>
                             </div>
-
-                            {cancelledLoading ? (
-                                <div className="flex-1 flex items-center justify-center">
-                                    <div className="animate-spin h-7 w-7 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
-                                </div>
-                            ) : cancelledAppointments.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center my-auto pb-6">
-                                    <img
-                                        src={todaysAppointmentIcon}
-                                        alt="Cancelled Appointments Icon"
-                                        className="w-12 h-12 object-contain opacity-50"
-                                    />
-                                    <h4 className={`text-[14px] font-bold mt-3 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Cancelled Appointments</h4>
-                                    <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-gray-300'}`}>There are no cancelled slots for today.</p>
-                                </div>
-                            ) : (
-                                <div className={`divide-y flex-1 overflow-y-auto max-h-[260px] pr-1 ${
-                                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
-                                }`}>
-                                    {cancelledAppointments.map((appt) => (
-                                        <div key={appt.id} className="flex justify-between items-center py-3">
-                                            <div>
-                                                <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{appt.customerName}</h4>
-                                                <p className={`text-[11px] font-semibold mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
-                                                    {appt.serviceNames?.join(', ') || 'Service'} • Stylist: {appt.staffName || 'Any'}
-                                                </p>
-                                                <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
-                                                    {formatAppointmentTime(appt.appointmentAt)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md mt-1.5 capitalize ${
-                                                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                                                }`}>
-                                                    {appt.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 
+    const renderStylistAvailabilityCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Stylist Status & Availability</h3>
+                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Real-time team active status</p>
+                </div>
+                <button 
+                    onClick={() => navigate('/owner/manage/staff')}
+                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                >
+                    <span>Staff</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                </button>
+            </div>
+            
+            {staffAvailabilityLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                </div>
+            ) : staffStatusList.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
+                    <Users className={`w-8 h-8 mb-1.5 ${isDarkMode ? 'text-zinc-700' : 'text-gray-300'}`} />
+                    <p className={`text-[12px] font-bold ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>No staff status available</p>
+                    <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Add stylists to track active presence</p>
+                </div>
+            ) : (
+                <div className={`divide-y flex-1 overflow-y-auto max-h-[160px] pr-1 ${
+                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
+                }`}>
+                    {staffStatusList.map((staff, idx) => (
+                        <div key={staff.id || idx} className="flex justify-between items-center py-2 first:pt-0 last:pb-0">
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs border shadow-2xs overflow-hidden shrink-0 ${
+                                    isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-gray-50 border-gray-200 text-gray-800'
+                                }`}>
+                                    <img 
+                                        src={staff.imageUrl || staff.imagePath || (staff.gender === 'FEMALE' 
+                                            ? 'https://cdn-icons-png.flaticon.com/512/6997/6997671.png'
+                                            : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')} 
+                                        alt={staff.name} 
+                                        className="w-full h-full object-cover" 
+                                        onError={(e) => {
+                                            e.target.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+                                        }}
+                                    />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className={`text-[12px] sm:text-[13px] font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{staff.name || 'Stylist'}</h4>
+                                    <p className={`text-[9px] sm:text-[10px] font-semibold truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                        {(staff.specialization || staff.speciality || 'Stylist')} • {(!staff.rating || Number(staff.rating) === 0) ? '★ New' : `★ ${Number(staff.rating).toFixed(1)}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="shrink-0 ml-2">
+                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md ${
+                                    staff.status === 'Available' ? (isDarkMode ? 'bg-[#E3F9EC]/10 text-[#299764]' : 'bg-[#E3F9EC] text-[#299764]') :
+                                    staff.status === 'In Session' ? (isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]') :
+                                    staff.status === 'On Leave' ? (isDarkMode ? 'bg-amber-950/30 text-amber-500' : 'bg-amber-50 text-amber-600') :
+                                    isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
+                                }`}>
+                                    {staff.status || 'Offline'}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    const renderCompletedAppointmentsCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Completed Appointments</h3>
+                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Feed of successful sessions</p>
+                </div>
+                <button 
+                    onClick={() => navigate('/owner/appointments')}
+                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                >
+                    <span>All</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                </button>
+            </div>
+
+            {completedLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                </div>
+            ) : completedAppointments.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
+                    <img src={appointmentActivityIcon} alt="Log Icon" className="w-8 h-8 opacity-40 dark:invert mb-1.5" />
+                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Completed Sessions</h4>
+                    <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>Mark sessions as completed to see activity.</p>
+                </div>
+            ) : (
+                <div className={`divide-y flex-1 overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                    {completedAppointments.slice(0, 4).map((appt) => (
+                        <div key={appt.id} className="flex justify-between items-center py-2.5 first:pt-0 last:pb-0">
+                            <div className="min-w-0 pr-2">
+                                <h4 className={`text-[12px] sm:text-[13px] font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{appt.serviceNames?.join(', ') || 'Service'}</h4>
+                                <div className="flex items-center space-x-1.5 mt-0.5 truncate">
+                                    <img
+                                        src={appointmentActivityIcon}
+                                        alt="Log Icon"
+                                        className="w-3 h-3 object-contain shrink-0 opacity-70"
+                                    />
+                                    <p className={`text-[10px] sm:text-[11px] font-semibold truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>{appt.customerName} • {formatAppointmentTime(appt.appointmentAt)}</p>
+                                </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                                <p className={`text-[12px] sm:text-[13px] font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                <span className="inline-block text-[8px] sm:text-[9px] bg-[#E3F9EC] dark:bg-emerald-950/70 text-[#299764] dark:text-emerald-400 font-bold px-2 py-0.5 rounded-md mt-1">Completed</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    const renderCancelledAppointmentsCard = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cancelled Appointments</h3>
+                    <p className={`text-[11px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Booked slots cancelled for today</p>
+                </div>
+                <button 
+                    onClick={() => navigate('/owner/appointments')}
+                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                >
+                    <span>All</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                </button>
+            </div>
+
+            {cancelledLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                </div>
+            ) : cancelledAppointments.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
+                    <img
+                        src={todaysAppointmentIcon}
+                        alt="Cancelled Appointments Icon"
+                        className="w-8 h-8 object-contain opacity-50 mb-1.5"
+                    />
+                    <h4 className={`text-[13px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>No Cancelled Appointments</h4>
+                    <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>There are no cancelled slots for today.</p>
+                </div>
+            ) : (
+                <div className={`divide-y flex-1 overflow-y-auto max-h-[160px] pr-1 ${
+                    isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'
+                }`}>
+                    {cancelledAppointments.map((appt) => (
+                        <div key={appt.id} className="flex justify-between items-center py-2.5 first:pt-0 last:pb-0">
+                            <div className="min-w-0 pr-2">
+                                <h4 className={`text-[12px] sm:text-[13px] font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-gray-800'}`}>{appt.customerName}</h4>
+                                <p className={`text-[10px] sm:text-[11px] font-semibold truncate mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                    {appt.serviceNames?.join(', ') || 'Service'} • {appt.staffName || 'Any Stylist'}
+                                </p>
+                                <p className={`text-[9px] sm:text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                    {formatAppointmentTime(appt.appointmentAt)}
+                                </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                                <p className="text-[12px] sm:text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                <span className={`inline-block text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 capitalize ${
+                                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
+                                }`}>
+                                    {appt.status}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    const renderUnifiedAppointmentsHub = () => (
+        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
+            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}>
+            <div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                        <h3 className={`text-sm sm:text-[15px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            Appointments Command Hub
+                        </h3>
                     </div>
-                </main>
+                    <button 
+                        onClick={() => navigate('/owner/appointments')}
+                        className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group self-start sm:self-auto"
+                    >
+                        <span>Full Bookings</span>
+                        <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                    </button>
+                </div>
+
+                {/* Hub Tab Switchers */}
+                <div className="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar pb-1">
+                    <button
+                        onClick={() => setActiveApptTab('upcoming')}
+                        className={`px-3 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                            activeApptTab === 'upcoming'
+                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                : isDarkMode ? 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        <span>Upcoming</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-white/20">{upcomingAppointments.length}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveApptTab('unallocated')}
+                        className={`px-3 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                            activeApptTab === 'unallocated'
+                                ? 'bg-amber-500 text-white shadow-xs'
+                                : isDarkMode ? 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        <span>Unallocated</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${unallocatedAppointments.length > 0 ? 'bg-red-600 text-white animate-pulse' : 'bg-white/20'}`}>
+                            {unallocatedAppointments.length}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => setActiveApptTab('completed')}
+                        className={`px-3 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                            activeApptTab === 'completed'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : isDarkMode ? 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        <span>Completed</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-white/20">{completedAppointments.length}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveApptTab('cancelled')}
+                        className={`px-3 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                            activeApptTab === 'cancelled'
+                                ? 'bg-zinc-700 text-white shadow-xs'
+                                : isDarkMode ? 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        <span>Cancelled</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-white/20">{cancelledAppointments.length}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Content Display */}
+            <div className="flex-1">
+                {activeApptTab === 'upcoming' && (
+                    upcomingLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                        </div>
+                    ) : upcomingAppointments.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
+                            <img src={upcomingAppointmentIcon} alt="Empty" className="w-8 h-8 object-contain opacity-70 dark:invert mb-1" />
+                            <h4 className="text-xs font-bold">No upcoming booked slots</h4>
+                            <button onClick={() => navigate('/owner/manage/walk-in')} className="mt-2 px-3 py-1 rounded-lg bg-[#ff0b01] text-white text-[10px] font-bold cursor-pointer">+ Book Walk-in</button>
+                        </div>
+                    ) : (
+                        <div className={`divide-y overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                            {upcomingAppointments.map((appt) => (
+                                <div key={appt.id} className="flex justify-between items-center py-2">
+                                    <div className="min-w-0 pr-2">
+                                        <h4 className="text-xs font-bold truncate">{appt.customerName}</h4>
+                                        <p className="text-[10px] text-gray-400 truncate">{appt.serviceNames?.join(', ')} • {appt.staffName || 'Any'}</p>
+                                        <p className="text-[9px] text-gray-500">{formatAppointmentTime(appt.appointmentAt)}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-xs font-black text-[#ff0b01]">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
+                                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/70 text-[#ff0b01] uppercase">{appt.status}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+
+                {activeApptTab === 'unallocated' && (
+                    unallocatedLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                        </div>
+                    ) : unallocatedAppointments.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-1" />
+                            <h4 className="text-xs font-bold text-emerald-600">All staff allocated</h4>
+                            <p className="text-[10px] text-gray-400">Zero unassigned appointments</p>
+                        </div>
+                    ) : (
+                        <div className={`divide-y overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                            {unallocatedAppointments.map((appt) => (
+                                <div key={appt.id} className="flex justify-between items-center py-2 gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-xs font-bold truncate">{appt.customerName}</h4>
+                                        <p className="text-[10px] text-gray-400 truncate">{appt.serviceNames?.join(', ')} • {formatAppointmentTime(appt.appointmentAt)}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <select
+                                            value={selectedStaffMap[appt.id] || ''}
+                                            onChange={(e) => setSelectedStaffMap(prev => ({ ...prev, [appt.id]: e.target.value }))}
+                                            onFocus={() => fetchAvailableStaff(appt.id, appt.appointmentAt, appt.durationMinutes)}
+                                            className="text-[10px] border rounded px-1.5 py-1 font-semibold dark:bg-zinc-800 dark:border-zinc-700"
+                                        >
+                                            <option value="">Staff</option>
+                                            {availableStaffMap[appt.id]?.map((staff) => (
+                                                <option key={staff.id || staff.staffId} value={staff.id || staff.staffId}>{staff.name || staff.staffName}</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={() => handleAssignStaff(appt.id)}
+                                            disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
+                                            className="bg-[#ff0b01] text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer"
+                                        >
+                                            Assign
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+
+                {activeApptTab === 'completed' && (
+                    completedLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                        </div>
+                    ) : completedAppointments.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
+                            <img src={appointmentActivityIcon} alt="Log" className="w-8 h-8 opacity-40 dark:invert mb-1" />
+                            <h4 className="text-xs font-bold">No completed sessions yet</h4>
+                        </div>
+                    ) : (
+                        <div className={`divide-y overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                            {completedAppointments.map((appt) => (
+                                <div key={appt.id} className="flex justify-between items-center py-2">
+                                    <div className="min-w-0 pr-2">
+                                        <h4 className="text-xs font-bold truncate">{appt.serviceNames?.join(', ')}</h4>
+                                        <p className="text-[10px] text-gray-400 truncate">{appt.customerName} • {formatAppointmentTime(appt.appointmentAt)}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-xs font-black">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
+                                        <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/70 px-1.5 py-0.5 rounded">Completed</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+
+                {activeApptTab === 'cancelled' && (
+                    cancelledLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                        </div>
+                    ) : cancelledAppointments.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
+                            <img src={todaysAppointmentIcon} alt="Log" className="w-8 h-8 opacity-40 dark:invert mb-1" />
+                            <h4 className="text-xs font-bold">Zero cancellations today</h4>
+                        </div>
+                    ) : (
+                        <div className={`divide-y overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                            {cancelledAppointments.map((appt) => (
+                                <div key={appt.id} className="flex justify-between items-center py-2">
+                                    <div className="min-w-0 pr-2">
+                                        <h4 className="text-xs font-bold truncate">{appt.customerName}</h4>
+                                        <p className="text-[10px] text-gray-400 truncate">{appt.serviceNames?.join(', ')} • {formatAppointmentTime(appt.appointmentAt)}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-xs font-black text-[#ff0b01]">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
+                                        <span className="text-[8px] font-bold text-red-500 bg-red-50 dark:bg-red-950/70 px-1.5 py-0.5 rounded">Cancelled</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+            </div>
+        </div>
+    );
+
+    return (
+        <main className={`flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full bg-transparent min-w-0 transition-colors duration-300 ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
+        }`}>
+            {/* 1. Welcome Banner & Live Quick Metric Counters */}
+            <div className={`p-4 sm:p-5 rounded-2xl border mb-5 transition-all ${
+                isDarkMode ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100 shadow-xs' : 'bg-white border-gray-200 text-gray-900 shadow-2xs'
+            }`}>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span>Salon Operations Hub</span>
+                            </span>
+                            <span className={`text-[11px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                Live Workspace
+                            </span>
+                        </div>
+                        <h1 className={`text-xl sm:text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            Welcome back, {activeSalonName}!
+                        </h1>
+                        <p className={`text-xs sm:text-[13px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                            Manage your appointments, track real-time revenue, and operate your salon efficiently.
+                        </p>
+                    </div>
+
+                    {/* Quick Metric Counters */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+                        <div className={`px-3 py-2 rounded-xl border text-center ${
+                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        }`}>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Today</p>
+                            <p className="text-sm sm:text-base font-black text-[#ff0b01]">{todaysAppointments.length}</p>
+                        </div>
+                        <div className={`px-3 py-2 rounded-xl border text-center ${
+                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        }`}>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Upcoming</p>
+                            <p className="text-sm sm:text-base font-black text-blue-600 dark:text-blue-400">{upcomingAppointments.length}</p>
+                        </div>
+                        <div className={`px-3 py-2 rounded-xl border text-center ${
+                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        }`}>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Unallocated</p>
+                            <p className={`text-sm sm:text-base font-black ${unallocatedAppointments.length > 0 ? 'text-amber-500 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                {unallocatedAppointments.length}
+                            </p>
+                        </div>
+                        <div className={`px-3 py-2 rounded-xl border text-center ${
+                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        }`}>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Completed</p>
+                            <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{completedAppointments.length}</p>
+                        </div>
+                        <div className={`px-3 py-2 rounded-xl border text-center col-span-2 sm:col-span-1 ${
+                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        }`}>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Revenue</p>
+                            <p className={`text-sm sm:text-base font-black truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                ₹{totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. Quick Links to Important Features */}
+            <div className="mb-5 sm:mb-6">
+                <div className="flex items-center justify-between mb-2.5">
+                    <h2 className={`text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                        <Sparkles className="w-4 h-4 text-[#ff0b01]" />
+                        <span>Quick Links & Important Features</span>
+                    </h2>
+                    <span className={`text-[10px] sm:text-[11px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+                        1-Click Shortcuts
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3">
+                    {/* 1. Book Walk-in (Primary highlighted action) */}
+                    <div
+                        onClick={() => navigate('/owner/manage/walk-in')}
+                        className="p-3 rounded-2xl bg-[#ff0b01] text-white hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-md flex flex-col justify-between group min-h-[92px]"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="p-1.5 rounded-xl bg-white/20 text-white">
+                                <CalendarPlus className="w-4 h-4" />
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-white/80 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Book Walk-in</h3>
+                            <p className="text-[10px] text-white/80 font-medium truncate">New customer slot</p>
+                        </div>
+                    </div>
+
+                    {/* 2. Manage Services */}
+                    <div
+                        onClick={() => navigate('/owner/manage/services')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-pink-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-pink-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-pink-500/10 text-pink-400' : 'bg-pink-50 text-pink-600'}`}>
+                                <Scissors className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-pink-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Services</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Prices & catalog</p>
+                        </div>
+                    </div>
+
+                    {/* 3. Manage Staff */}
+                    <div
+                        onClick={() => navigate('/owner/manage/staff')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-blue-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-blue-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                                <Users className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Manage Staff</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Team & stylists</p>
+                        </div>
+                    </div>
+
+                    {/* 4. Salon Schedule */}
+                    <div
+                        onClick={() => navigate('/owner/manage/schedule')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-amber-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-amber-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                                <CalendarRange className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Schedule</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Calendar & slots</p>
+                        </div>
+                    </div>
+
+                    {/* 5. Billing & Invoices */}
+                    <div
+                        onClick={() => navigate('/owner/billing')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-emerald-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
+                                <Receipt className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Billing & POS</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Invoices & GST</p>
+                        </div>
+                    </div>
+
+                    {/* 6. Customers */}
+                    <div
+                        onClick={() => navigate('/owner/customers')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-purple-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-purple-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
+                                <UserCheck className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Customers</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Client database</p>
+                        </div>
+                    </div>
+
+                    {/* 7. Inventory */}
+                    <div
+                        onClick={() => navigate('/owner/manage/inventory')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-cyan-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-cyan-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
+                                <Package className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-cyan-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Inventory</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Stock & supplies</p>
+                        </div>
+                    </div>
+
+                    {/* 8. Offers & Deals */}
+                    <div
+                        onClick={() => navigate('/owner/manage/add-offers')}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
+                            isDarkMode 
+                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-indigo-500/40 text-zinc-100 shadow-2xs' 
+                                : 'bg-white border-gray-200 hover:border-indigo-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+                                <Tag className="w-4 h-4" />
+                            </div>
+                            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </div>
+                        <div className="mt-2">
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Offers & Deals</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Promos & combos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 3. Section Header & Layout Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                    <h2 className={`text-xs sm:text-sm font-black uppercase tracking-wider ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                        Operations & Activity Hub
+                    </h2>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        isDarkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                        Real-time
+                    </span>
+                </div>
+
+                {/* View Mode Switcher */}
+                <div className={`inline-flex items-center p-1 rounded-xl border text-xs font-bold self-start sm:self-auto ${
+                    isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200 shadow-3xs'
+                }`}>
+                    <button
+                        type="button"
+                        onClick={() => setDashboardViewMode('grid')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                            dashboardViewMode === 'grid'
+                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                    >
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                        <span>Compact Grid</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDashboardViewMode('tabbed')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                            dashboardViewMode === 'tabbed'
+                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                    >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                        <span>Unified Hub</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* 4. The 6 Operation Cards (Space-Optimized Layout) */}
+            {dashboardViewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                    {renderRevenueCard()}
+                    {renderUpcomingAppointmentsCard()}
+                    {renderUnallocatedAppointmentsCard()}
+                    {renderStylistAvailabilityCard()}
+                    {renderCompletedAppointmentsCard()}
+                    {renderCancelledAppointmentsCard()}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                    {renderRevenueCard()}
+                    {renderUnifiedAppointmentsHub()}
+                    <div className="md:col-span-2">
+                        {renderStylistAvailabilityCard()}
+                    </div>
+                </div>
+            )}
+        </main>
     );
 };
 
