@@ -156,42 +156,61 @@ export const lighten = (hex, percent = 15) => {
 
 /**
  * Intelligently adapts brand color for Dark Mode.
- * Ensures interactive/selected brand elements are vibrant, radiant, and clearly
- * distinguishable against dark surfaces (lightness ~0.60-0.66) rather than muddy or dark.
+ * Calibrates the brand color into a refined, comfortable, non-fluorescent tone.
+ * Keeps lightness in the balanced range (0.44 - 0.49) and moderates saturation (0.55 - 0.72)
+ * so interactive elements look premium and sophisticated without bright neon/glow glare.
  */
 export const adaptBrandForDarkMode = (primaryHex) => {
-  if (!primaryHex) return '#7C3AED';
+  if (!primaryHex) return '#6D28D9';
   const { r, g, b } = hexToRgb(primaryHex);
   const hsl = rgbToHsl(r, g, b);
 
   // If achromatic / grayscale (pure grey, black, silver, white)
   if (hsl.s < 0.12) {
-    const adapted = hslToRgb(0, 0, 0.88);
+    const adapted = hslToRgb(0, 0, 0.78);
     return rgbToHex(adapted.r, adapted.g, adapted.b);
   }
 
-  // In dark mode, primary interactive and selected elements must be vibrant, radiant,
-  // and luminous (lightness 0.60 - 0.66) so they never look like dark muddy blocks.
-  let targetL = 0.62;
-  let targetS = Math.min(1.0, Math.max(hsl.s * 1.15, 0.88));
-
-  if (hsl.h >= 15 && hsl.h <= 65) {
-    // Warm hues (orange, amber, gold, brown) need slightly higher lightness
-    // to transform brown/mustard into brilliant glowing liquid gold
-    targetL = 0.62;
-    targetS = Math.min(1.0, Math.max(hsl.s * 1.20, 0.92));
-  } else if (hsl.h > 65 && hsl.h <= 100) {
-    // Yellow / lime
-    targetL = 0.64;
-    targetS = Math.min(1.0, Math.max(hsl.s * 1.10, 0.86));
-  } else if (hsl.h > 100 && hsl.h <= 250) {
-    // Emerald, cyan, blue
-    targetL = 0.60;
-    targetS = Math.min(1.0, Math.max(hsl.s * 1.10, 0.86));
+  // Refined Dark Mode Accent Calibration:
+  // Avoid neon glowing/blinding highlights. Keep lightness in the comfortable,
+  // premium range (0.44 - 0.49) with controlled saturation (0.55 - 0.72)
+  // so elements look sophisticated, rich, and readable with crisp white text.
+  let targetL;
+  if (hsl.l < 0.38) {
+    // Dark original color (e.g. deep forest green, navy, wine):
+    // Lift gently to 0.45 so it stands out comfortably from dark surfaces without glowing
+    targetL = 0.45;
+  } else if (hsl.l > 0.52) {
+    // Very bright, pastel, or fluorescent original color:
+    // Settle down to 0.47 so it is not a glowing highlighter
+    targetL = 0.47;
   } else {
-    // Purple, violet, magenta, red
-    targetL = 0.64;
-    targetS = Math.min(1.0, Math.max(hsl.s * 1.15, 0.90));
+    // Already in a comfortable range (0.38 - 0.52): preserve close to original
+    targetL = Math.max(0.44, Math.min(0.49, hsl.l));
+  }
+
+  // Controlled saturation: preserve brand hue identity without fluorescent neon glare
+  let targetS;
+  if (hsl.h >= 15 && hsl.h <= 65) {
+    // Warm hues (orange, amber, gold): rich caramel/honey gold, not neon yellow
+    targetL = Math.max(0.45, Math.min(0.50, targetL));
+    targetS = Math.min(0.75, Math.max(0.55, hsl.s * 0.90));
+  } else if (hsl.h > 65 && hsl.h <= 100) {
+    // Yellow/lime: tone down to warm olive/moss to avoid electric green
+    targetL = 0.45;
+    targetS = Math.min(0.65, Math.max(0.48, hsl.s * 0.75));
+  } else if (hsl.h > 100 && hsl.h <= 170) {
+    // Emerald / Green / Mint: rich, deep jade/emerald, NOT neon mint highlighter
+    targetL = 0.45;
+    targetS = Math.min(0.68, Math.max(0.50, hsl.s * 0.82));
+  } else if (hsl.h > 170 && hsl.h <= 250) {
+    // Cyan / Ocean / Blue: sophisticated sapphire/teal, NOT neon cyan
+    targetL = 0.47;
+    targetS = Math.min(0.70, Math.max(0.52, hsl.s * 0.85));
+  } else {
+    // Purple / Violet / Crimson: elegant royal amethyst / ruby
+    targetL = Math.max(0.45, Math.min(0.50, targetL));
+    targetS = Math.min(0.75, Math.max(0.55, hsl.s * 0.90));
   }
 
   const adapted = hslToRgb(hsl.h, targetS, targetL);
@@ -641,16 +660,16 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     darkTextParagraph = '#D1D5DB';
   }
 
-  const darkButtonText = getContrastingTextColor(darkPrimaryHex);
-  const darkPrimaryHover = lighten(darkPrimaryHex, 10);
-  const darkPrimaryActive = darken(darkPrimaryHex, 10);
+  const darkButtonText = '#FFFFFF';
+  const darkPrimaryHover = lighten(darkPrimaryHex, 6);
+  const darkPrimaryActive = darken(darkPrimaryHex, 6);
 
   const darkTokens = {
     primary: darkPrimaryHex,
     primaryHover: darkPrimaryHover,
     primaryActive: darkPrimaryActive,
-    secondary: lighten(darkPrimaryHex, 16),
-    accent: lighten(darkPrimaryHex, 22),
+    secondary: lighten(darkPrimaryHex, 8),
+    accent: lighten(darkPrimaryHex, 12),
     buttonText: darkButtonText,
 
     background: darkBgHex,
@@ -906,8 +925,8 @@ export const applyDynamicTheme = (palette) => {
       html.dark body {
         background-color: var(--color-background) !important;
         background-image: 
-          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${darkPr}, 0.18), transparent),
-          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${darkPr}, 0.10), transparent) !important;
+          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${darkPr}, 0.07), transparent),
+          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${darkPr}, 0.04), transparent) !important;
         background-attachment: fixed !important;
         color: var(--color-text-primary) !important;
       }
@@ -994,29 +1013,49 @@ export const applyDynamicTheme = (palette) => {
       /* ============================================================
          5. ACTIVE SIDEBAR TAB (Matching Reference Mockup)
          ============================================================ */
-      .sidebar-btn.bg-red-50,
-      .sidebar-btn.bg-red-500\\/15,
-      .sidebar-btn[data-active="true"] {
+      html:not(.dark) .sidebar-btn.bg-red-50,
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15,
+      html:not(.dark) .sidebar-btn[data-active="true"] {
         background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
         color: var(--color-button-text) !important;
-        box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.35) !important;
+        box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.25) !important;
       }
 
-      .sidebar-btn.bg-red-50 span,
-      .sidebar-btn.bg-red-500\\/15 span,
-      .sidebar-btn.bg-red-50 svg,
-      .sidebar-btn.bg-red-500\\/15 svg,
-      .sidebar-btn.bg-red-50 div,
-      .sidebar-btn.bg-red-500\\/15 div {
+      html:not(.dark) .sidebar-btn.bg-red-50 span,
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15 span,
+      html:not(.dark) .sidebar-btn.bg-red-50 svg,
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15 svg,
+      html:not(.dark) .sidebar-btn.bg-red-50 div,
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15 div {
         color: var(--color-button-text) !important;
         stroke: var(--color-button-text) !important;
       }
 
-      .sidebar-btn.bg-red-50 .active-icon-glow,
-      .sidebar-btn.bg-red-500\\/15 .active-icon-glow,
-      .sidebar-btn[data-active="true"] .active-icon-glow {
+      /* Dark Mode Active Sidebar Tab: Rich, Clean, Non-Glowy */
+      .dark .sidebar-btn.bg-red-50,
+      .dark .sidebar-btn.bg-red-500\\/15,
+      .dark .sidebar-btn[data-active="true"] {
+        background: var(--color-primary) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      }
+
+      .dark .sidebar-btn.bg-red-50 span,
+      .dark .sidebar-btn.bg-red-500\\/15 span,
+      .dark .sidebar-btn.bg-red-50 svg,
+      .dark .sidebar-btn.bg-red-500\\/15 svg,
+      .dark .sidebar-btn.bg-red-50 div,
+      .dark .sidebar-btn.bg-red-500\\/15 div {
+        color: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+      }
+
+      .dark .sidebar-btn.bg-red-50 .active-icon-glow,
+      .dark .sidebar-btn.bg-red-500\\/15 .active-icon-glow,
+      .dark .sidebar-btn[data-active="true"] .active-icon-glow {
         filter: none !important;
-        color: var(--color-button-text) !important;
+        color: #FFFFFF !important;
       }
 
       /* ============================================================
@@ -1036,6 +1075,23 @@ export const applyDynamicTheme = (palette) => {
       .hover\\:bg-\\[\\#E02510\\]:hover {
         background-color: var(--color-primary-hover) !important;
         color: var(--color-button-text) !important;
+      }
+
+      /* Dark Mode Button Overrides: Crisp White Text, No Neon Glare */
+      .dark .bg-\\[\\#FF0B01\\], 
+      .dark .bg-\\[\\#ff0b01\\], 
+      .dark .bg-\\[\\#EF3E23\\],
+      .dark .bg-red-600,
+      .dark .bg-red-500 {
+        background-color: var(--color-primary) !important;
+        color: #FFFFFF !important;
+      }
+
+      .dark .hover\\:bg-red-700:hover, 
+      .dark .hover\\:bg-red-600:hover,
+      .dark .hover\\:bg-\\[\\#E02510\\]:hover {
+        background-color: var(--color-primary-hover) !important;
+        color: #FFFFFF !important;
       }
 
       .active\\:scale-95:active,
@@ -1099,8 +1155,14 @@ export const applyDynamicTheme = (palette) => {
 
       .dark .bg-red-950\\/40,
       .dark .bg-red-950\\/50,
-      .dark .bg-red-900\\/20 {
-        background-color: rgba(var(--color-primary-rgb), 0.22) !important;
+      .dark .bg-red-900\\/20,
+      .dark .bg-red-50, 
+      .dark .bg-\\[\\#ffebeb\\],
+      .dark .bg-red-500\\/10,
+      .dark .bg-red-500\\/15,
+      .dark .bg-red-500\\/20 {
+        background-color: rgba(var(--color-primary-rgb), 0.16) !important;
+        color: var(--color-primary) !important;
       }
 
       .dark .text-red-400 {

@@ -451,7 +451,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                 backgroundColor: activeTokens.background,
                 borderColor: activeTokens.border,
                 color: activeTokens.textPrimary,
-                backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${activeTokens.primaryRgb}, ${previewMode === 'dark' ? 0.30 : 0.14}), transparent)`
+                backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${activeTokens.primaryRgb}, ${previewMode === 'dark' ? 0.08 : 0.12}), transparent)`
               }}
             >
               {/* Simulated Navigation Bar */}
