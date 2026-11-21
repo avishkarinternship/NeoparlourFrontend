@@ -6,6 +6,8 @@ import Footer from './Footer';
 import SalonBanBanner from './SalonBanBanner';
 import axiosInstance from '../../../api/axiosInstance';
 import { extractPaletteFromImage, applySalonTheme } from '../../../utils/whiteLabelHelper';
+import { getSalonTheme } from '../../../utils/themeGenerator';
+import { useDarkMode } from '../../../context/DarkModeContext';
 
 export default function OwnerLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -30,29 +32,7 @@ export default function OwnerLayout() {
   const isAdmin = userRole === 'ADMIN';
   const isSeoAdmin = userRole === 'SEO_ADMIN' || userRole.includes('SEO');
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('owner_dark_mode');
-    if (saved !== null) {
-      return saved === 'true';
-    }
-    // Default to dark mode for SEO admin initially, but allow toggle
-    if (isSeoAdmin) return true;
-    return false;
-  });
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      localStorage.setItem('owner_dark_mode', String(next));
-      localStorage.setItem('theme', next ? 'dark' : 'light');
-      if (next) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return next;
-    });
-  };
+  const { isDark: isDarkMode, toggleDark: toggleDarkMode } = useDarkMode();
 
   const toggleSidebar = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -78,19 +58,17 @@ export default function OwnerLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+
 
   useEffect(() => {
     const activeSalonId = localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
     if (activeSalonId && activeSalonId !== 'SYSTEM' && activeSalonId !== 'null' && !isNaN(Number(activeSalonId))) {
+      // 1. If salon already has a custom/saved theme, apply it immediately
+      const savedTheme = getSalonTheme(activeSalonId);
+      if (savedTheme) {
+        applySalonTheme(savedTheme);
+      }
+
       axiosInstance.get(`/salons/${activeSalonId}`)
         .then(res => {
           setSalon(res.data);
@@ -98,12 +76,16 @@ export default function OwnerLayout() {
           if (logo) {
             localStorage.setItem('salon_logo', logo);
             localStorage.setItem('activeSalonLogo', logo);
-            extractPaletteFromImage(logo).then(palette => {
-              if (palette) {
-                localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
-                applySalonTheme(palette);
-              }
-            });
+            // Only auto-extract if salon has no saved theme yet
+            if (!savedTheme) {
+              extractPaletteFromImage(logo).then(palette => {
+                if (palette) {
+                  localStorage.setItem(`salon_theme_${activeSalonId}`, JSON.stringify(palette));
+                  localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
+                  applySalonTheme(palette);
+                }
+              });
+            }
           }
         })
         .catch(err => console.warn('Could not fetch active salon info for ban check:', err.message));

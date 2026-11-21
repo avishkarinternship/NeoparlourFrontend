@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
-export { default as SalonLogoImage } from '../components/common/SalonLogoImage';
-import {
-  applyDynamicTheme,
-  removeDynamicTheme,
-  extractBrandPaletteFromLogo,
-  getSalonTheme,
-  saveSalonTheme
+import { 
+  applyDynamicTheme, 
+  removeDynamicTheme, 
+  extractBrandPaletteFromLogo, 
+  getSalonTheme 
 } from './themeGenerator';
-
-export * from './themeGenerator';
+export { default as SalonLogoImage } from '../components/common/SalonLogoImage';
 
 export const WHITE_LABEL_EVENT = 'np_active_salon_changed';
 
@@ -112,20 +109,21 @@ export const getActiveSalon = () => {
 
 /**
  * Injects dynamic CSS rules to customize website colors based on extracted salon logo palette.
+ * Delegates to themeGenerator.js.
  */
 export const applySalonTheme = (palette) => {
-  applyDynamicTheme(palette);
+  return applyDynamicTheme(palette);
 };
 
 /**
  * Removes the dynamic theme style element, returning to default colors.
  */
 export const removeSalonTheme = () => {
-  removeDynamicTheme();
+  return removeDynamicTheme();
 };
 
 /**
- * Client-side color extractor: extracts dominant brand palette from salon logo image.
+ * Client-side color extractor: extracts dominant brand color from a salon logo image.
  */
 export const extractPaletteFromImage = async (imageUrl) => {
   return extractBrandPaletteFromLogo(imageUrl);
@@ -136,9 +134,10 @@ export const extractPaletteFromImage = async (imageUrl) => {
  */
 export const initSalonTheme = () => {
   try {
-    const cached = getSalonTheme();
-    if (cached) {
-      applyDynamicTheme(cached);
+    const cached = localStorage.getItem('activeSalonTheme');
+    if (cached && cached !== 'undefined' && cached !== 'null') {
+      const palette = JSON.parse(cached);
+      applySalonTheme(palette);
     }
   } catch (e) {
     console.error('Error initializing salon theme:', e);
@@ -196,15 +195,12 @@ export const setActiveSalon = (salonData) => {
     const info = { id, name, logo, address, phone, rating };
     localStorage.setItem('activeSalonInfo', JSON.stringify(info));
 
-    // Check if this salon already has a customized or cached palette
-    const existingTheme = getSalonTheme(id);
-    if (existingTheme) {
-      applyDynamicTheme(existingTheme);
-    } else if (logo) {
-      // Automatically extract brand palette and apply dynamic theme
-      extractBrandPaletteFromLogo(logo).then(palette => {
+    // Automatically extract palette and apply dynamic theme
+    if (logo) {
+      extractPaletteFromImage(logo).then(palette => {
         if (palette) {
-          saveSalonTheme(id, palette);
+          localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
+          applySalonTheme(palette);
         }
       });
     }
@@ -229,7 +225,7 @@ export const clearActiveSalon = () => {
     localStorage.removeItem('activeSalonRating');
     localStorage.removeItem('activeSalonInfo');
     localStorage.removeItem('activeSalonTheme');
-    removeDynamicTheme();
+    removeSalonTheme();
 
     window.dispatchEvent(new CustomEvent(WHITE_LABEL_EVENT, { detail: null }));
     window.dispatchEvent(new Event('activeSalonChanged'));

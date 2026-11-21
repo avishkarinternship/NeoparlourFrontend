@@ -7,10 +7,11 @@ import { GstStateInput, StateSelector, GstinInput } from "../common/GstStateInpu
 import { BillingSummaryCard } from "../common/BillingSummaryCard";
 import { getStateFromCityName, getStateFromStateName, getGstInvoiceNotice, getStateDisplayName, INDIAN_STATES } from "../../constants/indianStates";
 import searchService from "../../services/searchService";
-import { MapPin, Navigation as NavigationIcon, Compass, Building, Palette } from "lucide-react";
+import { MapPin, Navigation as NavigationIcon, Compass, Building } from "lucide-react";
 import LocationPickerModal from "../location/LocationPickerModal";
 import BrandingThemeSettings from "./BrandingThemeSettings";
 import { extractBrandPaletteFromLogo, saveSalonTheme } from "../../utils/themeGenerator";
+import { Palette } from "lucide-react";
 
 const is18OrOlder = (birthdateString) => {
   if (!birthdateString) return false;
