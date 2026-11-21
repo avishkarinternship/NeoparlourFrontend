@@ -51,7 +51,7 @@ export const DarkModeProvider = ({ children }) => {
   // Compute effective dark state
   const isDark = mode === 'system' ? systemPrefersDark : mode === 'dark';
 
-  // Apply .dark class to root and persist
+  // Apply .dark class to both documentElement AND body, and persist
   useEffect(() => {
     try {
       localStorage.setItem('user_appearance_mode', mode);
@@ -61,9 +61,12 @@ export const DarkModeProvider = ({ children }) => {
       if (typeof document !== 'undefined') {
         if (isDark) {
           document.documentElement.classList.add('dark');
+          if (document.body) document.body.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
+          if (document.body) document.body.classList.remove('dark');
         }
+        window.dispatchEvent(new CustomEvent('np_dark_mode_changed', { detail: { isDark, mode } }));
       }
     } catch (e) {
       console.warn('Failed to persist appearance mode:', e);
@@ -76,8 +79,17 @@ export const DarkModeProvider = ({ children }) => {
     }
   }, []);
 
+  // Bulletproof toggle: flips active state based on current effective isDark
   const toggleDark = useCallback(() => {
-    setModeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setModeState((prev) => {
+      const isCurrentlyDark =
+        prev === 'system'
+          ? (typeof window !== 'undefined' && window.matchMedia
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              : false)
+          : prev === 'dark';
+      return isCurrentlyDark ? 'light' : 'dark';
+    });
   }, []);
 
   return (
@@ -93,13 +105,51 @@ export const useDarkMode = () => {
     const isDark =
       typeof document !== 'undefined' &&
       (document.documentElement.classList.contains('dark') ||
+        (typeof document.body !== 'undefined' && document.body?.classList.contains('dark')) ||
         localStorage.getItem('neoparlour-dark-mode') === 'true' ||
         localStorage.getItem('theme') === 'dark');
     return {
       isDark: Boolean(isDark),
       mode: isDark ? 'dark' : 'light',
-      setMode: () => {},
-      toggleDark: () => {}
+      setMode: (m) => {
+        try {
+          localStorage.setItem('user_appearance_mode', m);
+          if (typeof document !== 'undefined') {
+            if (m === 'dark') {
+              document.documentElement.classList.add('dark');
+              if (document.body) document.body.classList.add('dark');
+            } else if (m === 'light') {
+              document.documentElement.classList.remove('dark');
+              if (document.body) document.body.classList.remove('dark');
+            }
+          }
+        } catch (err) {
+          console.debug('Failed to set fallback mode:', err);
+        }
+      },
+      toggleDark: () => {
+        try {
+          const currentlyDark =
+            typeof document !== 'undefined' &&
+            document.documentElement.classList.contains('dark');
+          const next = !currentlyDark;
+          if (typeof document !== 'undefined') {
+            if (next) {
+              document.documentElement.classList.add('dark');
+              if (document.body) document.body.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+              if (document.body) document.body.classList.remove('dark');
+            }
+          }
+          localStorage.setItem('neoparlour-dark-mode', String(next));
+          localStorage.setItem('theme', next ? 'dark' : 'light');
+          localStorage.setItem('user_appearance_mode', next ? 'dark' : 'light');
+          window.dispatchEvent(new CustomEvent('np_dark_mode_changed', { detail: { isDark: next, mode: next ? 'dark' : 'light' } }));
+        } catch (err) {
+          console.debug('Failed to toggle fallback dark mode:', err);
+        }
+      }
     };
   }
   return context;

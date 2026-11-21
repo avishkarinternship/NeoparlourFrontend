@@ -56,9 +56,5 @@ function CustomerLayoutInner() {
 }
 
 export default function CustomerLayout() {
-  return (
-    <DarkModeProvider>
-      <CustomerLayoutInner />
-    </DarkModeProvider>
-  );
+  return <CustomerLayoutInner />;
 }

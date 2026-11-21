@@ -9,6 +9,7 @@ import { routes } from './router/NeoParlourRouter'
 import './index.css'
 import i18n from './i18n'
 import { I18nextProvider, useTranslation } from 'react-i18next'
+import { DarkModeProvider } from './context/DarkModeContext'
 import RootErrorBoundary from './components/common/RootErrorBoundary'
 
 // Safeguard against missing imports or cached chunks referencing hooks globally
@@ -52,12 +53,14 @@ const RootFallback = () => (
 
 createRoot(document.getElementById('root')).render(
   <RootErrorBoundary>
-  <Provider store={store}>
-    <I18nextProvider i18n={i18n}>
-      <Suspense fallback={<RootFallback />}>
-        <RouterProvider router={routes} />
-      </Suspense>
-    </I18nextProvider>
+    <Provider store={store}>
+      <I18nextProvider i18n={i18n}>
+        <DarkModeProvider>
+          <Suspense fallback={<RootFallback />}>
+            <RouterProvider router={routes} />
+          </Suspense>
+        </DarkModeProvider>
+      </I18nextProvider>
     </Provider>
   </RootErrorBoundary>
 )

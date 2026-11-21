@@ -1381,15 +1381,17 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
           </div>
         )}
 
-        {/* Dark Mode Toggle Button (Desktop only - mobile is in sidebar) */}
+        {/* Dark Mode Toggle Button (Accessible across all screen sizes) */}
         <button
+          type="button"
           onClick={toggleDarkMode}
-          className={`hidden sm:flex w-11 h-11 rounded-2xl transition border items-center justify-center cursor-pointer relative overflow-hidden ${
+          className={`flex w-10 h-10 sm:w-11 sm:h-11 rounded-2xl transition border items-center justify-center cursor-pointer relative overflow-hidden ${
             isDarkMode 
               ? 'bg-zinc-800 text-amber-400 border-zinc-700 hover:bg-zinc-700' 
               : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
           }`}
           title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <Sun className={`w-4 h-4 text-amber-400 absolute ${

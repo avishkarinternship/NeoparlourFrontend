@@ -773,7 +773,7 @@ export const applyDynamicTheme = (palette) => {
       /* ============================================================
          3. LIGHT MODE GLOBAL THEME APPLICATION (Atmospheric Tint)
          ============================================================ */
-      body:not(.dark) {
+      html:not(.dark) body {
         background-color: var(--color-background);
         background-image: 
           radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${lightPr}, 0.12), transparent),
@@ -783,81 +783,80 @@ export const applyDynamicTheme = (palette) => {
       }
 
       /* Page & layout backgrounds */
-      :not(.dark) .bg-\\[\\#FAFAFA\\],
-      :not(.dark) .bg-gray-50,
-      :not(.dark) .bg-slate-50,
-      :not(.dark) .bg-zinc-50,
-      :not(.dark) main {
+      html:not(.dark) .bg-\\[\\#FAFAFA\\],
+      html:not(.dark) .bg-gray-50,
+      html:not(.dark) .bg-slate-50,
+      html:not(.dark) .bg-zinc-50,
+      html:not(.dark) main {
         background-color: var(--color-background) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Navigation Header */
-      :not(.dark) header,
-      :not(.dark) nav {
+      html:not(.dark) header,
+      html:not(.dark) nav {
         background-color: var(--color-nav-bg) !important;
         border-color: var(--color-border) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Sidebars */
-      :not(.dark) aside,
-      :not(.dark) .sidebar-container {
+      html:not(.dark) aside,
+      html:not(.dark) .sidebar-container {
         background-color: var(--color-sidebar-bg) !important;
         border-color: var(--color-border) !important;
       }
 
       /* Cards & Surfaces */
-      :not(.dark) .bg-white,
-      :not(.dark) .rounded-xl.bg-white,
-      :not(.dark) .rounded-2xl.bg-white,
-      :not(.dark) .rounded-3xl.bg-white {
+      html:not(.dark) .bg-white,
+      html:not(.dark) .rounded-xl.bg-white,
+      html:not(.dark) .rounded-2xl.bg-white,
+      html:not(.dark) .rounded-3xl.bg-white {
         background-color: var(--color-surface) !important;
         border-color: var(--color-border) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Inputs, Search Bars & Selects */
-      :not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
-      :not(.dark) select,
-      :not(.dark) textarea {
+      html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+      html:not(.dark) select,
+      html:not(.dark) textarea {
         background-color: var(--color-input-bg) !important;
         border-color: var(--color-input-border) !important;
         color: var(--color-input-text) !important;
       }
 
       /* Text Hierarchy in Light Mode */
-      :not(.dark) .text-gray-900,
-      :not(.dark) .text-gray-800,
-      :not(.dark) .text-slate-900,
-      :not(.dark) .text-slate-800,
-      :not(.dark) h1, 
-      :not(.dark) h2, 
-      :not(.dark) h3, 
-      :not(.dark) h4, 
-      :not(.dark) h5 {
+      html:not(.dark) .text-gray-900,
+      html:not(.dark) .text-gray-800,
+      html:not(.dark) .text-slate-900,
+      html:not(.dark) .text-slate-800,
+      html:not(.dark) h1, 
+      html:not(.dark) h2, 
+      html:not(.dark) h3, 
+      html:not(.dark) h4, 
+      html:not(.dark) h5 {
         color: var(--color-text-primary) !important;
       }
 
-      :not(.dark) .text-gray-600,
-      :not(.dark) .text-gray-500,
-      :not(.dark) .text-slate-600,
-      :not(.dark) .text-slate-500,
-      :not(.dark) p {
+      html:not(.dark) .text-gray-600,
+      html:not(.dark) .text-gray-500,
+      html:not(.dark) .text-slate-600,
+      html:not(.dark) .text-slate-500,
+      html:not(.dark) p {
         color: var(--color-text-secondary) !important;
       }
 
-      :not(.dark) .border-gray-200,
-      :not(.dark) .border-gray-100,
-      :not(.dark) .border-slate-200,
-      :not(.dark) .border-slate-100 {
+      html:not(.dark) .border-gray-200,
+      html:not(.dark) .border-gray-100,
+      html:not(.dark) .border-slate-200,
+      html:not(.dark) .border-slate-100 {
         border-color: var(--color-border) !important;
       }
 
       /* ============================================================
          4. DARK MODE GLOBAL THEME APPLICATION (Royal Midnight Night)
          ============================================================ */
-      .dark body,
       html.dark body {
         background-color: var(--color-background) !important;
         background-image: 
@@ -868,81 +867,81 @@ export const applyDynamicTheme = (palette) => {
       }
 
       /* Dark page backgrounds */
-      .dark .bg-zinc-950,
-      .dark.bg-zinc-950,
-      .dark .bg-black,
-      .dark main {
+      html.dark .bg-zinc-950,
+      html.dark.bg-zinc-950,
+      html.dark .bg-black,
+      html.dark main {
         background-color: var(--color-background) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Dark Navigation Header */
-      .dark header,
-      .dark nav {
+      html.dark header,
+      html.dark nav {
         background-color: var(--color-nav-bg) !important;
         border-color: var(--color-border) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Dark Sidebars */
-      .dark aside,
-      .dark .sidebar-container {
+      html.dark aside,
+      html.dark .sidebar-container {
         background-color: var(--color-sidebar-bg) !important;
         border-color: var(--color-border) !important;
       }
 
       /* Dark Cards & Surfaces */
-      .dark .bg-zinc-900,
-      .dark.bg-zinc-900,
-      .dark .bg-zinc-900\\/80,
-      .dark .bg-zinc-900\\/60,
-      .dark .bg-slate-900 {
+      html.dark .bg-zinc-900,
+      html.dark.bg-zinc-900,
+      html.dark .bg-zinc-900\\/80,
+      html.dark .bg-zinc-900\\/60,
+      html.dark .bg-slate-900 {
         background-color: var(--color-surface) !important;
         border-color: var(--color-border) !important;
         color: var(--color-text-primary) !important;
       }
 
       /* Dark Secondary Elevated Cards & Tables */
-      .dark .bg-zinc-800,
-      .dark.bg-zinc-800,
-      .dark .bg-zinc-800\\/80,
-      .dark .bg-zinc-800\\/60 {
+      html.dark .bg-zinc-800,
+      html.dark.bg-zinc-800,
+      html.dark .bg-zinc-800\\/80,
+      html.dark .bg-zinc-800\\/60 {
         background-color: var(--color-secondary-background) !important;
         border-color: var(--color-border) !important;
       }
 
       /* Dark Inputs, Search Bars & Selects */
-      .dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
-      .dark select,
-      .dark textarea {
+      html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+      html.dark select,
+      html.dark textarea {
         background-color: var(--color-input-bg) !important;
         border-color: var(--color-input-border) !important;
         color: var(--color-input-text) !important;
       }
 
       /* Dark Text Hierarchy */
-      .dark .text-white,
-      .dark .text-zinc-100,
-      .dark .text-zinc-200,
-      .dark .text-slate-100,
-      .dark h1, 
-      .dark h2, 
-      .dark h3, 
-      .dark h4, 
-      .dark h5 {
+      html.dark .text-white,
+      html.dark .text-zinc-100,
+      html.dark .text-zinc-200,
+      html.dark .text-slate-100,
+      html.dark h1, 
+      html.dark h2, 
+      html.dark h3, 
+      html.dark h4, 
+      html.dark h5 {
         color: var(--color-text-primary) !important;
       }
 
-      .dark .text-zinc-400,
-      .dark .text-zinc-500,
-      .dark .text-slate-400,
-      .dark p {
+      html.dark .text-zinc-400,
+      html.dark .text-zinc-500,
+      html.dark .text-slate-400,
+      html.dark p {
         color: var(--color-text-secondary) !important;
       }
 
-      .dark .border-zinc-800,
-      .dark .border-zinc-700,
-      .dark .border-zinc-800\\/80 {
+      html.dark .border-zinc-800,
+      html.dark .border-zinc-700,
+      html.dark .border-zinc-800\\/80 {
         border-color: var(--color-border) !important;
       }
 
