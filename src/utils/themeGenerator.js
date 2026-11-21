@@ -156,22 +156,46 @@ export const lighten = (hex, percent = 15) => {
 
 /**
  * Intelligently adapts brand color for Dark Mode.
+ * Ensures interactive/selected brand elements are vibrant, radiant, and clearly
+ * distinguishable against dark surfaces (lightness ~0.60-0.66) rather than muddy or dark.
  */
 export const adaptBrandForDarkMode = (primaryHex) => {
+  if (!primaryHex) return '#7C3AED';
   const { r, g, b } = hexToRgb(primaryHex);
   const hsl = rgbToHsl(r, g, b);
 
-  if (hsl.l < 0.38) {
-    const adapted = hslToRgb(hsl.h, Math.min(1, hsl.s * 1.1), 0.58);
+  // If achromatic / grayscale (pure grey, black, silver, white)
+  if (hsl.s < 0.12) {
+    const adapted = hslToRgb(0, 0, 0.88);
     return rgbToHex(adapted.r, adapted.g, adapted.b);
   }
 
-  if (hsl.l > 0.65) {
-    const adapted = hslToRgb(hsl.h, Math.min(1, hsl.s * 0.9), 0.50);
-    return rgbToHex(adapted.r, adapted.g, adapted.b);
+  // In dark mode, primary interactive and selected elements must be vibrant, radiant,
+  // and luminous (lightness 0.60 - 0.66) so they never look like dark muddy blocks.
+  let targetL = 0.62;
+  let targetS = Math.min(1.0, Math.max(hsl.s * 1.15, 0.88));
+
+  if (hsl.h >= 15 && hsl.h <= 65) {
+    // Warm hues (orange, amber, gold, brown) need slightly higher lightness
+    // to transform brown/mustard into brilliant glowing liquid gold
+    targetL = 0.62;
+    targetS = Math.min(1.0, Math.max(hsl.s * 1.20, 0.92));
+  } else if (hsl.h > 65 && hsl.h <= 100) {
+    // Yellow / lime
+    targetL = 0.64;
+    targetS = Math.min(1.0, Math.max(hsl.s * 1.10, 0.86));
+  } else if (hsl.h > 100 && hsl.h <= 250) {
+    // Emerald, cyan, blue
+    targetL = 0.60;
+    targetS = Math.min(1.0, Math.max(hsl.s * 1.10, 0.86));
+  } else {
+    // Purple, violet, magenta, red
+    targetL = 0.64;
+    targetS = Math.min(1.0, Math.max(hsl.s * 1.15, 0.90));
   }
 
-  return primaryHex;
+  const adapted = hslToRgb(hsl.h, targetS, targetL);
+  return rgbToHex(adapted.r, adapted.g, adapted.b);
 };
 
 // ==========================================
@@ -542,58 +566,75 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
   let darkTextParagraph = '#DED6E7';
 
   if (bgStyle === 'pure-white') {
-    darkBgHex = '#09090B';
-    darkSecBgHex = '#121215';
-    darkSurfaceHex = '#18181B';
-    darkSurfaceElevated = '#222226';
-    darkSidebarBg = '#101014';
-    darkNavBg = '#101014';
-    darkBorderHex = '#27272A';
-    darkInputBg = '#18181B';
-    darkInputBorder = '#3F3F46';
+    darkBgHex = '#0C0D12';
+    darkSecBgHex = '#14161E';
+    darkSurfaceHex = '#1B1E28';
+    darkSurfaceElevated = '#242836';
+    darkSidebarBg = '#101117';
+    darkNavBg = '#12141A';
+    darkBorderHex = '#2E3344';
+    darkInputBg = '#181A24';
+    darkInputBorder = '#3D4358';
     darkInputText = '#FFFFFF';
     darkTextPrimary = '#FFFFFF';
-    darkTextSecondary = '#A1A1AA';
-    darkTextParagraph = '#D4D4D8';
+    darkTextSecondary = '#9DA4B4';
+    darkTextParagraph = '#D1D5DB';
   } else if (bgStyle === 'warm-ivory') {
-    darkBgHex = '#1B1408';
-    darkSecBgHex = '#251D0E';
-    darkSurfaceHex = '#302613';
-    darkSurfaceElevated = '#3B301A';
-    darkSidebarBg = '#140E05';
-    darkNavBg = '#171107';
-    darkBorderHex = '#4A3D24';
-    darkInputBg = '#271F10';
-    darkInputBorder = '#4D3F25';
+    darkBgHex = '#181613';
+    darkSecBgHex = '#221F1B';
+    darkSurfaceHex = '#2C2822';
+    darkSurfaceElevated = '#38332C';
+    darkSidebarBg = '#14120F';
+    darkNavBg = '#161411';
+    darkBorderHex = '#4A4339';
+    darkInputBg = '#24201A';
+    darkInputBorder = '#4E463A';
     darkInputText = '#FAF7EE';
     darkTextPrimary = '#FAF7EE';
     darkTextSecondary = '#C9BEA8';
     darkTextParagraph = '#DDD4C3';
   } else if (isChromatic) {
     const toHexStr = (rgbObj) => rgbToHex(rgbObj.r, rgbObj.g, rgbObj.b);
-    darkBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.70, 0.60), 0.09));
-    darkSecBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.55), 0.13));
-    darkSurfaceHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.55), 0.16));
-    darkSurfaceElevated = toHexStr(hslToRgb(h, Math.min(s * 0.60, 0.50), 0.20));
-    darkSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.75, 0.65), 0.07));
-    darkNavBg = toHexStr(hslToRgb(h, Math.min(s * 0.70, 0.60), 0.08));
-    darkBorderHex = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.45), 0.25));
-    darkInputBg = toHexStr(hslToRgb(h, Math.min(s * 0.60, 0.50), 0.14));
-    darkInputBorder = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.45), 0.26));
+
+    // Perceptually balanced dark surfaces:
+    // Warm hues (orange, gold, amber, brown, olive 15-75 deg) need gentle saturation (10-14%)
+    // to prevent murky brown/sludge, while cool hues (purple, blue, emerald) can sustain deeper tone (20-26%).
+    const isWarmHue = (h >= 15 && h <= 75);
+    const maxBgS = isWarmHue ? 0.12 : 0.24;
+    const maxCardS = isWarmHue ? 0.14 : 0.26;
+    const maxElevatedS = isWarmHue ? 0.14 : 0.24;
+    const maxBorderS = isWarmHue ? 0.18 : 0.28;
+
+    const bgS = Math.min(s * 0.35, maxBgS);
+    const cardS = Math.min(s * 0.40, maxCardS);
+    const elevatedS = Math.min(s * 0.38, maxElevatedS);
+    const borderS = Math.min(s * 0.45, maxBorderS);
+
+    // Lightness hierarchy: background (0.105), sidebar (0.095), cards (0.175), elevated (0.23), borders (0.29)
+    darkBgHex = toHexStr(hslToRgb(h, bgS, 0.105));
+    darkSecBgHex = toHexStr(hslToRgb(h, cardS, 0.145));
+    darkSurfaceHex = toHexStr(hslToRgb(h, cardS, 0.175));
+    darkSurfaceElevated = toHexStr(hslToRgb(h, elevatedS, 0.23));
+    darkSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.30, isWarmHue ? 0.10 : 0.20), 0.095));
+    darkNavBg = toHexStr(hslToRgb(h, bgS, 0.105));
+    darkBorderHex = toHexStr(hslToRgb(h, borderS, 0.29));
+    darkInputBg = toHexStr(hslToRgb(h, cardS, 0.14));
+    darkInputBorder = toHexStr(hslToRgb(h, borderS, 0.28));
     darkInputText = '#FAF9FB';
     darkTextPrimary = '#FAF9FB';
-    darkTextSecondary = toHexStr(hslToRgb(h, 0.25, 0.80));
-    darkTextParagraph = toHexStr(hslToRgb(h, 0.20, 0.86));
+    darkTextSecondary = toHexStr(hslToRgb(h, isWarmHue ? 0.15 : 0.20, 0.78));
+    darkTextParagraph = toHexStr(hslToRgb(h, isWarmHue ? 0.12 : 0.18, 0.85));
   } else {
-    darkBgHex = '#0B0C10';
-    darkSecBgHex = '#14151C';
-    darkSurfaceHex = '#181920';
-    darkSurfaceElevated = '#22232B';
-    darkSidebarBg = '#0E0F14';
-    darkNavBg = '#0E0F14';
-    darkBorderHex = '#272932';
-    darkInputBg = '#181920';
-    darkInputBorder = '#383B46';
+    // Neutral monochrome dark
+    darkBgHex = '#0F1015';
+    darkSecBgHex = '#171821';
+    darkSurfaceHex = '#1E202B';
+    darkSurfaceElevated = '#262937';
+    darkSidebarBg = '#121319';
+    darkNavBg = '#121319';
+    darkBorderHex = '#2F3343';
+    darkInputBg = '#1A1C25';
+    darkInputBorder = '#3D4155';
     darkInputText = '#FFFFFF';
     darkTextPrimary = '#FFFFFF';
     darkTextSecondary = '#A6ABB5';
@@ -691,8 +732,13 @@ export const applyDynamicTheme = (palette) => {
       head.appendChild(styleEl);
     }
 
-    const light = palette.light || palette;
-    const dark = palette.dark || palette;
+    const balanced = generateBalancedPalette(
+      palette.primary,
+      palette.secondary || palette.themeLight,
+      palette.bgStyle || 'brand-tint'
+    );
+    const light = palette.light && palette.light.background ? palette.light : balanced.light;
+    const dark = balanced.dark;
 
     const lightPr = light.primaryRgb || palette.primaryRgb || '124, 58, 237';
     const lightSec = light.secondaryRgb || palette.secondaryRgb || '167, 139, 250';
@@ -860,8 +906,8 @@ export const applyDynamicTheme = (palette) => {
       html.dark body {
         background-color: var(--color-background) !important;
         background-image: 
-          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${darkPr}, 0.28), transparent),
-          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${darkPr}, 0.16), transparent) !important;
+          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${darkPr}, 0.18), transparent),
+          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${darkPr}, 0.10), transparent) !important;
         background-attachment: fixed !important;
         color: var(--color-text-primary) !important;
       }
@@ -952,7 +998,7 @@ export const applyDynamicTheme = (palette) => {
       .sidebar-btn.bg-red-500\\/15,
       .sidebar-btn[data-active="true"] {
         background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
-        color: #FFFFFF !important;
+        color: var(--color-button-text) !important;
         box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.35) !important;
       }
 
@@ -962,8 +1008,15 @@ export const applyDynamicTheme = (palette) => {
       .sidebar-btn.bg-red-500\\/15 svg,
       .sidebar-btn.bg-red-50 div,
       .sidebar-btn.bg-red-500\\/15 div {
-        color: #FFFFFF !important;
-        stroke: #FFFFFF !important;
+        color: var(--color-button-text) !important;
+        stroke: var(--color-button-text) !important;
+      }
+
+      .sidebar-btn.bg-red-50 .active-icon-glow,
+      .sidebar-btn.bg-red-500\\/15 .active-icon-glow,
+      .sidebar-btn[data-active="true"] .active-icon-glow {
+        filter: none !important;
+        color: var(--color-button-text) !important;
       }
 
       /* ============================================================
@@ -1075,15 +1128,26 @@ export const getSalonTheme = (salonId = null) => {
   try {
     const effectiveId =
       salonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+    let themeObj = null;
     if (effectiveId) {
       const specific = localStorage.getItem(`salon_theme_${effectiveId}`);
       if (specific && specific !== 'undefined' && specific !== 'null') {
-        return JSON.parse(specific);
+        themeObj = JSON.parse(specific);
       }
     }
-    const globalCached = localStorage.getItem('activeSalonTheme');
-    if (globalCached && globalCached !== 'undefined' && globalCached !== 'null') {
-      return JSON.parse(globalCached);
+    if (!themeObj) {
+      const globalCached = localStorage.getItem('activeSalonTheme');
+      if (globalCached && globalCached !== 'undefined' && globalCached !== 'null') {
+        themeObj = JSON.parse(globalCached);
+      }
+    }
+    if (themeObj && themeObj.primary) {
+      // Re-balance with updated non-sludgy dark tokens so previously saved themes upgrade automatically
+      return generateBalancedPalette(
+        themeObj.primary,
+        themeObj.secondary || themeObj.themeLight,
+        themeObj.bgStyle || 'brand-tint'
+      );
     }
   } catch (e) {
     console.warn('Failed to read salon theme from storage:', e);

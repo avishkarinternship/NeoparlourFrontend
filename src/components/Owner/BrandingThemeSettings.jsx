@@ -13,7 +13,8 @@ import {
   getContrastRatio, 
   getContrastingTextColor,
   adaptBrandForDarkMode,
-  removeDynamicTheme
+  removeDynamicTheme,
+  applyDynamicTheme
 } from '../../utils/themeGenerator';
 import { SalonLogoImage } from '../../utils/whiteLabelHelper';
 
@@ -79,6 +80,11 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
   // Compute live palette based on form inputs
   const fullPalette = generateBalancedPalette(primaryColor, secondaryColor, bgStyle);
   const activeTokens = previewMode === 'dark' ? fullPalette.dark : fullPalette.light;
+
+  // Apply real-time preview across the application when controls change
+  useEffect(() => {
+    applyDynamicTheme(fullPalette);
+  }, [primaryColor, secondaryColor, bgStyle]);
 
   // Dark mode adapted brand color
   const darkAdaptedBrand = adaptBrandForDarkMode(primaryColor);
