@@ -1,8 +1,9 @@
 /**
- * Dynamic Logo-Based Theme Generation & Adaptive Color Science System
+ * Dynamic Logo-Based Theme Generation & Brand-Driven Background Theming System
  *
  * Implements WCAG 2.1 contrast standards, perimeter-aware logo extraction,
- * brand-tinted adaptive light and dark modes, and dual-mode stylesheet injection.
+ * brand-tinted adaptive light and dark modes with complete visual hierarchy,
+ * and dual-mode stylesheet injection.
  */
 
 import axiosInstance from '../api/axiosInstance';
@@ -15,13 +16,13 @@ export const THEME_CHANGE_EVENT = 'np_salon_theme_changed';
 // ==========================================
 
 export const hexToRgb = (hex) => {
-  if (!hex) return { r: 255, g: 11, b: 1 };
+  if (!hex) return { r: 124, g: 58, b: 237 };
   let clean = String(hex).replace('#', '').trim();
   if (clean.length === 3) {
     clean = clean.split('').map((c) => c + c).join('');
   }
   const num = parseInt(clean, 16);
-  if (isNaN(num)) return { r: 255, g: 11, b: 1 };
+  if (isNaN(num)) return { r: 124, g: 58, b: 237 };
   return {
     r: (num >> 16) & 255,
     g: (num >> 8) & 255,
@@ -155,27 +156,21 @@ export const lighten = (hex, percent = 15) => {
 
 /**
  * Intelligently adapts brand color for Dark Mode.
- * - Deep colors (Navy, dark maroon, forest green): lifted so they remain legible on dark surfaces.
- * - Bright/neon/golden colors: gently softened to luxury metallic tones to prevent eye strain.
- * - Midtones (Purple, Emerald, Crimson): balanced saturation & lightness.
  */
 export const adaptBrandForDarkMode = (primaryHex) => {
   const { r, g, b } = hexToRgb(primaryHex);
   const hsl = rgbToHsl(r, g, b);
 
   if (hsl.l < 0.38) {
-    // Too dark for dark mode surface: lift lightness
     const adapted = hslToRgb(hsl.h, Math.min(1, hsl.s * 1.1), 0.58);
     return rgbToHex(adapted.r, adapted.g, adapted.b);
   }
 
   if (hsl.l > 0.65) {
-    // Too light/neon: soften to elegant metallic tone
     const adapted = hslToRgb(hsl.h, Math.min(1, hsl.s * 0.9), 0.50);
     return rgbToHex(adapted.r, adapted.g, adapted.b);
   }
 
-  // Already well-balanced
   return primaryHex;
 };
 
@@ -183,10 +178,6 @@ export const adaptBrandForDarkMode = (primaryHex) => {
 // 2. INTELLIGENT LOGO IMAGE ANALYZER
 // ==========================================
 
-/**
- * Analyzes an image (URL, Blob, or DataURI), detects canvas background vs brand colors,
- * rejects solid canvas backgrounds, and extracts the primary and secondary brand colors.
- */
 export const extractBrandPaletteFromLogo = async (imageSource) => {
   if (!imageSource) return null;
 
@@ -224,7 +215,7 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) return finish(null);
 
-          const size = 64; // High accuracy sampling grid
+          const size = 64;
           canvas.width = size;
           canvas.height = size;
           ctx.drawImage(img, 0, 0, size, size);
@@ -238,7 +229,7 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
           const samplePerimeterPixel = (x, y) => {
             const idx = (y * size + x) * 4;
             const a = imgData[idx + 3];
-            if (a < 120) return; // ignore transparent edges
+            if (a < 120) return;
             const r = Math.round(imgData[idx] / 16) * 16;
             const g = Math.round(imgData[idx + 1] / 16) * 16;
             const b = Math.round(imgData[idx + 2] / 16) * 16;
@@ -248,12 +239,12 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
           };
 
           for (let x = 0; x < size; x++) {
-            samplePerimeterPixel(x, 0); // top edge
-            samplePerimeterPixel(x, size - 1); // bottom edge
+            samplePerimeterPixel(x, 0);
+            samplePerimeterPixel(x, size - 1);
           }
           for (let y = 1; y < size - 1; y++) {
-            samplePerimeterPixel(0, y); // left edge
-            samplePerimeterPixel(size - 1, y); // right edge
+            samplePerimeterPixel(0, y);
+            samplePerimeterPixel(size - 1, y);
           }
 
           let canvasBgRgb = null;
@@ -267,7 +258,6 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
               }
             });
 
-            // If a single color occupies > 40% of perimeter, it's the logo canvas background
             if (maxCount / totalPerimeter > 0.40 && dominantPerimeterKey) {
               const [cR, cG, cB] = dominantPerimeterKey.split(',').map(Number);
               canvasBgRgb = { r: cR, g: cG, b: cB };
@@ -283,27 +273,22 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
             const b = imgData[i + 2];
             const a = imgData[i + 3];
 
-            // 1. Ignore transparent & translucent pixels
             if (a < 120) continue;
 
-            // 2. Reject pixels identical/very close to detected canvas background
             if (canvasBgRgb) {
               const dist = Math.sqrt(
                 Math.pow(r - canvasBgRgb.r, 2) +
                 Math.pow(g - canvasBgRgb.g, 2) +
                 Math.pow(b - canvasBgRgb.b, 2)
               );
-              if (dist < 32) continue; // Skip canvas background color
+              if (dist < 32) continue;
             }
 
             const hsl = rgbToHsl(r, g, b);
 
-            // 3. Ignore bleached white pixels
             if (hsl.l > 0.94) continue;
-            // 4. Ignore pure black noise
             if (hsl.l < 0.08) continue;
 
-            // Quantize to smooth clusters
             const qr = Math.round(r / 16) * 16;
             const qg = Math.round(g / 16) * 16;
             const qb = Math.round(b / 16) * 16;
@@ -326,18 +311,15 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
 
           const items = Object.values(clusters);
           if (items.length === 0) {
-            // If all filtered out (e.g. solid white or black icon), fall back to neutral
-            return finish(generateBalancedPalette('#18181B', '#7C3AED'));
+            return finish(generateBalancedPalette('#7C3AED', '#A78BFA', 'brand-tint'));
           }
 
-          // Step C: Classify into chromatic (colorful brand elements) and neutrals
           const chromatic = items.filter((item) => item.s >= 0.14 && item.l >= 0.10 && item.l <= 0.90);
 
           let primaryCluster = null;
           let secondaryCluster = null;
 
           if (chromatic.length > 0) {
-            // Score chromatic clusters: favor vibrant brand presence + balance
             chromatic.forEach((item) => {
               const lightnessScore = 1 - Math.abs(item.l - 0.48);
               item.score = item.count * (1 + item.s * 3.2) * (0.8 + lightnessScore);
@@ -346,7 +328,6 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
 
             primaryCluster = chromatic[0];
 
-            // Find distinct secondary color
             secondaryCluster = chromatic.find((item) => {
               const hueDiff = Math.abs(item.h - primaryCluster.h);
               const lightDiff = Math.abs(item.l - primaryCluster.l);
@@ -354,10 +335,9 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
             });
           }
 
-          // If no chromatic color found (e.g. monochrome / grayscale logo)
           if (!primaryCluster) {
             items.sort((a, b) => b.count - a.count);
-            primaryCluster = items[0] || { r: 24, g: 24, b: 27, h: 240, s: 0.05, l: 0.1 };
+            primaryCluster = items[0] || { r: 124, g: 58, b: 237, h: 270, s: 0.8, l: 0.58 };
           }
 
           if (!secondaryCluster) {
@@ -413,67 +393,104 @@ export const extractBrandPaletteFromLogo = async (imageSource) => {
 // ==========================================
 
 /**
- * Takes primary & secondary brand colors and generates a complete dual-mode design token
- * palette obeying WCAG AA standards.
- *
- * In Light Mode:
- * - website background: luminous, soft light version of brand color (e.g. light purple #FAF7FF)
- * - card surface: pure white #FFFFFF
- * - text: crisp dark charcoal / black
- * - buttons: primary brand color with contrasting text
- *
- * In Dark Mode:
- * - website background: rich, deep dark version of brand color (e.g. midnight purple #0F091B)
- * - card surface: elevated dark brand surface #1A112C
- * - text: pure white #FFFFFF
- * - buttons: adapted brand color with contrasting text
+ * Generates an exhaustive 16-token design system where the salon's primary brand colour
+ * determines the ENTIRE website background in both Light Mode (soft luminous pastel)
+ * and Dark Mode (deep royal midnight shade), establishing visual hierarchy across cards,
+ * sidebars, navigation, inputs, and buttons.
  */
 export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle = 'brand-tint') => {
   const pRgb = hexToRgb(primaryHex);
   const pHsl = rgbToHsl(pRgb.r, pRgb.g, pRgb.b);
 
-  // Secondary color fallback
   let secHex = secondaryHex;
   if (!secHex) {
     secHex = lighten(primaryHex, 20);
   }
   const sRgb = hexToRgb(secHex);
 
-  // Dark-mode adapted primary
   const darkPrimaryHex = adaptBrandForDarkMode(primaryHex);
   const darkPRgb = hexToRgb(darkPrimaryHex);
 
+  const isChromatic = pHsl.s >= 0.10;
+  const h = pHsl.h;
+  const s = pHsl.s;
+
   // ----------------------------------------------------
-  // LIGHT MODE TOKENS
+  // LIGHT MODE TOKENS (Brand-Driven Atmosphere)
   // ----------------------------------------------------
-  let lightBgHex = '#FAF9FB';
-  let lightSecBgHex = '#F3EEFC';
-  let lightBorderHex = '#EAE2F7';
+  let lightBgHex = '#EBE0F5';
+  let lightSecBgHex = '#F0EAF6';
+  let lightSurfaceHex = '#FCFCFD';
+  let lightSurfaceElevated = '#FFFFFF';
+  let lightSidebarBg = '#F2EDF8';
+  let lightNavBg = '#F2EDF8';
+  let lightBorderHex = '#DBCBEB';
+  let lightInputBg = '#F5F1F8';
+  let lightInputBorder = '#DFD2ED';
+  let lightInputText = '#191122';
+  let lightTextPrimary = '#191122';
+  let lightTextSecondary = '#614979';
+  let lightTextParagraph = '#423253';
 
   if (bgStyle === 'pure-white') {
     lightBgHex = '#FFFFFF';
     lightSecBgHex = '#F9FAFB';
+    lightSurfaceHex = '#FFFFFF';
+    lightSurfaceElevated = '#FFFFFF';
+    lightSidebarBg = '#FFFFFF';
+    lightNavBg = '#FFFFFF';
     lightBorderHex = '#E5E7EB';
+    lightInputBg = '#FFFFFF';
+    lightInputBorder = '#D1D5DB';
+    lightInputText = '#111827';
+    lightTextPrimary = '#111827';
+    lightTextSecondary = '#6B7280';
+    lightTextParagraph = '#4B5563';
   } else if (bgStyle === 'warm-ivory') {
-    lightBgHex = '#FAF9F6';
-    lightSecBgHex = '#F5F3EF';
-    lightBorderHex = '#EAE5D8';
+    lightBgHex = '#FAF7EE';
+    lightSecBgHex = '#F4EFE2';
+    lightSurfaceHex = '#FCFBF8';
+    lightSurfaceElevated = '#FFFFFF';
+    lightSidebarBg = '#F7F2E7';
+    lightNavBg = '#F7F2E7';
+    lightBorderHex = '#E4DBC8';
+    lightInputBg = '#F9F6ED';
+    lightInputBorder = '#E2D8C3';
+    lightInputText = '#241E15';
+    lightTextPrimary = '#241E15';
+    lightTextSecondary = '#6A5E4F';
+    lightTextParagraph = '#4A4033';
+  } else if (isChromatic) {
+    // Dynamic brand tint
+    const toHexStr = (rgbObj) => rgbToHex(rgbObj.r, rgbObj.g, rgbObj.b);
+    lightBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.50), 0.92));
+    lightSecBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.42), 0.94));
+    lightSurfaceHex = toHexStr(hslToRgb(h, Math.min(s * 0.35, 0.22), 0.985));
+    lightSurfaceElevated = '#FFFFFF';
+    lightSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.38), 0.95));
+    lightNavBg = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.38), 0.95));
+    lightBorderHex = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.42), 0.86));
+    lightInputBg = toHexStr(hslToRgb(h, Math.min(s * 0.45, 0.35), 0.96));
+    lightInputBorder = toHexStr(hslToRgb(h, Math.min(s * 0.45, 0.38), 0.88));
+    lightInputText = toHexStr(hslToRgb(h, 0.35, 0.10));
+    lightTextPrimary = toHexStr(hslToRgb(h, 0.35, 0.10));
+    lightTextSecondary = toHexStr(hslToRgb(h, 0.25, 0.38));
+    lightTextParagraph = toHexStr(hslToRgb(h, 0.28, 0.25));
   } else {
-    // 'brand-tint' (default): Derive soft, luminous light tint from brand hue
-    if (pHsl.s >= 0.10) {
-      const bRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.35, 0.25), 0.98);
-      lightBgHex = rgbToHex(bRgb.r, bRgb.g, bRgb.b);
-
-      const secRgbBg = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.35, 0.28), 0.955);
-      lightSecBgHex = rgbToHex(secRgbBg.r, secRgbBg.g, secRgbBg.b);
-
-      const brdRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.30, 0.25), 0.90);
-      lightBorderHex = rgbToHex(brdRgb.r, brdRgb.g, brdRgb.b);
-    } else {
-      lightBgHex = '#FAFAFA';
-      lightSecBgHex = '#F4F4F5';
-      lightBorderHex = '#E4E4E7';
-    }
+    // Neutral monochrome
+    lightBgHex = '#F1F3F6';
+    lightSecBgHex = '#E9ECEF';
+    lightSurfaceHex = '#FFFFFF';
+    lightSurfaceElevated = '#FFFFFF';
+    lightSidebarBg = '#F5F6F8';
+    lightNavBg = '#F5F6F8';
+    lightBorderHex = '#DDE0E5';
+    lightInputBg = '#FFFFFF';
+    lightInputBorder = '#D1D5DB';
+    lightInputText = '#111827';
+    lightTextPrimary = '#111827';
+    lightTextSecondary = '#5A626A';
+    lightTextParagraph = '#3D4248';
   }
 
   const lightButtonText = getContrastingTextColor(primaryHex);
@@ -490,57 +507,97 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
 
     background: lightBgHex,
     secondaryBackground: lightSecBgHex,
-    surface: '#FFFFFF',
-    textPrimary: '#111827',
-    textSecondary: '#4B5563',
+    surface: lightSurfaceHex,
+    surfaceElevated: lightSurfaceElevated,
+    sidebarBg: lightSidebarBg,
+    navBg: lightNavBg,
+    textPrimary: lightTextPrimary,
+    textSecondary: lightTextSecondary,
+    textParagraph: lightTextParagraph,
     border: lightBorderHex,
-    inputBg: '#FFFFFF',
-    inputBorder: '#D1D5DB',
+    inputBg: lightInputBg,
+    inputBorder: lightInputBorder,
+    inputText: lightInputText,
+    iconColor: primaryHex,
 
     primaryRgb: `${pRgb.r}, ${pRgb.g}, ${pRgb.b}`,
     secondaryRgb: `${sRgb.r}, ${sRgb.g}, ${sRgb.b}`
   };
 
   // ----------------------------------------------------
-  // DARK MODE TOKENS
+  // DARK MODE TOKENS (Deep Royal Midnight Atmosphere)
   // ----------------------------------------------------
-  let darkBgHex = '#0F091B';
-  let darkSecBgHex = '#150D24';
-  let darkSurfaceHex = '#1A112C';
-  let darkBorderHex = '#2B1D47';
+  let darkBgHex = '#170925';
+  let darkSecBgHex = '#210F33';
+  let darkSurfaceHex = '#29123F';
+  let darkSurfaceElevated = '#33174F';
+  let darkSidebarBg = '#12061D';
+  let darkNavBg = '#150822';
+  let darkBorderHex = '#40235C';
+  let darkInputBg = '#241236';
+  let darkInputBorder = '#432560';
+  let darkInputText = '#FAF9FB';
+  let darkTextPrimary = '#FAF9FB';
+  let darkTextSecondary = '#CCBFD9';
+  let darkTextParagraph = '#DED6E7';
 
   if (bgStyle === 'pure-white') {
-    // Pure neutral dark
     darkBgHex = '#09090B';
     darkSecBgHex = '#121215';
     darkSurfaceHex = '#18181B';
+    darkSurfaceElevated = '#222226';
+    darkSidebarBg = '#101014';
+    darkNavBg = '#101014';
     darkBorderHex = '#27272A';
+    darkInputBg = '#18181B';
+    darkInputBorder = '#3F3F46';
+    darkInputText = '#FFFFFF';
+    darkTextPrimary = '#FFFFFF';
+    darkTextSecondary = '#A1A1AA';
+    darkTextParagraph = '#D4D4D8';
   } else if (bgStyle === 'warm-ivory') {
-    // Warm dark charcoal
-    darkBgHex = '#15130C';
-    darkSecBgHex = '#1C1912';
-    darkSurfaceHex = '#242117';
-    darkBorderHex = '#383428';
+    darkBgHex = '#1B1408';
+    darkSecBgHex = '#251D0E';
+    darkSurfaceHex = '#302613';
+    darkSurfaceElevated = '#3B301A';
+    darkSidebarBg = '#140E05';
+    darkNavBg = '#171107';
+    darkBorderHex = '#4A3D24';
+    darkInputBg = '#271F10';
+    darkInputBorder = '#4D3F25';
+    darkInputText = '#FAF7EE';
+    darkTextPrimary = '#FAF7EE';
+    darkTextSecondary = '#C9BEA8';
+    darkTextParagraph = '#DDD4C3';
+  } else if (isChromatic) {
+    const toHexStr = (rgbObj) => rgbToHex(rgbObj.r, rgbObj.g, rgbObj.b);
+    darkBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.70, 0.60), 0.09));
+    darkSecBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.55), 0.13));
+    darkSurfaceHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.55), 0.16));
+    darkSurfaceElevated = toHexStr(hslToRgb(h, Math.min(s * 0.60, 0.50), 0.20));
+    darkSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.75, 0.65), 0.07));
+    darkNavBg = toHexStr(hslToRgb(h, Math.min(s * 0.70, 0.60), 0.08));
+    darkBorderHex = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.45), 0.25));
+    darkInputBg = toHexStr(hslToRgb(h, Math.min(s * 0.60, 0.50), 0.14));
+    darkInputBorder = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.45), 0.26));
+    darkInputText = '#FAF9FB';
+    darkTextPrimary = '#FAF9FB';
+    darkTextSecondary = toHexStr(hslToRgb(h, 0.25, 0.80));
+    darkTextParagraph = toHexStr(hslToRgb(h, 0.20, 0.86));
   } else {
-    // 'brand-tint' (default): Derive deep, rich dark version of brand
-    if (pHsl.s >= 0.10) {
-      const dRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.40, 0.32), 0.065);
-      darkBgHex = rgbToHex(dRgb.r, dRgb.g, dRgb.b);
-
-      const dSecRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.35, 0.30), 0.09);
-      darkSecBgHex = rgbToHex(dSecRgb.r, dSecRgb.g, dSecRgb.b);
-
-      const dSurfRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.35, 0.28), 0.115);
-      darkSurfaceHex = rgbToHex(dSurfRgb.r, dSurfRgb.g, dSurfRgb.b);
-
-      const dBrgRgb = hslToRgb(pHsl.h, Math.min(pHsl.s * 0.30, 0.25), 0.20);
-      darkBorderHex = rgbToHex(dBrgRgb.r, dBrgRgb.g, dBrgRgb.b);
-    } else {
-      darkBgHex = '#09090B';
-      darkSecBgHex = '#121215';
-      darkSurfaceHex = '#18181B';
-      darkBorderHex = '#27272A';
-    }
+    darkBgHex = '#0B0C10';
+    darkSecBgHex = '#14151C';
+    darkSurfaceHex = '#181920';
+    darkSurfaceElevated = '#22232B';
+    darkSidebarBg = '#0E0F14';
+    darkNavBg = '#0E0F14';
+    darkBorderHex = '#272932';
+    darkInputBg = '#181920';
+    darkInputBorder = '#383B46';
+    darkInputText = '#FFFFFF';
+    darkTextPrimary = '#FFFFFF';
+    darkTextSecondary = '#A6ABB5';
+    darkTextParagraph = '#D1D5DB';
   }
 
   const darkButtonText = getContrastingTextColor(darkPrimaryHex);
@@ -558,11 +615,17 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     background: darkBgHex,
     secondaryBackground: darkSecBgHex,
     surface: darkSurfaceHex,
-    textPrimary: '#FFFFFF',
-    textSecondary: '#D4D4D8',
+    surfaceElevated: darkSurfaceElevated,
+    sidebarBg: darkSidebarBg,
+    navBg: darkNavBg,
+    textPrimary: darkTextPrimary,
+    textSecondary: darkTextSecondary,
+    textParagraph: darkTextParagraph,
     border: darkBorderHex,
-    inputBg: darkSurfaceHex,
-    inputBorder: darkBorderHex,
+    inputBg: darkInputBg,
+    inputBorder: darkInputBorder,
+    inputText: darkInputText,
+    iconColor: darkPrimaryHex,
 
     primaryRgb: `${darkPRgb.r}, ${darkPRgb.g}, ${darkPRgb.b}`,
     secondaryRgb: `${sRgb.r}, ${sRgb.g}, ${sRgb.b}`
@@ -585,12 +648,17 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     buttonText: lightButtonText,
     background: lightBgHex,
     secondaryBackground: lightSecBgHex,
-    surface: '#FFFFFF',
-    textPrimary: '#111827',
-    textSecondary: '#4B5563',
+    surface: lightSurfaceHex,
+    surfaceElevated: lightSurfaceElevated,
+    sidebarBg: lightSidebarBg,
+    navBg: lightNavBg,
+    textPrimary: lightTextPrimary,
+    textSecondary: lightTextSecondary,
+    textParagraph: lightTextParagraph,
     border: lightBorderHex,
-    inputBg: '#FFFFFF',
-    inputBorder: '#D1D5DB',
+    inputBg: lightInputBg,
+    inputBorder: lightInputBorder,
+    inputText: lightInputText,
 
     success: '#10B981',
     warning: '#F59E0B',
@@ -609,11 +677,6 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
 // 4. DYNAMIC DUAL-MODE STYLESHEET ENGINE
 // ==========================================
 
-/**
- * Injects a dynamic <style> tag into the document head containing CSS variables
- * for both :root (Light Mode) and .dark (Dark Mode), ensuring instantaneous mode
- * switching and complete UI adaptation.
- */
 export const applyDynamicTheme = (palette) => {
   if (!palette || !palette.primary || typeof document === 'undefined') return;
 
@@ -631,8 +694,8 @@ export const applyDynamicTheme = (palette) => {
     const light = palette.light || palette;
     const dark = palette.dark || palette;
 
-    const lightPr = light.primaryRgb || palette.primaryRgb || '255, 11, 1';
-    const lightSec = light.secondaryRgb || palette.secondaryRgb || '255, 235, 235';
+    const lightPr = light.primaryRgb || palette.primaryRgb || '124, 58, 237';
+    const lightSec = light.secondaryRgb || palette.secondaryRgb || '167, 139, 250';
     const darkPr = dark.primaryRgb || lightPr;
     const darkSec = dark.secondaryRgb || lightSec;
 
@@ -647,23 +710,29 @@ export const applyDynamicTheme = (palette) => {
         --color-secondary: ${light.secondary || light.primary};
         --color-accent: ${light.accent || light.primary};
         --color-button-text: ${light.buttonText || '#FFFFFF'};
-        --color-background: ${light.background || '#FAF9FB'};
-        --color-secondary-background: ${light.secondaryBackground || '#F3EEFC'};
-        --color-surface: ${light.surface || '#FFFFFF'};
-        --color-text-primary: ${light.textPrimary || '#111827'};
-        --color-text-secondary: ${light.textSecondary || '#4B5563'};
-        --color-border: ${light.border || '#EAE2F7'};
-        --color-input-bg: ${light.inputBg || '#FFFFFF'};
-        --color-input-border: ${light.inputBorder || '#D1D5DB'};
+        --color-background: ${light.background || '#EBE0F5'};
+        --color-secondary-background: ${light.secondaryBackground || '#F0EAF6'};
+        --color-surface: ${light.surface || '#FCFCFD'};
+        --color-surface-elevated: ${light.surfaceElevated || '#FFFFFF'};
+        --color-sidebar-bg: ${light.sidebarBg || '#F2EDF8'};
+        --color-nav-bg: ${light.navBg || '#F2EDF8'};
+        --color-text-primary: ${light.textPrimary || '#191122'};
+        --color-text-secondary: ${light.textSecondary || '#614979'};
+        --color-text-paragraph: ${light.textParagraph || '#423253'};
+        --color-border: ${light.border || '#DBCBEB'};
+        --color-input-bg: ${light.inputBg || '#F5F1F8'};
+        --color-input-border: ${light.inputBorder || '#DFD2ED'};
+        --color-input-text: ${light.inputText || '#191122'};
+        --color-icon: ${light.iconColor || light.primary};
         --color-primary-rgb: ${lightPr};
         --color-secondary-rgb: ${lightSec};
 
-        /* Legacy salon variables for complete backward compatibility */
+        /* Legacy variables */
         --salon-primary: var(--color-primary);
         --salon-secondary: var(--color-secondary);
         --salon-primary-rgb: ${lightPr};
         --salon-secondary-rgb: ${lightSec};
-        --salon-theme-light-bg: rgba(${lightPr}, 0.08);
+        --salon-theme-light-bg: rgba(${lightPr}, 0.12);
       }
 
       /* ============================================================
@@ -676,83 +745,231 @@ export const applyDynamicTheme = (palette) => {
         --color-secondary: ${dark.secondary || dark.primary};
         --color-accent: ${dark.accent || dark.primary};
         --color-button-text: ${dark.buttonText || '#FFFFFF'};
-        --color-background: ${dark.background || '#0F091B'};
-        --color-secondary-background: ${dark.secondaryBackground || '#150D24'};
-        --color-surface: ${dark.surface || '#1A112C'};
-        --color-text-primary: ${dark.textPrimary || '#FFFFFF'};
-        --color-text-secondary: ${dark.textSecondary || '#D4D4D8'};
-        --color-border: ${dark.border || '#2B1D47'};
-        --color-input-bg: ${dark.inputBg || '#1A112C'};
-        --color-input-border: ${dark.inputBorder || '#2B1D47'};
+        --color-background: ${dark.background || '#170925'};
+        --color-secondary-background: ${dark.secondaryBackground || '#210F33'};
+        --color-surface: ${dark.surface || '#29123F'};
+        --color-surface-elevated: ${dark.surfaceElevated || '#33174F'};
+        --color-sidebar-bg: ${dark.sidebarBg || '#12061D'};
+        --color-nav-bg: ${dark.navBg || '#150822'};
+        --color-text-primary: ${dark.textPrimary || '#FAF9FB'};
+        --color-text-secondary: ${dark.textSecondary || '#CCBFD9'};
+        --color-text-paragraph: ${dark.textParagraph || '#DED6E7'};
+        --color-border: ${dark.border || '#40235C'};
+        --color-input-bg: ${dark.inputBg || '#241236'};
+        --color-input-border: ${dark.inputBorder || '#432560'};
+        --color-input-text: ${dark.inputText || '#FAF9FB'};
+        --color-icon: ${dark.iconColor || dark.primary};
         --color-primary-rgb: ${darkPr};
         --color-secondary-rgb: ${darkSec};
 
-        /* Legacy dark mode overrides */
+        /* Legacy variables */
         --salon-primary: var(--color-primary);
         --salon-secondary: var(--color-secondary);
         --salon-primary-rgb: ${darkPr};
         --salon-secondary-rgb: ${darkSec};
-        --salon-theme-light-bg: rgba(${darkPr}, 0.16);
+        --salon-theme-light-bg: rgba(${darkPr}, 0.22);
       }
 
       /* ============================================================
-         3. ADAPTIVE LIGHT MODE BACKGROUND & SURFACE APPLICATION
+         3. LIGHT MODE GLOBAL THEME APPLICATION (Atmospheric Tint)
          ============================================================ */
       body:not(.dark) {
         background-color: var(--color-background);
+        background-image: 
+          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${lightPr}, 0.12), transparent),
+          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${lightPr}, 0.07), transparent);
+        background-attachment: fixed;
         color: var(--color-text-primary);
       }
 
+      /* Page & layout backgrounds */
       :not(.dark) .bg-\\[\\#FAFAFA\\],
       :not(.dark) .bg-gray-50,
-      :not(.dark) .bg-slate-50 {
+      :not(.dark) .bg-slate-50,
+      :not(.dark) .bg-zinc-50,
+      :not(.dark) main {
         background-color: var(--color-background) !important;
+        color: var(--color-text-primary) !important;
+      }
+
+      /* Navigation Header */
+      :not(.dark) header,
+      :not(.dark) nav {
+        background-color: var(--color-nav-bg) !important;
+        border-color: var(--color-border) !important;
+        color: var(--color-text-primary) !important;
+      }
+
+      /* Sidebars */
+      :not(.dark) aside,
+      :not(.dark) .sidebar-container {
+        background-color: var(--color-sidebar-bg) !important;
+        border-color: var(--color-border) !important;
+      }
+
+      /* Cards & Surfaces */
+      :not(.dark) .bg-white,
+      :not(.dark) .rounded-xl.bg-white,
+      :not(.dark) .rounded-2xl.bg-white,
+      :not(.dark) .rounded-3xl.bg-white {
+        background-color: var(--color-surface) !important;
+        border-color: var(--color-border) !important;
+        color: var(--color-text-primary) !important;
+      }
+
+      /* Inputs, Search Bars & Selects */
+      :not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+      :not(.dark) select,
+      :not(.dark) textarea {
+        background-color: var(--color-input-bg) !important;
+        border-color: var(--color-input-border) !important;
+        color: var(--color-input-text) !important;
+      }
+
+      /* Text Hierarchy in Light Mode */
+      :not(.dark) .text-gray-900,
+      :not(.dark) .text-gray-800,
+      :not(.dark) .text-slate-900,
+      :not(.dark) .text-slate-800,
+      :not(.dark) h1, 
+      :not(.dark) h2, 
+      :not(.dark) h3, 
+      :not(.dark) h4, 
+      :not(.dark) h5 {
+        color: var(--color-text-primary) !important;
+      }
+
+      :not(.dark) .text-gray-600,
+      :not(.dark) .text-gray-500,
+      :not(.dark) .text-slate-600,
+      :not(.dark) .text-slate-500,
+      :not(.dark) p {
+        color: var(--color-text-secondary) !important;
+      }
+
+      :not(.dark) .border-gray-200,
+      :not(.dark) .border-gray-100,
+      :not(.dark) .border-slate-200,
+      :not(.dark) .border-slate-100 {
+        border-color: var(--color-border) !important;
       }
 
       /* ============================================================
-         4. ADAPTIVE DARK MODE BACKGROUND & SURFACE APPLICATION
+         4. DARK MODE GLOBAL THEME APPLICATION (Royal Midnight Night)
          ============================================================ */
       .dark body,
       html.dark body {
         background-color: var(--color-background) !important;
+        background-image: 
+          radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${darkPr}, 0.28), transparent),
+          radial-gradient(ellipse 60% 40% at 15% 15%, rgba(${darkPr}, 0.16), transparent) !important;
+        background-attachment: fixed !important;
         color: var(--color-text-primary) !important;
       }
 
+      /* Dark page backgrounds */
       .dark .bg-zinc-950,
-      .dark.bg-zinc-950 {
+      .dark.bg-zinc-950,
+      .dark .bg-black,
+      .dark main {
         background-color: var(--color-background) !important;
+        color: var(--color-text-primary) !important;
       }
 
-      .dark .bg-zinc-900,
-      .dark.bg-zinc-900 {
-        background-color: var(--color-surface) !important;
+      /* Dark Navigation Header */
+      .dark header,
+      .dark nav {
+        background-color: var(--color-nav-bg) !important;
+        border-color: var(--color-border) !important;
+        color: var(--color-text-primary) !important;
       }
 
-      .dark .bg-zinc-800,
-      .dark.bg-zinc-800 {
-        background-color: var(--color-secondary-background) !important;
-      }
-
-      .dark .border-zinc-800,
-      .dark .border-zinc-700 {
+      /* Dark Sidebars */
+      .dark aside,
+      .dark .sidebar-container {
+        background-color: var(--color-sidebar-bg) !important;
         border-color: var(--color-border) !important;
       }
 
+      /* Dark Cards & Surfaces */
+      .dark .bg-zinc-900,
+      .dark.bg-zinc-900,
+      .dark .bg-zinc-900\\/80,
+      .dark .bg-zinc-900\\/60,
+      .dark .bg-slate-900 {
+        background-color: var(--color-surface) !important;
+        border-color: var(--color-border) !important;
+        color: var(--color-text-primary) !important;
+      }
+
+      /* Dark Secondary Elevated Cards & Tables */
+      .dark .bg-zinc-800,
+      .dark.bg-zinc-800,
+      .dark .bg-zinc-800\\/80,
+      .dark .bg-zinc-800\\/60 {
+        background-color: var(--color-secondary-background) !important;
+        border-color: var(--color-border) !important;
+      }
+
+      /* Dark Inputs, Search Bars & Selects */
+      .dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+      .dark select,
+      .dark textarea {
+        background-color: var(--color-input-bg) !important;
+        border-color: var(--color-input-border) !important;
+        color: var(--color-input-text) !important;
+      }
+
+      /* Dark Text Hierarchy */
       .dark .text-white,
-      .dark .text-zinc-100 {
+      .dark .text-zinc-100,
+      .dark .text-zinc-200,
+      .dark .text-slate-100,
+      .dark h1, 
+      .dark h2, 
+      .dark h3, 
+      .dark h4, 
+      .dark h5 {
         color: var(--color-text-primary) !important;
       }
 
       .dark .text-zinc-400,
-      .dark .text-zinc-300 {
+      .dark .text-zinc-500,
+      .dark .text-slate-400,
+      .dark p {
         color: var(--color-text-secondary) !important;
       }
 
-      /* ============================================================
-         5. PRIMARY BRAND BUTTONS, BADGES, AND HIGHLIGHTS
-         ============================================================ */
+      .dark .border-zinc-800,
+      .dark .border-zinc-700,
+      .dark .border-zinc-800\\/80 {
+        border-color: var(--color-border) !important;
+      }
 
-      /* Buttons & Solid Brand Elements */
+      /* ============================================================
+         5. ACTIVE SIDEBAR TAB (Matching Reference Mockup)
+         ============================================================ */
+      .sidebar-btn.bg-red-50,
+      .sidebar-btn.bg-red-500\\/15,
+      .sidebar-btn[data-active="true"] {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.35) !important;
+      }
+
+      .sidebar-btn.bg-red-50 span,
+      .sidebar-btn.bg-red-500\\/15 span,
+      .sidebar-btn.bg-red-50 svg,
+      .sidebar-btn.bg-red-500\\/15 svg,
+      .sidebar-btn.bg-red-50 div,
+      .sidebar-btn.bg-red-500\\/15 div {
+        color: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+      }
+
+      /* ============================================================
+         6. PRIMARY BRAND BUTTONS, BADGES, AND HIGHLIGHTS
+         ============================================================ */
       .bg-\\[\\#FF0B01\\], 
       .bg-\\[\\#ff0b01\\], 
       .bg-\\[\\#EF3E23\\],
@@ -762,7 +979,6 @@ export const applyDynamicTheme = (palette) => {
         color: var(--color-button-text) !important;
       }
 
-      /* Hover States */
       .hover\\:bg-red-700:hover, 
       .hover\\:bg-red-600:hover,
       .hover\\:bg-\\[\\#E02510\\]:hover {
@@ -770,13 +986,11 @@ export const applyDynamicTheme = (palette) => {
         color: var(--color-button-text) !important;
       }
 
-      /* Active States */
       .active\\:scale-95:active,
       .active\\:scale-\\[0\\.98\\]:active {
         background-color: var(--color-primary-active);
       }
 
-      /* Text Brand Accents */
       .text-\\[\\#FF0B01\\], 
       .text-\\[\\#ff0b01\\], 
       .text-\\[\\#EF3E23\\],
@@ -786,7 +1000,6 @@ export const applyDynamicTheme = (palette) => {
         color: var(--color-primary) !important;
       }
 
-      /* SVG Icon Colors */
       svg.text-\\[\\#FF0B01\\],
       svg.text-\\[\\#ff0b01\\],
       svg.text-red-600,
@@ -794,7 +1007,6 @@ export const applyDynamicTheme = (palette) => {
         color: var(--color-primary) !important;
       }
 
-      /* Primary Borders */
       .border-\\[\\#FF0B01\\], 
       .border-\\[\\#ff0b01\\], 
       .border-\\[\\#EF3E23\\],
@@ -803,7 +1015,6 @@ export const applyDynamicTheme = (palette) => {
         border-color: var(--color-primary) !important;
       }
 
-      /* Focus Rings */
       .ring-\\[\\#FF0B01\\]\\/20,
       .ring-red-500\\/20,
       .focus-within\\:ring-red-500:focus-within,
@@ -811,23 +1022,15 @@ export const applyDynamicTheme = (palette) => {
         --tw-ring-color: rgba(var(--color-primary-rgb), 0.35) !important;
       }
 
-      /* Light Accent Badges & Tints */
       .bg-red-50, 
       .bg-\\[\\#ffebeb\\],
       .bg-red-500\\/10,
       .bg-red-500\\/15,
       .bg-red-500\\/20 {
-        background-color: rgba(var(--color-primary-rgb), 0.08) !important;
+        background-color: rgba(var(--color-primary-rgb), 0.12) !important;
+        color: var(--color-primary) !important;
       }
 
-      /* Subtle Hover Backgrounds */
-      .hover\\:bg-red-50:hover,
-      .hover\\:bg-red-50\\/10:hover,
-      .hover\\:bg-red-50\\/20:hover {
-        background-color: rgba(var(--color-primary-rgb), 0.10) !important;
-      }
-
-      /* Gradients */
       .from-\\[\\#ff0b01\\],
       .from-\\[\\#FF0B01\\],
       .from-red-600 {
@@ -842,7 +1045,6 @@ export const applyDynamicTheme = (palette) => {
         --tw-gradient-to: var(--color-primary-hover) !important;
       }
 
-      /* Dark mode subtle accents */
       .dark .bg-red-950\\/40,
       .dark .bg-red-950\\/50,
       .dark .bg-red-900\\/20 {
@@ -858,9 +1060,6 @@ export const applyDynamicTheme = (palette) => {
   }
 };
 
-/**
- * Removes the dynamic theme stylesheet, restoring default platform styling.
- */
 export const removeDynamicTheme = () => {
   try {
     if (typeof document === 'undefined') return;
@@ -872,10 +1071,6 @@ export const removeDynamicTheme = () => {
     console.error('Failed to remove dynamic theme stylesheet:', e);
   }
 };
-
-// ==========================================
-// 5. STORAGE & SYNCHRONIZATION HELPERS
-// ==========================================
 
 export const getSalonTheme = (salonId = null) => {
   try {

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { 
   Sparkles, RotateCcw, Eye, ShieldCheck, 
-  Sliders, ShoppingBag, Star, ArrowRight, Sun, Moon
+  Sliders, Calendar, Users, DollarSign, Clock,
+  PlusCircle, Scissors, BarChart3, Star, ArrowRight, Sun, Moon, Search
 } from 'lucide-react';
 import { 
   getSalonTheme, 
@@ -19,19 +20,19 @@ import { SalonLogoImage } from '../../utils/whiteLabelHelper';
 const PRESET_BG_STYLES = [
   { 
     id: 'brand-tint', 
-    label: 'Intelligent Brand Tint', 
+    label: 'Brand-Driven Atmosphere', 
     badge: 'Recommended',
-    desc: 'Light Mode: Soft brand-tinted white. Dark Mode: Deep midnight brand tint.' 
+    desc: 'Light Mode: Soft pastel brand background. Dark Mode: Deep royal midnight brand atmosphere.' 
   },
   { 
     id: 'pure-white', 
     label: 'Pure White & Obsidian', 
-    desc: 'Light Mode: Stark white. Dark Mode: Deep obsidian neutral.' 
+    desc: 'Light Mode: Stark white surface. Dark Mode: Deep neutral obsidian.' 
   },
   { 
     id: 'warm-ivory', 
     label: 'Warm Ivory & Charcoal', 
-    desc: 'Light Mode: Organic ivory. Dark Mode: Warm dark charcoal.' 
+    desc: 'Light Mode: Soft champagne ivory. Dark Mode: Warm dark bronze charcoal.' 
   }
 ];
 
@@ -77,7 +78,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
 
   // Compute live palette based on form inputs
   const fullPalette = generateBalancedPalette(primaryColor, secondaryColor, bgStyle);
-  const activePreviewTokens = previewMode === 'dark' ? fullPalette.dark : fullPalette.light;
+  const activeTokens = previewMode === 'dark' ? fullPalette.dark : fullPalette.light;
 
   // Dark mode adapted brand color
   const darkAdaptedBrand = adaptBrandForDarkMode(primaryColor);
@@ -101,7 +102,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
 
     try {
       setIsExtracting(true);
-      toast('🎨 Analyzing logo colors & generating adaptive palette...', { icon: '✨' });
+      toast('🎨 Analyzing logo colors & generating brand-driven atmosphere...', { icon: '✨' });
       const extracted = await extractBrandPaletteFromLogo(salonLogo);
       if (extracted) {
         setPrimaryColor(extracted.primary);
@@ -109,7 +110,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
         setBgStyle(extracted.bgStyle || 'brand-tint');
         setCurrentPalette(extracted);
         saveSalonTheme(salonId, extracted);
-        toast.success('Generated and applied adaptive brand theme from your logo!');
+        toast.success('Generated and applied brand-driven atmosphere from your logo!');
       } else {
         toast.error('Could not extract colors from the logo image. Using default theme.');
       }
@@ -127,7 +128,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
     try {
       saveSalonTheme(salonId, fullPalette);
       setCurrentPalette(fullPalette);
-      toast.success('Custom salon theme saved and applied across the entire website!');
+      toast.success('Custom brand theme saved and applied across the entire application!');
     } catch (err) {
       console.error(err);
       toast.error('Failed to save theme settings.');
@@ -150,13 +151,13 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-8 max-w-6xl">
       {/* Header Banner */}
       <div
         className={`p-6 rounded-2xl border transition-all ${
           isDarkMode
             ? 'bg-zinc-900/60 border-zinc-800'
-            : 'bg-gradient-to-r from-red-50/40 via-white to-gray-50 border-gray-200'
+            : 'bg-gradient-to-r from-purple-50/50 via-white to-gray-50 border-gray-200'
         }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -169,14 +170,14 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className={`text-lg font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Intelligent Dynamic Branding System
+                  Brand-Driven Atmospheric Theming
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
-                  Logo-Powered
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  Logo-Powered Atmosphere
                 </span>
               </div>
               <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
-                Automatically harmonizes background tones, surfaces, text, buttons, and badges around {salonName}'s official logo in both Light and Dark modes.
+                The dominant logo colour dictates the complete website background: soft pastel in Light Mode and deep royal midnight in Dark Mode.
               </p>
             </div>
           </div>
@@ -185,7 +186,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
             type="button"
             onClick={handleGenerateFromLogo}
             disabled={isExtracting}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-purple-600 hover:bg-purple-700 text-white shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             <Sparkles className="w-4 h-4" />
             {isExtracting ? 'Analyzing Logo...' : 'Auto-Generate from Logo'}
@@ -206,14 +207,14 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                 isDarkMode ? 'text-zinc-200' : 'text-gray-800'
               }`}
             >
-              <Sliders className="w-4 h-4 text-red-500" />
-              Palette Controls
+              <Sliders className="w-4 h-4 text-purple-500" />
+              Brand Palette Controls
             </h4>
 
             {/* Primary Brand Color */}
             <div className="space-y-2">
               <label className={`text-xs font-bold block ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
-                Primary Brand Color
+                Dominant Brand Color (Logo Extracted)
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -233,11 +234,11 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                 />
               </div>
               <p className="text-[10px] text-gray-400">
-                Applied to primary buttons, interactive highlights, active tabs, and accents.
+                Determines main background tint, buttons, active sidebar tab, and ambient glow.
               </p>
             </div>
 
-            {/* Dark Mode Adapted Color Chip */}
+            {/* Dark Mode Adapted Accent */}
             <div
               className={`p-3 rounded-xl border flex items-center justify-between ${
                 isDarkMode ? 'bg-zinc-800/40 border-zinc-700' : 'bg-gray-50 border-gray-200'
@@ -248,7 +249,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                   Dark-Mode Adapted Accent
                 </span>
                 <span className="text-[10px] text-gray-400">
-                  Tuned for readability on dark surfaces
+                  Calibrated for contrast against midnight background
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -265,7 +266,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
             {/* Secondary Color */}
             <div className="space-y-2">
               <label className={`text-xs font-bold block ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
-                Secondary / Accent Color
+                Secondary Accent Color
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -285,14 +286,14 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                 />
               </div>
               <p className="text-[10px] text-gray-400">
-                Used for soft secondary tags, subtle gradients, and decorative rings.
+                Used for soft secondary tags, subtle borders, and gradient highlights.
               </p>
             </div>
 
-            {/* Background Style Preset */}
+            {/* Background Style Architecture */}
             <div className="space-y-2">
               <label className={`text-xs font-bold block ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
-                Background Tone Architecture
+                Background Theme Philosophy
               </label>
               <div className="grid grid-cols-1 gap-2.5">
                 {PRESET_BG_STYLES.map((preset) => {
@@ -305,7 +306,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                       onClick={() => setBgStyle(preset.id)}
                       className={`p-3 rounded-xl text-left border flex items-center justify-between transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/10'
+                          ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/10'
                           : isDarkMode
                           ? 'border-zinc-800 hover:border-zinc-700'
                           : 'border-gray-200 hover:border-gray-300'
@@ -324,7 +325,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
                         </div>
                         <div className="text-[10px] text-gray-400 mt-0.5 leading-snug">{preset.desc}</div>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <span
                           className="w-4 h-4 rounded-full border border-gray-300 shadow-xs"
                           style={{ backgroundColor: mockPalette.light.background }}
@@ -392,7 +393,7 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
           </div>
         </div>
 
-        {/* Live Interactive Preview Column */}
+        {/* Live Interactive Dashboard Preview Column */}
         <div className="lg:col-span-7 space-y-6">
           <div
             className={`p-6 rounded-2xl border space-y-6 ${
@@ -402,9 +403,9 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
             {/* Preview Header with Light/Dark Mode Switcher */}
             <div className="flex items-center justify-between border-b pb-3 border-gray-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-red-500" />
+                <Eye className="w-4 h-4 text-purple-500" />
                 <h4 className={`text-sm font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`}>
-                  Live Brand Preview
+                  Live Application Simulation
                 </h4>
               </div>
 
@@ -437,225 +438,206 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
               </div>
             </div>
 
-            {/* Simulated Page Background Container */}
+            {/* Simulated Complete Application Shell (Matching User Reference Image) */}
             <div
-              className="p-5 rounded-2xl border space-y-5 transition-colors duration-200"
+              className="p-5 sm:p-6 rounded-2xl border space-y-5 transition-all duration-300 relative overflow-hidden"
               style={{
-                backgroundColor: activePreviewTokens.background,
-                borderColor: activePreviewTokens.border,
-                color: activePreviewTokens.textPrimary
+                backgroundColor: activeTokens.background,
+                borderColor: activeTokens.border,
+                color: activeTokens.textPrimary,
+                backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -10%, rgba(${activeTokens.primaryRgb}, ${previewMode === 'dark' ? 0.30 : 0.14}), transparent)`
               }}
             >
-              {/* Mock Navigation Header */}
+              {/* Simulated Navigation Bar */}
               <div
-                className="p-3.5 rounded-xl border flex items-center justify-between shadow-xs transition-colors duration-200"
+                className="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition-colors duration-200"
                 style={{
-                  backgroundColor: activePreviewTokens.surface,
-                  borderColor: activePreviewTokens.border
+                  backgroundColor: activeTokens.navBg,
+                  borderColor: activeTokens.border
                 }}
               >
                 <div className="flex items-center space-x-2.5">
                   <SalonLogoImage
                     logo={salonLogo}
                     name={salonName}
-                    className="w-8 h-8 rounded-lg shrink-0 shadow-xs object-cover"
+                    className="w-9 h-9 rounded-xl shrink-0 shadow-xs object-cover"
                   />
-                  <span
-                    className="text-sm font-black tracking-tight"
-                    style={{ color: activePreviewTokens.textPrimary }}
-                  >
-                    {salonName}
-                  </span>
+                  <div>
+                    <span
+                      className="text-sm font-black tracking-tight block"
+                      style={{ color: activeTokens.textPrimary }}
+                    >
+                      {salonName}
+                    </span>
+                    <span className="text-[10px] opacity-70 block" style={{ color: activeTokens.textSecondary }}>
+                      ABC Complex, Kothrud, Pune
+                    </span>
+                  </div>
                 </div>
+
+                {/* Pill Search Input */}
                 <div className="flex items-center gap-2">
-                  <span
-                    className="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                  <div
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs"
                     style={{
-                      backgroundColor: `rgba(${activePreviewTokens.primaryRgb}, 0.12)`,
-                      color: activePreviewTokens.primary
+                      backgroundColor: activeTokens.inputBg,
+                      borderColor: activeTokens.inputBorder,
+                      color: activeTokens.textSecondary
                     }}
                   >
-                    Verified Salon
-                  </span>
+                    <Search className="w-3.5 h-3.5 opacity-60" />
+                    <span className="text-[11px] opacity-70">Search services, customers...</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Welcome Section */}
+              <div className="space-y-1">
+                <h3
+                  className="text-xl sm:text-2xl font-black tracking-tight"
+                  style={{ color: activeTokens.textPrimary }}
+                >
+                  Welcome back, {salonName}!
+                </h3>
+                <p className="text-xs" style={{ color: activeTokens.textSecondary }}>
+                  Manage your salon efficiently and grow your business.
+                </p>
+              </div>
+
+              {/* 4 KPI Metric Cards (Matching Reference Mockup) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Appointments', value: '128', change: '↑ 12%', icon: Calendar },
+                  { label: 'Total Customers', value: '86', change: '↑ 8%', icon: Users },
+                  { label: 'Total Revenue', value: '₹48,500', change: '↑ 15%', icon: DollarSign },
+                  { label: 'Pending Appts', value: '24', change: '↓ 5%', icon: Clock }
+                ].map((stat, i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-xl border shadow-xs transition-all"
+                    style={{
+                      backgroundColor: activeTokens.surface,
+                      borderColor: activeTokens.border
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-bold" style={{ color: activeTokens.textSecondary }}>
+                        {stat.label}
+                      </span>
+                      <stat.icon
+                        className="w-3.5 h-3.5"
+                        style={{ color: activeTokens.primary }}
+                      />
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span
+                        className="text-lg font-black tracking-tight"
+                        style={{ color: activeTokens.textPrimary }}
+                      >
+                        {stat.value}
+                      </span>
+                      <span className="text-[9px] font-black text-emerald-500">
+                        {stat.change}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Actions (Matching Reference Mockup) */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold" style={{ color: activeTokens.textPrimary }}>
+                  Quick Actions
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-transform active:scale-95"
+                    className="px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     style={{
-                      backgroundColor: activePreviewTokens.primary,
-                      color: activePreviewTokens.buttonText
+                      backgroundColor: activeTokens.primary,
+                      color: activeTokens.buttonText
                     }}
                   >
-                    Book Slot
+                    <Calendar className="w-3.5 h-3.5" />
+                    Book Appointment →
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer flex items-center gap-1.5"
+                    style={{
+                      backgroundColor: activeTokens.surface,
+                      borderColor: activeTokens.border,
+                      color: activeTokens.textPrimary
+                    }}
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" style={{ color: activeTokens.primary }} />
+                    Add Customer
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer flex items-center gap-1.5"
+                    style={{
+                      backgroundColor: activeTokens.surface,
+                      borderColor: activeTokens.border,
+                      color: activeTokens.textPrimary
+                    }}
+                  >
+                    <Scissors className="w-3.5 h-3.5" style={{ color: activeTokens.primary }} />
+                    Manage Services
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer flex items-center gap-1.5"
+                    style={{
+                      backgroundColor: activeTokens.surface,
+                      borderColor: activeTokens.border,
+                      color: activeTokens.textPrimary
+                    }}
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" style={{ color: activeTokens.primary }} />
+                    View Reports
                   </button>
                 </div>
               </div>
 
-              {/* Mock Service Card */}
-              <div
-                className="p-5 rounded-2xl border shadow-xs transition-colors duration-200"
-                style={{
-                  backgroundColor: activePreviewTokens.surface,
-                  borderColor: activePreviewTokens.border
-                }}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: activePreviewTokens.primary }}
-                      />
-                      <span
-                        className="text-[10px] font-black uppercase tracking-widest"
-                        style={{ color: activePreviewTokens.primary }}
-                      >
-                        Signature Service
-                      </span>
-                    </div>
-                    <h5
-                      className="text-base font-black"
-                      style={{ color: activePreviewTokens.textPrimary }}
-                    >
-                      Luxury Keratin Hair Spa & Blowout
-                    </h5>
-                    <p
-                      className="text-xs"
-                      style={{ color: activePreviewTokens.textSecondary }}
-                    >
-                      Deep scalp detox, organic keratin mask, and professional salon styling.
-                    </p>
+              {/* Active Tokens Swatch Grid */}
+              <div className="pt-2 border-t" style={{ borderColor: activeTokens.border }}>
+                <span className="text-[10px] font-black uppercase tracking-wider block mb-2" style={{ color: activeTokens.textSecondary }}>
+                  Active Generated Palette Hierarchy
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                  <div
+                    className="p-2 rounded-lg border flex items-center justify-between"
+                    style={{ backgroundColor: activeTokens.surface, borderColor: activeTokens.border }}
+                  >
+                    <span style={{ color: activeTokens.textSecondary }}>Page Bg</span>
+                    <span className="font-mono font-bold" style={{ color: activeTokens.textPrimary }}>{activeTokens.background}</span>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div
-                      className="text-lg font-black"
-                      style={{ color: activePreviewTokens.primary }}
-                    >
-                      ₹ 1,499
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-amber-500 font-bold justify-end">
-                      <Star className="w-3 h-3 fill-amber-500" />
-                      <span>4.9 (128)</span>
-                    </div>
+                  <div
+                    className="p-2 rounded-lg border flex items-center justify-between"
+                    style={{ backgroundColor: activeTokens.surface, borderColor: activeTokens.border }}
+                  >
+                    <span style={{ color: activeTokens.textSecondary }}>Card Surface</span>
+                    <span className="font-mono font-bold" style={{ color: activeTokens.textPrimary }}>{activeTokens.surface}</span>
                   </div>
-                </div>
-
-                {/* Sample Action Row */}
-                <div
-                  className="mt-4 pt-4 border-t flex items-center justify-between gap-3"
-                  style={{ borderColor: activePreviewTokens.border }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
-                      style={{
-                        backgroundColor: `rgba(${activePreviewTokens.primaryRgb}, 0.10)`,
-                        color: activePreviewTokens.primary,
-                        border: `1px solid rgba(${activePreviewTokens.primaryRgb}, 0.2)`
-                      }}
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      Popular Service
-                    </span>
+                  <div
+                    className="p-2 rounded-lg border flex items-center justify-between"
+                    style={{ backgroundColor: activeTokens.surface, borderColor: activeTokens.border }}
+                  >
+                    <span style={{ color: activeTokens.textSecondary }}>Primary Brand</span>
+                    <span className="font-mono font-bold" style={{ color: activeTokens.primary }}>{activeTokens.primary}</span>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="px-4 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer"
-                      style={{
-                        borderColor: `rgba(${activePreviewTokens.primaryRgb}, 0.35)`,
-                        color: activePreviewTokens.primary
-                      }}
-                    >
-                      View Details
-                    </button>
-                    <button
-                      type="button"
-                      className="px-5 py-2 rounded-xl text-xs font-black shadow-sm transition-transform active:scale-95 flex items-center gap-1 cursor-pointer"
-                      style={{
-                        backgroundColor: activePreviewTokens.primary,
-                        color: activePreviewTokens.buttonText
-                      }}
-                    >
-                      Add Service
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                  <div
+                    className="p-2 rounded-lg border flex items-center justify-between"
+                    style={{ backgroundColor: activeTokens.surface, borderColor: activeTokens.border }}
+                  >
+                    <span style={{ color: activeTokens.textSecondary }}>Text Primary</span>
+                    <span className="font-mono font-bold" style={{ color: activeTokens.textPrimary }}>{activeTokens.textPrimary}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Background & Surface Swatch Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                <div
-                  className="p-2.5 rounded-xl border flex flex-col justify-between"
-                  style={{
-                    backgroundColor: activePreviewTokens.surface,
-                    borderColor: activePreviewTokens.border
-                  }}
-                >
-                  <span className="text-[10px] opacity-70">Background</span>
-                  <div className="flex items-center gap-1.5 mt-1 font-mono font-bold">
-                    <span
-                      className="w-3 h-3 rounded-full border border-gray-400"
-                      style={{ backgroundColor: activePreviewTokens.background }}
-                    />
-                    <span className="truncate">{activePreviewTokens.background}</span>
-                  </div>
-                </div>
-
-                <div
-                  className="p-2.5 rounded-xl border flex flex-col justify-between"
-                  style={{
-                    backgroundColor: activePreviewTokens.surface,
-                    borderColor: activePreviewTokens.border
-                  }}
-                >
-                  <span className="text-[10px] opacity-70">Card Surface</span>
-                  <div className="flex items-center gap-1.5 mt-1 font-mono font-bold">
-                    <span
-                      className="w-3 h-3 rounded-full border border-gray-400"
-                      style={{ backgroundColor: activePreviewTokens.surface }}
-                    />
-                    <span className="truncate">{activePreviewTokens.surface}</span>
-                  </div>
-                </div>
-
-                <div
-                  className="p-2.5 rounded-xl border flex flex-col justify-between"
-                  style={{
-                    backgroundColor: activePreviewTokens.surface,
-                    borderColor: activePreviewTokens.border
-                  }}
-                >
-                  <span className="text-[10px] opacity-70">Primary Button</span>
-                  <div className="flex items-center gap-1.5 mt-1 font-mono font-bold">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: activePreviewTokens.primary }}
-                    />
-                    <span className="truncate">{activePreviewTokens.primary}</span>
-                  </div>
-                </div>
-
-                <div
-                  className="p-2.5 rounded-xl border flex flex-col justify-between"
-                  style={{
-                    backgroundColor: activePreviewTokens.surface,
-                    borderColor: activePreviewTokens.border
-                  }}
-                >
-                  <span className="text-[10px] opacity-70">Text Primary</span>
-                  <div className="flex items-center gap-1.5 mt-1 font-mono font-bold">
-                    <span
-                      className="w-3 h-3 rounded-full border border-gray-400"
-                      style={{ backgroundColor: activePreviewTokens.textPrimary }}
-                    />
-                    <span className="truncate">{activePreviewTokens.textPrimary}</span>
-                  </div>
-                </div>
-              </div>
             </div>
-
           </div>
         </div>
       </div>
