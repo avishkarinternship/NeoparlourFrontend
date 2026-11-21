@@ -93,7 +93,7 @@ export default function OwnerLayout() {
   }, []);
 
   return (
-    <div className={`min-h-screen font-sans flex flex-col justify-between antialiased transition-colors duration-300 relative ${
+    <div className={`h-screen max-h-screen font-sans flex flex-col overflow-hidden antialiased transition-colors duration-300 relative ${
       isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
     }`}>
       <Navbar 
@@ -104,7 +104,7 @@ export default function OwnerLayout() {
         salon={salon} 
       />
       
-      <div className="flex flex-1 relative min-h-0 items-stretch">
+      <div className="flex flex-1 relative min-h-0 overflow-hidden">
         <Sidebar 
           isOpen={isMobileSidebarOpen} 
           isDesktopOpen={isDesktopSidebarOpen}
@@ -114,40 +114,42 @@ export default function OwnerLayout() {
           toggleDarkMode={toggleDarkMode} 
         />
 
-        <div className="flex-1 flex flex-col min-w-0 p-0 transition-all duration-300 ease-in-out relative z-10">
-          <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
-          <Suspense fallback={
-            <div className="min-h-[50vh] flex items-center justify-center">
-              <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
-            </div>
-          }>
-            <Outlet context={{ isDarkMode, salon }} />
-          </Suspense>
-        </div>
-      </div>
-      
-      {isAdmin ? (
-        <footer className={`py-3.5 px-6 md:px-8 border-t text-xs transition-colors duration-200 ${
-          isDarkMode ? 'bg-zinc-950 border-zinc-900 text-zinc-500' : 'bg-white border-gray-200 text-gray-500'
-        }`}>
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className={`font-black tracking-tight text-[11px] uppercase ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>NeoParlour Admin Engine</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">ALL SYSTEMS LIVE</span>
-            </div>
-            <div className="flex items-center gap-4 text-[11px]">
-              <span>Confidential • Internal Portal</span>
-              <span>•</span>
-              <button onClick={() => navigate('/owner/privacy-policy')} className="hover:underline cursor-pointer">Privacy Policy</button>
-              <span>•</span>
-              <button onClick={() => navigate('/owner/terms-and-conditions')} className="hover:underline cursor-pointer">Terms</button>
-            </div>
+        <main className="flex-1 h-full overflow-y-auto custom-scrollbar min-w-0 flex flex-col justify-between relative z-10">
+          <div className="flex-1 min-w-0">
+            <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
+            <Suspense fallback={
+              <div className="min-h-[50vh] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
+              </div>
+            }>
+              <Outlet context={{ isDarkMode, salon }} />
+            </Suspense>
           </div>
-        </footer>
-      ) : (
-        <Footer isDarkMode={isDarkMode} />
-      )}
+
+          {isAdmin ? (
+            <footer className={`py-3.5 px-6 md:px-8 border-t text-xs transition-colors duration-200 shrink-0 ${
+              isDarkMode ? 'bg-zinc-950 border-zinc-900 text-zinc-500' : 'bg-white border-gray-200 text-gray-500'
+            }`}>
+              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className={`font-black tracking-tight text-[11px] uppercase ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>NeoParlour Admin Engine</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">ALL SYSTEMS LIVE</span>
+                </div>
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span>Confidential • Internal Portal</span>
+                  <span>•</span>
+                  <button onClick={() => navigate('/owner/privacy-policy')} className="hover:underline cursor-pointer">Privacy Policy</button>
+                  <span>•</span>
+                  <button onClick={() => navigate('/owner/terms-and-conditions')} className="hover:underline cursor-pointer">Terms</button>
+                </div>
+              </div>
+            </footer>
+          ) : (
+            <Footer isDarkMode={isDarkMode} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }

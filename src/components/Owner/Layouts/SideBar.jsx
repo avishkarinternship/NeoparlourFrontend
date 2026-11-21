@@ -850,9 +850,9 @@ const Sidebar = ({
         />
       )}
 
-      {/* Desktop Column: Dynamic Full-Height Column with Sticky Navigation */}
-      <div 
-        className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 sidebar-container border-r min-h-full ${
+      {/* Desktop Column: Dynamic Full-Height Column Docked to Viewport */}
+      <aside 
+        className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 sidebar-container border-r h-full ${
           isDesktopOpen 
             ? 'w-64' 
             : 'w-20'
@@ -860,44 +860,38 @@ const Sidebar = ({
           isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
         }`}
       >
-        <aside 
-          className={`sticky top-16 w-full flex-1 flex flex-col min-h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out relative z-30 ${
-            isDesktopOpen ? 'w-64' : 'w-20'
+        {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}
+        <button 
+          type="button"
+          onClick={onToggleDesktop}
+          className={`absolute top-4 -right-3.5 z-50 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${
+            isDarkMode 
+              ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500 shadow-black/40' 
+              : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
           }`}
+          title={!isDesktopOpen ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+          aria-label={!isDesktopOpen ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}
-          <button 
-            type="button"
-            onClick={onToggleDesktop}
-            className={`absolute top-4 -right-3.5 z-50 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${
-              isDarkMode 
-                ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500 shadow-black/40' 
-                : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
-            }`}
-            title={!isDesktopOpen ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-            aria-label={!isDesktopOpen ? "Expand sidebar" : "Collapse sidebar"}
+          <svg
+            className={`w-3.5 h-3.5 transition-transform duration-300 ${!isDesktopOpen ? 'rotate-180 text-red-600' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className={`w-3.5 h-3.5 transition-transform duration-300 ${!isDesktopOpen ? 'rotate-180 text-red-600' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
 
-          {/* Dynamic Content Container */}
-          <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
-            {renderSidebarContent(false, !isDesktopOpen)}
-          </div>
-        </aside>
-      </div>
+        {/* Dynamic Content Container */}
+        <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
+          {renderSidebarContent(false, !isDesktopOpen)}
+        </div>
+      </aside>
 
       {/* Mobile Column: Slide-over drawer */}
       <aside className={`

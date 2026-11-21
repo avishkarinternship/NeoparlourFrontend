@@ -1225,12 +1225,12 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
     : t('owner.navbar.search_placeholder', 'Search staff, bookings, customers, services...');
 
   return (
-    <header className={`h-16 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300 border-b relative ${
+    <header className={`min-h-16 h-auto py-1.5 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 border-b relative shrink-0 ${
       isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
     }`}>
 
       {/* Left Logo Area - White-labeled with Salon Logo and Name */}
-      <div className={`h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
+      <div className={`min-h-16 h-full flex items-center border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
         isSidebarOpen 
           ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-start' 
           : 'lg:w-20 px-3 justify-center'
