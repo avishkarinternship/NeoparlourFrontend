@@ -446,7 +446,7 @@ const Sidebar = ({
           </div>
 
           {/* Bottom Admin Utility Actions Group */}
-          <div className={`p-2 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
+          <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
             {renderNavButton({
               path: '/owner/settings',
               label: t('owner.sidebar.settings', 'Settings'),
@@ -559,7 +559,7 @@ const Sidebar = ({
             {supportItems.map(item => renderNavButton(item))}
           </div>
 
-          <div className={`p-2 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
+          <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
             {renderNavButton({
               path: '/owner/settings',
               label: t('owner.sidebar.settings', 'Settings'),
@@ -636,7 +636,7 @@ const Sidebar = ({
             {seoItems.map(item => renderNavButton(item))}
           </div>
 
-          <div className={`p-2 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
+          <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
             {renderNavButton({
               path: '/owner/settings',
               label: t('owner.sidebar.settings', 'Settings'),
@@ -804,7 +804,7 @@ const Sidebar = ({
           ))}
         </div>
 
-        <div className={`p-2 border-t space-y-1 flex-shrink-0 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
+        <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
           {renderNavButton({
             path: '/customer/support',
             label: t('drawer.support', 'Help'),
@@ -850,17 +850,21 @@ const Sidebar = ({
         />
       )}
 
-      {/* Desktop Column: Smooth Collapsible Mini-Rail (w-20) / Expanded (w-64) Column */}
-      <div className={`hidden lg:block lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 ${
-        isDesktopOpen 
-          ? 'lg:w-64 lg:border-r' 
-          : 'lg:w-20 lg:border-r'
-      } ${
-        isDarkMode ? 'lg:bg-zinc-900 lg:border-zinc-800 text-zinc-100' : 'lg:bg-white lg:border-gray-200 text-gray-900'
-      }`}>
-        <aside className={`sticky top-16 h-[calc(100vh-64px)] flex flex-col transition-all duration-300 ease-in-out relative z-30 ${
-          isDesktopOpen ? 'w-64' : 'w-20'
-        }`}>
+      {/* Desktop Column: Dynamic Full-Height Column with Sticky Navigation */}
+      <div 
+        className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 sidebar-container border-r min-h-full ${
+          isDesktopOpen 
+            ? 'w-64' 
+            : 'w-20'
+        } ${
+          isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        }`}
+      >
+        <aside 
+          className={`sticky top-16 w-full flex-1 flex flex-col min-h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out relative z-30 ${
+            isDesktopOpen ? 'w-64' : 'w-20'
+          }`}
+        >
           {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}
           <button 
             type="button"
@@ -888,8 +892,8 @@ const Sidebar = ({
             </svg>
           </button>
 
-          {/* Scrollable Items Container */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden flex flex-col justify-between">
+          {/* Dynamic Content Container */}
+          <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
             {renderSidebarContent(false, !isDesktopOpen)}
           </div>
         </aside>

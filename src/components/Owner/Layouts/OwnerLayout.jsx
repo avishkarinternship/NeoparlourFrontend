@@ -104,7 +104,7 @@ export default function OwnerLayout() {
         salon={salon} 
       />
       
-      <div className="flex flex-1 relative min-h-0">
+      <div className="flex flex-1 relative min-h-0 items-stretch">
         <Sidebar 
           isOpen={isMobileSidebarOpen} 
           isDesktopOpen={isDesktopSidebarOpen}
