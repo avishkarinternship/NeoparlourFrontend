@@ -698,7 +698,7 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: '/owner/billing',
-                        element: <OwnerRouteGuard><Billing /></OwnerRouteGuard>
+                        element: <Navigate to="/owner/dashboard" replace />
                     },
                     {
                         path: '/owner/settings',

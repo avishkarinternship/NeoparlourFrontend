@@ -716,12 +716,6 @@ const Sidebar = ({
         isActive: location.pathname === '/owner/orders'
       },
       {
-        label: t('owner.sidebar.billing', 'Billing'),
-        path: '/owner/billing',
-        icon: <img src={ordersIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
-        isActive: location.pathname === '/owner/billing'
-      },
-      {
         label: t('owner.sidebar.kyc', 'KYC Verification'),
         path: '/owner/kyc',
         icon: (

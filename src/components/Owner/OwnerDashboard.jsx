@@ -1989,9 +1989,9 @@ const OwnerDashboard = () => {
                         </div>
                     </div>
 
-                    {/* 5. Billing & Invoices */}
+                    {/* 5. Bookings / Appointments */}
                     <div
-                        onClick={() => navigate('/owner/billing')}
+                        onClick={() => navigate('/owner/appointments')}
                         className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
                             isDarkMode 
                                 ? 'bg-zinc-900/90 border-zinc-800 hover:border-emerald-500/40 text-zinc-100 shadow-2xs' 
@@ -2000,13 +2000,13 @@ const OwnerDashboard = () => {
                     >
                         <div className="flex items-center justify-between">
                             <div className={`p-1.5 rounded-xl ${isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
-                                <Receipt className="w-4 h-4" />
+                                <Calendar className="w-4 h-4" />
                             </div>
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Billing & POS</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Invoices & GST</p>
+                            <h3 className="text-xs font-black tracking-tight leading-tight">Bookings</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>All appointments</p>
                         </div>
                     </div>
 
