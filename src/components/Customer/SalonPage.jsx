@@ -32,7 +32,11 @@ import {
     Info,
     ArrowUpRight,
     Compass,
-    CheckCheck
+    CheckCheck,
+    Sunrise,
+    Sun,
+    Sunset,
+    Moon
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -135,6 +139,37 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
     return <img src={src} alt={alt || 'Artisan'} className={className} />;
 };
 
+// Helper: classify time slot into morning, afternoon, evening, night
+const getSlotPeriod = (slot) => {
+    let hour = null;
+    if (slot.displayTime) {
+        const match = slot.displayTime.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        if (match) {
+            hour = parseInt(match[1], 10);
+            const period = match[3] ? match[3].toUpperCase() : null;
+            if (period === 'PM' && hour < 12) hour += 12;
+            if (period === 'AM' && hour === 12) hour = 0;
+        }
+    }
+    if (hour === null && slot.startTime) {
+        if (slot.startTime.includes('T')) {
+            const d = new Date(slot.startTime);
+            if (!isNaN(d.getTime())) {
+                const ist = new Date(d.getTime() + 330 * 60000);
+                hour = ist.getUTCHours();
+            }
+        } else {
+            const parts = slot.startTime.split(':');
+            if (parts.length >= 1) hour = parseInt(parts[0], 10);
+        }
+    }
+    if (hour === null) hour = 10;
+    if (hour < 12) return 'morning';
+    if (hour < 16) return 'afternoon';
+    if (hour < 20) return 'evening';
+    return 'night';
+};
+
 const SalonPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -172,7 +207,7 @@ const SalonPage = () => {
     const [activeSection, setActiveSection] = useState('atelier');
     const [showConciergeDock, setShowConciergeDock] = useState(false);
 
-    // Concierge Slot Booking
+    // Concierge Slot Booking & Time-of-Day Segmenting
     const getNextDays = () => {
         const days = [];
         const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -194,6 +229,34 @@ const SalonPage = () => {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [salonSlots, setSalonSlots] = useState([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
+    const [selectedPeriod, setSelectedPeriod] = useState('all');
+
+    // Segmented Slots by Time of Day
+    const segmentedSlots = useMemo(() => {
+        const morning = [];
+        const afternoon = [];
+        const evening = [];
+        const night = [];
+
+        salonSlots.forEach((slot) => {
+            const period = getSlotPeriod(slot);
+            if (period === 'morning') morning.push(slot);
+            else if (period === 'afternoon') afternoon.push(slot);
+            else if (period === 'evening') evening.push(slot);
+            else night.push(slot);
+        });
+
+        return { morning, afternoon, evening, night };
+    }, [salonSlots]);
+
+    // Active slots displayed according to selected period
+    const displayedSlots = useMemo(() => {
+        if (selectedPeriod === 'morning') return segmentedSlots.morning;
+        if (selectedPeriod === 'afternoon') return segmentedSlots.afternoon;
+        if (selectedPeriod === 'evening') return segmentedSlots.evening;
+        if (selectedPeriod === 'night') return segmentedSlots.night;
+        return salonSlots;
+    }, [selectedPeriod, segmentedSlots, salonSlots]);
 
     // Dynamic distance calculation
     const distanceBadge = useMemo(() => {
@@ -219,7 +282,7 @@ const SalonPage = () => {
         return formatDistance(dist);
     }, [activeLocation, salon?.latitude, salon?.longitude]);
 
-    // Format time (e.g., "10:00:00" -> "10:00 AM")
+    // Format time
     const formatTimeStr = (timeStr) => {
         if (!timeStr) return '';
         const parts = timeStr.split(':');
@@ -257,65 +320,6 @@ const SalonPage = () => {
         }
         if (!openingTime || !closingTime) return '10:00 AM - 10:00 PM';
         return `${formatTimeStr(openingTime)} - ${formatTimeStr(closingTime)}`;
-    };
-
-    // Category mapping helper
-    const getCategoryIcon = (catName) => {
-        if (!catName) return hairLogo;
-        const catLower = String(catName).toLowerCase().trim();
-        const exactMap = {
-            'hair': hairLogo,
-            'haircut': hairLogo,
-            'hair cut': hairLogo,
-            'hair styling': hairStylingLogo,
-            'hairstyling': hairStylingLogo,
-            'styling': hairStylingLogo,
-            'hair coloring': hairColoringLogo,
-            'coloring': hairColoringLogo,
-            'hair color': hairColoringLogo,
-            'hair removal': hairRemovalLogo,
-            'hairremoval': hairRemovalLogo,
-            'waxing': hairRemovalLogo,
-            'threading': hairRemovalLogo,
-            'hair spa': hairSpaLogo,
-            'hairspa': hairSpaLogo,
-            'hair treatment': hairTreatmentLogo,
-            'hairtreatment': hairTreatmentLogo,
-            'hair wash': hairWashLogo,
-            'hairwash': hairWashLogo,
-            'shampoo': hairWashLogo,
-            'nail care': nailCareLogo,
-            'nailcare': nailCareLogo,
-            'nails': nailCareLogo,
-            'nail': nailCareLogo,
-            'manicure': nailCareLogo,
-            'pedicure': nailCareLogo,
-            'shaving': shavingLogo,
-            'beard': shavingLogo,
-            'skin care': skinCareLogo,
-            'skincare': skinCareLogo,
-            'skin': skinCareLogo,
-            'facial': skinCareLogo,
-            'dryer': dryerLogo,
-            'grooming': groomingLogo,
-            'makeup': makeupLogo,
-            'make up': makeupLogo,
-            'bridal': makeupLogo,
-            'spa': spaMassageLogo,
-            'massage': spaMassageLogo,
-            'spa & massage': spaMassageLogo,
-        };
-        if (exactMap[catLower]) return exactMap[catLower];
-        if (catLower.includes('color')) return hairColoringLogo;
-        if (catLower.includes('removal') || catLower.includes('wax')) return hairRemovalLogo;
-        if (catLower.includes('spa') || catLower.includes('massage')) return spaMassageLogo;
-        if (catLower.includes('treatment')) return hairTreatmentLogo;
-        if (catLower.includes('makeup') || catLower.includes('bridal')) return makeupLogo;
-        if (catLower.includes('style')) return hairStylingLogo;
-        if (catLower.includes('shave') || catLower.includes('beard')) return shavingLogo;
-        if (catLower.includes('skin') || catLower.includes('facial')) return skinCareLogo;
-        if (catLower.includes('nail')) return nailCareLogo;
-        return hairLogo;
     };
 
     const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
@@ -379,7 +383,7 @@ const SalonPage = () => {
         resolveSlug();
     }, [salonSlug, navigate]);
 
-    // --- FETCH SALON & ALL ATELIER DATA ---
+    // --- FETCH SALON & ATELIER DATA ---
     useEffect(() => {
         if (!resolvedSalonId) return;
 
@@ -521,7 +525,21 @@ const SalonPage = () => {
                 const res = await axiosInstance.get('/appointments/public/salon-slots', {
                     params: { salonId: resolvedSalonId, selectedDate: dateInstant }
                 });
-                setSalonSlots(res.data || []);
+                const fetchedSlots = res.data || [];
+                setSalonSlots(fetchedSlots);
+
+                // Auto-set the selectedPeriod to first non-empty period
+                const morning = fetchedSlots.filter(s => getSlotPeriod(s) === 'morning');
+                const afternoon = fetchedSlots.filter(s => getSlotPeriod(s) === 'afternoon');
+                const evening = fetchedSlots.filter(s => getSlotPeriod(s) === 'evening');
+                const night = fetchedSlots.filter(s => getSlotPeriod(s) === 'night');
+
+                if (morning.length > 0) setSelectedPeriod('morning');
+                else if (afternoon.length > 0) setSelectedPeriod('afternoon');
+                else if (evening.length > 0) setSelectedPeriod('evening');
+                else if (night.length > 0) setSelectedPeriod('night');
+                else setSelectedPeriod('all');
+
             } catch (err) {
                 console.error('Error fetching slots:', err);
                 setSalonSlots([]);
@@ -875,7 +893,6 @@ const SalonPage = () => {
                     
                     {/* Top Editorial Story Feature */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-                        {/* Left: Editorial Image with Caption Badge */}
                         <div className="lg:col-span-5 relative group">
                             <div className="w-full h-80 sm:h-96 rounded-3xl overflow-hidden bg-stone-200 dark:bg-stone-900 shadow-xl border border-stone-200 dark:border-stone-800">
                                 <img
@@ -894,7 +911,6 @@ const SalonPage = () => {
                             </div>
                         </div>
 
-                        {/* Right: Narrative */}
                         <div className="lg:col-span-7 space-y-5">
                             <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
                                 The Atelier Philosophy
@@ -907,7 +923,6 @@ const SalonPage = () => {
                                     `At ${salonName}, we consider personal styling an intimate art form. We reject factory-line salon conveyor belts in favor of bespoke private consultations, medical-grade hygiene protocols, and precision techniques customized exclusively for you.`}
                             </p>
 
-                            {/* Signatures */}
                             <div className="grid grid-cols-2 gap-4 pt-4">
                                 <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800">
                                     <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Private Suites</h4>
@@ -989,7 +1004,6 @@ const SalonPage = () => {
             <section id="section-menu" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                     
-                    {/* Menu Header */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-2">
                             <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
@@ -1003,7 +1017,6 @@ const SalonPage = () => {
                             </p>
                         </div>
 
-                        {/* Search in Menu */}
                         <div className="relative w-full md:w-80">
                             <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
@@ -1025,7 +1038,6 @@ const SalonPage = () => {
                         </div>
                     </div>
 
-                    {/* Category Selector Tabs */}
                     {categories.length > 0 && (
                         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 border-b border-stone-200 dark:border-stone-800">
                             <button
@@ -1067,7 +1079,6 @@ const SalonPage = () => {
                         </div>
                     )}
 
-                    {/* Treatment Items List (Boutique Spa Menu Style) */}
                     {filteredServices.length === 0 ? (
                         <div className="py-16 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
                             <Scissors className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
@@ -1131,7 +1142,6 @@ const SalonPage = () => {
                         </div>
                     )}
 
-                    {/* Bottom Concierge Prompt */}
                     <div className="p-8 rounded-3xl bg-stone-900 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-stone-800">
                         <div className="space-y-1 text-center md:text-left">
                             <h4 className="text-lg font-black tracking-tight uppercase">Custom Bridal, Makeover or Editorial Project?</h4>
@@ -1219,7 +1229,6 @@ const SalonPage = () => {
                                 </div>
                             ))}
 
-                            {/* Seasonal Curations / Offers */}
                             {offers.map((offer) => {
                                 const isPct = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
                                 const val = offer.discountValue ?? offer.percentage ?? 0;
@@ -1406,10 +1415,10 @@ const SalonPage = () => {
             </section>
 
             {/* ============================================================ */}
-            {/* 8. CONCIERGE SLOT RESERVATION */}
+            {/* 8. CONCIERGE SLOT RESERVATION — COMPACT & DIVIDED BY TIME PERIOD */}
             {/* ============================================================ */}
             <section id="section-reservation" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
-                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-8">
                     <div className="space-y-2">
                         <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
                             Private Scheduling
@@ -1418,13 +1427,13 @@ const SalonPage = () => {
                             Concierge Reservation Desk
                         </h2>
                         <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-                            Reserve an unhurried, private time slot at {salonName}.
+                            Select your date and preferred session — Morning, Afternoon, Evening or Night.
                         </p>
                     </div>
 
-                    <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm space-y-8">
+                    <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm space-y-6">
                         {/* Month / Year Indicator */}
-                        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-4">
+                        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
                             <span className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-white">
                                 {selectedDateObj?.month} {selectedDateObj?.year}
                             </span>
@@ -1434,7 +1443,7 @@ const SalonPage = () => {
                         </div>
 
                         {/* 14-Day Calendar Strip */}
-                        <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-2">
+                        <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-none pb-2">
                             {nextDays.map((d, i) => {
                                 const isSelected = selectedDateObj?.fullDate === d.fullDate;
                                 return (
@@ -1445,50 +1454,84 @@ const SalonPage = () => {
                                             setSelectedDateObj(d);
                                             setSelectedSlot(null);
                                         }}
-                                        className={`flex flex-col items-center justify-center py-4 px-4 rounded-2xl min-w-[68px] transition cursor-pointer ${
+                                        className={`flex flex-col items-center justify-center py-3 px-3.5 rounded-2xl min-w-[62px] transition cursor-pointer ${
                                             isSelected
                                                 ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md scale-105'
                                                 : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
                                         }`}
                                     >
                                         <span className="text-[10px] uppercase font-bold tracking-wider">{d.day}</span>
-                                        <span className="text-lg font-black mt-0.5">{d.num}</span>
+                                        <span className="text-base font-black mt-0.5">{d.num}</span>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        {/* Time Slots */}
-                        <div className="space-y-3 pt-2">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                                Available Time Slots on {selectedDateObj?.day}, {selectedDateObj?.num} {selectedDateObj?.month}:
-                            </h4>
+                        {/* Time Period Tabs: Morning, Afternoon, Evening, Night (Shrinks the section) */}
+                        <div className="space-y-4 pt-1">
+                            <div className="flex flex-wrap items-center gap-2 border-b border-stone-100 dark:border-stone-800 pb-3">
+                                {[
+                                    { id: 'all', label: 'All Sessions', count: salonSlots.length, icon: Clock },
+                                    { id: 'morning', label: 'Morning', sub: '8 AM - 12 PM', count: segmentedSlots.morning.length, icon: Sunrise },
+                                    { id: 'afternoon', label: 'Afternoon', sub: '12 PM - 4 PM', count: segmentedSlots.afternoon.length, icon: Sun },
+                                    { id: 'evening', label: 'Evening', sub: '4 PM - 8 PM', count: segmentedSlots.evening.length, icon: Sunset },
+                                    { id: 'night', label: 'Night', sub: '8 PM - 10 PM', count: segmentedSlots.night.length, icon: Moon }
+                                ].map((period) => {
+                                    const PIcon = period.icon;
+                                    const isCurrent = selectedPeriod === period.id;
+                                    const hasSlots = period.count > 0;
+                                    return (
+                                        <button
+                                            key={period.id}
+                                            type="button"
+                                            disabled={!hasSlots && period.id !== 'all'}
+                                            onClick={() => setSelectedPeriod(period.id)}
+                                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                isCurrent
+                                                    ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
+                                                    : hasSlots
+                                                    ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
+                                                    : 'opacity-40 bg-stone-50 dark:bg-stone-900/40 text-stone-400 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            <PIcon className="w-3.5 h-3.5" />
+                                            <span>{period.label}</span>
+                                            <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
+                                                isCurrent ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black' : 'bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-300'
+                                            }`}>
+                                                {period.count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
+                            {/* Shrunk Slots Display (Only shows slots for selected period in a tidy compact row) */}
                             {slotsLoading ? (
-                                <div className="py-12 text-center space-y-2">
-                                    <div className="animate-spin h-6 w-6 border-2 border-stone-400 border-t-transparent rounded-full mx-auto" />
-                                    <p className="text-xs text-stone-400 font-bold">Checking availability...</p>
+                                <div className="py-8 text-center space-y-2">
+                                    <div className="animate-spin h-5 w-5 border-2 border-stone-400 border-t-transparent rounded-full mx-auto" />
+                                    <p className="text-xs text-stone-400 font-bold">Checking timetable availability...</p>
                                 </div>
-                            ) : salonSlots.length === 0 ? (
-                                <div className="py-10 text-center bg-stone-50 dark:bg-stone-800/40 rounded-2xl border border-stone-200 dark:border-stone-800 space-y-1">
-                                    <Clock className="w-8 h-8 text-stone-300 dark:text-stone-700 mx-auto" />
+                            ) : displayedSlots.length === 0 ? (
+                                <div className="py-8 text-center bg-stone-50 dark:bg-stone-800/40 rounded-2xl border border-stone-200 dark:border-stone-800 space-y-1">
+                                    <Clock className="w-6 h-6 text-stone-300 dark:text-stone-700 mx-auto" />
                                     <p className="text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                                        No online slots available on this date
+                                        No slots available in this session
                                     </p>
-                                    <p className="text-xs text-stone-400">Please choose another date or contact our concierge.</p>
+                                    <p className="text-[11px] text-stone-400">Please choose another session (Morning, Afternoon, Evening, Night) or date.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                                    {salonSlots.map((slot, idx) => {
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+                                    {displayedSlots.map((slot, idx) => {
                                         const isSelected = selectedSlot?.startTime === slot.startTime;
                                         return (
                                             <button
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => handleConfirmSlot(slot)}
-                                                className={`py-3 px-3 rounded-xl text-center text-xs font-bold transition cursor-pointer ${
+                                                className={`py-2.5 px-2.5 rounded-xl text-center text-xs font-bold transition cursor-pointer ${
                                                     isSelected
-                                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md'
+                                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md scale-105'
                                                         : 'bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200/50 dark:border-stone-700'
                                                 }`}
                                             >
