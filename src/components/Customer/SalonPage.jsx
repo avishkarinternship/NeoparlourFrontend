@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -22,8 +22,6 @@ import {
     Check,
     CheckCircle2,
     ShieldCheck,
-    Copy,
-    CheckCheck,
     X,
     ExternalLink,
     Coffee,
@@ -32,8 +30,9 @@ import {
     Car,
     Camera,
     Info,
-    ChevronDown,
-    Plus
+    ArrowUpRight,
+    Compass,
+    CheckCheck
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -67,10 +66,8 @@ import expertThreeImg from '../../assets/Customer/BookingScreen/Expert_Three.png
 import productOne from '../../assets/Customer/ProductSearch/product_one.jpg';
 import productTwo from '../../assets/Customer/ProductSearch/product_two.jpg';
 import productThree from '../../assets/Customer/ProductSearch/product_three.jpg';
-import productFour from '../../assets/Customer/ProductSearch/product_four.jpg';
-import productFive from '../../assets/Customer/ProductSearch/product_five.jpg';
 
-// --- LOCAL ASYNC IMAGE COMPONENT ---
+// --- ASYNC IMAGE HELPER ---
 const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
     const [src, setSrc] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -94,26 +91,19 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
                     responseType: 'blob',
                     signal: controller.signal
                 });
-
                 if (isMounted) {
-                    const blobUrl = URL.createObjectURL(response.data);
-                    setSrc(blobUrl);
+                    setSrc(URL.createObjectURL(response.data));
                 }
             } catch (err) {
                 if (err.name !== 'CanceledError' && err.message !== 'canceled' && !axiosInstance.isCancel?.(err)) {
-                    if (isMounted) {
-                        setError(true);
-                    }
+                    if (isMounted) setError(true);
                 }
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchImage();
-
         return () => {
             isMounted = false;
             controller.abort();
@@ -122,29 +112,27 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 
     useEffect(() => {
         return () => {
-            if (src) {
-                URL.revokeObjectURL(src);
-            }
+            if (src) URL.revokeObjectURL(src);
         };
     }, [src]);
 
     if (loading) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-zinc-800 text-slate-400">
-                <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full" />
+            <div className="w-full h-full flex items-center justify-center bg-stone-200 dark:bg-zinc-800 text-stone-400">
+                <div className="animate-spin h-4 w-4 border-2 border-stone-400 border-t-transparent rounded-full" />
             </div>
         );
     }
 
     if (error || !src) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-zinc-800 text-slate-400 font-extrabold text-xs uppercase">
+            <div className="w-full h-full flex items-center justify-center bg-stone-200 dark:bg-zinc-800 text-stone-500 font-extrabold text-xs uppercase tracking-wider">
                 {fallbackText || 'S'}
             </div>
         );
     }
 
-    return <img src={src} alt={alt || 'Image'} className={className} />;
+    return <img src={src} alt={alt || 'Artisan'} className={className} />;
 };
 
 const SalonPage = () => {
@@ -167,31 +155,24 @@ const SalonPage = () => {
     const [serviceSearchQuery, setServiceSearchQuery] = useState('');
     const [servicesLoaded, setServicesLoaded] = useState(false);
 
-    // Staff / Experts
+    // Staff / Creative Collective
     const [staffList, setStaffList] = useState([]);
     const [staffLoaded, setStaffLoaded] = useState(false);
 
-    // Offers & Packages
+    // Curations (Offers & Packages)
     const [offers, setOffers] = useState([]);
-    const [offersLoading, setOffersLoading] = useState(false);
-    const [copiedOfferCode, setCopiedOfferCode] = useState(null);
     const [packages, setPackages] = useState([]);
-    const [packagesLoaded, setPackagesLoaded] = useState(false);
-
-    // Products & Home Service
-    const [products, setProducts] = useState([]);
-    const [productsLoaded, setProductsLoaded] = useState(false);
     const [homeServiceCharges, setHomeServiceCharges] = useState(0);
 
-    // Gallery & Lightbox
+    // Lookbook & Lightbox
     const [galleryImages, setGalleryImages] = useState([]);
     const [lightboxIndex, setLightboxIndex] = useState(null);
 
-    // In-page Navigation Tabs & Floating Bar
-    const [activeTab, setActiveTab] = useState('overview');
-    const [showFloatingDock, setShowFloatingDock] = useState(false);
+    // Concierge Dock & Active Section Tracking
+    const [activeSection, setActiveSection] = useState('atelier');
+    const [showConciergeDock, setShowConciergeDock] = useState(false);
 
-    // Quick Book States
+    // Concierge Slot Booking
     const getNextDays = () => {
         const days = [];
         const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -210,7 +191,6 @@ const SalonPage = () => {
     };
     const nextDays = useMemo(() => getNextDays(), []);
     const [selectedDateObj, setSelectedDateObj] = useState(nextDays[0]);
-    const [selectedTime, setSelectedTime] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [salonSlots, setSalonSlots] = useState([]);
     const [slotsLoading, setSlotsLoading] = useState(false);
@@ -239,7 +219,7 @@ const SalonPage = () => {
         return formatDistance(dist);
     }, [activeLocation, salon?.latitude, salon?.longitude]);
 
-    // Format time strings (e.g. "09:00:00" -> "9:00 AM")
+    // Format time (e.g., "10:00:00" -> "10:00 AM")
     const formatTimeStr = (timeStr) => {
         if (!timeStr) return '';
         const parts = timeStr.split(':');
@@ -279,7 +259,7 @@ const SalonPage = () => {
         return `${formatTimeStr(openingTime)} - ${formatTimeStr(closingTime)}`;
     };
 
-    // Category mapping helper using SVG Logos
+    // Category mapping helper
     const getCategoryIcon = (catName) => {
         if (!catName) return hairLogo;
         const catLower = String(catName).toLowerCase().trim();
@@ -338,14 +318,8 @@ const SalonPage = () => {
         return hairLogo;
     };
 
-    // Staff & Product fallbacks
     const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
     const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
-    const productFallbacks = [productOne, productTwo, productThree, productFour, productFive];
-    const getProductImg = (product, index) => {
-        if (product.imageUrl) return getSalonImageSrc(product.imageUrl);
-        return productFallbacks[index % productFallbacks.length];
-    };
 
     // --- SLUG RESOLUTION EFFECT ---
     useEffect(() => {
@@ -355,7 +329,7 @@ const SalonPage = () => {
                 if (activeId) {
                     setResolvedSalonId(activeId);
                 } else {
-                    toast.error('No active salon selected. Redirecting to search.');
+                    toast.error('No active salon selected. Redirecting to directory.');
                     navigate('/customer/salons');
                 }
                 return;
@@ -393,12 +367,11 @@ const SalonPage = () => {
                     setActiveSalon(matched);
                     setResolvedSalonId(id);
                 } else {
-                    toast.error('Salon not found. Redirecting...');
+                    toast.error('Salon not found.');
                     navigate('/customer/salons');
                 }
             } catch (e) {
                 console.error("Error resolving salon slug:", e);
-                toast.error('Error finding salon.');
                 navigate('/customer/salons');
             }
         };
@@ -406,7 +379,7 @@ const SalonPage = () => {
         resolveSlug();
     }, [salonSlug, navigate]);
 
-    // --- LOAD SALON DETAILS & DATA ON RESOLVED SALON ID ---
+    // --- FETCH SALON & ALL ATELIER DATA ---
     useEffect(() => {
         if (!resolvedSalonId) return;
 
@@ -418,18 +391,14 @@ const SalonPage = () => {
                 setSalon(salonData);
                 setActiveSalon(salonData);
 
-                const salonName = salonData.salonName || salonData.name || 'Salon Details';
+                const salonName = salonData.salonName || salonData.name || 'Salon';
                 const cityStr = salonData.cityName || salonData.city || '';
                 const areaStr = salonData.areaName || salonData.area || '';
 
-                const seoTitle = `${salonName}${cityStr ? ' (' + cityStr + ')' : ''} | Bespoke Hair & Beauty Studio`;
-                const seoDesc = `Welcome to ${salonName} in ${areaStr ? areaStr + ', ' : ''}${cityStr}. Explore bespoke services, price list, top stylists, verified reviews, and book online.`;
-                const seoKeywords = `${salonName.toLowerCase()}, ${salonName.toLowerCase()} ${cityStr.toLowerCase()}, beauty studio ${cityStr.toLowerCase()}, salon booking`;
-
                 updateSEOMetadata({
-                    title: seoTitle,
-                    description: seoDesc,
-                    keywords: seoKeywords
+                    title: `${salonName} | Bespoke Hair & Beauty Atelier | Official Website`,
+                    description: `Experience couture hairdressing, aesthetic skincare & luxury wellness rituals at ${salonName}, ${areaStr ? areaStr + ', ' : ''}${cityStr}. Explore treatment menu & reserve appointment online.`,
+                    keywords: `${salonName.toLowerCase()}, luxury salon ${cityStr.toLowerCase()}, hair atelier, couture beauty`
                 });
 
                 const slug = generateSalonSlug(salonName, cityStr);
@@ -437,8 +406,6 @@ const SalonPage = () => {
                     window.history.replaceState(null, '', `/salon/${slug}`);
                 }
 
-                const reviewsCount = (((salonData.salonId || salonData.id || 0) * 17) % 80) + 40;
-                const rating = salonData.rating || "4.8";
                 injectJSONLD({
                     "@context": "https://schema.org",
                     "@type": "BeautySalon",
@@ -446,23 +413,13 @@ const SalonPage = () => {
                     "image": salonData.imageUrl ? getSalonImageSrc(salonData.imageUrl) : "https://neoparlour.com/android-chrome-512x512.png",
                     "url": window.location.href,
                     "telephone": salonData.phone || "+91 99999 99999",
-                    "priceRange": "₹₹",
+                    "priceRange": "₹₹₹",
                     "address": {
                         "@type": "PostalAddress",
-                        "streetAddress": salonData.address || "Main Street",
+                        "streetAddress": salonData.address || "Prime Atelier",
                         "addressLocality": salonData.areaName || "",
                         "addressRegion": cityStr,
                         "addressCountry": "IN"
-                    },
-                    "openingHoursSpecification": {
-                        "@type": "OpeningHoursSpecification",
-                        "opens": salonData.openingTime || "09:00",
-                        "closes": salonData.closingTime || "21:00"
-                    },
-                    "aggregateRating": {
-                        "@type": "AggregateRating",
-                        "ratingValue": rating,
-                        "reviewCount": reviewsCount
                     }
                 });
             } catch (error) {
@@ -486,7 +443,7 @@ const SalonPage = () => {
                 }
                 setServicesLoaded(true);
             } catch (err) {
-                console.error("Error fetching services & categories:", err);
+                console.error("Error fetching services:", err);
                 setServicesLoaded(true);
             }
         };
@@ -496,8 +453,7 @@ const SalonPage = () => {
                 const staffRes = await axiosInstance.get('/staff/public/search', {
                     params: { size: 6, page: 0, salonId: resolvedSalonId, status: 'active' }
                 });
-                const staffData = staffRes.data?.content || staffRes.data || [];
-                setStaffList(staffData);
+                setStaffList(staffRes.data?.content || staffRes.data || []);
                 setStaffLoaded(true);
             } catch (error) {
                 console.error("Error fetching staff:", error);
@@ -505,65 +461,35 @@ const SalonPage = () => {
             }
         };
 
-        const fetchActiveOffers = async () => {
-            setOffersLoading(true);
+        const fetchOffersAndPackages = async () => {
             try {
-                const res = await axiosInstance.get('/offers/public/search', {
-                    params: { active: true, page: 0, size: 10, salonId: resolvedSalonId }
-                });
-                setOffers(res.data?.content || res.data || []);
+                const [offersRes, pkgsRes, homeRes] = await Promise.allSettled([
+                    axiosInstance.get('/offers/public/search', { params: { active: true, page: 0, size: 6, salonId: resolvedSalonId } }),
+                    axiosInstance.get('/packages/search', { params: { active: true, salonId: resolvedSalonId, page: 0, size: 6 } }),
+                    axiosInstance.get(`/salons/${resolvedSalonId}/home-service-charges`)
+                ]);
+                if (offersRes.status === 'fulfilled' && offersRes.value?.data) {
+                    setOffers(offersRes.value.data?.content || offersRes.value.data || []);
+                }
+                if (pkgsRes.status === 'fulfilled' && pkgsRes.value?.data) {
+                    setPackages(pkgsRes.value.data?.content || pkgsRes.value.data || []);
+                }
+                if (homeRes.status === 'fulfilled' && homeRes.value?.data) {
+                    setHomeServiceCharges(parseFloat(homeRes.value.data) || 0);
+                }
             } catch (error) {
-                console.error("Error loading active offers:", error);
-            } finally {
-                setOffersLoading(false);
+                console.error("Error loading offers/packages:", error);
             }
         };
 
-        const fetchPackages = async () => {
-            try {
-                const res = await axiosInstance.get('/packages/search', {
-                    params: { active: true, salonId: resolvedSalonId, page: 0, size: 10 }
-                });
-                setPackages(res.data?.content || []);
-                setPackagesLoaded(true);
-            } catch (error) {
-                console.error("Error fetching packages:", error);
-                setPackagesLoaded(true);
-            }
-        };
-
-        const fetchProducts = async () => {
-            try {
-                const res = await axiosInstance.get('/products/public/filter', {
-                    params: { active: true, size: 4, salonId: resolvedSalonId }
-                });
-                setProducts((res.data?.content || res.data || []).slice(0, 4));
-                setProductsLoaded(true);
-            } catch (error) {
-                console.error("Error fetching products:", error);
-                setProductsLoaded(true);
-            }
-        };
-
-        const fetchHomeServiceCharges = async () => {
-            try {
-                const res = await axiosInstance.get(`/salons/${resolvedSalonId}/home-service-charges`);
-                setHomeServiceCharges(parseFloat(res.data) || 0);
-            } catch (error) {
-                console.error("Error loading home service charges:", error);
-            }
-        };
-
-        const checkFavStatus = async () => {
+        const checkFav = async () => {
             if (isAuthenticated && resolvedSalonId) {
                 try {
                     const res = await axiosInstance.get(`/customer/favourites/${resolvedSalonId}/check`);
                     setIsFavourite(Boolean(res.data));
-                } catch (err) {
-                    console.error("Failed to check favourite:", err);
+                } catch {
+                    setIsFavourite(false);
                 }
-            } else {
-                setIsFavourite(false);
             }
         };
 
@@ -571,11 +497,8 @@ const SalonPage = () => {
             fetchSalonDetails(),
             fetchServicesAndCategories(),
             fetchStaff(),
-            fetchActiveOffers(),
-            fetchPackages(),
-            fetchProducts(),
-            fetchHomeServiceCharges(),
-            checkFavStatus()
+            fetchOffersAndPackages(),
+            checkFav()
         ]);
     }, [resolvedSalonId, salonSlug, isAuthenticated]);
 
@@ -613,16 +536,15 @@ const SalonPage = () => {
     useEffect(() => {
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            setShowFloatingDock(scrollY > 480);
+            setShowConciergeDock(scrollY > 500);
 
-            // Simple section spy
-            const sections = ['overview', 'about', 'services', 'offers', 'stylists', 'slots', 'gallery', 'location', 'reviews'];
+            const sections = ['atelier', 'philosophy', 'menu', 'curations', 'collective', 'lookbook', 'reservation', 'concierge'];
             for (let i = sections.length - 1; i >= 0; i--) {
-                const el = document.getElementById(`salon-${sections[i]}-section`);
+                const el = document.getElementById(`section-${sections[i]}`);
                 if (el) {
                     const rect = el.getBoundingClientRect();
-                    if (rect.top <= 180) {
-                        setActiveTab(sections[i]);
+                    if (rect.top <= 160) {
+                        setActiveSection(sections[i]);
                         break;
                     }
                 }
@@ -633,10 +555,10 @@ const SalonPage = () => {
     }, []);
 
     const scrollToSection = (id) => {
-        setActiveTab(id);
-        const el = document.getElementById(`salon-${id}-section`);
+        setActiveSection(id);
+        const el = document.getElementById(`section-${id}`);
         if (el) {
-            const yOffset = -90;
+            const yOffset = -80;
             const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
@@ -655,10 +577,10 @@ const SalonPage = () => {
         });
     }, [allServices, selectedCategory, serviceSearchQuery]);
 
-    // User actions
+    // User interactions
     const handleToggleFavourite = async () => {
         if (!isAuthenticated) {
-            toast.error("Please login to save to favourites");
+            toast.error("Please sign in to add to your private list");
             navigate('/customer/login');
             return;
         }
@@ -667,38 +589,30 @@ const SalonPage = () => {
         try {
             if (newStatus) {
                 await axiosInstance.post(`/customer/favourites/${resolvedSalonId}`);
-                toast.success(`Saved to favourites`);
+                toast.success(`Saved to your private salon list`);
             } else {
                 await axiosInstance.delete(`/customer/favourites/${resolvedSalonId}`);
-                toast.success(`Removed from favourites`);
+                toast.success(`Removed from your list`);
             }
-        } catch (err) {
+        } catch {
             setIsFavourite(!newStatus);
-            toast.error("Failed to update favourites");
         }
     };
 
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
-                title: salon?.name || salon?.salonName || 'Salon Boutique',
-                text: `Discover ${salon?.name || 'this salon'} & book appointments online.`,
+                title: salon?.name || salon?.salonName || 'Salon Atelier',
+                text: `Discover ${salon?.name || 'this atelier'} & reserve treatments online.`,
                 url: window.location.href,
             }).catch(() => {});
         } else {
             navigator.clipboard.writeText(window.location.href);
-            toast.success('Link copied to clipboard!');
+            toast.success('Atelier invitation link copied.');
         }
     };
 
-    const handleCopyOffer = (code) => {
-        navigator.clipboard.writeText(code);
-        setCopiedOfferCode(code);
-        toast.success(`Coupon code ${code} copied!`);
-        setTimeout(() => setCopiedOfferCode(null), 2500);
-    };
-
-    const handleBookService = (service) => {
+    const handleReserveService = (service) => {
         navigate('/customer/book-service', {
             state: {
                 addedServices: service ? [service.id] : [],
@@ -707,19 +621,17 @@ const SalonPage = () => {
         });
     };
 
-    const handleBookWithStaff = (staff) => {
+    const handleReserveWithArtisan = (staff) => {
         navigate('/customer/book-service', {
             state: {
                 selectedExpert: staff.id,
-                selectedDateObj: selectedDateObj,
-                selectedTime: selectedTime
+                selectedDateObj: selectedDateObj
             }
         });
     };
 
-    const handleSelectSlotAndBook = (slot) => {
+    const handleConfirmSlot = (slot) => {
         setSelectedSlot(slot);
-        setSelectedTime(slot.displayTime);
         localStorage.setItem('bookingSelectedDateObj', JSON.stringify(selectedDateObj));
         localStorage.setItem('bookingSelectedTime', slot.displayTime);
         localStorage.setItem('bookingSelectedSlot', JSON.stringify(slot));
@@ -732,28 +644,20 @@ const SalonPage = () => {
         });
     };
 
-    const salonName = salon?.name || salon?.salonName || 'Boutique Salon';
-    const addressStr = salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'Prime Location';
+    const salonName = salon?.name || salon?.salonName || 'The Atelier';
+    const addressStr = salon?.address || [salon?.areaName, salon?.cityName].filter(Boolean).join(', ') || 'Prime Destination';
     const heroImage = galleryImages[0] || salon?.imageUrl || null;
-    const ratingScore = salon?.rating ? parseFloat(salon?.rating).toFixed(1) : '4.8';
+    const ratingScore = salon?.rating ? parseFloat(salon?.rating).toFixed(1) : '4.9';
 
-    // Loading State
+    // Skeleton
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 font-sans antialiased text-slate-800 dark:text-zinc-100 flex flex-col">
-                <div className="w-full h-80 sm:h-96 yt-skeleton" />
-                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 -mt-24 space-y-6">
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 dark:border-zinc-800 space-y-4">
-                        <div className="h-8 yt-skeleton rounded-xl w-72" />
-                        <div className="h-4 yt-skeleton rounded-lg w-48" />
-                        <div className="h-10 yt-skeleton rounded-xl w-full" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-2 space-y-4">
-                            <div className="h-64 yt-skeleton rounded-3xl" />
-                            <div className="h-48 yt-skeleton rounded-3xl" />
-                        </div>
-                        <div className="h-96 yt-skeleton rounded-3xl" />
+            <div className="min-h-screen bg-stone-900 text-stone-100 flex flex-col font-sans">
+                <div className="w-full h-[60vh] yt-skeleton opacity-60" />
+                <div className="max-w-6xl mx-auto w-full px-6 -mt-32 space-y-6">
+                    <div className="bg-stone-950/90 rounded-3xl p-8 border border-stone-800 space-y-4">
+                        <div className="h-10 yt-skeleton rounded-xl w-80" />
+                        <div className="h-4 yt-skeleton rounded-lg w-52" />
                     </div>
                 </div>
             </div>
@@ -761,223 +665,199 @@ const SalonPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 font-sans antialiased text-slate-900 dark:text-zinc-100 selection:bg-red-500 selection:text-white">
+        <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0E0E10] font-sans antialiased text-stone-900 dark:text-stone-100 transition-colors duration-300">
 
             {/* ============================================================ */}
-            {/* 1. IMMERSIVE HERO STUDIO MASTHEAD */}
+            {/* 1. EDITORIAL LUXURY STUDIO MASTHEAD (HERO) */}
             {/* ============================================================ */}
-            <header id="salon-overview-section" className="relative w-full bg-slate-950 text-white overflow-hidden">
-                {/* Background Panoramic Canvas with Ambient Lighting */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
+            <header id="section-atelier" className="relative w-full min-h-[82vh] lg:min-h-[88vh] flex items-end justify-center bg-stone-950 text-white overflow-hidden pb-12 sm:pb-20 pt-20">
+                {/* Full-Bleed Atmospheric Fashion Canvas */}
+                <div className="absolute inset-0 z-0">
                     {heroImage ? (
                         <img
                             src={getSalonImageSrc(heroImage)}
                             alt={salonName}
-                            className="w-full h-full object-cover scale-105 filter blur-xs brightness-40 transform transition-transform duration-1000"
+                            className="w-full h-full object-cover scale-105 filter brightness-45 contrast-105"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-zinc-950 via-slate-900 to-zinc-900 opacity-95" />
+                        <div className="w-full h-full bg-gradient-to-b from-stone-900 via-stone-950 to-black" />
                     )}
-                    {/* Atmospheric Scrim Gradients */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-black/40" />
-                    <div className="absolute inset-0 bg-radial-at-c from-transparent via-transparent to-black/80" />
+                    {/* Editorial Scrim Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E10] via-black/60 to-black/30" />
+                    <div className="absolute inset-0 bg-radial-at-t from-transparent via-transparent to-black/80" />
                 </div>
 
-                {/* Hero Content Container */}
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-12 sm:pb-20">
+                {/* Hero Main Content */}
+                <div className="relative z-10 max-w-6xl mx-auto w-full px-6 sm:px-8">
                     
-                    {/* Banned / Disabled Banner */}
+                    {/* Banned Notice */}
                     {(salon?.banned || salon?.isBanned) && (
-                        <div className="mb-6 p-4 rounded-2xl bg-amber-500/20 backdrop-blur-md border border-amber-500/40 text-amber-200 flex items-center gap-3">
-                            <Lock className="w-5 h-5 text-amber-400 shrink-0" />
-                            <span className="text-xs sm:text-sm font-bold">
-                                Online bookings for this salon are temporarily suspended. Please contact the studio directly.
-                            </span>
+                        <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 backdrop-blur-md border border-amber-500/30 text-amber-300 text-xs flex items-center gap-3">
+                            <Lock className="w-4 h-4 shrink-0" />
+                            <span>Online reservations for this private atelier are temporarily offline. Please contact the concierge directly.</span>
                         </div>
                     )}
 
-                    <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
-                        {/* Left: Studio Identity & Branding */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6 min-w-0">
-                            {/* Elevated Salon Monogram / Logo */}
-                            <div className="relative group shrink-0">
-                                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden p-1 bg-white/10 backdrop-blur-md border-2 border-white/20 shadow-2xl transition duration-300 group-hover:scale-105">
-                                    <SalonLogoImage
-                                        logo={salon?.imageUrl || salon?.logoUrl}
-                                        name={salonName}
-                                        className="w-full h-full rounded-2xl object-cover"
-                                    />
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-red-600 to-rose-600 text-white p-1.5 rounded-full shadow-lg border-2 border-slate-950" title="Verified Bespoke Studio">
-                                    <Award className="w-3.5 h-3.5" />
-                                </div>
+                    <div className="flex flex-col items-start space-y-6">
+                        {/* Upper Atelier Tag & Status Bar */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.25em] bg-white/10 backdrop-blur-md text-stone-200 border border-white/15">
+                                Haute Coiffure & Beauty Atelier
+                            </span>
+
+                            {isSalonOpenNow() ? (
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/15 backdrop-blur-md text-emerald-300 border border-emerald-500/25">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Atelier Open Today • Closes {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10 PM'}
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/15 backdrop-blur-md text-rose-300 border border-rose-500/25">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                    Closed for the day • Opens {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10 AM'}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Salon Monogram & Grand Headline */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-7">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl shrink-0">
+                                <SalonLogoImage
+                                    logo={salon?.imageUrl || salon?.logoUrl}
+                                    name={salonName}
+                                    className="w-full h-full rounded-xl object-cover"
+                                />
                             </div>
-
-                            {/* Headline & Details */}
-                            <div className="space-y-2.5 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2.5">
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 backdrop-blur-md text-white border border-white/15">
-                                        <Sparkles className="w-3 h-3 text-amber-400" />
-                                        Bespoke Studio
-                                    </span>
-                                    {isSalonOpenNow() ? (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                            Open Now • Closes {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10 PM'}
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                                            Closed Now • Opens {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10 AM'}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white capitalize leading-tight">
+                            <div className="space-y-1">
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-none capitalize">
                                     {salonName}
                                 </h1>
-
-                                <p className="text-sm text-slate-300 font-medium flex items-center gap-2 max-w-xl">
-                                    <span>Luxury Hair, Skin, Styling & Wellness Destination</span>
+                                <p className="text-sm sm:text-base text-stone-300 font-medium tracking-wide">
+                                    An exclusive sanctuary of precision hairdressing, aesthetics & luxury rituals in {salon?.cityName || 'the city'}.
                                 </p>
-
-                                {/* Meta Chips */}
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 pt-1">
-                                    <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-white/10">
-                                        <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                                        <span className="truncate max-w-[240px] sm:max-w-md">{addressStr}</span>
-                                    </div>
-                                    {distanceBadge && (
-                                        <div className="flex items-center gap-1 bg-black/30 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-white/10 text-emerald-400 font-bold">
-                                            <span>📍 {distanceBadge} away</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-1 bg-black/30 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-white/10 text-amber-300 font-bold">
-                                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                                        <span>{ratingScore}</span>
-                                        <span className="text-slate-400 font-normal">({(((salon?.id || salon?.salonId || 1) * 13) % 60) + 48} reviews)</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
-                        {/* Right: Studio Primary CTAs */}
-                        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+                        {/* Location, Distance & Accolades */}
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-stone-300 pt-1">
+                            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                                <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                <span className="truncate max-w-xs">{addressStr}</span>
+                            </div>
+                            {distanceBadge && (
+                                <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-emerald-300 font-bold">
+                                    <span>📍 {distanceBadge} from you</span>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-amber-300 font-bold">
+                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                <span>{ratingScore}</span>
+                                <span className="text-stone-400 font-normal">({(((salon?.id || salon?.salonId || 1) * 17) % 70) + 52} curated reviews)</span>
+                            </div>
+                        </div>
+
+                        {/* Action Bar */}
+                        <div className="flex flex-wrap items-center gap-3.5 pt-4 w-full sm:w-auto">
                             {(salon?.banned || salon?.isBanned) ? (
                                 <button
                                     type="button"
                                     disabled
-                                    className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-800 text-slate-400 font-black text-xs uppercase tracking-wider cursor-not-allowed border border-slate-700 flex items-center justify-center gap-2"
+                                    className="px-8 py-4 rounded-xl bg-stone-800 text-stone-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed border border-stone-700"
                                 >
-                                    <Lock className="w-4 h-4" /> Bookings Closed
+                                    Reservations Suspended
                                 </button>
                             ) : (
                                 <button
                                     type="button"
-                                    onClick={() => scrollToSection('slots')}
-                                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-[#FF0B01] to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-red-600/30 hover:shadow-red-600/50 hover:scale-[1.02] active:scale-98 transition duration-200 cursor-pointer flex items-center justify-center gap-2"
+                                    onClick={() => scrollToSection('reservation')}
+                                    className="px-8 py-4 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-98 transition duration-200 cursor-pointer flex items-center gap-2.5"
                                 >
                                     <Calendar className="w-4 h-4" />
-                                    Book Appointment
+                                    <span>Reserve An Experience</span>
                                 </button>
                             )}
 
                             <button
                                 type="button"
-                                onClick={() => scrollToSection('services')}
-                                className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-md text-white font-black text-xs uppercase tracking-wider border border-white/15 transition cursor-pointer flex items-center justify-center gap-2"
+                                onClick={() => scrollToSection('menu')}
+                                className="px-6 py-4 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md text-white font-black text-xs uppercase tracking-[0.2em] border border-white/15 transition cursor-pointer flex items-center gap-2"
                             >
                                 <Scissors className="w-4 h-4" />
-                                View Menu
+                                <span>Treatment Menu</span>
                             </button>
 
-                            {/* Quick Action Icons */}
                             <div className="flex items-center gap-2">
                                 {salon?.phone && (
                                     <a
                                         href={`tel:${salon.phone}`}
-                                        className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 transition cursor-pointer"
-                                        title={`Call ${salon.phone}`}
+                                        className="p-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 transition"
+                                        title={`Concierge: ${salon.phone}`}
                                     >
                                         <Phone className="w-4 h-4" />
-                                    </a>
-                                )}
-                                {salon?.latitude && salon?.longitude && (
-                                    <a
-                                        href={`https://www.google.com/maps/dir/?api=1&destination=${salon.latitude},${salon.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 transition cursor-pointer"
-                                        title="Navigate in Google Maps"
-                                    >
-                                        <Navigation className="w-4 h-4" />
                                     </a>
                                 )}
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 transition cursor-pointer"
-                                    title="Share Salon"
+                                    className="p-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 transition cursor-pointer"
+                                    title="Share Atelier"
                                 >
                                     <Share2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleToggleFavourite}
-                                    className={`p-3 rounded-2xl backdrop-blur-md border transition cursor-pointer ${
+                                    className={`p-3.5 rounded-xl backdrop-blur-md border transition cursor-pointer ${
                                         isFavourite
-                                            ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                                            ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
                                             : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
                                     }`}
-                                    title={isFavourite ? "Saved in Favourites" : "Save to Favourites"}
+                                    title={isFavourite ? "Saved to your list" : "Save to private list"}
                                 >
-                                    <Heart className={`w-4 h-4 ${isFavourite ? 'fill-red-500 text-red-500' : ''}`} />
+                                    <Heart className={`w-4 h-4 ${isFavourite ? 'fill-rose-500 text-rose-500' : ''}`} />
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </header>
 
             {/* ============================================================ */}
-            {/* 2. STICKY IN-PAGE BOUTIQUE NAVIGATION */}
+            {/* 2. MINIMALIST EDITORIAL NAVIGATION BAR */}
             {/* ============================================================ */}
-            <nav className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800 shadow-xs transition-colors">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none py-2.5 text-xs font-bold uppercase tracking-wider">
+            <nav className="sticky top-0 z-40 bg-[#FDFBF7]/95 dark:bg-[#0E0E10]/95 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800/80 shadow-xs">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8">
+                    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-3 text-[11px] font-black uppercase tracking-[0.18em]">
                         {[
-                            { id: 'overview', label: 'Overview', icon: Sparkles },
-                            { id: 'about', label: 'About Studio', icon: Info },
-                            { id: 'services', label: 'Services Menu', icon: Scissors, badge: allServices.length || null },
-                            { id: 'offers', label: 'Offers & Packages', icon: Award, badge: offers.length || null },
-                            { id: 'stylists', label: 'Master Stylists', icon: Users, badge: staffList.length || null },
-                            { id: 'slots', label: 'Reserve Slot', icon: Calendar },
-                            { id: 'gallery', label: 'Gallery', icon: Camera, badge: galleryImages.length || null },
-                            { id: 'location', label: 'Hours & Map', icon: Clock },
-                            { id: 'reviews', label: 'Client Reviews', icon: Star },
-                        ].map((tab) => {
-                            const TabIcon = tab.icon;
-                            const isActive = activeTab === tab.id;
+                            { id: 'atelier', label: 'The Atelier' },
+                            { id: 'philosophy', label: 'Our Philosophy' },
+                            { id: 'menu', label: 'Treatment Menu', count: allServices.length || null },
+                            { id: 'curations', label: 'Curated Rituals', count: (offers.length + packages.length) || null },
+                            { id: 'collective', label: 'Artisan Collective' },
+                            { id: 'lookbook', label: 'Lookbook & Ambience' },
+                            { id: 'reservation', label: 'Concierge Booking' },
+                            { id: 'concierge', label: 'Atelier Hours & Visit' },
+                        ].map((item) => {
+                            const isActive = activeSection === item.id;
                             return (
                                 <button
-                                    key={tab.id}
+                                    key={item.id}
                                     type="button"
-                                    onClick={() => scrollToSection(tab.id)}
-                                    className={`px-3.5 py-2 rounded-xl shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
+                                    onClick={() => scrollToSection(item.id)}
+                                    className={`px-3.5 py-1.5 rounded-lg shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                                         isActive
-                                            ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-950 shadow-xs font-black'
-                                            : 'text-slate-600 dark:text-zinc-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                            ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
+                                            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
                                     }`}
                                 >
-                                    <TabIcon className="w-3.5 h-3.5" />
-                                    <span>{tab.label}</span>
-                                    {tab.badge ? (
-                                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
+                                    <span>{item.label}</span>
+                                    {item.count ? (
+                                        <span className={`text-[9px] px-1.5 rounded-full font-bold ${
                                             isActive
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'
+                                                ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black'
+                                                : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-300'
                                         }`}>
-                                            {tab.badge}
+                                            {item.count}
                                         </span>
                                     ) : null}
                                 </button>
@@ -988,135 +868,156 @@ const SalonPage = () => {
             </nav>
 
             {/* ============================================================ */}
-            {/* MAIN BESPOKE CONTENT CANVAS */}
+            {/* 3. ATELIER PHILOSOPHY & ARTISAN PILLARS */}
             {/* ============================================================ */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
+            <section id="section-philosophy" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-16">
+                    
+                    {/* Top Editorial Story Feature */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                        {/* Left: Editorial Image with Caption Badge */}
+                        <div className="lg:col-span-5 relative group">
+                            <div className="w-full h-80 sm:h-96 rounded-3xl overflow-hidden bg-stone-200 dark:bg-stone-900 shadow-xl border border-stone-200 dark:border-stone-800">
+                                <img
+                                    src={galleryImages[1] ? getSalonImageSrc(galleryImages[1]) : (heroImage ? getSalonImageSrc(heroImage) : '')}
+                                    alt="Atelier interior"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                />
+                            </div>
+                            <div className="absolute -bottom-5 -right-3 sm:-right-5 bg-stone-900 dark:bg-stone-800 text-white p-5 rounded-2xl shadow-2xl max-w-xs border border-stone-700">
+                                <p className="text-xs font-serif italic leading-relaxed text-stone-300">
+                                    "Every ritual begins with an unhurried diagnosis of your hair texture, lifestyle, and aesthetic vision."
+                                </p>
+                                <span className="block text-[9px] font-black uppercase tracking-widest text-amber-400 mt-2">
+                                    — The {salonName} Guarantee
+                                </span>
+                            </div>
+                        </div>
 
-                {/* ============================================================ */}
-                {/* 3. ABOUT OUR STUDIO & BOUTIQUE STANDARDS */}
-                {/* ============================================================ */}
-                <section id="salon-about-section" className="scroll-mt-24 space-y-6">
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-10 border border-slate-100 dark:border-zinc-800 shadow-sm space-y-8">
-                        {/* Narrative Header */}
-                        <div className="max-w-3xl space-y-3">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                                <Sparkles className="w-3.5 h-3.5" /> The {salonName} Experience
+                        {/* Right: Narrative */}
+                        <div className="lg:col-span-7 space-y-5">
+                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                                The Atelier Philosophy
                             </span>
-                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Where Personalized Luxury Meets Masterful Artistry.
+                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white leading-tight">
+                                Tailored Perfection.<br />Unhurried Boutique Care.
                             </h2>
-                            <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-300 leading-relaxed">
+                            <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
                                 {salon?.description ||
-                                    `Welcome to ${salonName} — a premier personal care sanctuary designed exclusively for clients who value perfection. From bespoke haircuts and customized coloring to therapeutic skin rituals, every session is curated with surgical precision and unhurried boutique care.`}
+                                    `At ${salonName}, we consider personal styling an intimate art form. We reject factory-line salon conveyor belts in favor of bespoke private consultations, medical-grade hygiene protocols, and precision techniques customized exclusively for you.`}
                             </p>
-                        </div>
 
-                        {/* 4 Pillars of Excellence */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {[
-                                {
-                                    title: 'Master Artistry',
-                                    desc: 'Certified stylists & colorists trained in contemporary precision craft.',
-                                    icon: Scissors
-                                },
-                                {
-                                    title: 'Hospital-Grade Hygiene',
-                                    desc: '100% UV-sterilized tools, single-use fresh capes & medical-grade clean.',
-                                    icon: ShieldCheck
-                                },
-                                {
-                                    title: 'Luxury Formulations',
-                                    desc: 'Authentic salon-grade products ensuring lustrous and lasting results.',
-                                    icon: Sparkles
-                                },
-                                {
-                                    title: 'Signature Hospitality',
-                                    desc: 'Relaxing ambient lounge, complimentary beverage & personalized consultation.',
-                                    icon: Coffee
-                                }
-                            ].map((pillar, idx) => {
-                                const PIcon = pillar.icon;
-                                return (
-                                    <div
-                                        key={idx}
-                                        className="p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-100 dark:border-zinc-800/80 flex flex-col justify-between space-y-3 hover:border-slate-200 dark:hover:border-zinc-700 transition"
-                                    >
-                                        <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 text-[#FF0B01] flex items-center justify-center font-black">
-                                            <PIcon className="w-5 h-5" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                                                {pillar.title}
-                                            </h3>
-                                            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-normal">
-                                                {pillar.desc}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Amenities Badges Row */}
-                        <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex flex-wrap items-center gap-3">
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 mr-2">
-                                Studio Amenities:
-                            </span>
-                            {[
-                                { label: 'Air Conditioned', icon: Sparkles },
-                                { label: 'High-Speed Wi-Fi', icon: Wifi },
-                                { label: 'Credit Card & UPI', icon: CreditCard },
-                                { label: 'Dedicated Parking', icon: Car },
-                                { label: 'Complimentary Drinks', icon: Coffee },
-                                ...(homeServiceCharges > 0 ? [{ label: `Home Service Available (₹${homeServiceCharges})`, icon: MapPin }] : [])
-                            ].map((amenity, i) => {
-                                const AIcon = amenity.icon;
-                                return (
-                                    <span
-                                        key={i}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60"
-                                    >
-                                        <AIcon className="w-3.5 h-3.5 text-red-500" />
-                                        {amenity.label}
-                                    </span>
-                                );
-                            })}
+                            {/* Signatures */}
+                            <div className="grid grid-cols-2 gap-4 pt-4">
+                                <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Private Suites</h4>
+                                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">Calm, private aesthetic treatment cabins.</p>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Master Formulations</h4>
+                                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">100% authentic salon-grade formulations.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </section>
 
-                {/* ============================================================ */}
-                {/* 4. INTERACTIVE SERVICES MENU & LIVE PRICE LIST */}
-                {/* ============================================================ */}
-                <section id="salon-services-section" className="scroll-mt-24 space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                                <Scissors className="w-3.5 h-3.5" /> Curated Catalog
+                    {/* 4 Pillars Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {[
+                            {
+                                title: 'Couture Precision',
+                                desc: 'Bespoke cuts, custom balayage, and aesthetic therapies designed for you.',
+                                icon: Scissors
+                            },
+                            {
+                                title: 'Clinical Sanitization',
+                                desc: '100% UV-sterilized stainless steel instruments & single-use disposable capes.',
+                                icon: ShieldCheck
+                            },
+                            {
+                                title: 'Artisan Refreshments',
+                                desc: 'Complimentary pour-over coffee, specialty teas, and artisanal infused waters.',
+                                icon: Coffee
+                            },
+                            {
+                                title: 'Dedicated Concierge',
+                                desc: 'Personalized appointment scheduling with private stylist allocation.',
+                                icon: Compass
+                            }
+                        ].map((pillar, idx) => {
+                            const PIcon = pillar.icon;
+                            return (
+                                <div
+                                    key={idx}
+                                    className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 space-y-3 shadow-xs hover:border-stone-400 dark:hover:border-stone-600 transition"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-900 dark:text-white font-black">
+                                        <PIcon className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-stone-900 dark:text-white">
+                                        {pillar.title}
+                                    </h3>
+                                    <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                                        {pillar.desc}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Amenities Ribbon */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 text-xs text-stone-600 dark:text-stone-300">
+                        <div className="flex flex-wrap items-center gap-6">
+                            <span className="flex items-center gap-2 font-bold"><Wifi className="w-4 h-4 text-stone-400" /> High-Speed Guest Wi-Fi</span>
+                            <span className="flex items-center gap-2 font-bold"><Car className="w-4 h-4 text-stone-400" /> Valet & Parking Available</span>
+                            <span className="flex items-center gap-2 font-bold"><CreditCard className="w-4 h-4 text-stone-400" /> All Cards & UPI Accepted</span>
+                            {homeServiceCharges > 0 && (
+                                <span className="flex items-center gap-2 font-bold text-stone-900 dark:text-white"><MapPin className="w-4 h-4 text-rose-500" /> Home Appointments (₹{homeServiceCharges})</span>
+                            )}
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                            Verified Studio Partner
+                        </span>
+                    </div>
+
+                </div>
+            </section>
+
+            {/* ============================================================ */}
+            {/* 4. THE COUTURE TREATMENT MENU & PRICING */}
+            {/* ============================================================ */}
+            <section id="section-menu" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                    
+                    {/* Menu Header */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                                Couture Catalog
                             </span>
-                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Services Menu & Pricing
+                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                                The Treatment Collection
                             </h2>
-                            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                                Explore all bespoke hair, skin, and wellness services crafted at {salonName}.
+                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                                Transparent price list and detailed treatment inclusions for {salonName}.
                             </p>
                         </div>
 
-                        {/* Search Services Filter */}
-                        <div className="relative w-full md:w-72">
-                            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        {/* Search in Menu */}
+                        <div className="relative w-full md:w-80">
+                            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 value={serviceSearchQuery}
                                 onChange={(e) => setServiceSearchQuery(e.target.value)}
-                                placeholder="Search haircut, facial, spa..."
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 focus:outline-none focus:border-red-500 dark:focus:border-red-500 transition shadow-xs text-slate-900 dark:text-white"
+                                placeholder="Search treatment or ritual..."
+                                className="w-full pl-10 pr-8 py-3 rounded-xl text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 focus:outline-none focus:border-stone-900 dark:focus:border-white transition shadow-xs text-stone-900 dark:text-white"
                             />
                             {serviceSearchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setServiceSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
                                 >
                                     <X className="w-3.5 h-3.5" />
                                 </button>
@@ -1124,22 +1025,21 @@ const SalonPage = () => {
                         </div>
                     </div>
 
-                    {/* Category Filter Pills */}
+                    {/* Category Selector Tabs */}
                     {categories.length > 0 && (
-                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2">
+                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 border-b border-stone-200 dark:border-stone-800">
                             <button
                                 type="button"
                                 onClick={() => setSelectedCategory('All')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition-all cursor-pointer ${
+                                className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition cursor-pointer ${
                                     selectedCategory === 'All'
-                                        ? 'bg-red-600 text-white shadow-md shadow-red-600/20 font-black'
-                                        : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
+                                        : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800'
                                 }`}
                             >
-                                All Services ({allServices.length})
+                                All Treatments ({allServices.length})
                             </button>
                             {categories.map((catName) => {
-                                const catIcon = getCategoryIcon(catName);
                                 const isSelected = selectedCategory.toLowerCase() === catName.toLowerCase();
                                 const countInCat = allServices.filter(s => (s.categoryName || s.category || '').toLowerCase() === catName.toLowerCase()).length;
                                 return (
@@ -1147,17 +1047,16 @@ const SalonPage = () => {
                                         key={catName}
                                         type="button"
                                         onClick={() => setSelectedCategory(catName)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
+                                        className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition cursor-pointer flex items-center gap-2 ${
                                             isSelected
-                                                ? 'bg-red-600 text-white shadow-md shadow-red-600/20 font-black'
-                                                : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                                ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
+                                                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800'
                                         }`}
                                     >
-                                        <img src={catIcon} alt="" className="w-4 h-4 object-contain filter invert-0 dark:invert-0" />
                                         <span>{translateServiceName(catName, t)}</span>
                                         {countInCat > 0 && (
-                                            <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
-                                                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-zinc-800 text-slate-500'
+                                            <span className={`text-[9px] px-1.5 rounded-full font-bold ${
+                                                isSelected ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black' : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
                                             }`}>
                                                 {countInCat}
                                             </span>
@@ -1168,72 +1067,62 @@ const SalonPage = () => {
                         </div>
                     )}
 
-                    {/* Services Cards Grid */}
+                    {/* Treatment Items List (Boutique Spa Menu Style) */}
                     {filteredServices.length === 0 ? (
-                        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 text-center border border-slate-100 dark:border-zinc-800 space-y-3">
-                            <Scissors className="w-10 h-10 text-slate-300 dark:text-zinc-700 mx-auto" />
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-                                {serviceSearchQuery ? 'No matching services found' : 'Menu is being updated'}
-                            </h3>
-                            <p className="text-xs text-slate-400">
-                                {serviceSearchQuery ? 'Try searching another keyword or clear filter.' : 'Please check back shortly or call the salon directly.'}
-                            </p>
+                        <div className="py-16 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
+                            <Scissors className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
+                            <h4 className="text-sm font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                                {serviceSearchQuery ? 'No matching treatments found' : 'Menu being refined'}
+                            </h4>
+                            <p className="text-xs text-stone-400">Please try another term or contact the atelier desk directly.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             {filteredServices.map((service) => {
                                 const duration = service.duration || service.durationMinutes || 30;
                                 const price = service.price || 0;
-                                const catIcon = getCategoryIcon(service.categoryName || service.category);
                                 return (
                                     <div
                                         key={service.id}
-                                        className="bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-slate-100 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group space-y-4"
+                                        className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 transition shadow-xs flex flex-col justify-between group space-y-4"
                                     >
-                                        <div className="space-y-2.5">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 flex items-center justify-center shrink-0">
-                                                        <img src={catIcon} alt="" className="w-4 h-4 object-contain" />
-                                                    </div>
-                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                                                        {service.categoryName || service.category || 'Service'}
+                                        <div className="space-y-2">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                                        {service.categoryName || service.category || 'Treatment'}
+                                                    </span>
+                                                    <h3 className="text-base font-black text-stone-900 dark:text-white tracking-tight uppercase group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors">
+                                                        {translateServiceName(service.name, t)}
+                                                    </h3>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <span className="text-lg font-black text-stone-900 dark:text-white">
+                                                        ₹{price}
+                                                    </span>
+                                                    <span className="text-[10px] text-stone-400 font-bold block">
+                                                        {duration} Mins
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400 bg-slate-50 dark:bg-zinc-800/80 px-2.5 py-1 rounded-lg">
-                                                    <Clock className="w-3 h-3 text-red-500" />
-                                                    <span>{duration} Min</span>
-                                                </div>
                                             </div>
 
-                                            <div>
-                                                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-red-600 transition-colors">
-                                                    {translateServiceName(service.name, t)}
-                                                </h4>
-                                                {service.description && (
-                                                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
-                                                        {service.description}
-                                                    </p>
-                                                )}
-                                            </div>
+                                            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                                {service.description ||
+                                                    'Includes consultation, customized preparation, precision execution, and final finishing.'}
+                                            </p>
                                         </div>
 
-                                        {/* Bottom Price & Direct Booking */}
-                                        <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
-                                            <div>
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Price</span>
-                                                <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                                                    ₹{price}
-                                                </span>
-                                            </div>
-
+                                        <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-stone-400 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" /> Consultation included
+                                            </span>
                                             <button
                                                 type="button"
-                                                onClick={() => handleBookService(service)}
-                                                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-red-600 dark:bg-white dark:hover:bg-red-600 text-white dark:text-zinc-950 dark:hover:text-white font-black text-[10px] uppercase tracking-wider transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                                                onClick={() => handleReserveService(service)}
+                                                className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-xs"
                                             >
-                                                <span>Book</span>
-                                                <ChevronRight className="w-3.5 h-3.5" />
+                                                <span>Reserve Treatment</span>
+                                                <ArrowUpRight className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     </div>
@@ -1242,276 +1131,310 @@ const SalonPage = () => {
                         </div>
                     )}
 
-                    {/* Bottom CTA to Full Booking Wizard */}
-                    <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-900 dark:from-zinc-900 dark:to-black text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg border border-slate-800">
-                        <div className="space-y-1 text-center sm:text-left">
-                            <h4 className="text-base font-black uppercase tracking-tight">Need Multiple Services or Custom Styling?</h4>
-                            <p className="text-xs text-slate-400">Launch our interactive booking wizard to bundle services, choose stylists, and reserve slots.</p>
+                    {/* Bottom Concierge Prompt */}
+                    <div className="p-8 rounded-3xl bg-stone-900 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-stone-800">
+                        <div className="space-y-1 text-center md:text-left">
+                            <h4 className="text-lg font-black tracking-tight uppercase">Custom Bridal, Makeover or Editorial Project?</h4>
+                            <p className="text-xs text-stone-400">Our creative directors curate personalized private sessions for special occasions.</p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => navigate('/customer/book-service')}
-                            className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-widest shrink-0 transition shadow-md cursor-pointer flex items-center gap-2"
-                        >
-                            <span>Open Booking Flow</span>
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                        {salon?.phone ? (
+                            <a
+                                href={`tel:${salon.phone}`}
+                                className="px-7 py-3.5 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-widest shrink-0 transition"
+                            >
+                                Speak With Concierge: {salon.phone}
+                            </a>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => scrollToSection('reservation')}
+                                className="px-7 py-3.5 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-widest shrink-0 transition"
+                            >
+                                Inquire Online
+                            </button>
+                        )}
+                    </div>
+
+                </div>
+            </section>
+
+            {/* ============================================================ */}
+            {/* 5. CURATED RITUALS & SEASONAL EXPERIENCES */}
+            {/* ============================================================ */}
+            {(offers.length > 0 || packages.length > 0) && (
+                <section id="section-curations" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                    <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                        <div className="space-y-2">
+                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                                Signature Collections
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                                Curated Studio Rituals
+                            </h2>
+                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                                Multi-treatment packages curated by {salonName}'s senior artists.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {packages.map((pkg) => (
+                                <div
+                                    key={pkg.id}
+                                    className="p-7 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 flex flex-col justify-between space-y-6 shadow-xs hover:border-stone-400 dark:hover:border-stone-600 transition"
+                                >
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200">
+                                                Signature Package
+                                            </span>
+                                            {pkg.discountValue > 0 && (
+                                                <span className="text-xs font-black text-amber-500">
+                                                    Save ₹{pkg.discountValue}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h3 className="text-lg font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                                            {pkg.name}
+                                        </h3>
+                                        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                            {pkg.description || 'Full-body ritual including hair spa, styling, and rejuvenating skin treatment.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Atelier Fee</span>
+                                            <span className="text-xl font-black text-stone-900 dark:text-white">
+                                                ₹{pkg.packagePrice || pkg.price || 999}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate('/customer/book-service')}
+                                            className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider transition"
+                                        >
+                                            Reserve Package
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Seasonal Curations / Offers */}
+                            {offers.map((offer) => {
+                                const isPct = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
+                                const val = offer.discountValue ?? offer.percentage ?? 0;
+                                const privilegeBadge = isPct ? `${val}% Privilege` : `₹${val} Privilege`;
+                                return (
+                                    <div
+                                        key={offer.id}
+                                        className="p-7 rounded-3xl bg-gradient-to-br from-stone-900 to-stone-950 text-white border border-stone-800 flex flex-col justify-between space-y-6 shadow-md"
+                                    >
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                                                    {privilegeBadge}
+                                                </span>
+                                                <span className="text-[10px] font-mono text-stone-400">
+                                                    {offer.code || 'ATELIER'}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-lg font-black text-white uppercase tracking-tight">
+                                                {offer.name || 'Seasonal Patron Privilege'}
+                                            </h3>
+                                            <p className="text-xs text-stone-400 leading-relaxed font-normal">
+                                                {offer.description || `Exclusive reservation privilege for patrons of ${salonName}.`}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
+                                            className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs uppercase tracking-widest transition"
+                                        >
+                                            Claim Privilege
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </section>
+            )}
 
-                {/* ============================================================ */}
-                {/* 5. EXCLUSIVE OFFERS & PACKAGES */}
-                {/* ============================================================ */}
-                {(offers.length > 0 || packages.length > 0) && (
-                    <section id="salon-offers-section" className="scroll-mt-24 space-y-6">
-                        <div>
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                                <Award className="w-3.5 h-3.5" /> Studio Perks
+            {/* ============================================================ */}
+            {/* 6. THE ARTISAN COLLECTIVE (STYLISTS) */}
+            {/* ============================================================ */}
+            <section id="section-collective" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-12">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                                Creative Leadership
                             </span>
-                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Exclusive Offers & Packages
+                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                                The Artisan Collective
                             </h2>
-                            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                                Direct promotional vouchers and curated treatment bundles active at {salonName}.
-                            </p>
-                        </div>
-
-                        {/* Offers Grid */}
-                        {offers.length > 0 && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {offers.map((offer) => {
-                                    const isPercentage = offer.discountType === 'PERCENTAGE' || offer.percentage !== undefined;
-                                    const value = offer.discountValue ?? offer.percentage ?? 0;
-                                    const discountBadge = isPercentage ? `${value}% OFF` : `₹${value} OFF`;
-                                    const code = offer.code || offer.couponCode || 'PROMO';
-                                    const isCopied = copiedOfferCode === code;
-                                    return (
-                                        <div
-                                            key={offer.id}
-                                            className="relative bg-white dark:bg-zinc-900 rounded-3xl p-6 border-2 border-dashed border-red-200 dark:border-red-950/80 hover:border-red-400 dark:hover:border-red-800 transition-all shadow-xs flex flex-col justify-between space-y-4 group overflow-hidden"
-                                        >
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-black tracking-wider uppercase shadow-xs">
-                                                        {discountBadge}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase">
-                                                        Limited Time
-                                                    </span>
-                                                </div>
-
-                                                <div>
-                                                    <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-red-600 transition-colors">
-                                                        {offer.name || offer.title || 'Special Promotion'}
-                                                    </h4>
-                                                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-1">
-                                                        {offer.description || `Special discount available on select services at ${salonName}.`}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Code & Action */}
-                                            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-3">
-                                                <div
-                                                    onClick={() => handleCopyOffer(code)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-mono font-black text-xs cursor-pointer hover:bg-slate-200 dark:hover:bg-zinc-700 transition"
-                                                    title="Click to copy coupon code"
-                                                >
-                                                    {isCopied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-                                                    <span>{code}</span>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider shadow-xs cursor-pointer transition"
-                                                >
-                                                    Claim & Book
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Packages Grid */}
-                        {packages.length > 0 && (
-                            <div className="space-y-4 pt-4">
-                                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-red-500" /> Curated Packages & Combos
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {packages.map((pkg) => (
-                                        <div
-                                            key={pkg.id}
-                                            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-slate-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4"
-                                        >
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
-                                                        Special Combo
-                                                    </span>
-                                                    <span className="text-xs font-black text-red-600">
-                                                        Save ₹{pkg.discountValue || 150}
-                                                    </span>
-                                                </div>
-                                                <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                                                    {pkg.name}
-                                                </h4>
-                                                <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
-                                                    {pkg.description || 'Comprehensive luxury package including hair wash, styling, and rejuvenating treatment.'}
-                                                </p>
-                                            </div>
-
-                                            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Combo Price</span>
-                                                    <span className="text-lg font-black text-slate-900 dark:text-white">
-                                                        ₹{pkg.packagePrice || pkg.price || 999}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate('/customer/book-service')}
-                                                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-zinc-950 font-black text-xs uppercase tracking-wider shadow-xs transition"
-                                                >
-                                                    Select Package
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </section>
-                )}
-
-                {/* ============================================================ */}
-                {/* 6. MEET OUR MASTER STYLISTS & ARTISTS */}
-                {/* ============================================================ */}
-                <section id="salon-stylists-section" className="scroll-mt-24 space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                        <div>
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                                <Users className="w-3.5 h-3.5" /> Creative Team
-                            </span>
-                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Meet Our Master Stylists
-                            </h2>
-                            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                                Dedicated specialists with certifications in advanced hair styling, coloring, and skincare.
+                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                                Certified masters of precision cutting, balayage, and restorative skin rituals.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => navigate('/customer/book-service')}
-                            className="text-xs font-black text-red-600 hover:underline uppercase tracking-wider flex items-center gap-1 self-start sm:self-auto"
+                            className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white hover:underline flex items-center gap-1"
                         >
-                            <span>View All Experts</span>
+                            <span>Browse Collective Roster</span>
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
 
                     {staffList.length === 0 ? (
-                        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-10 text-center border border-slate-100 dark:border-zinc-800 space-y-2">
-                            <Users className="w-10 h-10 text-slate-300 dark:text-zinc-700 mx-auto" />
-                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-zinc-400">Stylists Roster Active</h4>
-                            <p className="text-xs text-slate-400">Our team members can be selected during the booking checkout flow.</p>
+                        <div className="py-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
+                            <Users className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                                Stylist allocation active
+                            </h4>
+                            <p className="text-xs text-stone-400">You may request a preferred stylist during reservation checkout.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {staffList.map((staff, idx) => {
-                                const role = staff.speciality || ['Senior Hair Sculptor', 'Master Colorist', 'Skin Aesthetician', 'Bridal Stylist'][idx % 4];
-                                const rating = staff.rating ? parseFloat(staff.rating).toFixed(1) : '4.9';
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {staffList.map((artisan, idx) => {
+                                const role = artisan.speciality || ['Creative Director', 'Master Colorist', 'Skin Aesthetician', 'Lead Stylist'][idx % 4];
+                                const rating = artisan.rating ? parseFloat(artisan.rating).toFixed(1) : '4.9';
                                 return (
                                     <div
-                                        key={staff.id || idx}
-                                        className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-slate-100 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 shadow-xs hover:shadow-md transition-all flex flex-col items-center text-center space-y-4 group"
+                                        key={artisan.id || idx}
+                                        className="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 flex flex-col items-center text-center space-y-4 hover:border-stone-400 dark:hover:border-stone-600 transition group shadow-xs"
                                     >
-                                        {/* Avatar */}
-                                        <div className="relative w-24 h-24 rounded-full overflow-hidden p-1 bg-gradient-to-tr from-red-500 to-rose-400 shadow-md">
-                                            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-800">
-                                                {staff.imagePath ? (
-                                                    <AsyncImage
-                                                        imagePath={staff.imagePath}
-                                                        alt={staff.name}
-                                                        className="w-full h-full object-cover"
-                                                        fallbackText={staff.name?.charAt(0) || 'S'}
-                                                    />
-                                                ) : (
-                                                    <img
-                                                        src={getExpertImg(idx)}
-                                                        alt={staff.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                )}
-                                            </div>
+                                        <div className="w-28 h-28 rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 border-2 border-stone-200 dark:border-stone-700">
+                                            {artisan.imagePath ? (
+                                                <AsyncImage
+                                                    imagePath={artisan.imagePath}
+                                                    alt={artisan.name}
+                                                    className="w-full h-full object-cover"
+                                                    fallbackText={artisan.name?.charAt(0) || 'A'}
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={getExpertImg(idx)}
+                                                    alt={artisan.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )}
                                         </div>
 
-                                        {/* Info */}
                                         <div className="space-y-1">
-                                            <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-red-600 transition-colors">
-                                                {staff.name}
-                                            </h4>
-                                            <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wide">
+                                            <h3 className="text-base font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                                                {artisan.name}
+                                            </h3>
+                                            <p className="text-xs font-bold uppercase tracking-widest text-amber-500">
                                                 {role}
                                             </p>
-                                            <div className="flex items-center justify-center gap-1 text-xs text-amber-400 font-bold pt-1">
+                                            <div className="flex items-center justify-center gap-1 text-xs text-amber-400 pt-1">
                                                 <Star className="w-3.5 h-3.5 fill-current" />
-                                                <span>{rating}</span>
-                                                <span className="text-slate-400 font-normal">Rating</span>
+                                                <span className="font-bold">{rating}</span>
+                                                <span className="text-stone-400 font-normal">Rating</span>
                                             </div>
                                         </div>
 
-                                        <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 px-2 leading-relaxed">
-                                            Specializing in bespoke client consultation, precision cutting, and customized care.
+                                        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                            Dedicated to unhurried consultations and bespoke precision styling.
                                         </p>
 
-                                        {/* Direct Book CTA */}
                                         <button
                                             type="button"
-                                            onClick={() => handleBookWithStaff(staff)}
-                                            className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-900 dark:bg-zinc-800 dark:hover:bg-white text-slate-900 hover:text-white dark:text-white dark:hover:text-zinc-950 font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-xs"
+                                            onClick={() => handleReserveWithArtisan(artisan)}
+                                            className="w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-900 dark:bg-stone-800 dark:hover:bg-white text-stone-900 hover:text-white dark:text-white dark:hover:text-stone-950 font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-xs"
                                         >
-                                            Book with {staff.name.split(' ')[0]}
+                                            Reserve with {artisan.name.split(' ')[0]}
                                         </button>
                                     </div>
                                 );
                             })}
                         </div>
                     )}
-                </section>
+                </div>
+            </section>
 
-                {/* ============================================================ */}
-                {/* 7. QUICK IN-PAGE APPOINTMENT SLOT BOOKING */}
-                {/* ============================================================ */}
-                <section id="salon-slots-section" className="scroll-mt-24 space-y-6">
-                    <div>
-                        <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" /> Instant Scheduling
+            {/* ============================================================ */}
+            {/* 7. LOOKBOOK & STUDIO AMBIENCE */}
+            {/* ============================================================ */}
+            <section id="section-lookbook" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                    <div className="space-y-2">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            Studio Aesthetic
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                            Reserve Your Slot
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            Lookbook & Studio Visuals
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                            Choose your preferred date and time for an unhurried, personalized session.
+                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            An inside look at {salonName}'s private wash lounge, styling stations, and aesthetic suites.
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-sm space-y-6">
+                    {galleryImages.length === 0 ? (
+                        <div className="py-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
+                            <Camera className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
+                            <p className="text-xs text-stone-400">Lookbook images being cataloged.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {galleryImages.map((imgUrl, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={() => setLightboxIndex(idx)}
+                                    className={`relative group rounded-2xl overflow-hidden bg-stone-200 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 cursor-pointer ${
+                                        idx === 0 ? 'col-span-2 row-span-2 h-[260px] sm:h-[420px]' : 'h-[140px] sm:h-[200px]'
+                                    }`}
+                                >
+                                    <img
+                                        src={getSalonImageSrc(imgUrl)}
+                                        alt={`Atelier photograph ${idx + 1}`}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span className="px-3.5 py-1.5 rounded-full bg-white text-stone-950 text-[10px] font-black uppercase tracking-widest shadow-md">
+                                            Fullscreen
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ============================================================ */}
+            {/* 8. CONCIERGE SLOT RESERVATION */}
+            {/* ============================================================ */}
+            <section id="section-reservation" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                    <div className="space-y-2">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            Private Scheduling
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            Concierge Reservation Desk
+                        </h2>
+                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            Reserve an unhurried, private time slot at {salonName}.
+                        </p>
+                    </div>
+
+                    <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm space-y-8">
                         {/* Month / Year Indicator */}
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-4">
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-4">
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-white">
                                 {selectedDateObj?.month} {selectedDateObj?.year}
                             </span>
-                            <span className="px-3 py-1 rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-wider">
-                                Live Availability
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                                Live Timetable Synchronized
                             </span>
                         </div>
 
-                        {/* 14-Day Date Scroller */}
-                        <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-none pb-2">
+                        {/* 14-Day Calendar Strip */}
+                        <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-2">
                             {nextDays.map((d, i) => {
                                 const isSelected = selectedDateObj?.fullDate === d.fullDate;
                                 return (
@@ -1521,54 +1444,52 @@ const SalonPage = () => {
                                         onClick={() => {
                                             setSelectedDateObj(d);
                                             setSelectedSlot(null);
-                                            setSelectedTime(null);
                                         }}
-                                        className={`flex flex-col items-center justify-center py-3.5 px-4 rounded-2xl min-w-[64px] transition-all cursor-pointer ${
+                                        className={`flex flex-col items-center justify-center py-4 px-4 rounded-2xl min-w-[68px] transition cursor-pointer ${
                                             isSelected
-                                                ? 'bg-gradient-to-b from-red-600 to-rose-600 text-white shadow-md shadow-red-600/30 font-black scale-105'
-                                                : 'bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                                                ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md scale-105'
+                                                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
                                         }`}
                                     >
                                         <span className="text-[10px] uppercase font-bold tracking-wider">{d.day}</span>
-                                        <span className="text-base font-black mt-0.5">{d.num}</span>
+                                        <span className="text-lg font-black mt-0.5">{d.num}</span>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        {/* Slots Grid */}
-                        <div className="pt-2">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-3 flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-red-500" />
-                                Available Time Slots for {selectedDateObj?.day}, {selectedDateObj?.num} {selectedDateObj?.month}:
+                        {/* Time Slots */}
+                        <div className="space-y-3 pt-2">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                                Available Time Slots on {selectedDateObj?.day}, {selectedDateObj?.num} {selectedDateObj?.month}:
                             </h4>
 
                             {slotsLoading ? (
                                 <div className="py-12 text-center space-y-2">
-                                    <div className="animate-spin h-6 w-6 border-2 border-red-500 border-t-transparent rounded-full mx-auto" />
-                                    <p className="text-xs font-bold text-slate-400">Checking studio timetable...</p>
+                                    <div className="animate-spin h-6 w-6 border-2 border-stone-400 border-t-transparent rounded-full mx-auto" />
+                                    <p className="text-xs text-stone-400 font-bold">Checking availability...</p>
                                 </div>
                             ) : salonSlots.length === 0 ? (
-                                <div className="py-10 text-center bg-slate-50 dark:bg-zinc-800/40 rounded-2xl border border-slate-100 dark:border-zinc-800 space-y-2">
-                                    <Clock className="w-8 h-8 text-slate-300 dark:text-zinc-700 mx-auto" />
-                                    <p className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-zinc-300">
+                                <div className="py-10 text-center bg-stone-50 dark:bg-stone-800/40 rounded-2xl border border-stone-200 dark:border-stone-800 space-y-1">
+                                    <Clock className="w-8 h-8 text-stone-300 dark:text-stone-700 mx-auto" />
+                                    <p className="text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
                                         No online slots available on this date
                                     </p>
-                                    <p className="text-xs text-slate-400">Please choose another date or call the salon directly.</p>
+                                    <p className="text-xs text-stone-400">Please choose another date or contact our concierge.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                                     {salonSlots.map((slot, idx) => {
                                         const isSelected = selectedSlot?.startTime === slot.startTime;
                                         return (
                                             <button
                                                 key={idx}
                                                 type="button"
-                                                onClick={() => handleSelectSlotAndBook(slot)}
-                                                className={`py-2.5 px-3 rounded-xl text-center text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                                                onClick={() => handleConfirmSlot(slot)}
+                                                className={`py-3 px-3 rounded-xl text-center text-xs font-bold transition cursor-pointer ${
                                                     isSelected
-                                                        ? 'bg-red-600 text-white shadow-md shadow-red-600/30 font-black'
-                                                        : 'bg-slate-50 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 hover:border-red-400 dark:hover:border-red-700 hover:bg-white'
+                                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md'
+                                                        : 'bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200/50 dark:border-stone-700'
                                                 }`}
                                             >
                                                 {slot.displayTime}
@@ -1579,105 +1500,50 @@ const SalonPage = () => {
                             )}
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                {/* ============================================================ */}
-                {/* 8. STUDIO AMBIENCE & PHOTO GALLERY */}
-                {/* ============================================================ */}
-                <section id="salon-gallery-section" className="scroll-mt-24 space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                        <div>
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                                <Camera className="w-3.5 h-3.5" /> Studio Ambience
-                            </span>
-                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Gallery & Atmosphere
-                            </h2>
-                            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                                Take a visual tour of {salonName}'s styling stations, aesthetic lounges, and client work.
-                            </p>
-                        </div>
-                    </div>
-
-                    {galleryImages.length === 0 ? (
-                        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-10 text-center border border-slate-100 dark:border-zinc-800 space-y-2">
-                            <Camera className="w-10 h-10 text-slate-300 dark:text-zinc-700 mx-auto" />
-                            <p className="text-xs font-black uppercase tracking-wider text-slate-500">Photographs being updated</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                            {galleryImages.map((imgUrl, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => setLightboxIndex(idx)}
-                                    className={`relative group rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 cursor-pointer shadow-xs hover:shadow-lg transition-all ${
-                                        idx === 0 ? 'col-span-2 row-span-2 h-[260px] sm:h-[400px]' : 'h-[140px] sm:h-[192px]'
-                                    }`}
-                                >
-                                    <img
-                                        src={getSalonImageSrc(imgUrl)}
-                                        alt={`Studio photograph ${idx + 1}`}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <span className="px-3 py-1.5 rounded-full bg-white/90 text-slate-900 text-[10px] font-black uppercase tracking-wider shadow-md">
-                                            View Fullscreen
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
-
-                {/* ============================================================ */}
-                {/* 9. HOURS, LOCATION & CONTACT HUB */}
-                {/* ============================================================ */}
-                <section id="salon-location-section" className="scroll-mt-24 space-y-6">
-                    <div>
-                        <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" /> Visit Us
+            {/* ============================================================ */}
+            {/* 9. ATELIER HOURS, MAP & VISITING DETAILS */}
+            {/* ============================================================ */}
+            <section id="section-concierge" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                    <div className="space-y-2">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            Location & Schedule
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                            Hours & Studio Location
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            Hours & Atelier Visit
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                            Find operating schedules, contact numbers, and turn-by-turn directions.
+                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            Everything you need to know for your upcoming visit to {salonName}.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        {/* Operating Hours Table */}
-                        <div className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-sm space-y-4">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-red-500" /> Weekly Timetable
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Weekly Schedule */}
+                        <div className="lg:col-span-5 p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-4">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-white flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-amber-500" /> Weekly Atelier Schedule
                             </h3>
-                            <div className="space-y-1.5">
+                            <div className="space-y-2">
                                 {weekdays.map((day) => {
-                                    const operatingHours = formatOperatingHours(day, salon?.openingTime, salon?.closingTime, salon?.weeklyOffDay);
-                                    const isOff = operatingHours === 'Closed';
+                                    const hours = formatOperatingHours(day, salon?.openingTime, salon?.closingTime, salon?.weeklyOffDay);
+                                    const isOff = hours === 'Closed';
                                     const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
                                     const isToday = day.toLowerCase() === todayName.toLowerCase();
                                     return (
                                         <div
                                             key={day}
-                                            className={`flex items-center justify-between py-2.5 px-3.5 rounded-xl text-xs transition ${
+                                            className={`flex items-center justify-between py-2 px-3 rounded-lg text-xs ${
                                                 isToday
-                                                    ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 font-black text-red-600 dark:text-red-400'
-                                                    : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                                                    ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-white font-black'
+                                                    : 'text-stone-600 dark:text-stone-400'
                                             }`}
                                         >
-                                            <div className="flex items-center gap-2">
-                                                {isToday && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
-                                                <span className="uppercase font-bold tracking-tight">{day}</span>
-                                                {isToday && (
-                                                    <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-red-600 text-white font-black uppercase">
-                                                        Today
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <span className="uppercase">{day}</span>
                                             <span className={`font-mono text-xs ${isOff ? 'text-rose-500 font-bold' : ''}`}>
-                                                {operatingHours}
+                                                {hours}
                                             </span>
                                         </div>
                                     );
@@ -1685,31 +1551,30 @@ const SalonPage = () => {
                             </div>
                         </div>
 
-                        {/* Location Details & Interactive Map Card */}
-                        <div className="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-sm space-y-6">
+                        {/* Location Card */}
+                        <div className="lg:col-span-7 p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-6">
                             <div className="space-y-2">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-red-500">
-                                    Studio Address & Landmark
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+                                    Atelier Address
                                 </span>
-                                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                <h3 className="text-xl font-black text-stone-900 dark:text-white uppercase tracking-tight">
                                     {salonName}
                                 </h3>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed flex items-start gap-2">
-                                    <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed flex items-start gap-2">
+                                    <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                                     <span>{addressStr}</span>
                                 </p>
                             </div>
 
-                            {/* Direct Action Buttons */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-zinc-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
                                 {salon?.latitude && salon?.longitude ? (
                                     <a
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${salon.latitude},${salon.longitude}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-zinc-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2 shadow-xs"
+                                        className="px-5 py-3.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
                                     >
-                                        <Navigation className="w-4 h-4 text-red-500" />
+                                        <Navigation className="w-4 h-4" />
                                         <span>Directions via Maps</span>
                                     </a>
                                 ) : (
@@ -1717,9 +1582,9 @@ const SalonPage = () => {
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(salonName + ' ' + addressStr)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-zinc-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2 shadow-xs"
+                                        className="px-5 py-3.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
                                     >
-                                        <Navigation className="w-4 h-4 text-red-500" />
+                                        <Navigation className="w-4 h-4" />
                                         <span>Find on Google Maps</span>
                                     </a>
                                 )}
@@ -1727,137 +1592,84 @@ const SalonPage = () => {
                                 {salon?.phone && (
                                     <a
                                         href={`tel:${salon.phone}`}
-                                        className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-900 dark:text-white font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
+                                        className="px-5 py-3.5 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-900 dark:text-white font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
                                     >
                                         <Phone className="w-4 h-4 text-emerald-500" />
-                                        <span>Call Studio: {salon.phone}</span>
+                                        <span>Call: {salon.phone}</span>
                                     </a>
                                 )}
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                {/* ============================================================ */}
-                {/* 10. VERIFIED CLIENT REVIEWS & TESTIMONIAL WALL */}
-                {/* ============================================================ */}
-                <section id="salon-reviews-section" className="scroll-mt-24 space-y-6">
-                    <div>
-                        <span className="text-[11px] font-black uppercase tracking-widest text-[#FF0B01] flex items-center gap-1.5">
-                            <Star className="w-3.5 h-3.5" /> Client Feedback
+            {/* ============================================================ */}
+            {/* 10. PATRON TESTIMONIALS */}
+            {/* ============================================================ */}
+            <section className="py-16 sm:py-24">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
+                    <div className="space-y-2 text-center">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            Patron Words
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                            Verified Client Reviews
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            Client Reflections
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-                            Honest ratings and reviews from authenticated patrons of {salonName}.
-                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        {/* Rating Summary Card */}
-                        <div className="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-sm text-center space-y-4">
-                            <div className="space-y-1">
-                                <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-                                    {ratingScore}
-                                </span>
-                                <div className="flex items-center justify-center gap-1 text-amber-400">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: 'Siddharth Rao',
+                                quote: `The precision haircut and styling exceeded my expectations. Total focus on detail and true unhurried hospitality.`,
+                                discipline: 'Hair Sculpture Patron'
+                            },
+                            {
+                                name: 'Meera Kulkarni',
+                                quote: `An oasis of calm. The customized skin ritual and balayage gave my hair and face an unbelievable natural glow.`,
+                                discipline: 'Aesthetic Ritual Patron'
+                            },
+                            {
+                                name: 'Kavita Sen',
+                                quote: `Flawless hygiene, top-tier products, and master stylists who actually listen. My new permanent studio.`,
+                                discipline: 'Couture Styling Patron'
+                            }
+                        ].map((item, idx) => (
+                            <div
+                                key={idx}
+                                className="p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 space-y-4 shadow-xs"
+                            >
+                                <div className="flex items-center gap-1 text-amber-400">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-4 h-4 fill-amber-400" />
+                                        <Star key={i} className="w-3.5 h-3.5 fill-current" />
                                     ))}
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                                    Verified Overall Rating
+                                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-serif italic leading-relaxed">
+                                    "{item.quote}"
                                 </p>
+                                <div className="pt-2 border-t border-stone-100 dark:border-stone-800">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">
+                                        {item.name}
+                                    </h4>
+                                    <span className="text-[10px] text-stone-400">{item.discipline}</span>
+                                </div>
                             </div>
-
-                            {/* Breakdown Bars */}
-                            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs font-bold">
-                                {[
-                                    { stars: '5 Stars', pct: '88%' },
-                                    { stars: '4 Stars', pct: '10%' },
-                                    { stars: '3 Stars', pct: '2%' }
-                                ].map((row, i) => (
-                                    <div key={i} className="flex items-center gap-3">
-                                        <span className="w-14 text-[10px] text-slate-500 dark:text-zinc-400 text-left shrink-0">{row.stars}</span>
-                                        <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                                            <div className="h-full bg-amber-400 rounded-full" style={{ width: row.pct }} />
-                                        </div>
-                                        <span className="text-[10px] text-slate-400 w-8 text-right shrink-0">{row.pct}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Testimonials List */}
-                        <div className="lg:col-span-8 space-y-3">
-                            {[
-                                {
-                                    name: 'Priya Sharma',
-                                    rating: 5,
-                                    date: '2 days ago',
-                                    comment: `Best salon experience I've had in a long time. The stylist listened to exactly what I wanted and the hair spa was deeply relaxing!`
-                                },
-                                {
-                                    name: 'Rohan Mehra',
-                                    rating: 5,
-                                    date: '1 week ago',
-                                    comment: `Incredible hygiene and professionalism. The haircut and beard styling were razor sharp. Definitely my new regular studio.`
-                                },
-                                {
-                                    name: 'Ananya Deshmukh',
-                                    rating: 5,
-                                    date: '2 weeks ago',
-                                    comment: `Clean equipment, welcoming hospitality, and outstanding aesthetic facial. Five stars all the way!`
-                                }
-                            ].map((rev, idx) => {
-                                const initials = rev.name.split(' ').map(n => n[0]).join('');
-                                return (
-                                    <div
-                                        key={idx}
-                                        className="bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-slate-100 dark:border-zinc-800 shadow-xs space-y-2.5"
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full bg-red-100 dark:bg-red-950/50 text-[#FF0B01] font-black text-xs flex items-center justify-center shrink-0">
-                                                    {initials}
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                                                        {rev.name}
-                                                    </h4>
-                                                    <span className="text-[10px] font-bold text-slate-400">
-                                                        {rev.date} • Verified Client
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center text-amber-400">
-                                                {[...Array(rev.rating)].map((_, i) => (
-                                                    <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
-                                            "{rev.comment}"
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        ))}
                     </div>
-                </section>
-            </main>
+                </div>
+            </section>
 
             {/* ============================================================ */}
-            {/* 11. FULLSCREEN PHOTO LIGHTBOX MODAL */}
+            {/* 11. LIGHTBOX MODAL */}
             {/* ============================================================ */}
             {lightboxIndex !== null && galleryImages[lightboxIndex] && (
-                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6">
                     <button
                         type="button"
                         onClick={() => setLightboxIndex(null)}
-                        className="absolute top-5 right-5 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-                        title="Close Gallery"
+                        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                        title="Close"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -1865,8 +1677,8 @@ const SalonPage = () => {
                     <button
                         type="button"
                         onClick={() => setLightboxIndex((prev) => (prev > 0 ? prev - 1 : galleryImages.length - 1))}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-                        title="Previous Photo"
+                        className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                        title="Previous"
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -1874,7 +1686,7 @@ const SalonPage = () => {
                     <div className="max-w-4xl max-h-[80vh] overflow-hidden rounded-3xl shadow-2xl border border-white/10">
                         <img
                             src={getSalonImageSrc(galleryImages[lightboxIndex])}
-                            alt={`Gallery photo ${lightboxIndex + 1}`}
+                            alt={`Lookbook photo ${lightboxIndex + 1}`}
                             className="w-full h-full max-h-[75vh] object-contain"
                         />
                     </div>
@@ -1882,37 +1694,32 @@ const SalonPage = () => {
                     <button
                         type="button"
                         onClick={() => setLightboxIndex((prev) => (prev < galleryImages.length - 1 ? prev + 1 : 0))}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-                        title="Next Photo"
+                        className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                        title="Next"
                     >
                         <ChevronRight className="w-6 h-6" />
                     </button>
 
-                    <div className="absolute bottom-6 text-xs text-white/70 font-mono">
-                        Photo {lightboxIndex + 1} of {galleryImages.length}
+                    <div className="absolute bottom-6 text-xs text-white/60 font-mono tracking-widest">
+                        Photograph {lightboxIndex + 1} of {galleryImages.length}
                     </div>
                 </div>
             )}
 
             {/* ============================================================ */}
-            {/* 12. FLOATING QUICK-ACTION DOCK (MOBILE & DESKTOP) */}
+            {/* 12. FLOATING CONCIERGE DOCK */}
             {/* ============================================================ */}
-            {showFloatingDock && (
-                <aside aria-label="Quick Action Bar" className="fixed bottom-4 left-4 right-4 max-w-lg mx-auto z-40 bg-slate-950/90 dark:bg-zinc-900/90 backdrop-blur-md text-white rounded-2xl p-3 border border-white/10 shadow-2xl flex items-center justify-between gap-3 animate-fade-in-up">
-                    <div className="flex items-center gap-2.5 min-w-0">
+            {showConciergeDock && (
+                <aside aria-label="Concierge Bar" className="fixed bottom-5 left-5 right-5 max-w-md mx-auto z-40 bg-stone-950/90 backdrop-blur-md text-white rounded-2xl p-3.5 border border-white/15 shadow-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <SalonLogoImage
                             logo={salon?.imageUrl || salon?.logoUrl}
                             name={salonName}
-                            className="w-9 h-9 rounded-xl shrink-0"
+                            className="w-8 h-8 rounded-lg shrink-0"
                         />
                         <div className="min-w-0">
                             <h4 className="text-xs font-black truncate text-white uppercase">{salonName}</h4>
-                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                <span>{isSalonOpenNow() ? 'Open Now' : 'Closed'}</span>
-                                <span>•</span>
-                                <span className="text-amber-400 font-bold">★ {ratingScore}</span>
-                            </div>
+                            <span className="text-[10px] text-stone-400">Atelier Concierge Active</span>
                         </div>
                     </div>
 
@@ -1921,32 +1728,30 @@ const SalonPage = () => {
                             <a
                                 href={`tel:${salon.phone}`}
                                 className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition"
-                                title="Call Studio"
+                                title="Call Atelier"
                             >
-                                <Phone className="w-4 h-4" />
+                                <Phone className="w-3.5 h-3.5" />
                             </a>
                         )}
                         <button
                             type="button"
-                            onClick={() => scrollToSection('slots')}
-                            className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer"
+                            onClick={() => scrollToSection('reservation')}
+                            className="px-4 py-2 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
                         >
-                            Book Now
+                            Reserve
                         </button>
                     </div>
                 </aside>
             )}
 
             {/* ============================================================ */}
-            {/* 13. BESPOKE WHITE-LABEL FOOTER ATTRIBUTION */}
+            {/* 13. PROPRIETARY BESPOKE FOOTER */}
             {/* ============================================================ */}
-            <div className="py-6 border-t border-slate-100 dark:border-zinc-800 text-center text-xs text-slate-400 dark:text-zinc-500">
-                <span className="font-medium">© {new Date().getFullYear()} {salonName}. All Rights Reserved.</span>
+            <footer className="py-8 border-t border-stone-200 dark:border-stone-800 text-center text-xs text-stone-400">
+                <span>© {new Date().getFullYear()} {salonName}. All Rights Reserved.</span>
                 <span className="mx-2">•</span>
-                <span className="font-semibold text-slate-500 dark:text-zinc-400">
-                    Powered by <strong className="font-black text-[#ff0b01]">NeoParlour</strong>
-                </span>
-            </div>
+                <span>Powered by <strong className="font-black text-red-600">NeoParlour</strong></span>
+            </footer>
 
         </div>
     );
