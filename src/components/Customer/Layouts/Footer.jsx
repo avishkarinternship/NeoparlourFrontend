@@ -49,12 +49,18 @@ const Footer = () => {
                                     {activeSalon.phone}
                                 </p>
                             )}
-                            {/* Powered by NeoParlour Attribution Badge */}
-                            <div className="flex items-center gap-1.5 mt-3 pt-1">
-                                <span className="text-[11px] font-medium text-gray-500">Powered by</span>
-                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-red-200/60 dark:border-red-900/40 shadow-xs">
-                                    <img src={logoIcon} alt="NeoParlour" className="w-3.5 h-3.5 object-contain" />
-                                    <span className="text-[11px] font-black text-[#ff0b01]">NeoParlour</span>
+                            {/* Prominent Powered by NeoParlour Attribution Badge */}
+                            <div className="mt-3.5 pt-1">
+                                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border shadow-xs transition-all ${
+                                    isDark 
+                                        ? 'bg-zinc-900 border-red-500/30 text-white' 
+                                        : 'bg-white border-red-200 text-gray-900'
+                                }`}>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Platform:</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <img src={logoIcon} alt="NeoParlour" className="w-5 h-5 object-contain" />
+                                        <span className="text-sm font-black text-[#ff0b01] tracking-tight">Powered by NeoParlour</span>
+                                    </div>
                                 </div>
                             </div>
                         </>
@@ -164,14 +170,17 @@ const Footer = () => {
 
             {/* Copyright and Social Media Icons - White-labeled */}
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs sm:text-sm font-bold">
                     <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         © {new Date().getFullYear()} {isWhiteLabeled ? activeSalon.name : 'NeoParlour'}. All rights reserved.
                     </span>
-                    <span className="text-gray-400">•</span>
-                    <span className="flex items-center gap-1 text-gray-500">
-                        Powered by <strong className="text-[#ff0b01] font-black tracking-tight">NeoParlour</strong>
-                    </span>
+                    <span className="text-gray-400 hidden sm:inline">•</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 shadow-3xs">
+                        <img src={logoIcon} alt="NeoParlour" className="w-4 h-4 object-contain" />
+                        <span className="text-xs sm:text-sm font-black text-[#ff0b01] tracking-tight">
+                            Powered by NeoParlour
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-4">

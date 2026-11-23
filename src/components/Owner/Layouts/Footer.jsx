@@ -45,11 +45,17 @@ const Footer = ({ isDarkMode = false }) => {
                                 Dedicated operating portal for {activeSalonName}. Manage staff, appointments, client retention and revenue.
                             </p>
                             {/* Prominent Powered by NeoParlour Badge */}
-                            <div className="flex items-center gap-1.5 pt-2">
-                                <span className="text-xs font-medium text-gray-400">Platform:</span>
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 shadow-xs">
-                                    <img src={logoIcon} alt="NeoParlour" className="w-3.5 h-3.5 object-contain" />
-                                    <span className="text-xs font-black text-[#ff0b01]">Powered by NeoParlour</span>
+                            <div className="pt-2">
+                                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border shadow-xs transition-all ${
+                                    isDarkMode 
+                                        ? 'bg-zinc-800/80 border-red-500/30 text-white' 
+                                        : 'bg-white border-red-200 text-gray-900'
+                                }`}>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Platform:</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <img src={logoIcon} alt="NeoParlour" className="w-5 h-5 object-contain" />
+                                        <span className="text-sm font-black text-[#ff0b01] tracking-tight">Powered by NeoParlour</span>
+                                    </div>
                                 </div>
                             </div>
                         </>
@@ -180,14 +186,17 @@ const Footer = ({ isDarkMode = false }) => {
 
             {/* Copyright and Social Media Icons - White-labeled */}
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs sm:text-sm font-bold">
                     <span className={`uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
                         © {new Date().getFullYear()} {!isSystemAdmin && activeSalonName ? activeSalonName : 'NeoParlour'}. All rights reserved.
                     </span>
-                    <span className="text-gray-400">•</span>
-                    <span className="flex items-center gap-1 text-gray-500 font-semibold lowercase">
-                        powered by <strong className="text-red-600 font-black">NeoParlour</strong>
-                    </span>
+                    <span className="text-gray-400 hidden sm:inline">•</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 shadow-3xs">
+                        <img src={logoIcon} alt="NeoParlour" className="w-4 h-4 object-contain" />
+                        <span className="text-xs sm:text-sm font-black text-[#ff0b01] tracking-tight">
+                            Powered by NeoParlour
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-4">
