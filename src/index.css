@@ -242,6 +242,37 @@ body {
   color: #cbd5e1 !important;
 }
 
+/* Stone colours used across components */
+.dark-mode .text-stone-950,
+.dark-mode .text-stone-900,
+.dark-mode .text-stone-800,
+.dark-mode .text-stone-700,
+.dark .text-stone-950,
+.dark .text-stone-900,
+.dark .text-stone-800,
+.dark .text-stone-700 {
+  color: #f8fafc !important;
+}
+
+.dark-mode .text-stone-600,
+.dark-mode .text-stone-500,
+.dark-mode .text-stone-400,
+.dark .text-stone-600,
+.dark .text-stone-500,
+.dark .text-stone-400 {
+  color: #cbd5e1 !important;
+}
+
+.dark-mode .bg-stone-900,
+.dark .bg-stone-900 {
+  background-color: #18181b !important;
+}
+
+.dark-mode .border-stone-800,
+.dark .border-stone-800 {
+  border-color: #27272a !important;
+}
+
 /* Custom hex backgrounds used in HomeScreen sections */
 .dark-mode [class*="bg-[#F9FAFB]"],
 .dark-mode [class*="bg-[#f4f4f4]"],

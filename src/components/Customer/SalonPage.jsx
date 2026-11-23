@@ -41,7 +41,8 @@ import {
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import { updateSEOMetadata, injectJSONLD, generateSalonSlug } from '../../utils/seoHelper';
-import { setActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../utils/whiteLabelHelper';
+import { setActiveSalon, getSalonImageSrc, SalonLogoImage, useActiveSalon } from '../../utils/whiteLabelHelper';
+import { useDarkMode } from '../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
 import { calculateDistanceKm, formatDistance } from '../../services/searchService';
@@ -122,15 +123,15 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 
     if (loading) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-stone-200 dark:bg-zinc-800 text-stone-400">
-                <div className="animate-spin h-4 w-4 border-2 border-stone-400 border-t-transparent rounded-full" />
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-zinc-800 text-slate-400">
+                <div className="animate-spin h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full" />
             </div>
         );
     }
 
     if (error || !src) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-stone-200 dark:bg-zinc-800 text-stone-500 font-extrabold text-xs uppercase tracking-wider">
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-zinc-800 text-slate-500 font-extrabold text-xs uppercase tracking-wider">
                 {fallbackText || 'S'}
             </div>
         );
@@ -174,6 +175,7 @@ const SalonPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { salonSlug } = useParams();
+    const { isDark } = useDarkMode();
     const { isAuthenticated } = useSelector((state) => state.customer);
     const activeLocation = useSelector((state) => state.location?.activeLocation);
 
@@ -670,10 +672,10 @@ const SalonPage = () => {
     // Skeleton
     if (loading) {
         return (
-            <div className="min-h-screen bg-stone-900 text-stone-100 flex flex-col font-sans">
+            <div className={`min-h-screen font-sans ${isDark ? 'bg-zinc-950 text-white' : 'bg-slate-50 text-slate-900'} flex flex-col`}>
                 <div className="w-full h-[60vh] yt-skeleton opacity-60" />
                 <div className="max-w-6xl mx-auto w-full px-6 -mt-32 space-y-6">
-                    <div className="bg-stone-950/90 rounded-3xl p-8 border border-stone-800 space-y-4">
+                    <div className={`rounded-3xl p-8 border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'} space-y-4`}>
                         <div className="h-10 yt-skeleton rounded-xl w-80" />
                         <div className="h-4 yt-skeleton rounded-lg w-52" />
                     </div>
@@ -683,7 +685,9 @@ const SalonPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0E0E10] font-sans antialiased text-stone-900 dark:text-stone-100 transition-colors duration-300">
+        <div className={`min-h-screen font-sans antialiased transition-colors duration-300 ${
+            isDark ? 'bg-[#0E0E10] text-white' : 'bg-[#FDFBF7] text-slate-950'
+        }`}>
 
             {/* ============================================================ */}
             {/* 1. EDITORIAL LUXURY STUDIO MASTHEAD (HERO) */}
@@ -719,17 +723,21 @@ const SalonPage = () => {
                     <div className="flex flex-col items-start space-y-6">
                         {/* Upper Atelier Tag & Status Bar */}
                         <div className="flex flex-wrap items-center gap-3">
-                            <span className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.25em] bg-white/10 backdrop-blur-md text-stone-200 border border-white/15">
+                            <span 
+                                className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.25em] backdrop-blur-md border border-white/20 text-white"
+                                style={{ backgroundColor: 'rgba(var(--color-primary-rgb, 255, 11, 1), 0.25)' }}
+                            >
+                                <Sparkles className="w-3 h-3 inline mr-1 text-amber-400" />
                                 Haute Coiffure & Beauty Atelier
                             </span>
 
                             {isSalonOpenNow() ? (
-                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/15 backdrop-blur-md text-emerald-300 border border-emerald-500/25">
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/20 backdrop-blur-md text-emerald-300 border border-emerald-500/30">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                     Atelier Open Today • Closes {salon?.closingTime ? formatTimeStr(salon.closingTime) : '10 PM'}
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/15 backdrop-blur-md text-rose-300 border border-rose-500/25">
+                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/20 backdrop-blur-md text-rose-300 border border-rose-500/30">
                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
                                     Closed for the day • Opens {salon?.openingTime ? formatTimeStr(salon.openingTime) : '10 AM'}
                                 </span>
@@ -738,7 +746,10 @@ const SalonPage = () => {
 
                         {/* Salon Monogram & Grand Headline */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-7">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl shrink-0">
+                            <div 
+                                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-1 backdrop-blur-md border-2 shadow-2xl shrink-0"
+                                style={{ borderColor: 'var(--color-primary, #ffffff)' }}
+                            >
                                 <SalonLogoImage
                                     logo={salon?.imageUrl || salon?.logoUrl}
                                     name={salonName}
@@ -749,14 +760,14 @@ const SalonPage = () => {
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-none capitalize">
                                     {salonName}
                                 </h1>
-                                <p className="text-sm sm:text-base text-stone-300 font-medium tracking-wide">
+                                <p className="text-sm sm:text-base text-zinc-200 font-medium tracking-wide">
                                     An exclusive sanctuary of precision hairdressing, aesthetics & luxury rituals in {salon?.cityName || 'the city'}.
                                 </p>
                             </div>
                         </div>
 
                         {/* Location, Distance & Accolades */}
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-stone-300 pt-1">
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-300 pt-1">
                             <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
                                 <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                                 <span className="truncate max-w-xs">{addressStr}</span>
@@ -769,17 +780,17 @@ const SalonPage = () => {
                             <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-amber-300 font-bold">
                                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                                 <span>{ratingScore}</span>
-                                <span className="text-stone-400 font-normal">({(((salon?.id || salon?.salonId || 1) * 17) % 70) + 52} curated reviews)</span>
+                                <span className="text-zinc-400 font-normal">({(((salon?.id || salon?.salonId || 1) * 17) % 70) + 52} curated reviews)</span>
                             </div>
                         </div>
 
-                        {/* Action Bar */}
+                        {/* Action Bar with Dynamic White Label Color */}
                         <div className="flex flex-wrap items-center gap-3.5 pt-4 w-full sm:w-auto">
                             {(salon?.banned || salon?.isBanned) ? (
                                 <button
                                     type="button"
                                     disabled
-                                    className="px-8 py-4 rounded-xl bg-stone-800 text-stone-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed border border-stone-700"
+                                    className="px-8 py-4 rounded-xl bg-zinc-800 text-zinc-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed border border-zinc-700"
                                 >
                                     Reservations Suspended
                                 </button>
@@ -787,7 +798,11 @@ const SalonPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => scrollToSection('reservation')}
-                                    className="px-8 py-4 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-98 transition duration-200 cursor-pointer flex items-center gap-2.5"
+                                    style={{
+                                        backgroundColor: 'var(--color-primary, #FF0B01)',
+                                        color: 'var(--color-button-text, #ffffff)'
+                                    }}
+                                    className="px-8 py-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:brightness-110 hover:scale-[1.02] active:scale-98 transition duration-200 cursor-pointer flex items-center gap-2.5"
                                 >
                                     <Calendar className="w-4 h-4" />
                                     <span>Reserve An Experience</span>
@@ -797,7 +812,7 @@ const SalonPage = () => {
                             <button
                                 type="button"
                                 onClick={() => scrollToSection('menu')}
-                                className="px-6 py-4 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md text-white font-black text-xs uppercase tracking-[0.2em] border border-white/15 transition cursor-pointer flex items-center gap-2"
+                                className="px-6 py-4 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-black text-xs uppercase tracking-[0.2em] border border-white/20 transition cursor-pointer flex items-center gap-2"
                             >
                                 <Scissors className="w-4 h-4" />
                                 <span>Treatment Menu</span>
@@ -843,7 +858,9 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 2. MINIMALIST EDITORIAL NAVIGATION BAR */}
             {/* ============================================================ */}
-            <nav className="sticky top-0 z-40 bg-[#FDFBF7]/95 dark:bg-[#0E0E10]/95 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800/80 shadow-xs">
+            <nav className={`sticky top-0 z-40 backdrop-blur-md border-b shadow-xs transition-colors ${
+                isDark ? 'bg-[#0E0E10]/95 border-zinc-800' : 'bg-white/95 border-slate-200'
+            }`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8">
                     <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-3 text-[11px] font-black uppercase tracking-[0.18em]">
                         {[
@@ -862,18 +879,26 @@ const SalonPage = () => {
                                     key={item.id}
                                     type="button"
                                     onClick={() => scrollToSection(item.id)}
+                                    style={isActive ? {
+                                        backgroundColor: 'var(--color-primary, #0f172a)',
+                                        color: 'var(--color-button-text, #ffffff)'
+                                    } : {}}
                                     className={`px-3.5 py-1.5 rounded-lg shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
                                         isActive
-                                            ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
-                                            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
+                                            ? 'font-black shadow-xs'
+                                            : isDark
+                                            ? 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                            : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                                     }`}
                                 >
                                     <span>{item.label}</span>
                                     {item.count ? (
                                         <span className={`text-[9px] px-1.5 rounded-full font-bold ${
                                             isActive
-                                                ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black'
-                                                : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-300'
+                                                ? 'bg-white/20 text-white'
+                                                : isDark
+                                                ? 'bg-zinc-800 text-zinc-300'
+                                                : 'bg-slate-200 text-slate-700'
                                         }`}>
                                             {item.count}
                                         </span>
@@ -888,49 +913,69 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 3. ATELIER PHILOSOPHY & ARTISAN PILLARS */}
             {/* ============================================================ */}
-            <section id="section-philosophy" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-philosophy" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-16">
                     
                     {/* Top Editorial Story Feature */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
                         <div className="lg:col-span-5 relative group">
-                            <div className="w-full h-80 sm:h-96 rounded-3xl overflow-hidden bg-stone-200 dark:bg-stone-900 shadow-xl border border-stone-200 dark:border-stone-800">
+                            <div className={`w-full h-80 sm:h-96 rounded-3xl overflow-hidden shadow-xl border ${
+                                isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-100 border-slate-200'
+                            }`}>
                                 <img
                                     src={galleryImages[1] ? getSalonImageSrc(galleryImages[1]) : (heroImage ? getSalonImageSrc(heroImage) : '')}
                                     alt="Atelier interior"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                 />
                             </div>
-                            <div className="absolute -bottom-5 -right-3 sm:-right-5 bg-stone-900 dark:bg-stone-800 text-white p-5 rounded-2xl shadow-2xl max-w-xs border border-stone-700">
-                                <p className="text-xs font-serif italic leading-relaxed text-stone-300">
+                            <div className="absolute -bottom-5 -right-3 sm:-right-5 bg-zinc-900 text-white p-5 rounded-2xl shadow-2xl max-w-xs border border-zinc-700">
+                                <p className="text-xs font-serif italic leading-relaxed text-zinc-300">
                                     "Every ritual begins with an unhurried diagnosis of your hair texture, lifestyle, and aesthetic vision."
                                 </p>
-                                <span className="block text-[9px] font-black uppercase tracking-widest text-amber-400 mt-2">
+                                <span 
+                                    className="block text-[9px] font-black uppercase tracking-widest mt-2"
+                                    style={{ color: 'var(--color-primary, #f59e0b)' }}
+                                >
                                     — The {salonName} Guarantee
                                 </span>
                             </div>
                         </div>
 
                         <div className="lg:col-span-7 space-y-5">
-                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            <span 
+                                className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                                style={{ color: 'var(--color-primary, #f59e0b)' }}
+                            >
                                 The Atelier Philosophy
                             </span>
-                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white leading-tight">
+                            <h2 className={`text-3xl sm:text-4xl font-black tracking-tight leading-tight ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 Tailored Perfection.<br />Unhurried Boutique Care.
                             </h2>
-                            <p className="text-sm sm:text-base text-stone-600 dark:text-stone-300 leading-relaxed font-normal">
+                            <p className={`text-sm sm:text-base leading-relaxed font-normal ${
+                                isDark ? 'text-zinc-300' : 'text-slate-600'
+                            }`}>
                                 {salon?.description ||
                                     `At ${salonName}, we consider personal styling an intimate art form. We reject factory-line salon conveyor belts in favor of bespoke private consultations, medical-grade hygiene protocols, and precision techniques customized exclusively for you.`}
                             </p>
 
                             <div className="grid grid-cols-2 gap-4 pt-4">
-                                <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800">
-                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Private Suites</h4>
-                                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">Calm, private aesthetic treatment cabins.</p>
+                                <div className={`p-4 rounded-2xl border ${
+                                    isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                                }`}>
+                                    <h4 className={`text-xs font-black uppercase tracking-wider ${
+                                        isDark ? 'text-white' : 'text-slate-950'
+                                    }`}>Private Suites</h4>
+                                    <p className={`text-xs mt-1 ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Calm, private aesthetic treatment cabins.</p>
                                 </div>
-                                <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800">
-                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Master Formulations</h4>
-                                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">100% authentic salon-grade formulations.</p>
+                                <div className={`p-4 rounded-2xl border ${
+                                    isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                                }`}>
+                                    <h4 className={`text-xs font-black uppercase tracking-wider ${
+                                        isDark ? 'text-white' : 'text-slate-950'
+                                    }`}>Master Formulations</h4>
+                                    <p className={`text-xs mt-1 ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>100% authentic salon-grade formulations.</p>
                                 </div>
                             </div>
                         </div>
@@ -964,15 +1009,29 @@ const SalonPage = () => {
                             return (
                                 <div
                                     key={idx}
-                                    className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 space-y-3 shadow-xs hover:border-stone-400 dark:hover:border-stone-600 transition"
+                                    className={`p-6 rounded-2xl border space-y-3 shadow-xs transition ${
+                                        isDark 
+                                            ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' 
+                                            : 'bg-white border-slate-200 hover:border-slate-300'
+                                    }`}
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-900 dark:text-white font-black">
+                                    <div 
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center font-black"
+                                        style={{
+                                            backgroundColor: 'rgba(var(--color-primary-rgb, 255, 11, 1), 0.12)',
+                                            color: 'var(--color-primary, #FF0B01)'
+                                        }}
+                                    >
                                         <PIcon className="w-5 h-5" />
                                     </div>
-                                    <h3 className="text-sm font-black uppercase tracking-wider text-stone-900 dark:text-white">
+                                    <h3 className={`text-sm font-black uppercase tracking-wider ${
+                                        isDark ? 'text-white' : 'text-slate-950'
+                                    }`}>
                                         {pillar.title}
                                     </h3>
-                                    <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                                    <p className={`text-xs leading-relaxed ${
+                                        isDark ? 'text-zinc-400' : 'text-slate-600'
+                                    }`}>
                                         {pillar.desc}
                                     </p>
                                 </div>
@@ -981,16 +1040,23 @@ const SalonPage = () => {
                     </div>
 
                     {/* Amenities Ribbon */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 text-xs text-stone-600 dark:text-stone-300">
+                    <div className={`flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border text-xs ${
+                        isDark 
+                            ? 'bg-zinc-900/60 border-zinc-800 text-zinc-300' 
+                            : 'bg-slate-100 border-slate-200 text-slate-700'
+                    }`}>
                         <div className="flex flex-wrap items-center gap-6">
-                            <span className="flex items-center gap-2 font-bold"><Wifi className="w-4 h-4 text-stone-400" /> High-Speed Guest Wi-Fi</span>
-                            <span className="flex items-center gap-2 font-bold"><Car className="w-4 h-4 text-stone-400" /> Valet & Parking Available</span>
-                            <span className="flex items-center gap-2 font-bold"><CreditCard className="w-4 h-4 text-stone-400" /> All Cards & UPI Accepted</span>
+                            <span className="flex items-center gap-2 font-bold"><Wifi className="w-4 h-4 text-emerald-500" /> High-Speed Guest Wi-Fi</span>
+                            <span className="flex items-center gap-2 font-bold"><Car className="w-4 h-4 text-amber-500" /> Valet & Parking Available</span>
+                            <span className="flex items-center gap-2 font-bold"><CreditCard className="w-4 h-4 text-blue-500" /> All Cards & UPI Accepted</span>
                             {homeServiceCharges > 0 && (
-                                <span className="flex items-center gap-2 font-bold text-stone-900 dark:text-white"><MapPin className="w-4 h-4 text-rose-500" /> Home Appointments (₹{homeServiceCharges})</span>
+                                <span className="flex items-center gap-2 font-bold text-rose-500"><MapPin className="w-4 h-4" /> Home Appointments (₹{homeServiceCharges})</span>
                             )}
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                        <span 
+                            className="text-[10px] font-black uppercase tracking-widest"
+                            style={{ color: 'var(--color-primary, #FF0B01)' }}
+                        >
                             Verified Studio Partner
                         </span>
                     </div>
@@ -1001,36 +1067,45 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 4. THE COUTURE TREATMENT MENU & PRICING */}
             {/* ============================================================ */}
-            <section id="section-menu" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-menu" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                     
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-2">
-                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            <span 
+                                className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                                style={{ color: 'var(--color-primary, #FF0B01)' }}
+                            >
                                 Couture Catalog
                             </span>
-                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 The Treatment Collection
                             </h2>
-                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                                 Transparent price list and detailed treatment inclusions for {salonName}.
                             </p>
                         </div>
 
                         <div className="relative w-full md:w-80">
-                            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${isDark ? 'text-zinc-400' : 'text-slate-400'}`} />
                             <input
                                 type="text"
                                 value={serviceSearchQuery}
                                 onChange={(e) => setServiceSearchQuery(e.target.value)}
                                 placeholder="Search treatment or ritual..."
-                                className="w-full pl-10 pr-8 py-3 rounded-xl text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 focus:outline-none focus:border-stone-900 dark:focus:border-white transition shadow-xs text-stone-900 dark:text-white"
+                                className={`w-full pl-10 pr-8 py-3 rounded-xl text-xs font-bold border transition shadow-xs outline-none ${
+                                    isDark 
+                                        ? 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500 focus:border-zinc-500' 
+                                        : 'bg-white border-slate-200 text-slate-950 placeholder-slate-400 focus:border-slate-900'
+                                }`}
                             />
                             {serviceSearchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setServiceSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-zinc-400 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}
                                 >
                                     <X className="w-3.5 h-3.5" />
                                 </button>
@@ -1039,14 +1114,22 @@ const SalonPage = () => {
                     </div>
 
                     {categories.length > 0 && (
-                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 border-b border-stone-200 dark:border-stone-800">
+                        <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none pb-2 border-b ${
+                            isDark ? 'border-zinc-800' : 'border-slate-200'
+                        }`}>
                             <button
                                 type="button"
                                 onClick={() => setSelectedCategory('All')}
+                                style={selectedCategory === 'All' ? {
+                                    backgroundColor: 'var(--color-primary, #0f172a)',
+                                    color: 'var(--color-button-text, #ffffff)'
+                                } : {}}
                                 className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition cursor-pointer ${
                                     selectedCategory === 'All'
-                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
-                                        : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800'
+                                        ? 'font-black shadow-xs'
+                                        : isDark
+                                        ? 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                                 }`}
                             >
                                 All Treatments ({allServices.length})
@@ -1059,16 +1142,24 @@ const SalonPage = () => {
                                         key={catName}
                                         type="button"
                                         onClick={() => setSelectedCategory(catName)}
+                                        style={isSelected ? {
+                                            backgroundColor: 'var(--color-primary, #0f172a)',
+                                            color: 'var(--color-button-text, #ffffff)'
+                                        } : {}}
                                         className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0 transition cursor-pointer flex items-center gap-2 ${
                                             isSelected
-                                                ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
-                                                : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800'
+                                                ? 'font-black shadow-xs'
+                                                : isDark
+                                                ? 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                                                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
                                         }`}
                                     >
                                         <span>{translateServiceName(catName, t)}</span>
                                         {countInCat > 0 && (
                                             <span className={`text-[9px] px-1.5 rounded-full font-bold ${
-                                                isSelected ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black' : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
+                                                isSelected 
+                                                    ? 'bg-white/20 text-white' 
+                                                    : isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-slate-200 text-slate-700'
                                             }`}>
                                                 {countInCat}
                                             </span>
@@ -1080,12 +1171,16 @@ const SalonPage = () => {
                     )}
 
                     {filteredServices.length === 0 ? (
-                        <div className="py-16 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
-                            <Scissors className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
-                            <h4 className="text-sm font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                        <div className={`py-16 text-center rounded-3xl border space-y-2 ${
+                            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                        }`}>
+                            <Scissors className={`w-10 h-10 mx-auto ${isDark ? 'text-zinc-700' : 'text-slate-300'}`} />
+                            <h4 className={`text-sm font-black uppercase tracking-wider ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
                                 {serviceSearchQuery ? 'No matching treatments found' : 'Menu being refined'}
                             </h4>
-                            <p className="text-xs text-stone-400">Please try another term or contact the atelier desk directly.</p>
+                            <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Please try another term or contact the atelier desk directly.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -1095,42 +1190,65 @@ const SalonPage = () => {
                                 return (
                                     <div
                                         key={service.id}
-                                        className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 transition shadow-xs flex flex-col justify-between group space-y-4"
+                                        className={`p-6 rounded-2xl border transition shadow-xs flex flex-col justify-between group space-y-4 ${
+                                            isDark 
+                                                ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' 
+                                                : 'bg-white border-slate-200 hover:border-slate-300'
+                                        }`}
                                     >
                                         <div className="space-y-2">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                                                    <span 
+                                                        className="text-[10px] font-black uppercase tracking-widest"
+                                                        style={{ color: 'var(--color-primary, #f59e0b)' }}
+                                                    >
                                                         {service.categoryName || service.category || 'Treatment'}
                                                     </span>
-                                                    <h3 className="text-base font-black text-stone-900 dark:text-white tracking-tight uppercase group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors">
+                                                    <h3 className={`text-base font-black tracking-tight uppercase transition-colors ${
+                                                        isDark ? 'text-white' : 'text-slate-950'
+                                                    }`}>
                                                         {translateServiceName(service.name, t)}
                                                     </h3>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <span className="text-lg font-black text-stone-900 dark:text-white">
+                                                    <span className={`text-lg font-black block ${
+                                                        isDark ? 'text-white' : 'text-slate-950'
+                                                    }`}>
                                                         ₹{price}
                                                     </span>
-                                                    <span className="text-[10px] text-stone-400 font-bold block">
+                                                    <span className={`text-[10px] font-bold block ${
+                                                        isDark ? 'text-zinc-400' : 'text-slate-500'
+                                                    }`}>
                                                         {duration} Mins
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                            <p className={`text-xs leading-relaxed font-normal ${
+                                                isDark ? 'text-zinc-300' : 'text-slate-600'
+                                            }`}>
                                                 {service.description ||
                                                     'Includes consultation, customized preparation, precision execution, and final finishing.'}
                                             </p>
                                         </div>
 
-                                        <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-stone-400 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" /> Consultation included
+                                        <div className={`pt-3 border-t flex items-center justify-between ${
+                                            isDark ? 'border-zinc-800' : 'border-slate-100'
+                                        }`}>
+                                            <span className={`text-[10px] font-bold flex items-center gap-1 ${
+                                                isDark ? 'text-zinc-400' : 'text-slate-500'
+                                            }`}>
+                                                <Clock className="w-3 h-3 text-amber-500" /> Consultation included
                                             </span>
                                             <button
                                                 type="button"
                                                 onClick={() => handleReserveService(service)}
-                                                className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                                                style={{
+                                                    backgroundColor: 'var(--color-primary, #0f172a)',
+                                                    color: 'var(--color-button-text, #ffffff)'
+                                                }}
+                                                className="px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-xs hover:brightness-110"
                                             >
                                                 <span>Reserve Treatment</span>
                                                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1142,15 +1260,19 @@ const SalonPage = () => {
                         </div>
                     )}
 
-                    <div className="p-8 rounded-3xl bg-stone-900 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-stone-800">
+                    <div className="p-8 rounded-3xl bg-zinc-900 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-zinc-800">
                         <div className="space-y-1 text-center md:text-left">
-                            <h4 className="text-lg font-black tracking-tight uppercase">Custom Bridal, Makeover or Editorial Project?</h4>
-                            <p className="text-xs text-stone-400">Our creative directors curate personalized private sessions for special occasions.</p>
+                            <h4 className="text-lg font-black tracking-tight uppercase text-white">Custom Bridal, Makeover or Editorial Project?</h4>
+                            <p className="text-xs text-zinc-300">Our creative directors curate personalized private sessions for special occasions.</p>
                         </div>
                         {salon?.phone ? (
                             <a
                                 href={`tel:${salon.phone}`}
-                                className="px-7 py-3.5 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-widest shrink-0 transition"
+                                style={{
+                                    backgroundColor: 'var(--color-primary, #ffffff)',
+                                    color: 'var(--color-button-text, #0f172a)'
+                                }}
+                                className="px-7 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest shrink-0 transition hover:brightness-105"
                             >
                                 Speak With Concierge: {salon.phone}
                             </a>
@@ -1158,7 +1280,11 @@ const SalonPage = () => {
                             <button
                                 type="button"
                                 onClick={() => scrollToSection('reservation')}
-                                className="px-7 py-3.5 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-widest shrink-0 transition"
+                                style={{
+                                    backgroundColor: 'var(--color-primary, #ffffff)',
+                                    color: 'var(--color-button-text, #0f172a)'
+                                }}
+                                className="px-7 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest shrink-0 transition hover:brightness-105"
                             >
                                 Inquire Online
                             </button>
@@ -1172,16 +1298,21 @@ const SalonPage = () => {
             {/* 5. CURATED RITUALS & SEASONAL EXPERIENCES */}
             {/* ============================================================ */}
             {(offers.length > 0 || packages.length > 0) && (
-                <section id="section-curations" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+                <section id="section-curations" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                     <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                         <div className="space-y-2">
-                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            <span 
+                                className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                                style={{ color: 'var(--color-primary, #FF0B01)' }}
+                            >
                                 Signature Collections
                             </span>
-                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 Curated Studio Rituals
                             </h2>
-                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                                 Multi-treatment packages curated by {salonName}'s senior artists.
                             </p>
                         </div>
@@ -1190,11 +1321,17 @@ const SalonPage = () => {
                             {packages.map((pkg) => (
                                 <div
                                     key={pkg.id}
-                                    className="p-7 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 flex flex-col justify-between space-y-6 shadow-xs hover:border-stone-400 dark:hover:border-stone-600 transition"
+                                    className={`p-7 rounded-3xl border flex flex-col justify-between space-y-6 shadow-xs transition ${
+                                        isDark 
+                                            ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' 
+                                            : 'bg-white border-slate-200 hover:border-slate-300'
+                                    }`}
                                 >
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                                                isDark ? 'bg-zinc-800 text-zinc-200' : 'bg-slate-100 text-slate-800'
+                                            }`}>
                                                 Signature Package
                                             </span>
                                             {pkg.discountValue > 0 && (
@@ -1203,25 +1340,39 @@ const SalonPage = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="text-lg font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                                        <h3 className={`text-lg font-black uppercase tracking-tight ${
+                                            isDark ? 'text-white' : 'text-slate-950'
+                                        }`}>
                                             {pkg.name}
                                         </h3>
-                                        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                        <p className={`text-xs leading-relaxed font-normal ${
+                                            isDark ? 'text-zinc-300' : 'text-slate-600'
+                                        }`}>
                                             {pkg.description || 'Full-body ritual including hair spa, styling, and rejuvenating skin treatment.'}
                                         </p>
                                     </div>
 
-                                    <div className="pt-4 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
+                                    <div className={`pt-4 border-t flex items-center justify-between ${
+                                        isDark ? 'border-zinc-800' : 'border-slate-100'
+                                    }`}>
                                         <div>
-                                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Atelier Fee</span>
-                                            <span className="text-xl font-black text-stone-900 dark:text-white">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider block ${
+                                                isDark ? 'text-zinc-400' : 'text-slate-500'
+                                            }`}>Atelier Fee</span>
+                                            <span className={`text-xl font-black ${
+                                                isDark ? 'text-white' : 'text-slate-950'
+                                            }`}>
                                                 ₹{pkg.packagePrice || pkg.price || 999}
                                             </span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => navigate('/customer/book-service')}
-                                            className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider transition"
+                                            style={{
+                                                backgroundColor: 'var(--color-primary, #0f172a)',
+                                                color: 'var(--color-button-text, #ffffff)'
+                                            }}
+                                            className="px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition hover:brightness-110"
                                         >
                                             Reserve Package
                                         </button>
@@ -1236,21 +1387,21 @@ const SalonPage = () => {
                                 return (
                                     <div
                                         key={offer.id}
-                                        className="p-7 rounded-3xl bg-gradient-to-br from-stone-900 to-stone-950 text-white border border-stone-800 flex flex-col justify-between space-y-6 shadow-md"
+                                        className="p-7 rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 text-white border border-zinc-800 flex flex-col justify-between space-y-6 shadow-md"
                                     >
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30">
                                                     {privilegeBadge}
                                                 </span>
-                                                <span className="text-[10px] font-mono text-stone-400">
+                                                <span className="text-[10px] font-mono text-zinc-400">
                                                     {offer.code || 'ATELIER'}
                                                 </span>
                                             </div>
                                             <h3 className="text-lg font-black text-white uppercase tracking-tight">
                                                 {offer.name || 'Seasonal Patron Privilege'}
                                             </h3>
-                                            <p className="text-xs text-stone-400 leading-relaxed font-normal">
+                                            <p className="text-xs text-zinc-300 leading-relaxed font-normal">
                                                 {offer.description || `Exclusive reservation privilege for patrons of ${salonName}.`}
                                             </p>
                                         </div>
@@ -1258,7 +1409,11 @@ const SalonPage = () => {
                                         <button
                                             type="button"
                                             onClick={() => navigate('/customer/book-service', { state: { selectedOffer: offer } })}
-                                            className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs uppercase tracking-widest transition"
+                                            style={{
+                                                backgroundColor: 'var(--color-primary, #f59e0b)',
+                                                color: 'var(--color-button-text, #0f172a)'
+                                            }}
+                                            className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest transition hover:brightness-110"
                                         >
                                             Claim Privilege
                                         </button>
@@ -1273,24 +1428,31 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 6. THE ARTISAN COLLECTIVE (STYLISTS) */}
             {/* ============================================================ */}
-            <section id="section-collective" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-collective" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-12">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                         <div className="space-y-2">
-                            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                            <span 
+                                className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                                style={{ color: 'var(--color-primary, #FF0B01)' }}
+                            >
                                 Creative Leadership
                             </span>
-                            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                            <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 The Artisan Collective
                             </h2>
-                            <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                            <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                                 Certified masters of precision cutting, balayage, and restorative skin rituals.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => navigate('/customer/book-service')}
-                            className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white hover:underline flex items-center gap-1"
+                            className={`text-xs font-black uppercase tracking-wider hover:underline flex items-center gap-1 ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}
                         >
                             <span>Browse Collective Roster</span>
                             <ChevronRight className="w-4 h-4" />
@@ -1298,12 +1460,16 @@ const SalonPage = () => {
                     </div>
 
                     {staffList.length === 0 ? (
-                        <div className="py-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
-                            <Users className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
-                            <h4 className="text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                        <div className={`py-12 text-center rounded-3xl border space-y-2 ${
+                            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                        }`}>
+                            <Users className={`w-10 h-10 mx-auto ${isDark ? 'text-zinc-700' : 'text-slate-300'}`} />
+                            <h4 className={`text-xs font-black uppercase tracking-wider ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
                                 Stylist allocation active
                             </h4>
-                            <p className="text-xs text-stone-400">You may request a preferred stylist during reservation checkout.</p>
+                            <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>You may request a preferred stylist during reservation checkout.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1313,47 +1479,67 @@ const SalonPage = () => {
                                 return (
                                     <div
                                         key={artisan.id || idx}
-                                        className="p-6 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 flex flex-col items-center text-center space-y-4 hover:border-stone-400 dark:hover:border-stone-600 transition group shadow-xs"
+                                        className={`p-6 rounded-3xl border flex flex-col items-center text-center space-y-4 transition group shadow-xs ${
+                                            isDark 
+                                                ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' 
+                                                : 'bg-white border-slate-200 hover:border-slate-300'
+                                        }`}
                                     >
-                                        <div className="w-28 h-28 rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 border-2 border-stone-200 dark:border-stone-700">
-                                            {artisan.imagePath ? (
-                                                <AsyncImage
-                                                    imagePath={artisan.imagePath}
-                                                    alt={artisan.name}
-                                                    className="w-full h-full object-cover"
-                                                    fallbackText={artisan.name?.charAt(0) || 'A'}
-                                                />
-                                            ) : (
-                                                <img
-                                                    src={getExpertImg(idx)}
-                                                    alt={artisan.name}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            )}
+                                        <div 
+                                            className="w-28 h-28 rounded-2xl overflow-hidden p-1 border-2"
+                                            style={{ borderColor: 'var(--color-primary, #FF0B01)' }}
+                                        >
+                                            <div className="w-full h-full rounded-xl overflow-hidden bg-zinc-800">
+                                                {artisan.imagePath ? (
+                                                    <AsyncImage
+                                                        imagePath={artisan.imagePath}
+                                                        alt={artisan.name}
+                                                        className="w-full h-full object-cover"
+                                                        fallbackText={artisan.name?.charAt(0) || 'A'}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={getExpertImg(idx)}
+                                                        alt={artisan.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="space-y-1">
-                                            <h3 className="text-base font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                                            <h3 className={`text-base font-black uppercase tracking-tight ${
+                                                isDark ? 'text-white' : 'text-slate-950'
+                                            }`}>
                                                 {artisan.name}
                                             </h3>
-                                            <p className="text-xs font-bold uppercase tracking-widest text-amber-500">
+                                            <p 
+                                                className="text-xs font-bold uppercase tracking-widest"
+                                                style={{ color: 'var(--color-primary, #f59e0b)' }}
+                                            >
                                                 {role}
                                             </p>
                                             <div className="flex items-center justify-center gap-1 text-xs text-amber-400 pt-1">
                                                 <Star className="w-3.5 h-3.5 fill-current" />
                                                 <span className="font-bold">{rating}</span>
-                                                <span className="text-stone-400 font-normal">Rating</span>
+                                                <span className={`font-normal ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Rating</span>
                                             </div>
                                         </div>
 
-                                        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed font-normal">
+                                        <p className={`text-xs leading-relaxed font-normal ${
+                                            isDark ? 'text-zinc-300' : 'text-slate-600'
+                                        }`}>
                                             Dedicated to unhurried consultations and bespoke precision styling.
                                         </p>
 
                                         <button
                                             type="button"
                                             onClick={() => handleReserveWithArtisan(artisan)}
-                                            className="w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-900 dark:bg-stone-800 dark:hover:bg-white text-stone-900 hover:text-white dark:text-white dark:hover:text-stone-950 font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-xs"
+                                            className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-xs ${
+                                                isDark
+                                                    ? 'bg-zinc-800 text-white hover:bg-zinc-700'
+                                                    : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                                            }`}
                                         >
                                             Reserve with {artisan.name.split(' ')[0]}
                                         </button>
@@ -1368,24 +1554,31 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 7. LOOKBOOK & STUDIO AMBIENCE */}
             {/* ============================================================ */}
-            <section id="section-lookbook" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-lookbook" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                     <div className="space-y-2">
-                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                        <span 
+                            className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                            style={{ color: 'var(--color-primary, #FF0B01)' }}
+                        >
                             Studio Aesthetic
                         </span>
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                        <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                            isDark ? 'text-white' : 'text-slate-950'
+                        }`}>
                             Lookbook & Studio Visuals
                         </h2>
-                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                        <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                             An inside look at {salonName}'s private wash lounge, styling stations, and aesthetic suites.
                         </p>
                     </div>
 
                     {galleryImages.length === 0 ? (
-                        <div className="py-12 text-center bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-2">
-                            <Camera className="w-10 h-10 text-stone-300 dark:text-stone-700 mx-auto" />
-                            <p className="text-xs text-stone-400">Lookbook images being cataloged.</p>
+                        <div className={`py-12 text-center rounded-3xl border space-y-2 ${
+                            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                        }`}>
+                            <Camera className={`w-10 h-10 mx-auto ${isDark ? 'text-zinc-700' : 'text-slate-300'}`} />
+                            <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Lookbook images being cataloged.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1393,7 +1586,9 @@ const SalonPage = () => {
                                 <div
                                     key={idx}
                                     onClick={() => setLightboxIndex(idx)}
-                                    className={`relative group rounded-2xl overflow-hidden bg-stone-200 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 cursor-pointer ${
+                                    className={`relative group rounded-2xl overflow-hidden cursor-pointer border ${
+                                        isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-100 border-slate-200'
+                                    } ${
                                         idx === 0 ? 'col-span-2 row-span-2 h-[260px] sm:h-[420px]' : 'h-[140px] sm:h-[200px]'
                                     }`}
                                 >
@@ -1403,7 +1598,7 @@ const SalonPage = () => {
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                     />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <span className="px-3.5 py-1.5 rounded-full bg-white text-stone-950 text-[10px] font-black uppercase tracking-widest shadow-md">
+                                        <span className="px-3.5 py-1.5 rounded-full bg-white text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-md">
                                             Fullscreen
                                         </span>
                                     </div>
@@ -1417,24 +1612,35 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 8. CONCIERGE SLOT RESERVATION — COMPACT & DIVIDED BY TIME PERIOD */}
             {/* ============================================================ */}
-            <section id="section-reservation" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-reservation" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-8">
                     <div className="space-y-2">
-                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                        <span 
+                            className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                            style={{ color: 'var(--color-primary, #FF0B01)' }}
+                        >
                             Private Scheduling
                         </span>
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                        <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                            isDark ? 'text-white' : 'text-slate-950'
+                        }`}>
                             Concierge Reservation Desk
                         </h2>
-                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                        <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                             Select your date and preferred session — Morning, Afternoon, Evening or Night.
                         </p>
                     </div>
 
-                    <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm space-y-6">
+                    <div className={`p-6 sm:p-8 rounded-3xl border shadow-sm space-y-6 ${
+                        isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                    }`}>
                         {/* Month / Year Indicator */}
-                        <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
-                            <span className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-white">
+                        <div className={`flex items-center justify-between border-b pb-3 ${
+                            isDark ? 'border-zinc-800' : 'border-slate-200'
+                        }`}>
+                            <span className={`text-xs font-black uppercase tracking-widest ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 {selectedDateObj?.month} {selectedDateObj?.year}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
@@ -1454,10 +1660,16 @@ const SalonPage = () => {
                                             setSelectedDateObj(d);
                                             setSelectedSlot(null);
                                         }}
+                                        style={isSelected ? {
+                                            backgroundColor: 'var(--color-primary, #0f172a)',
+                                            color: 'var(--color-button-text, #ffffff)'
+                                        } : {}}
                                         className={`flex flex-col items-center justify-center py-3 px-3.5 rounded-2xl min-w-[62px] transition cursor-pointer ${
                                             isSelected
-                                                ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md scale-105'
-                                                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+                                                ? 'font-black shadow-md scale-105'
+                                                : isDark
+                                                ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                         }`}
                                     >
                                         <span className="text-[10px] uppercase font-bold tracking-wider">{d.day}</span>
@@ -1467,9 +1679,11 @@ const SalonPage = () => {
                             })}
                         </div>
 
-                        {/* Time Period Tabs: Morning, Afternoon, Evening, Night (Shrinks the section) */}
+                        {/* Time Period Tabs: Morning, Afternoon, Evening, Night */}
                         <div className="space-y-4 pt-1">
-                            <div className="flex flex-wrap items-center gap-2 border-b border-stone-100 dark:border-stone-800 pb-3">
+                            <div className={`flex flex-wrap items-center gap-2 border-b pb-3 ${
+                                isDark ? 'border-zinc-800' : 'border-slate-100'
+                            }`}>
                                 {[
                                     { id: 'all', label: 'All Sessions', count: salonSlots.length, icon: Clock },
                                     { id: 'morning', label: 'Morning', sub: '8 AM - 12 PM', count: segmentedSlots.morning.length, icon: Sunrise },
@@ -1486,18 +1700,26 @@ const SalonPage = () => {
                                             type="button"
                                             disabled={!hasSlots && period.id !== 'all'}
                                             onClick={() => setSelectedPeriod(period.id)}
+                                            style={isCurrent ? {
+                                                backgroundColor: 'var(--color-primary, #0f172a)',
+                                                color: 'var(--color-button-text, #ffffff)'
+                                            } : {}}
                                             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                                                 isCurrent
-                                                    ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-xs'
+                                                    ? 'font-black shadow-xs'
                                                     : hasSlots
-                                                    ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
-                                                    : 'opacity-40 bg-stone-50 dark:bg-stone-900/40 text-stone-400 cursor-not-allowed'
+                                                    ? isDark
+                                                        ? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'
+                                                        : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                                                    : 'opacity-40 bg-zinc-800/30 text-zinc-500 cursor-not-allowed'
                                             }`}
                                         >
                                             <PIcon className="w-3.5 h-3.5" />
                                             <span>{period.label}</span>
                                             <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
-                                                isCurrent ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black' : 'bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-300'
+                                                isCurrent 
+                                                    ? 'bg-white/20 text-white' 
+                                                    : isDark ? 'bg-zinc-700 text-zinc-200' : 'bg-slate-200 text-slate-700'
                                             }`}>
                                                 {period.count}
                                             </span>
@@ -1506,19 +1728,23 @@ const SalonPage = () => {
                                 })}
                             </div>
 
-                            {/* Shrunk Slots Display (Only shows slots for selected period in a tidy compact row) */}
+                            {/* Shrunk Slots Display */}
                             {slotsLoading ? (
                                 <div className="py-8 text-center space-y-2">
-                                    <div className="animate-spin h-5 w-5 border-2 border-stone-400 border-t-transparent rounded-full mx-auto" />
-                                    <p className="text-xs text-stone-400 font-bold">Checking timetable availability...</p>
+                                    <div className="animate-spin h-5 w-5 border-2 border-slate-400 border-t-transparent rounded-full mx-auto" />
+                                    <p className={`text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Checking timetable availability...</p>
                                 </div>
                             ) : displayedSlots.length === 0 ? (
-                                <div className="py-8 text-center bg-stone-50 dark:bg-stone-800/40 rounded-2xl border border-stone-200 dark:border-stone-800 space-y-1">
-                                    <Clock className="w-6 h-6 text-stone-300 dark:text-stone-700 mx-auto" />
-                                    <p className="text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                                <div className={`py-8 text-center rounded-2xl border space-y-1 ${
+                                    isDark ? 'bg-zinc-800/40 border-zinc-800' : 'bg-slate-50 border-slate-200'
+                                }`}>
+                                    <Clock className={`w-6 h-6 mx-auto ${isDark ? 'text-zinc-600' : 'text-slate-300'}`} />
+                                    <p className={`text-xs font-black uppercase tracking-wider ${
+                                        isDark ? 'text-white' : 'text-slate-900'
+                                    }`}>
                                         No slots available in this session
                                     </p>
-                                    <p className="text-[11px] text-stone-400">Please choose another session (Morning, Afternoon, Evening, Night) or date.</p>
+                                    <p className={`text-[11px] ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>Please choose another session (Morning, Afternoon, Evening, Night) or date.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
@@ -1529,10 +1755,16 @@ const SalonPage = () => {
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => handleConfirmSlot(slot)}
-                                                className={`py-2.5 px-2.5 rounded-xl text-center text-xs font-bold transition cursor-pointer ${
+                                                style={isSelected ? {
+                                                    backgroundColor: 'var(--color-primary, #0f172a)',
+                                                    color: 'var(--color-button-text, #ffffff)'
+                                                } : {}}
+                                                className={`py-2.5 px-2.5 rounded-xl text-center text-xs font-bold transition cursor-pointer border ${
                                                     isSelected
-                                                        ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-950 font-black shadow-md scale-105'
-                                                        : 'bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200/50 dark:border-stone-700'
+                                                        ? 'font-black shadow-md scale-105 border-transparent'
+                                                        : isDark
+                                                        ? 'bg-zinc-800/80 border-zinc-700 text-zinc-100 hover:bg-zinc-700'
+                                                        : 'bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100'
                                                 }`}
                                             >
                                                 {slot.displayTime}
@@ -1549,24 +1781,33 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 9. ATELIER HOURS, MAP & VISITING DETAILS */}
             {/* ============================================================ */}
-            <section id="section-concierge" className="py-16 sm:py-24 border-b border-stone-200 dark:border-stone-800">
+            <section id="section-concierge" className={`py-16 sm:py-24 border-b ${isDark ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                     <div className="space-y-2">
-                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                        <span 
+                            className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                            style={{ color: 'var(--color-primary, #FF0B01)' }}
+                        >
                             Location & Schedule
                         </span>
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                        <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                            isDark ? 'text-white' : 'text-slate-950'
+                        }`}>
                             Hours & Atelier Visit
                         </h2>
-                        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                        <p className={`text-xs sm:text-sm ${isDark ? 'text-zinc-400' : 'text-slate-600'}`}>
                             Everything you need to know for your upcoming visit to {salonName}.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Weekly Schedule */}
-                        <div className="lg:col-span-5 p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-4">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-white flex items-center gap-2">
+                        <div className={`lg:col-span-5 p-8 rounded-3xl border space-y-4 ${
+                            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                        }`}>
+                            <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${
+                                isDark ? 'text-white' : 'text-slate-950'
+                            }`}>
                                 <Clock className="w-4 h-4 text-amber-500" /> Weekly Atelier Schedule
                             </h3>
                             <div className="space-y-2">
@@ -1580,8 +1821,8 @@ const SalonPage = () => {
                                             key={day}
                                             className={`flex items-center justify-between py-2 px-3 rounded-lg text-xs ${
                                                 isToday
-                                                    ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-white font-black'
-                                                    : 'text-stone-600 dark:text-stone-400'
+                                                    ? isDark ? 'bg-zinc-800 text-white font-black' : 'bg-slate-100 text-slate-950 font-black'
+                                                    : isDark ? 'text-zinc-300' : 'text-slate-700'
                                             }`}
                                         >
                                             <span className="uppercase">{day}</span>
@@ -1595,27 +1836,42 @@ const SalonPage = () => {
                         </div>
 
                         {/* Location Card */}
-                        <div className="lg:col-span-7 p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-6">
+                        <div className={`lg:col-span-7 p-8 rounded-3xl border space-y-6 ${
+                            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                        }`}>
                             <div className="space-y-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+                                <span 
+                                    className="text-[10px] font-black uppercase tracking-widest"
+                                    style={{ color: 'var(--color-primary, #FF0B01)' }}
+                                >
                                     Atelier Address
                                 </span>
-                                <h3 className="text-xl font-black text-stone-900 dark:text-white uppercase tracking-tight">
+                                <h3 className={`text-xl font-black uppercase tracking-tight ${
+                                    isDark ? 'text-white' : 'text-slate-950'
+                                }`}>
                                     {salonName}
                                 </h3>
-                                <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed flex items-start gap-2">
+                                <p className={`text-sm leading-relaxed flex items-start gap-2 ${
+                                    isDark ? 'text-zinc-300' : 'text-slate-700'
+                                }`}>
                                     <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                                     <span>{addressStr}</span>
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t ${
+                                isDark ? 'border-zinc-800' : 'border-slate-200'
+                            }`}>
                                 {salon?.latitude && salon?.longitude ? (
                                     <a
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${salon.latitude},${salon.longitude}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="px-5 py-3.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
+                                        style={{
+                                            backgroundColor: 'var(--color-primary, #0f172a)',
+                                            color: 'var(--color-button-text, #ffffff)'
+                                        }}
+                                        className="px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2 hover:brightness-110"
                                     >
                                         <Navigation className="w-4 h-4" />
                                         <span>Directions via Maps</span>
@@ -1625,7 +1881,11 @@ const SalonPage = () => {
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(salonName + ' ' + addressStr)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="px-5 py-3.5 rounded-xl bg-stone-900 hover:bg-black dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-950 font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
+                                        style={{
+                                            backgroundColor: 'var(--color-primary, #0f172a)',
+                                            color: 'var(--color-button-text, #ffffff)'
+                                        }}
+                                        className="px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2 hover:brightness-110"
                                     >
                                         <Navigation className="w-4 h-4" />
                                         <span>Find on Google Maps</span>
@@ -1635,7 +1895,11 @@ const SalonPage = () => {
                                 {salon?.phone && (
                                     <a
                                         href={`tel:${salon.phone}`}
-                                        className="px-5 py-3.5 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-900 dark:text-white font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2"
+                                        className={`px-5 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-center transition flex items-center justify-center gap-2 ${
+                                            isDark 
+                                                ? 'bg-zinc-800 hover:bg-zinc-700 text-white' 
+                                                : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+                                        }`}
                                     >
                                         <Phone className="w-4 h-4 text-emerald-500" />
                                         <span>Call: {salon.phone}</span>
@@ -1653,10 +1917,15 @@ const SalonPage = () => {
             <section className="py-16 sm:py-24">
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 space-y-10">
                     <div className="space-y-2 text-center">
-                        <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-stone-400 dark:text-stone-500">
+                        <span 
+                            className="text-[11px] font-extrabold uppercase tracking-[0.25em]"
+                            style={{ color: 'var(--color-primary, #FF0B01)' }}
+                        >
                             Patron Words
                         </span>
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-white">
+                        <h2 className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                            isDark ? 'text-white' : 'text-slate-950'
+                        }`}>
                             Client Reflections
                         </h2>
                     </div>
@@ -1681,21 +1950,29 @@ const SalonPage = () => {
                         ].map((item, idx) => (
                             <div
                                 key={idx}
-                                className="p-8 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 space-y-4 shadow-xs"
+                                className={`p-8 rounded-3xl border space-y-4 shadow-xs ${
+                                    isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+                                }`}
                             >
                                 <div className="flex items-center gap-1 text-amber-400">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="w-3.5 h-3.5 fill-current" />
                                     ))}
                                 </div>
-                                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-serif italic leading-relaxed">
+                                <p className={`text-xs sm:text-sm font-serif italic leading-relaxed ${
+                                    isDark ? 'text-zinc-300' : 'text-slate-700'
+                                }`}>
                                     "{item.quote}"
                                 </p>
-                                <div className="pt-2 border-t border-stone-100 dark:border-stone-800">
-                                    <h4 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">
+                                <div className={`pt-2 border-t ${
+                                    isDark ? 'border-zinc-800' : 'border-slate-100'
+                                }`}>
+                                    <h4 className={`text-xs font-black uppercase tracking-wider ${
+                                        isDark ? 'text-white' : 'text-slate-950'
+                                    }`}>
                                         {item.name}
                                     </h4>
-                                    <span className="text-[10px] text-stone-400">{item.discipline}</span>
+                                    <span className={`text-[10px] ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>{item.discipline}</span>
                                 </div>
                             </div>
                         ))}
@@ -1753,7 +2030,7 @@ const SalonPage = () => {
             {/* 12. FLOATING CONCIERGE DOCK */}
             {/* ============================================================ */}
             {showConciergeDock && (
-                <aside aria-label="Concierge Bar" className="fixed bottom-5 left-5 right-5 max-w-md mx-auto z-40 bg-stone-950/90 backdrop-blur-md text-white rounded-2xl p-3.5 border border-white/15 shadow-2xl flex items-center justify-between gap-3">
+                <aside aria-label="Concierge Bar" className="fixed bottom-5 left-5 right-5 max-w-md mx-auto z-40 bg-zinc-950/95 backdrop-blur-md text-white rounded-2xl p-3.5 border border-white/15 shadow-2xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                         <SalonLogoImage
                             logo={salon?.imageUrl || salon?.logoUrl}
@@ -1762,7 +2039,7 @@ const SalonPage = () => {
                         />
                         <div className="min-w-0">
                             <h4 className="text-xs font-black truncate text-white uppercase">{salonName}</h4>
-                            <span className="text-[10px] text-stone-400">Atelier Concierge Active</span>
+                            <span className="text-[10px] text-zinc-400">Atelier Concierge Active</span>
                         </div>
                     </div>
 
@@ -1779,7 +2056,11 @@ const SalonPage = () => {
                         <button
                             type="button"
                             onClick={() => scrollToSection('reservation')}
-                            className="px-4 py-2 rounded-xl bg-white hover:bg-stone-200 text-stone-950 font-black text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
+                            style={{
+                                backgroundColor: 'var(--color-primary, #ffffff)',
+                                color: 'var(--color-button-text, #0f172a)'
+                            }}
+                            className="px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm cursor-pointer hover:brightness-110"
                         >
                             Reserve
                         </button>
@@ -1790,7 +2071,9 @@ const SalonPage = () => {
             {/* ============================================================ */}
             {/* 13. PROPRIETARY BESPOKE FOOTER */}
             {/* ============================================================ */}
-            <footer className="py-8 border-t border-stone-200 dark:border-stone-800 text-center text-xs text-stone-400">
+            <footer className={`py-8 border-t text-center text-xs transition-colors ${
+                isDark ? 'border-zinc-800 text-zinc-400' : 'border-slate-200 text-slate-500'
+            }`}>
                 <span>© {new Date().getFullYear()} {salonName}. All Rights Reserved.</span>
                 <span className="mx-2">•</span>
                 <span>Powered by <strong className="font-black text-red-600">NeoParlour</strong></span>
