@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
     Scissors,
@@ -36,7 +36,9 @@ import {
     Sunrise,
     Sun,
     Sunset,
-    Moon
+    Moon,
+    Smartphone,
+    Globe
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
@@ -178,6 +180,27 @@ const SalonPage = () => {
     const { isDark } = useDarkMode();
     const { isAuthenticated } = useSelector((state) => state.customer);
     const activeLocation = useSelector((state) => state.location?.activeLocation);
+
+    const [searchParams] = useSearchParams();
+    const [showAppChoiceModal, setShowAppChoiceModal] = useState(false);
+
+    const handleContinueOnBrowser = () => {
+        setShowAppChoiceModal(false);
+        try {
+            const newParams = new URLSearchParams(window.location.search);
+            newParams.delete('fromQr');
+            newParams.delete('device');
+            const newSearch = newParams.toString() ? '?' + newParams.toString() : '';
+            window.history.replaceState(null, '', window.location.pathname + newSearch);
+        } catch {
+            // ignore
+        }
+    };
+
+    const handleOpenApp = () => {
+        const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.neopace.neoparlour';
+        window.location.href = playStoreUrl;
+    };
 
     // --- STATE ---
     const [resolvedSalonId, setResolvedSalonId] = useState(null);
@@ -327,9 +350,25 @@ const SalonPage = () => {
     const expertFallbacks = [expertOneImg, expertTwoImg, expertThreeImg];
     const getExpertImg = (index) => expertFallbacks[index % expertFallbacks.length];
 
-    // --- SLUG RESOLUTION EFFECT ---
+    // --- SLUG & QUERY RESOLUTION EFFECT ---
     useEffect(() => {
         const resolveSlug = async () => {
+            // Direct query parameter (e.g. from QR scan: /salon?salonId=123&fromQr=true&device=android)
+            const querySalonId = searchParams.get('salonId') || searchParams.get('id');
+            const fromQr = searchParams.get('fromQr');
+            const device = searchParams.get('device');
+
+            if (querySalonId) {
+                const parsedId = Number(querySalonId) || querySalonId;
+                localStorage.setItem('activeSalonId', parsedId);
+                setResolvedSalonId(parsedId);
+
+                if (fromQr === 'true' && device === 'android') {
+                    setShowAppChoiceModal(true);
+                }
+                return;
+            }
+
             if (!salonSlug) {
                 const activeId = localStorage.getItem('activeSalonId');
                 if (activeId) {
@@ -383,7 +422,7 @@ const SalonPage = () => {
         };
 
         resolveSlug();
-    }, [salonSlug, navigate]);
+    }, [salonSlug, searchParams, navigate]);
 
     // --- FETCH SALON & ATELIER DATA ---
     useEffect(() => {
@@ -409,7 +448,8 @@ const SalonPage = () => {
 
                 const slug = generateSalonSlug(salonName, cityStr);
                 if (!salonSlug && slug && window.history.replaceState) {
-                    window.history.replaceState(null, '', `/salon/${slug}`);
+                    const currentSearch = window.location.search || '';
+                    window.history.replaceState(null, '', `/salon/${slug}${currentSearch}`);
                 }
 
                 injectJSONLD({
@@ -2078,6 +2118,105 @@ const SalonPage = () => {
                 <span className="mx-2">•</span>
                 <span>Powered by <strong className="font-black text-red-600">NeoParlour</strong></span>
             </footer>
+
+            {/* ============================================================ */}
+            {/* 14. ANDROID APP VS BROWSER CHOICE MODAL */}
+            {/* ============================================================ */}
+            {showAppChoiceModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className={`relative w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border transition-all ${isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                        {/* Close button */}
+                        <button
+                            onClick={handleContinueOnBrowser}
+                            className={`absolute top-4 right-4 p-2 rounded-full transition cursor-pointer ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'}`}
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        {/* Brand Emblem / Icon Header */}
+                        <div className="flex items-center gap-3.5 mb-4">
+                            <div
+                                style={{
+                                    backgroundColor: 'var(--color-primary, #FF0B01)',
+                                    color: 'var(--color-button-text, #ffffff)'
+                                }}
+                                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                            >
+                                <Smartphone className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">
+                                    Instant Experience
+                                </span>
+                                <h3 className="text-lg font-black tracking-tight leading-tight">
+                                    {salon?.salonName || salon?.name || 'Salon Experience'}
+                                </h3>
+                            </div>
+                        </div>
+
+                        <p className={`text-sm mb-6 ${isDark ? 'text-zinc-300' : 'text-slate-600'}`}>
+                            Choose how you would like to explore treatments and reserve your appointment:
+                        </p>
+
+                        <div className="space-y-3">
+                            {/* Option 1: Open NeoParlour Mobile App */}
+                            <button
+                                onClick={handleOpenApp}
+                                style={{
+                                    backgroundColor: 'var(--color-primary, #FF0B01)',
+                                    color: 'var(--color-button-text, #ffffff)'
+                                }}
+                                className="w-full p-4 rounded-2xl font-bold flex items-center justify-between group shadow-lg hover:brightness-105 active:scale-[0.99] transition cursor-pointer"
+                            >
+                                <div className="flex items-center gap-3.5 text-left">
+                                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                                        <Smartphone className="w-5 h-5 text-current" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-black tracking-wide">NeoParlour App</span>
+                                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/25">
+                                                Android
+                                            </span>
+                                        </div>
+                                        <p className="text-xs opacity-90 font-medium">Faster re-booking & notifications</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                            </button>
+
+                            {/* Option 2: Continue on Web Browser */}
+                            <button
+                                onClick={handleContinueOnBrowser}
+                                className={`w-full p-4 rounded-2xl font-bold flex items-center justify-between border transition group active:scale-[0.99] cursor-pointer ${isDark ? 'bg-zinc-800/80 border-zinc-700/80 hover:bg-zinc-800 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-900'}`}
+                            >
+                                <div className="flex items-center gap-3.5 text-left">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-zinc-700 text-zinc-200' : 'bg-slate-200 text-slate-700'}`}>
+                                        <Globe className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-black tracking-wide">Continue on Browser</span>
+                                        <p className={`text-xs font-medium ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>
+                                            Instant booking, no installation required
+                                        </p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                            </button>
+                        </div>
+
+                        <div className="mt-5 text-center">
+                            <button
+                                onClick={handleContinueOnBrowser}
+                                className={`text-xs font-semibold underline underline-offset-4 transition cursor-pointer ${isDark ? 'text-zinc-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                Skip and continue on website
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
