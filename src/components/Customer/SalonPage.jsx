@@ -2175,9 +2175,9 @@ const SalonPage = () => {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-black tracking-wide">NeoParlour App</span>
+                                            <span className="text-sm font-black tracking-wide">Download App</span>
                                             <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/25">
-                                                Android
+                                                NeoParlour App
                                             </span>
                                         </div>
                                         <p className="text-xs opacity-90 font-medium">Faster re-booking & notifications</p>
@@ -2196,7 +2196,7 @@ const SalonPage = () => {
                                         <Globe className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <span className="text-sm font-black tracking-wide">Continue on Browser</span>
+                                        <span className="text-sm font-black tracking-wide">Explore on Website</span>
                                         <p className={`text-xs font-medium ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>
                                             Instant booking, no installation required
                                         </p>
@@ -2211,7 +2211,7 @@ const SalonPage = () => {
                                 onClick={handleContinueOnBrowser}
                                 className={`text-xs font-semibold underline underline-offset-4 transition cursor-pointer ${isDark ? 'text-zinc-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
                             >
-                                Skip and continue on website
+                                Skip and explore on website
                             </button>
                         </div>
                     </div>
