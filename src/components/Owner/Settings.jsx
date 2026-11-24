@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosInstance from "../../api/axiosInstance";
@@ -7,11 +7,11 @@ import { GstStateInput, StateSelector, GstinInput } from "../common/GstStateInpu
 import { BillingSummaryCard } from "../common/BillingSummaryCard";
 import { getStateFromCityName, getStateFromStateName, getGstInvoiceNotice, getStateDisplayName, INDIAN_STATES } from "../../constants/indianStates";
 import searchService from "../../services/searchService";
-import { MapPin, Navigation as NavigationIcon, Compass, Building } from "lucide-react";
+import { MapPin, Navigation as NavigationIcon, Compass, Building, Palette, QrCode, Download, Printer } from "lucide-react";
 import LocationPickerModal from "../location/LocationPickerModal";
 import BrandingThemeSettings from "./BrandingThemeSettings";
 import { extractBrandPaletteFromLogo, saveSalonTheme } from "../../utils/themeGenerator";
-import { Palette } from "lucide-react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 
 const is18OrOlder = (birthdateString) => {
   if (!birthdateString) return false;
@@ -132,6 +132,16 @@ const Settings = () => {
     const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
 
     const [hasFetchedSalonProfile, setHasFetchedSalonProfile] = useState(false);
+
+    const activeLogo = logoPreview || salonProfile.imageUrl;
+
+    const scanUrl = useMemo(() => {
+        const rawBase = axiosInstance.defaults.baseURL || 'https://uat.neoparlour.com/api';
+        const serverHost = rawBase.replace(/\/api\/?$/, '');
+        const sId = salonProfile.salonId || salonProfile.id;
+        if (!sId) return '';
+        return `${serverHost}/api/salons/public/scan?salonId=${sId}`;
+    }, [salonProfile.salonId, salonProfile.id]);
 
     useEffect(() => {
         fetchOwnerProfile();
@@ -582,15 +592,54 @@ const Settings = () => {
         }
     };
 
-    const downloadQRCode = () => {
-        if (!salonProfile.qrCodeUrl) return;
-        const link = document.createElement("a");
-        link.href = salonProfile.qrCodeUrl;
-        link.target = "_blank";
-        link.download = "salon_qrcode.png";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const downloadQRCode = (format = 'png') => {
+        const sName = (salonProfile.salonName || 'salon').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+
+        if (format === 'svg') {
+            const svgElement = document.getElementById('salon-qr-svg');
+            if (svgElement) {
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const svgUrl = URL.createObjectURL(svgBlob);
+                const link = document.createElement('a');
+                link.href = svgUrl;
+                link.download = `${sName}_standee_qr.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(svgUrl);
+                toast.success('Vector SVG downloaded!');
+                return;
+            }
+        }
+
+        const canvas = document.getElementById('salon-qr-canvas-hi-res');
+        if (canvas) {
+            try {
+                const pngUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = pngUrl;
+                link.download = `${sName}_standee_qr_1024px.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                toast.success('High-resolution print QR downloaded!');
+                return;
+            } catch (err) {
+                console.warn('Canvas export fallback:', err);
+            }
+        }
+
+        if (salonProfile.qrCodeUrl) {
+            const link = document.createElement('a');
+            link.href = salonProfile.qrCodeUrl;
+            link.target = '_blank';
+            link.download = `${sName}_qrcode.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success('Salon QR downloaded!');
+        }
     };
 
     const handleOpenDeleteModal = () => {
@@ -856,22 +905,22 @@ const Settings = () => {
                                         <h4 className={`text-xs font-black uppercase tracking-widest border-b pb-2 ${isDarkMode ? 'text-zinc-400 border-zinc-800' : 'text-gray-400 border-gray-200'}`}>📍 Salon Location & Address Details</h4>
                                         
                                         {/* Compact Auto-Detect Salon Location Bar */}
-                                        <div className={`border rounded-xl px-3.5 py-2.5 text-left shadow-xs ${
+                                        <div className={`border rounded-xl px-3.5 py-2.5 text-left shadow-xs overflow-hidden ${
                                             isDarkMode 
                                                 ? 'bg-amber-950/20 border-amber-500/30 text-amber-200' 
                                                 : 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-400/30 text-amber-950'
                                         }`}>
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className="p-1.5 rounded-lg bg-amber-500 text-white flex-shrink-0 shadow-xs">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                                                <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                                                    <div className="p-1.5 rounded-lg bg-amber-500 text-white flex-shrink-0 shadow-xs mt-0.5 sm:mt-0">
                                                         <NavigationIcon className="w-3.5 h-3.5 -rotate-45" />
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                                             <span className={`text-[11px] font-black uppercase tracking-wider ${isDarkMode ? 'text-amber-300' : 'text-amber-900'}`}>
                                                                 Auto-Detect Salon Location
                                                             </span>
-                                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider hidden sm:inline ${
+                                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
                                                                 isDarkMode ? 'bg-amber-400/20 text-amber-400' : 'bg-amber-200/80 text-amber-900'
                                                             }`}>
                                                                 Physical Presence
@@ -884,11 +933,11 @@ const Settings = () => {
                                                 </div>
 
                                                 {isSalonEdit && (
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
                                                         <button
                                                             type="button"
                                                             onClick={() => setIsMapModalOpen(true)}
-                                                            className={`px-3 py-1.5 font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 hover:-translate-y-0.5 active:translate-y-0 ${
+                                                            className={`flex-1 sm:flex-initial px-3 py-1.5 font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 flex-shrink-0 hover:-translate-y-0.5 active:translate-y-0 ${
                                                                 isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-gray-900 hover:bg-black text-white'
                                                             }`}
                                                         >
@@ -900,7 +949,7 @@ const Settings = () => {
                                                             type="button"
                                                             onClick={handleDetectLocation}
                                                             disabled={isDetectingLocation}
-                                                            className={`px-3 py-1.5 bg-[#ff0b01] hover:bg-red-700 text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0 ${
+                                                            className={`flex-1 sm:flex-initial px-3 py-1.5 bg-[#ff0b01] hover:bg-red-700 text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 flex-shrink-0 ${
                                                                 isDetectingLocation ? 'animate-pulse pointer-events-none opacity-80' : 'hover:-translate-y-0.5 active:translate-y-0'
                                                             }`}
                                                         >
@@ -1675,22 +1724,106 @@ const Settings = () => {
 
                         
 
-                        {salonProfile.qrCodeUrl && (
-                            <div className={`mt-6 flex flex-col items-center p-4 rounded-xl border w-max mx-auto ${
-                                isDarkMode ? 'bg-zinc-800/40 border-zinc-800' : 'bg-gray-50 border-gray-200'
+                        {(salonProfile.qrCodeUrl || scanUrl) && (
+                            <div className={`mt-8 p-6 rounded-2xl border text-center max-w-md mx-auto transition-all ${
+                                isDarkMode ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'
                             }`}>
-                                <h4 className={`text-sm font-semibold mb-3 ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`}>Salon QR Code</h4>
-                                <img
-                                    src={salonProfile.qrCodeUrl}
-                                    alt="Salon QR Code"
-                                    className="w-40 h-40 object-contain mb-4 border rounded shadow-sm bg-white"
-                                />
-                                <button
-                                    onClick={downloadQRCode}
-                                    className="px-6 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors"
-                                >
-                                    Download QR Code
-                                </button>
+                                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-zinc-800">
+                                    <div className="flex items-center gap-2 text-left">
+                                        <div className="p-2 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600">
+                                            <QrCode className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className={`text-sm font-black uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                                Salon Counter Standee
+                                            </h4>
+                                            <p className={`text-[11px] ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                Smart dynamic QR code for reception & mirrors
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                        Active
+                                    </span>
+                                </div>
+
+                                {/* Desk Standee Mockup Container */}
+                                <div className="p-4 bg-white rounded-2xl shadow-inner border border-gray-100 inline-block mx-auto mb-4">
+                                    {scanUrl ? (
+                                        <QRCodeSVG
+                                            id="salon-qr-svg"
+                                            value={scanUrl}
+                                            size={180}
+                                            level="H"
+                                            includeMargin={false}
+                                            imageSettings={activeLogo ? {
+                                                src: activeLogo,
+                                                x: undefined,
+                                                y: undefined,
+                                                height: 38,
+                                                width: 38,
+                                                excavate: true,
+                                            } : undefined}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={salonProfile.qrCodeUrl}
+                                            alt="Salon QR Code"
+                                            className="w-44 h-44 object-contain"
+                                        />
+                                    )}
+                                    <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-gray-500 font-sans">
+                                        {salonProfile.salonName || 'NeoParlour'}
+                                    </div>
+                                </div>
+
+                                {/* Hidden Hi-Res Canvas for 1024px Export */}
+                                {scanUrl && (
+                                    <div style={{ display: 'none' }}>
+                                        <QRCodeCanvas
+                                            id="salon-qr-canvas-hi-res"
+                                            value={scanUrl}
+                                            size={1024}
+                                            level="H"
+                                            includeMargin={true}
+                                            imageSettings={activeLogo ? {
+                                                src: activeLogo,
+                                                x: undefined,
+                                                y: undefined,
+                                                height: 220,
+                                                width: 220,
+                                                excavate: true,
+                                            } : undefined}
+                                        />
+                                    </div>
+                                )}
+
+                                <p className={`text-xs mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                    Customers scanning this QR code are directed to your bespoke salon menu and booking page.
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => downloadQRCode('png')}
+                                        className="w-full px-4 py-2.5 bg-[#ff0b01] hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-red-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        <span>Print PNG (1024px)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => downloadQRCode('svg')}
+                                        className={`w-full px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                                            isDarkMode
+                                                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-200'
+                                        }`}
+                                    >
+                                        <Printer className="w-3.5 h-3.5" />
+                                        <span>Vector SVG</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
