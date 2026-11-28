@@ -196,7 +196,7 @@ const OwnerLogin = () => {
             <button 
               type="submit" 
               disabled={loading || !isValidIndianMobile(formData.username) || !formData.password}
-              className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${loading || !isValidIndianMobile(formData.username) || !formData.password ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0'}`}
+              className={`w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.25em] text-[11px] rounded-2xl transition-all mt-4 shadow-xl flex items-center justify-center gap-4 ${loading || !isValidIndianMobile(formData.username) || !formData.password ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-0.5 active:translate-y-0 cursor-pointer'}`}
             >
               {loading && (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

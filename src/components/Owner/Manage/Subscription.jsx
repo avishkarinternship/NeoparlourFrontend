@@ -22,7 +22,7 @@ const toastStyle = {
         minWidth: '350px',
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
-    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+    iconTheme: { primary: 'var(--brand-primary, #7C3AED)', secondary: '#fff' }
 };
 
 const Subscription = () => {
@@ -147,9 +147,10 @@ const Subscription = () => {
                                         <div
                                             key={plan.id}
                                             className={`rounded-xl border p-6 flex flex-col justify-between relative shadow-sm transition-all duration-200 ${isCurrent
-                                                    ? 'bg-[#FF0B01] border-[#FF0B01] text-white'
+                                                    ? 'bg-brand-primary border-brand-primary text-white'
                                                     : isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-800'
                                                 }`}
+                                            style={isCurrent ? { backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                                         >
                                             <div>
                                                 <div className={`text-[10px] font-bold uppercase tracking-wider text-right mb-1 ${isCurrent ? 'text-white/90' : isDarkMode ? 'text-zinc-400' : 'text-gray-500'
@@ -182,7 +183,7 @@ const Subscription = () => {
                                                     </div>
                                                     <ul className="space-y-2 pl-0.5 text-[11px]">
                                                         <li className="flex items-center space-x-2.5">
-                                                            <span className={`font-bold flex-shrink-0 ${isCurrent ? 'text-white' : 'text-[#FF0B01]'}`}>✓</span>
+                                                            <span className={`font-bold flex-shrink-0 ${isCurrent ? 'text-white' : 'text-brand-primary'}`} style={!isCurrent ? { color: 'var(--brand-primary)' } : {}}>✓</span>
                                                             <span>Full Access to All Features</span>
                                                         </li>
                                                     </ul>
@@ -192,9 +193,10 @@ const Subscription = () => {
                                             <button
                                                 onClick={() => handlePlanAction(plan.planCode)}
                                                 className={`w-full py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors shadow-sm ${isCurrent
-                                                        ? 'bg-white text-[#FF0B01] hover:bg-gray-50'
-                                                        : 'bg-[#FF0B01] text-white hover:bg-red-700'
+                                                        ? 'bg-white text-brand-primary hover:bg-gray-50'
+                                                        : 'bg-brand-primary text-white hover:opacity-90'
                                                     }`}
+                                                style={isCurrent ? { color: 'var(--brand-primary)' } : { backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                             >
                                                 {isCurrent ? t('subscriptions_page.current_plan', 'Current Plan') : t('subscriptions_page.subscribe_now', 'Subscribe Now')}
                                             </button>
@@ -253,7 +255,12 @@ const Subscription = () => {
                                             >
                                                 <div className="flex items-center space-x-2.5">
                                                     <img src={invoiceIcon} alt="Invoice" className="w-4 h-4" />
-                                                    <span className={`font-semibold ${isActive ? 'text-[#FF0B01]' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>SUB-{sub.id}</span>
+                                                    <span 
+                                                        className={`font-semibold ${isActive ? 'text-brand-primary' : isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                                                        style={isActive ? { color: 'var(--brand-primary)' } : {}}
+                                                    >
+                                                        SUB-{sub.id}
+                                                    </span>
                                                 </div>
                                                 <div className={isDarkMode ? 'text-zinc-200' : 'text-gray-700'}>{planInfo.name}</div>
                                                 <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

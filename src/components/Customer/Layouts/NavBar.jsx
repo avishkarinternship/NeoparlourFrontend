@@ -13,7 +13,7 @@ import { fetchCart } from '../../../redux/slices/cartSlice';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
-import { useActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../../utils/whiteLabelHelper';
+import { useActiveSalon, getSalonImageSrc, SalonLogoImage, isSalonCustomerRoute } from '../../../utils/whiteLabelHelper';
 import LocationHeaderPill from '../../location/LocationHeaderPill';
 import AddressDrawer from '../../location/AddressDrawer';
 import LocationPickerModal from '../../location/LocationPickerModal';
@@ -32,6 +32,8 @@ const Navbar = () => {
     const { isPickerOpen, activeLocation } = useSelector((state) => state.location);
     const { isDark, toggleDark } = useDarkMode();
     const { salon: activeSalon, isWhiteLabeled, clearActiveSalon } = useActiveSalon();
+    const isSalonRoute = isSalonCustomerRoute(currentPath);
+    const showSalonNavbar = Boolean(isWhiteLabeled && isSalonRoute);
 
     const handleConfirmLocation = (loc) => {
         dispatch(setActiveLocation(loc));
@@ -120,9 +122,9 @@ const Navbar = () => {
                 isDark ? 'bg-black border-gray-700' : 'bg-white border-gray-200'
             }`}>
                 
-                {/* Logo & Location Section - White-labeled when salon selected */}
+                {/* Logo & Location Section - White-labeled ONLY on active salon customer routes */}
                 <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 md:flex-initial mr-1.5 sm:mr-0">
-                    {isWhiteLabeled ? (
+                    {showSalonNavbar ? (
                         <div onClick={() => navigate('/salon')} className="flex items-center gap-2 cursor-pointer flex-shrink-0 min-w-0" title={activeSalon.name}>
                             <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl shadow-xs shrink-0" />
                             <div className="flex flex-col min-w-0">
@@ -131,6 +133,18 @@ const Navbar = () => {
                                 </span>
                                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                                     <span className="truncate max-w-[100px] sm:max-w-[150px]">{activeSalon.address || 'Salon Portal'}</span>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            clearActiveSalon();
+                                            navigate('/');
+                                        }}
+                                        className="text-[9px] font-bold text-gray-700 dark:text-gray-200 hover:text-red-500 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 uppercase"
+                                        title="Return to NeoParlour Home"
+                                    >
+                                        Home
+                                    </button>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -153,14 +167,14 @@ const Navbar = () => {
                         </div>
                     )}
 
-                    {!isWhiteLabeled && (
+                    {!showSalonNavbar && (
                         <LocationHeaderPill className="flex min-w-0 flex-1 sm:flex-initial max-w-[230px] sm:max-w-[280px] md:max-w-[320px]" />
                     )}
                 </div>
 
                 {/* Desktop Navigation Links */}
                 <div className={`hidden lg:flex items-center gap-6 text-xs font-bold tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {isWhiteLabeled ? (
+                    {showSalonNavbar ? (
                         <>
                             <a href="#" onClick={(e) => { e.preventDefault(); navigate('/salon'); }} className={navLinkClass(['/salon', '/customer/salon'])}>SERVICES & PRICING</a>
                             <a href="#" onClick={(e) => { e.preventDefault(); navigate('/book-service'); }} className={navLinkClass(['/book-service', '/customer/book-service'])}>BOOK APPOINTMENT</a>

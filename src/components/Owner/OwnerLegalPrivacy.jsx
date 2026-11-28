@@ -492,21 +492,21 @@ const PrivacyPolicyScreen = () => {
             <button
               type="button"
               onClick={() => { i18n.changeLanguage('en'); navigate('/owner/english/privacy-policy'); }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'en' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'en' ? 'bg-[#ff0b01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               English
             </button>
             <button
               type="button"
               onClick={() => { i18n.changeLanguage('hi'); navigate('/owner/hindi/privacy-policy'); }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'hi' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'hi' ? 'bg-[#ff0b01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               हिंदी
             </button>
             <button
               type="button"
               onClick={() => { i18n.changeLanguage('mr'); navigate('/owner/marathi/privacy-policy'); }}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'mr' ? 'bg-[#FF0B01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border-0 cursor-pointer ${lang === 'mr' ? 'bg-[#ff0b01] text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
             >
               मराठी
             </button>

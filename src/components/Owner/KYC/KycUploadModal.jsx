@@ -132,17 +132,18 @@ const KycUploadModal = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl p-6 sm:p-7 transition-all ${
-        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-100 text-slate-900'
-      }`}>
+      <div className="relative w-full max-w-lg rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-2xl p-6 sm:p-7 transition-all">
 
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-zinc-800">
           <div>
-            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest block">
+            <span 
+              className="text-[10px] font-black uppercase tracking-widest block"
+              style={{ color: 'var(--brand-primary, #7C3AED)' }}
+            >
               Document Verification
             </span>
-            <h3 className="text-lg font-black tracking-tight">
+            <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
               Upload {KYC_DOCUMENT_TYPES.find(t => t.value === selectedType)?.label || 'KYC Document'}
             </h3>
           </div>
@@ -166,11 +167,7 @@ const KycUploadModal = ({
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className={`w-full px-4 py-2.5 rounded-2xl text-xs font-bold border focus:outline-none focus:border-red-500 transition cursor-pointer ${
-                isDarkMode
-                  ? 'bg-zinc-800 border-zinc-700 text-white'
-                  : 'bg-slate-50 border-slate-200 text-slate-900'
-              }`}
+              className="w-full px-4 py-2.5 rounded-2xl text-xs font-bold border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary transition cursor-pointer"
             >
               {KYC_DOCUMENT_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -192,12 +189,10 @@ const KycUploadModal = ({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
                 isDragOver
-                  ? 'border-red-500 bg-red-50/20'
+                  ? 'border-brand-primary bg-brand-primary/10'
                   : selectedFile
                     ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20'
-                    : isDarkMode
-                      ? 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-500'
-                      : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                    : 'border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 hover:border-slate-400 dark:hover:border-zinc-500'
               }`}
             >
               <input
@@ -240,7 +235,7 @@ const KycUploadModal = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-700 dark:text-zinc-200">
-                      Drag and drop file here, or <span className="text-red-500 underline">browse</span>
+                      Drag and drop file here, or <span className="underline font-bold" style={{ color: 'var(--brand-primary, #7C3AED)' }}>browse</span>
                     </p>
                     <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1">
                       Supports PDF, JPEG, PNG, WEBP (Max {MAX_FILE_SIZE_MB} MB)
@@ -284,7 +279,8 @@ const KycUploadModal = ({
             <button
               type="submit"
               disabled={!selectedFile || uploading}
-              className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition shadow-md shadow-red-500/20"
+              className="px-5 py-2.5 rounded-xl bg-brand-primary hover:brightness-110 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition shadow-md"
+              style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
             >
               {uploading ? 'Uploading...' : 'Submit for Admin Review'}
             </button>

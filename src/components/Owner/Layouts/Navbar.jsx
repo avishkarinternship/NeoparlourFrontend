@@ -582,7 +582,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
           {/* Loading state when no results yet */}
           {searching && !hasAnyAdminResults && (
             <div className="flex items-center justify-center py-8 gap-2.5">
-              <div className="animate-spin h-5 w-5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+              <div 
+                className="animate-spin h-5 w-5 border-2 border-brand-primary border-t-transparent rounded-full"
+                style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+              ></div>
               <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Searching admin records...</span>
             </div>
           )}
@@ -606,19 +609,22 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                     key={`nav-${idx}`}
                     onClick={() => handleResultClick(() => navigate(nav.path))}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all group cursor-pointer border ${
-                      isDarkMode ? 'bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60 text-zinc-100' : 'bg-gray-50/80 hover:bg-red-50/20 border-gray-100 hover:border-red-100 text-gray-900'
+                      isDarkMode ? 'bg-zinc-800/60 hover:bg-zinc-800 border-zinc-700/60 text-zinc-100' : 'bg-gray-50/80 hover:bg-gray-100 border-gray-100 text-gray-900'
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0 pr-1">
-                      <div className="w-7 h-7 rounded-lg bg-red-500/10 text-[#ff0b01] flex items-center justify-center flex-shrink-0">
+                      <div 
+                        className="w-7 h-7 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center flex-shrink-0"
+                        style={{ color: 'var(--brand-primary)' }}
+                      >
                         {renderAdminIcon(nav.icon, "w-3.5 h-3.5")}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors">{nav.name}</div>
+                        <div className="text-xs font-bold truncate group-hover:text-brand-primary transition-colors">{nav.name}</div>
                         <div className="text-[9px] text-gray-400 font-mono truncate">{nav.path}</div>
                       </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#ff0b01] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
                   </button>
                 ))}
               </div>
@@ -655,7 +661,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                           <Building2 className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                          <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {salon.salonName || salon.name || `Salon #${salonId}`}
@@ -711,8 +717,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-[10px] font-black text-[#ff0b01]">#{ticketId}</span>
-                            <span className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                            <span className="font-mono text-[10px] font-black text-brand-primary" style={{ color: 'var(--brand-primary)' }}>#{ticketId}</span>
+                            <span className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                               isDarkMode ? 'text-white' : 'text-gray-900'
                             }`}>
                               {ticket.name || ticket.userName || 'Customer Issue'}
@@ -768,7 +774,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                           <ShieldCheck className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                          <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {item.salonName || item.ownerName || `KYC Submission #${docId}`}
@@ -822,7 +828,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                           <CreditCard className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                          <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {sub.salonName || sub.planName || `Subscription #${subId}`}
@@ -863,14 +869,14 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                 <button
                   type="button"
                   onClick={() => handleResultClick(() => navigate('/admin/salons'))}
-                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-red-500 hover:text-[#ff0b01] text-gray-600 dark:text-zinc-300 transition"
+                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-brand-primary hover:text-brand-primary text-gray-600 dark:text-zinc-300 transition"
                 >
                   Browse Salons
                 </button>
                 <button
                   type="button"
                   onClick={() => handleResultClick(() => navigate('/admin/support-requests'))}
-                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-red-500 hover:text-[#ff0b01] text-gray-600 dark:text-zinc-300 transition"
+                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-brand-primary hover:text-brand-primary text-gray-600 dark:text-zinc-300 transition"
                 >
                   Support Requests
                 </button>
@@ -878,7 +884,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                   <button
                     type="button"
                     onClick={() => handleResultClick(() => navigate('/owner/subscriptions'))}
-                    className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-red-500 hover:text-[#ff0b01] text-gray-600 dark:text-zinc-300 transition"
+                    className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-brand-primary hover:text-brand-primary text-gray-600 dark:text-zinc-300 transition"
                   >
                     Subscriptions
                   </button>
@@ -931,7 +937,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
 
         {searching && !hasAnyOwnerResults && (
           <div className="flex items-center justify-center py-8 gap-2.5">
-            <div className="animate-spin h-5 w-5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+            <div 
+              className="animate-spin h-5 w-5 border-2 border-brand-primary border-t-transparent rounded-full"
+              style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+            ></div>
             <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Searching records...</span>
           </div>
         )}
@@ -955,12 +964,15 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                 <button
                   key={staff.id}
                   onClick={() => handleResultClick(() => navigate('/owner/manage/staff', { state: { editStaffId: staff.id } }))}
-                  className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group cursor-pointer"
+                  className="w-full flex items-center justify-between p-2 hover:bg-brand-primary/10 rounded-xl text-left transition-all group cursor-pointer"
                 >
                   <div className="flex items-center space-x-2.5">
-                    <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px] border ${
-                      isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-red-50 border-gray-200'
-                    }`}>
+                    <div 
+                      className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-brand-primary text-[10px] border ${
+                        isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-brand-primary/10 border-gray-200'
+                      }`}
+                      style={{ color: 'var(--brand-primary)' }}
+                    >
                       {staff.imageUrl || staff.imagePath ? (
                         <img 
                           src={staff.imageUrl || staff.imagePath} 
@@ -983,15 +995,16 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                      <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>{staff.name}</div>
                       <div className="text-[9px] text-gray-400 font-semibold">{staff.phone}</div>
                     </div>
                   </div>
-                  <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold capitalize ${
-                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                  }`}>
+                  <span 
+                    className="text-[8px] px-1.5 py-0.5 rounded font-bold capitalize bg-brand-primary/10 text-brand-primary"
+                    style={{ color: 'var(--brand-primary)' }}
+                  >
                     {staff.status}
                   </span>
                 </button>
@@ -1013,10 +1026,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                 <button
                   key={visit.id}
                   onClick={() => handleResultClick(() => navigate('/owner/customers', { state: { customerMobile: visit.customerMobile, customerName: visit.customerName } }))}
-                  className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
+                  className="w-full p-2 hover:bg-brand-primary/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
                 >
                   <div className="flex justify-between items-start w-full">
-                    <span className={`text-xs font-bold group-hover:text-[#ff0b01] transition-colors truncate ${
+                    <span className={`text-xs font-bold group-hover:text-brand-primary transition-colors truncate ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       {visit.customerName}
@@ -1052,10 +1065,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                 <button
                   key={appt.id}
                   onClick={() => handleResultClick(() => navigate('/owner/manage/schedule', { state: { appointmentId: appt.id } }))}
-                  className="w-full p-2.5 hover:bg-red-50/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
+                  className="w-full p-2.5 hover:bg-brand-primary/10 rounded-xl text-left transition-all group flex flex-col justify-between cursor-pointer"
                 >
                   <div className="flex justify-between items-start w-full">
-                    <span className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                    <span className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       {appt.customerName || appt.customer?.fullName || 'Customer'}
@@ -1068,13 +1081,16 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                     <span className="text-[9px] text-gray-400 font-semibold truncate max-w-[150px]">
                       {appt.serviceNames?.join(', ') || appt.serviceName || (appt.services && appt.services.map(s => s.serviceName).join(', ')) || 'Grooming'}
                     </span>
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
-                      appt.status === 'booked' 
-                        ? isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                        : appt.status === 'completed' 
-                          ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]'
-                          : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
-                    }`}>
+                    <span 
+                      className={`text-[8px] font-bold px-1.5 py-0.5 rounded capitalize ${
+                        appt.status === 'booked' 
+                          ? 'bg-brand-primary/10 text-brand-primary'
+                          : appt.status === 'completed' 
+                            ? isDarkMode ? 'bg-emerald-950/30 text-emerald-400' : 'bg-[#E3F9EC] text-[#299764]'
+                            : isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
+                      }`}
+                      style={appt.status === 'booked' ? { color: 'var(--brand-primary)' } : {}}
+                    >
                       {appt.status === 'booked' ? 'scheduled' : appt.status}
                     </span>
                   </div>
@@ -1097,15 +1113,15 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                 <button
                   key={service.id}
                   onClick={() => handleResultClick(() => navigate('/owner/manage/services', { state: { serviceId: service.id } }))}
-                  className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
+                  className="w-full p-2 hover:bg-brand-primary/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
                 >
                   <div className="min-w-0 flex-1 pr-2">
-                    <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                    <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>{service.name}</div>
                     <div className="text-[9px] text-gray-400 font-semibold capitalize">{service.category} • {service.duration} mins</div>
                   </div>
-                  <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                  <span className="text-xs font-black text-brand-primary flex-shrink-0" style={{ color: 'var(--brand-primary)' }}>
                     ₹ {service.price}
                   </span>
                 </button>
@@ -1129,10 +1145,13 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                   <button
                     key={product.id}
                     onClick={() => handleResultClick(() => navigate('/owner/manage/add-products', { state: { editProductId: product.id } }))}
-                    className="w-full flex items-center justify-between p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group cursor-pointer"
+                    className="w-full flex items-center justify-between p-2 hover:bg-brand-primary/10 rounded-xl text-left transition-all group cursor-pointer"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-2">
-                      <div className="w-8 h-8 rounded-xl overflow-hidden bg-red-50 border border-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-[#ff0b01] text-[10px]">
+                      <div 
+                        className="w-8 h-8 rounded-xl overflow-hidden bg-brand-primary/10 border border-gray-200 dark:border-zinc-700 flex-shrink-0 flex items-center justify-center font-bold text-brand-primary text-[10px]"
+                        style={{ color: 'var(--brand-primary)' }}
+                      >
                         {product.imageUrl ? (
                           <img
                             src={product.imageUrl}
@@ -1148,13 +1167,13 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                        <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>{product.name}</div>
                         <div className="text-[9px] text-gray-400 font-semibold">{product.category} • {product.stock} in stock</div>
                       </div>
                     </div>
-                    <span className="text-xs font-black text-[#ff0b01] flex-shrink-0">
+                    <span className="text-xs font-black text-brand-primary flex-shrink-0" style={{ color: 'var(--brand-primary)' }}>
                       ₹ {product.price}
                     </span>
                   </button>
@@ -1181,10 +1200,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                   <button
                     key={offer.id}
                     onClick={() => handleResultClick(() => navigate('/owner/manage/add-offers', { state: { editOfferId: offer.id } }))}
-                    className="w-full p-2 hover:bg-red-50/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
+                    className="w-full p-2 hover:bg-brand-primary/10 rounded-xl text-left transition-all group flex items-center justify-between cursor-pointer"
                   >
                     <div className="min-w-0 flex-1 pr-2">
-                      <div className={`text-xs font-bold truncate group-hover:text-[#ff0b01] transition-colors ${
+                      <div className={`text-xs font-bold truncate group-hover:text-brand-primary transition-colors ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>{offer.name}</div>
                       <div className="text-[9px] text-gray-400 font-semibold">
@@ -1225,8 +1244,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
     : t('owner.navbar.search_placeholder', 'Search staff, bookings, customers, services...');
 
   return (
-    <header className={`min-h-16 h-auto py-1.5 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 border-b relative shrink-0 ${
-      isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+    <header className={`min-h-16 h-auto py-1.5 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 relative shrink-0 ${
+      isDarkMode 
+        ? 'bg-zinc-900 border-b border-zinc-800 text-zinc-100 shadow-sm' 
+        : 'bg-white border-b border-gray-200 text-gray-900 shadow-xs'
     }`}>
 
       {/* Left Logo Area - White-labeled with Salon Logo and Name */}
@@ -1235,7 +1256,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
           ? 'lg:w-64 px-3 sm:px-4 md:px-5 justify-start' 
           : 'lg:w-20 px-3 justify-center'
       } ${
-        isDarkMode ? 'border-zinc-800' : 'border-gray-200'
+        isDarkMode ? 'border-white/10' : 'border-slate-200/60'
       }`}>
         <div 
           className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0" 
@@ -1292,8 +1313,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
           <div ref={dropdownRef} className="hidden sm:block relative flex-1 max-w-xs md:max-w-md transition-all duration-300">
             <form 
               onSubmit={handleManualSearch}
-              className={`border rounded-full p-1 pl-3 sm:pl-4 flex items-center focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500 transition-all duration-200 ${
-                isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white border-gray-300'
+              className={`rounded-full p-1 pl-3 sm:pl-4 flex items-center focus-within:ring-2 focus-within:ring-red-500/30 transition-all duration-200 glass-input ${
+                isDarkMode ? 'text-zinc-100' : 'text-gray-900'
               }`}
             >
               <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1346,8 +1367,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
 
             {/* Absolute Search Dropdown results for Desktop */}
             {showDropdown && query.trim().length > 0 && (
-              <div className={`absolute top-full left-0 w-full mt-2 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto p-4 space-y-4 border animate-in fade-in zoom-in-95 duration-150 ${
-                isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+              <div className={`absolute top-full left-0 w-full mt-2 rounded-2xl z-50 max-h-96 overflow-y-auto p-4 space-y-4 animate-in fade-in zoom-in-95 duration-150 glass-panel ${
+                isDarkMode ? 'text-zinc-100' : 'text-gray-900'
               }`}>
                 {renderSearchResults()}
               </div>
@@ -1427,10 +1448,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
 
           {/* Notifications Dropdown Window */}
           {showNotifications && (
-            <div className={`absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl shadow-xl z-50 border overflow-hidden flex flex-col ${
-              isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+            <div className={`absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl z-50 overflow-hidden flex flex-col glass-panel ${
+              isDarkMode ? 'text-zinc-100' : 'text-gray-900'
             }`} style={{ maxHeight: '480px' }}>
-              <div className={`p-4 border-b flex items-center justify-between ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+              <div className={`p-4 border-b flex items-center justify-between ${isDarkMode ? 'border-white/10' : 'border-slate-100'}`}>
                 <div className="flex items-center space-x-2">
                   <h3 className="font-bold text-sm">Notifications</h3>
                   {unreadCount > 0 && (
@@ -1502,9 +1523,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
                     setShowNotifications(false);
                     navigate('/owner/notifications');
                   }}
-                  className={`w-full py-2 text-xs font-bold text-[#ff0b01] rounded-xl transition-colors cursor-pointer ${
-                    isDarkMode ? 'bg-red-950/40 hover:bg-red-950/60' : 'bg-red-50 hover:bg-red-100'
-                  }`}
+                  className="w-full py-2 text-xs font-bold text-brand-primary rounded-xl transition-colors cursor-pointer bg-brand-primary/10 hover:bg-brand-primary/20"
+                  style={{ color: 'var(--brand-primary)' }}
                 >
                   View All
                 </button>
@@ -1688,8 +1708,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen = true, isDarkMo
 
           {/* Search Dropdown for Mobile Overlay */}
           {showDropdown && query.trim().length > 0 && (
-            <div className={`fixed top-16 left-2 right-2 rounded-2xl shadow-2xl z-50 max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4 border ${
-              isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+            <div className={`fixed top-16 left-2 right-2 rounded-2xl z-50 max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4 glass-panel ${
+              isDarkMode ? 'text-zinc-100' : 'text-gray-900'
             }`}>
               {renderSearchResults()}
             </div>

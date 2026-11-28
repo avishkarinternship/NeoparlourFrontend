@@ -4,9 +4,15 @@ import {
   applyDynamicTheme, 
   removeDynamicTheme, 
   extractBrandPaletteFromLogo, 
-  getSalonTheme 
+  getSalonTheme,
+  hexToRgb,
+  rgbToHex,
+  rgbToHsl,
+  hslToRgb,
+  THEME_CHANGE_EVENT
 } from './themeGenerator';
 export { default as SalonLogoImage } from '../components/common/SalonLogoImage';
+export { getSalonTheme } from './themeGenerator';
 
 export const WHITE_LABEL_EVENT = 'np_active_salon_changed';
 
@@ -108,10 +114,167 @@ export const getActiveSalon = () => {
 };
 
 /**
+ * Determines whether the dynamic salon theme is allowed to run on the given path.
+ * Disallowed on:
+ * - Auth pages (login, register, signup, forgot password, delete-account)
+ * - Public static pages (Home, About Us, Privacy Policy, Terms, Features, Support, etc.)
+ * - Admin back-office pages (Superadmin, Support Engineer, Maintenance)
+ * Allowed ONLY on:
+ * - Authenticated Owner Portal (/owner/*, /subscription-plans)
+ * - Authenticated Staff Portal (/staff/*)
+ * - Customer salon-specific pages (/salon, /salon/*, /book-service)
+ */
+export const isThemeAllowedOnPath = (pathname = '') => {
+  if (typeof window === 'undefined') return false;
+  const currentPath = pathname || (window.location ? window.location.pathname : '') || '';
+  const path = currentPath.toLowerCase().split('?')[0].split('#')[0];
+
+  // 1. Explicitly disallow any auth route across all roles
+  if (
+    path.includes('/login') ||
+    path.includes('/register') ||
+    path.includes('/signup') ||
+    path.includes('/forgot-password') ||
+    path.includes('/delete-account')
+  ) {
+    return false;
+  }
+
+  // 2. Explicitly disallow legal, maintenance, sitemap, robots, subscription checkout
+  if (
+    path.includes('/terms-and-conditions') ||
+    path.includes('/privacy-policy') ||
+    path.includes('/maintenance') ||
+    path.includes('/sitemap') ||
+    path.includes('/robots') ||
+    path.includes('/buy-subscription')
+  ) {
+    return false;
+  }
+
+  // 3. Static public & marketing pages
+  const staticPublicExactOrPrefix = [
+    '/',
+    '/home',
+    '/about',
+    '/features',
+    '/support',
+    '/partner-with-us',
+    '/salons',
+    '/influencer-program',
+    '/blogs',
+    '/blog',
+    '/testimonials',
+    '/client-testimonials',
+    '/leadership',
+    '/videos',
+    '/security',
+    '/services',
+    '/updates',
+    '/case-studies',
+    '/seo-salons'
+  ];
+
+  if (path === '' || path === '/') {
+    return false;
+  }
+
+  for (const p of staticPublicExactOrPrefix) {
+    if (p === '/') continue;
+    if (
+      path === p || 
+      path.startsWith(`${p}/`) || 
+      path === `/customer${p}` || 
+      path.startsWith(`/customer${p}/`)
+    ) {
+      return false;
+    }
+  }
+
+  // 4. Admin back-office pages
+  if (path.startsWith('/admin')) {
+    return false;
+  }
+
+  // 5. Explicitly ALLOW salon white-label pages:
+  if (path.startsWith('/owner')) {
+    return true;
+  }
+
+  if (path.startsWith('/staff')) {
+    return true;
+  }
+
+  if (path === '/subscription-plans' || path.startsWith('/subscription-plans/')) {
+    return true;
+  }
+
+  if (path === '/salon' || path.startsWith('/salon/') || path === '/book-service' || path.startsWith('/book-service/')) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Checks if the current path is a salon-scoped customer route (where the salon white-labeled navbar/footer should appear).
+ */
+export const isSalonCustomerRoute = (pathname = '') => {
+  if (typeof window === 'undefined') return false;
+  const currentPath = pathname || (window.location ? window.location.pathname : '') || '';
+  const path = currentPath.toLowerCase().split('?')[0].split('#')[0];
+
+  // Disallow home, marketing, public pages, admin, owner, staff
+  const nonSalonCustomerPaths = [
+    '',
+    '/',
+    '/customer/home',
+    '/customer/dashboard',
+    '/about',
+    '/customer/about',
+    '/features',
+    '/customer/features',
+    '/salons',
+    '/customer/salons',
+    '/partner-with-us',
+    '/customer/partner-with-us',
+    '/blogs',
+    '/customer/blogs',
+    '/blog',
+    '/customer/blog',
+    '/support',
+    '/customer/support',
+    '/influencer-program',
+    '/customer/influencer-program',
+    '/terms-and-conditions',
+    '/customer/terms-and-conditions',
+    '/privacy-policy',
+    '/customer/privacy-policy'
+  ];
+
+  if (nonSalonCustomerPaths.includes(path) || path.startsWith('/salons/')) {
+    return false;
+  }
+
+  const salonPrefixes = [
+    '/salon',
+    '/customer/salon',
+    '/book-service',
+    '/customer/book-service'
+  ];
+
+  return salonPrefixes.some(p => path === p || path.startsWith(`${p}/`));
+};
+
+/**
  * Injects dynamic CSS rules to customize website colors based on extracted salon logo palette.
  * Delegates to themeGenerator.js.
  */
 export const applySalonTheme = (palette) => {
+  if (typeof window !== 'undefined' && !isThemeAllowedOnPath(window.location.pathname)) {
+    removeSalonTheme();
+    return null;
+  }
   return applyDynamicTheme(palette);
 };
 
@@ -132,8 +295,13 @@ export const extractPaletteFromImage = async (imageUrl) => {
 /**
  * Initializes the salon theme from localStorage on application startup.
  */
-export const initSalonTheme = () => {
+export const initSalonTheme = (pathname) => {
   try {
+    const targetPath = pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
+    if (!isThemeAllowedOnPath(targetPath)) {
+      removeSalonTheme();
+      return;
+    }
     const cached = localStorage.getItem('activeSalonTheme');
     if (cached && cached !== 'undefined' && cached !== 'null') {
       const palette = JSON.parse(cached);
@@ -147,7 +315,7 @@ export const initSalonTheme = () => {
 // Initialize theme safely after DOM is ready
 if (typeof window !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSalonTheme);
+    document.addEventListener('DOMContentLoaded', () => initSalonTheme());
   } else {
     initSalonTheme();
   }
@@ -264,4 +432,125 @@ export const useActiveSalon = () => {
     setActiveSalon,
     clearActiveSalon
   };
+};
+
+/**
+ * Calculates graph and chart colors dynamically based on the white-labeled salon branding.
+ * - Dark mode: Uses the LIGHT version of the brand color for high visibility against dark backgrounds.
+ * - Light mode: Uses the DARK version of the brand color for high contrast against light backgrounds.
+ */
+export const getWhitelabelGraphColors = (isDarkMode = false, salonId = null) => {
+  let primaryHex = '#FF0B01';
+  try {
+    const saved = getSalonTheme(salonId);
+    if (saved && saved.primary) {
+      primaryHex = saved.primary;
+    } else if (typeof document !== 'undefined') {
+      const cssBrand = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim();
+      if (cssBrand && cssBrand.startsWith('#')) {
+        primaryHex = cssBrand;
+      }
+    }
+  } catch (err) {
+    // fallback
+  }
+
+  const rgb = hexToRgb(primaryHex);
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+  if (isDarkMode) {
+    // Dark mode: Use LIGHT colour to show the graph
+    const targetL = Math.max(0.68, Math.min(0.78, hsl.l > 0.65 ? hsl.l : hsl.l + 0.28));
+    const targetS = Math.min(0.90, Math.max(0.60, hsl.s));
+    const lightRgb = hslToRgb(hsl.h, targetS, targetL);
+    const stroke = rgbToHex(lightRgb.r, lightRgb.g, lightRgb.b);
+
+    const piePalette = [
+      stroke,
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 35) % 360, 0.75, 0.72))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 70) % 360, 0.75, 0.70))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 120) % 360, 0.70, 0.72))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 180) % 360, 0.70, 0.74))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 240) % 360, 0.75, 0.74))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 300) % 360, 0.75, 0.72))),
+    ];
+
+    return {
+      stroke,
+      fill: stroke,
+      gradientStart: stroke,
+      gradientEnd: stroke,
+      startOpacity: 0.35,
+      endOpacity: 0.0,
+      dotFill: stroke,
+      dotStroke: '#09090b',
+      gridStroke: '#27272a',
+      axisText: '#94a3b8',
+      piePalette,
+      isDarkMode: true,
+      brandPrimary: primaryHex
+    };
+  } else {
+    // Light mode: Use DARK colour to show the graph
+    const targetL = Math.max(0.28, Math.min(0.40, hsl.l < 0.38 ? hsl.l : hsl.l - 0.20));
+    const targetS = Math.min(0.95, Math.max(0.65, hsl.s));
+    const darkRgb = hslToRgb(hsl.h, targetS, targetL);
+    const stroke = rgbToHex(darkRgb.r, darkRgb.g, darkRgb.b);
+
+    const piePalette = [
+      stroke,
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 35) % 360, 0.80, 0.36))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 70) % 360, 0.80, 0.35))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 120) % 360, 0.75, 0.34))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 180) % 360, 0.75, 0.35))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 240) % 360, 0.80, 0.36))),
+      rgbToHex(...Object.values(hslToRgb((hsl.h + 300) % 360, 0.80, 0.36))),
+    ];
+
+    return {
+      stroke,
+      fill: stroke,
+      gradientStart: stroke,
+      gradientEnd: stroke,
+      startOpacity: 0.22,
+      endOpacity: 0.0,
+      dotFill: stroke,
+      dotStroke: '#ffffff',
+      gridStroke: '#e2e8f0',
+      axisText: '#64748b',
+      piePalette,
+      isDarkMode: false,
+      brandPrimary: primaryHex
+    };
+  }
+};
+
+/**
+ * Hook to reactively track white-label graph colors across theme and dark mode updates.
+ */
+export const useWhitelabelGraphColors = (isDarkMode = false, salonId = null) => {
+  const [colors, setColors] = useState(() => getWhitelabelGraphColors(isDarkMode, salonId));
+
+  useEffect(() => {
+    const update = () => {
+      setColors(getWhitelabelGraphColors(isDarkMode, salonId));
+    };
+
+    update();
+    window.addEventListener(WHITE_LABEL_EVENT, update);
+    window.addEventListener('activeSalonChanged', update);
+    window.addEventListener(THEME_CHANGE_EVENT, update);
+    window.addEventListener('np_dark_mode_changed', update);
+    window.addEventListener('storage', update);
+
+    return () => {
+      window.removeEventListener(WHITE_LABEL_EVENT, update);
+      window.removeEventListener('activeSalonChanged', update);
+      window.removeEventListener(THEME_CHANGE_EVENT, update);
+      window.removeEventListener('np_dark_mode_changed', update);
+      window.removeEventListener('storage', update);
+    };
+  }, [isDarkMode, salonId]);
+
+  return colors;
 };

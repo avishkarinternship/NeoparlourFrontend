@@ -160,10 +160,8 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
     <div className="space-y-8 max-w-6xl">
       {/* Header Banner */}
       <div
-        className={`p-6 rounded-2xl border transition-all ${
-          isDarkMode
-            ? 'bg-zinc-900/60 border-zinc-800'
-            : 'bg-gradient-to-r from-purple-50/50 via-white to-gray-50 border-gray-200'
+        className={`p-6 rounded-2xl transition-all glass-panel ${
+          isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -204,8 +202,8 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
         {/* Controls Column */}
         <div className="lg:col-span-5 space-y-6">
           <div
-            className={`p-6 rounded-2xl border space-y-5 ${
-              isDarkMode ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'
+            className={`p-6 rounded-2xl space-y-5 glass-panel ${
+              isDarkMode ? 'text-zinc-100' : 'text-gray-900'
             }`}
           >
             <h4
@@ -402,8 +400,8 @@ export default function BrandingThemeSettings({ salon, isDarkMode }) {
         {/* Live Interactive Dashboard Preview Column */}
         <div className="lg:col-span-7 space-y-6">
           <div
-            className={`p-6 rounded-2xl border space-y-6 ${
-              isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'
+            className={`p-6 rounded-2xl space-y-6 glass-panel ${
+              isDarkMode ? 'text-zinc-100' : 'text-gray-900'
             }`}
           >
             {/* Preview Header with Light/Dark Mode Switcher */}

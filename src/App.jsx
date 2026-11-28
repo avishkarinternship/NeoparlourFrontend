@@ -5,6 +5,8 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './App.css';
 import ServerMaintenance from './components/common/ServerMaintenance';
+import { isThemeAllowedOnPath, removeSalonTheme, initSalonTheme } from './utils/whiteLabelHelper';
+import DiwaliTheme from './components/diwali';
 
 const App = () => {
   const location = useLocation();
@@ -20,6 +22,11 @@ const App = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (!isThemeAllowedOnPath(location.pathname)) {
+      removeSalonTheme();
+    } else {
+      initSalonTheme(location.pathname);
+    }
   }, [location.pathname]);
 
   useEffect(() => {
@@ -45,6 +52,8 @@ const App = () => {
   return (
     <div className="app-container overflow-x-hidden font-sans">
       <Toaster position="top-right" />
+      {/* Festive Diwali Firecrackers Background (Revertible: toggle in diwaliConfig.js or remove line below) */}
+      <DiwaliTheme />
       {maintenanceError && (
         <ServerMaintenance
           isOverlay={true}

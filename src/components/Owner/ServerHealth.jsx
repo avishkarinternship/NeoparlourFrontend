@@ -146,12 +146,13 @@ export default function ServerHealth() {
                 placeholder="e.g., https://grafana.neoparlour.com/d/neoparlour-health-dashboard?orgId=1"
                 value={tempUrl}
                 onChange={(e) => setTempUrl(e.target.value)}
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:border-[#FF0B01] transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-55 focus:bg-white'}`}
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:border-brand-primary transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-55 focus:bg-white'}`}
               />
             </div>
             <button
               type="submit"
-              className="w-full md:w-auto bg-[#FF0B01] hover:bg-red-700 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+              className="w-full md:w-auto bg-brand-primary text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:opacity-90 transition-all cursor-pointer"
+              style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
             >
               Connect Dashboard
             </button>

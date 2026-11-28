@@ -54,12 +54,20 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
         }
     }, [isOpen, isAuthenticated, user, profile, dispatch]);
 
+    const normalizeTenDigitMobile = (raw) => {
+        if (!raw) return '';
+        const digits = String(raw).replace(/\D/g, '');
+        if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+        if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+        return digits;
+    };
+
     useEffect(() => {
         if (profile) {
             setFormData({
                 fullName: profile.fullName || '',
                 email: profile.email || '',
-                mobile: profile.mobile || '',
+                mobile: normalizeTenDigitMobile(profile.mobile),
                 gender: profile.gender || '',
                 birthdate: formatDateForInput(profile.birthdate || profile.birthDate),
                 address: profile.address || ''
@@ -103,11 +111,12 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
             toast.error("Full name must be between 2 and 50 characters");
             return;
         }
-        if (!formData.mobile) {
+        const cleanMobile = normalizeTenDigitMobile(formData.mobile);
+        if (!cleanMobile) {
             toast.error("Mobile number is required");
             return;
         }
-        if (!/^[0-9]{10}$/.test(formData.mobile)) {
+        if (!/^[0-9]{10}$/.test(cleanMobile)) {
             toast.error("Mobile number must be exactly 10 digits");
             return;
         }
@@ -128,7 +137,7 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                 id: customerId,
                 fullName: formData.fullName.trim(),
                 email: formData.email.trim() || null,
-                mobile: formData.mobile,
+                mobile: cleanMobile,
                 gender: formData.gender || null,
                 birthdate: formData.birthdate || null,
                 birthDate: formData.birthdate || null,
@@ -170,54 +179,57 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
     const firstInitial = ((displayName.startsWith('+') ? displayName.slice(1) : displayName).charAt(0) || 'P').toUpperCase();
 
     return createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300 font-sans">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[100] flex items-center justify-center p-3 sm:p-4 transition-all duration-300 font-sans">
             {/* Backdrop click to close */}
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            {/* Modal Card */}
-            <div className="relative bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 z-10 p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200">
-                {/* Close Button */}
+            {/* Modal Card - Constrained to 90dvh so it always fits within viewport */}
+            <div className="relative bg-white w-full max-w-md max-h-[90dvh] rounded-[28px] sm:rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 z-10 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                {/* Close Button (Always pinned in top right corner) */}
                 <button 
                     onClick={onClose}
-                    className="absolute top-5 right-5 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all duration-200 cursor-pointer border-0"
+                    className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all duration-200 cursor-pointer border-0 z-20"
+                    aria-label="Close"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
-                {/* Profile Header Block */}
-                <div className="flex flex-col items-center text-center pb-6 border-b border-slate-100">
-                    {/* Avatar Circle with Badge */}
-                    <div className="relative mb-3">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-red-500 to-red-600 text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-red-500/20 border-4 border-white">
-                            {firstInitial}
+                {/* Scrollable Inner Content */}
+                <div className="overflow-y-auto p-5 sm:p-7 scrollbar-thin">
+                    {/* Profile Header Block */}
+                    <div className="flex flex-col items-center text-center pb-4 sm:pb-5 border-b border-slate-100">
+                        {/* Avatar Circle with Badge */}
+                        <div className="relative mb-2.5 sm:mb-3">
+                            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-red-500 to-red-600 text-white font-black text-xl sm:text-2xl flex items-center justify-center shadow-lg shadow-red-500/20 border-4 border-white">
+                                {firstInitial}
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center shadow-xs" title="Account Active">
+                                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                            </div>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center shadow-xs" title="Account Active">
-                            <Sparkles className="w-3 h-3 text-white" />
-                        </div>
+
+                        <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">{displayName}</h3>
+                        <p className="text-xs font-semibold text-slate-400 mt-0.5">{profile?.mobile || user?.mobile || user?.phone || 'Customer'}</p>
+                        
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="mt-2.5 sm:mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all duration-200 cursor-pointer border-0"
+                        >
+                            {isEditing ? (
+                                <>
+                                    <X className="w-3.5 h-3.5" /> Cancel Editing
+                                </>
+                            ) : (
+                                <>
+                                    <Edit2 className="w-3.5 h-3.5 text-[#FF0B01]" /> Edit Profile
+                                </>
+                            )}
+                        </button>
                     </div>
 
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{displayName}</h3>
-                    <p className="text-xs font-semibold text-slate-400 mt-0.5">{profile?.mobile || user?.mobile || user?.phone || 'Customer'}</p>
-                    
-                    <button
-                        onClick={() => setIsEditing(!isEditing)}
-                        className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all duration-200 cursor-pointer border-0"
-                    >
-                        {isEditing ? (
-                            <>
-                                <X className="w-3.5 h-3.5" /> Cancel Editing
-                            </>
-                        ) : (
-                            <>
-                                <Edit2 className="w-3.5 h-3.5 text-[#FF0B01]" /> Edit Profile
-                            </>
-                        )}
-                    </button>
-                </div>
-
-                {/* Profile Information / Edit Form */}
-                <div className="py-6 space-y-4 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
-                    {isEditing ? (
+                    {/* Profile Information / Edit Form */}
+                    {isEditing && (
+                        <div className="py-4 sm:py-5 space-y-3.5">
                         <form onSubmit={handleSave} className="space-y-4">
                             <div>
                                 <label className="block text-[11px] font-black uppercase text-slate-400 tracking-wider mb-1">Full Name</label>
@@ -302,38 +314,39 @@ const ProfilePopup = ({ isOpen, onClose, onChangePasswordClick }) => {
                                 {saving ? 'SAVING...' : 'SAVE CHANGES'}
                             </button>
                         </form>
-                    ) : null}
-                </div>
+                        </div>
+                    )}
 
-                {/* Footer Action Buttons */}
-                <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                    {onChangePasswordClick && (
+                    {/* Footer Action Buttons */}
+                    <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
+                        {onChangePasswordClick && (
+                            <button
+                                type="button"
+                                onClick={onChangePasswordClick}
+                                className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3 rounded-xl font-bold text-gray-600 transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm"
+                            >
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                CHANGE PASSWORD
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={onChangePasswordClick}
-                            className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-bold text-gray-600 transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm"
+                            onClick={handleLogout}
+                            className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] active:scale-[0.98] text-white py-3 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-xs sm:text-sm"
                         >
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                            CHANGE PASSWORD
+                            <LogOut className="w-4 h-4" />
+                            LOGOUT
                         </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="w-full bg-[#FF2A14] hover:bg-[#E01E0A] active:scale-[0.98] text-white py-3.5 rounded-xl font-bold transition duration-150 flex items-center justify-center gap-2 shadow-md shadow-red-500/10 cursor-pointer text-sm"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        LOGOUT
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3.5 rounded-xl font-semibold text-gray-500 transition duration-150 cursor-pointer text-sm"
-                    >
-                        CLOSE
-                    </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="w-full border border-gray-200 hover:bg-gray-50 active:scale-[0.98] py-3 rounded-xl font-semibold text-gray-500 transition duration-150 cursor-pointer text-xs sm:text-sm"
+                        >
+                            CLOSE
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>,

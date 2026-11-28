@@ -25,7 +25,7 @@ const toastStyle = {
     minWidth: '350px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
   },
-  iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+  iconTheme: { primary: 'var(--brand-primary, #7C3AED)', secondary: '#fff' }
 };
 
 const parseConflictsFromMessage = (msg) => {
@@ -805,13 +805,16 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
     const isStartedOrInProgress = appt.status?.toLowerCase() === 'in_progress' || appt.status?.toLowerCase() === 'confirmed';
 
     return (
-      <div key={appt.id} className={`flex flex-col lg:flex-row items-start lg:items-center justify-between p-3.5 sm:p-5 border rounded-2xl sm:rounded-3xl hover:shadow-md transition-all relative overflow-hidden group pl-5 sm:pl-8 gap-3 sm:gap-4 w-full ${
+      <div key={appt.id} className={`flex flex-col lg:flex-row items-start lg:items-center justify-between p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl hover:shadow-lg transition-all relative overflow-hidden group pl-5 sm:pl-8 gap-3 sm:gap-4 w-full glass-card-interactive ${
         isDarkMode 
-          ? 'bg-zinc-900 border-zinc-800 text-zinc-100 shadow-slate-950/40' 
-          : 'bg-white border-gray-100 text-slate-800'
+          ? 'text-zinc-100' 
+          : 'text-slate-800'
       }`}>
         {/* Left status vertical border indicator */}
-        <div className={`absolute left-0 top-0 bottom-0 w-1.5 sm:w-2.5 ${isStartedOrInProgress ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-[#FF0B01]' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}></div>
+        <div 
+          className={`absolute left-0 top-0 bottom-0 w-1.5 sm:w-2.5 ${isStartedOrInProgress ? 'bg-orange-500' : currentSubTab === 'Scheduled' ? 'bg-brand-primary' : currentSubTab === 'Past Appointments' ? 'bg-[#F59E0B]' : currentSubTab === 'Cancelled' ? 'bg-gray-300' : 'bg-green-500'}`}
+          style={currentSubTab === 'Scheduled' && !isStartedOrInProgress ? { backgroundColor: 'var(--brand-primary)' } : {}}
+        ></div>
         
         <div 
           onClick={() => handleViewAppointment(appt.id)}
@@ -822,7 +825,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             <img src={appt.customerAvatar || profileIcon} alt={appt.customerName} className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className={`text-xs sm:text-[14px] font-bold tracking-tight group-hover/info:text-[#FF0B01] transition-colors truncate ${
+            <h4 className={`text-xs sm:text-[14px] font-bold tracking-tight group-hover/info:text-brand-primary transition-colors truncate ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>{appt.customerName || 'Customer'}</h4>
             <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] sm:text-[11px] font-semibold text-gray-400 mt-0.5 sm:mt-1 flex-wrap gap-y-1">
@@ -934,8 +937,8 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             onClick={() => handleViewAppointment(appt.id)} 
             className={`w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center rounded-xl transition shadow-xs cursor-pointer border ${
               isDarkMode
-                ? 'bg-zinc-800/90 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-[#FF0B01]'
-                : 'bg-gray-50 text-gray-600 hover:text-[#FF0B01] hover:bg-red-50 border-gray-150'
+                ? 'bg-zinc-800/90 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-brand-primary'
+                : 'bg-gray-50 text-gray-600 hover:text-brand-primary hover:bg-gray-100 border-gray-150'
             }`}
             title="View Details"
           >
@@ -976,7 +979,8 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             <>
               <button 
                 onClick={() => openActionModal(appt, 'reschedule')} 
-                className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-[#FF0B01] text-white rounded-xl hover:bg-red-700 transition shadow-sm cursor-pointer"
+                className="w-8 sm:w-9 h-8 sm:h-9 flex-shrink-0 flex items-center justify-center bg-brand-primary text-white rounded-xl hover:opacity-90 transition shadow-sm cursor-pointer"
+                style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                 title="Reschedule Appointment"
               >
                 <CalendarClock className="w-4 h-4" />
@@ -1013,8 +1017,12 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                   <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Change Staff
                 </button>
               ) : (
-                <button onClick={() => openStaffModal(appt)} className="border border-[#FF0B01] text-[#FF0B01] bg-red-50/20 dark:bg-red-950/40 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-red-50 flex items-center gap-1 transition shadow-2xs text-[11px] sm:text-xs">
-                  <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" style={{ filter: 'invert(15%) sepia(95%) saturate(6935%) hue-rotate(357deg) brightness(95%) contrast(115%)' }} /> Assign Staff
+                <button 
+                  onClick={() => openStaffModal(appt)} 
+                  className="border border-brand-primary text-brand-primary bg-brand-primary/10 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl hover:bg-brand-primary/20 flex items-center gap-1 transition shadow-2xs text-[11px] sm:text-xs"
+                  style={{ borderColor: 'var(--brand-primary)', color: 'var(--brand-primary)' }}
+                >
+                  <img src={assignStaffIcon} alt="Staff" className="w-3.5 h-3.5" /> Assign Staff
                 </button>
               )}
             </>
@@ -1035,27 +1043,35 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
   return (
     <>
-        <main className={`flex-1 p-3 sm:p-6 md:p-8 overflow-auto transition-colors duration-300 ${
-          isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
+        <main className={`flex-1 ${isStaffPortal ? 'p-0 py-2 sm:py-3' : 'p-3 sm:p-6 md:p-8'} overflow-auto transition-colors duration-300 bg-transparent ${
+          isDarkMode ? 'text-zinc-100' : 'text-slate-800'
         }`}>
           {/* Header Bar with Subtabs & Mobile Filter Button */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4 sm:mb-8">
-            <div className={`flex gap-1.5 sm:gap-2 p-1 rounded-2xl flex-1 max-w-3xl border shadow-xs overflow-x-auto scrollbar-none transition-colors duration-300 ${
-              isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-100'
+            <div className={`flex gap-1.5 sm:gap-2 p-1.5 rounded-2xl flex-1 max-w-3xl overflow-x-auto no-scrollbar scrollbar-none transition-all duration-300 border ${
+              isDarkMode 
+                ? 'bg-zinc-900/70 border-zinc-800/80 shadow-xs' 
+                : 'bg-slate-100/90 border-slate-200/90 shadow-xs'
             }`}>
-              {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setCurrentSubTab(tab)}
-                  className={`flex-1 px-3 sm:px-5 py-2.5 sm:py-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                    currentSubTab === tab 
-                      ? 'bg-[#FF0B01] text-white shadow-md' 
-                      : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-800'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+              {['Scheduled', 'Past Appointments', 'Cancelled', 'Completed'].map(tab => {
+                const isSelected = currentSubTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setCurrentSubTab(tab)}
+                    className={`flex-1 px-3 sm:px-5 py-2.5 sm:py-3 font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                      isSelected 
+                        ? 'bg-brand-primary text-white shadow-md scale-[1.01]' 
+                        : isDarkMode 
+                          ? 'bg-zinc-800/40 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-transparent hover:border-zinc-700/60' 
+                          : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
+                    }`}
+                    style={isSelected ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' } : {}}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Mobile Filter Toggle Button */}
@@ -1063,16 +1079,17 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               className={`sm:hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs cursor-pointer border ${
                 showMobileFilters
-                  ? 'bg-[#FF0B01] text-white border-[#FF0B01]'
+                  ? 'bg-brand-primary text-white border-brand-primary'
                   : isDarkMode
                     ? 'bg-zinc-900 text-zinc-200 border-zinc-800 hover:bg-zinc-800'
                     : 'bg-white text-slate-800 border-gray-200 hover:bg-gray-50'
               }`}
+              style={showMobileFilters ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' } : {}}
             >
-              <Filter className="w-3.5 h-3.5 text-[#FF0B01]" />
+              <Filter className="w-3.5 h-3.5 text-brand-primary" style={{ color: 'var(--brand-primary, var(--color-primary, #7C3AED))' }} />
               <span>{showMobileFilters ? 'Hide Filters' : 'Filter Appointments'}</span>
               {Object.values(filters).some(Boolean) && (
-                <span className="w-2 h-2 rounded-full bg-[#FF0B01] ml-0.5 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-brand-primary ml-0.5 animate-pulse" style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }} />
               )}
             </button>
           </div>
@@ -1083,32 +1100,34 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
               ? 'max-h-[800px] opacity-100 mb-6'
               : 'max-h-0 sm:max-h-none opacity-0 sm:opacity-100 pointer-events-none sm:pointer-events-auto mb-0 sm:mb-8'
           }`}>
-            <div className={`border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-md transition-all duration-300 ${
+            <div className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 transition-all duration-300 border ${
               isDarkMode 
-                ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100 shadow-slate-950/50 backdrop-blur-xl' 
-                : 'bg-white border-gray-100 text-gray-900'
+                ? 'bg-zinc-900/80 border-zinc-800/80 text-zinc-100 shadow-black/20' 
+                : 'bg-white border-slate-200/90 text-slate-900 shadow-xs'
             }`}>
               <div className="flex items-center justify-between mb-4 sm:mb-5">
-                <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Advanced Search Filters</h3>
+                <h3 className={`text-base sm:text-lg font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Advanced Search Filters
+                </h3>
                 <div className="flex gap-2 sm:gap-3">
-                  <button onClick={resetFilters} className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-[#FF0B01]' : 'text-gray-400 hover:text-[#FF0B01]'}`}>Reset</button>
-                  <button onClick={handleSearch} className="bg-[#FF0B01] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer">Search</button>
+                  <button onClick={resetFilters} className={`text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-brand-primary' : 'text-slate-400 hover:text-brand-primary'}`} style={{ color: undefined }}>Reset</button>
+                  <button onClick={handleSearch} className="bg-brand-primary hover:brightness-110 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer" style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}>Search</button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Mobile Number</label>
-                  <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Mobile Number</label>
+                  <input type="text" value={filters.mobile} onChange={(e) => setFilters(prev => ({ ...prev, mobile: e.target.value }))} placeholder="Customer mobile" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white placeholder-zinc-500 focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white shadow-2xs'
                   }`} />
                 </div>
                 {!isStaffPortal && !staffOnlyId && (
                   <div>
-                    <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Staff</label>
+                    <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Staff</label>
                     <div className="relative">
-                      <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer ${
-                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                      <select value={filters.staffId} onChange={(e) => setFilters(prev => ({ ...prev, staffId: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 appearance-none cursor-pointer ${
+                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 focus:bg-white shadow-2xs'
                       }`}>
                         <option value="">All Staff</option>
                         {staffList.map(staff => (
@@ -1122,27 +1141,27 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                   </div>
                 )}
                 <div>
-                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>From Date</label>
-                  <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>From Date</label>
+                  <input type="datetime-local" value={filters.fromDate} onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 focus:bg-white shadow-2xs'
                   }`} />
                 </div>
                 <div>
-                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>To Date</label>
-                  <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>To Date</label>
+                  <input type="datetime-local" value={filters.toDate} onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))} className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 focus:bg-white shadow-2xs'
                   }`} />
                 </div>
                 <div>
-                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Min Amount (₹)</label>
-                  <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Min Amount (₹)</label>
+                  <input type="number" value={filters.minAmount} onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))} placeholder="Minimum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white placeholder-zinc-500 focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white shadow-2xs'
                   }`} />
                 </div>
                 <div>
-                  <label className={`text-[10px] sm:text-xs font-bold mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Max Amount (₹)</label>
-                  <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-slate-500 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 focus:bg-white'
+                  <label className={`text-[10px] sm:text-xs font-black mb-1.5 block uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Max Amount (₹)</label>
+                  <input type="number" value={filters.maxAmount} onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))} placeholder="Maximum" className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3.5 border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all duration-200 ${
+                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700/80 text-white placeholder-zinc-500 focus:bg-zinc-800' : 'bg-slate-50/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white shadow-2xs'
                   }`} />
                 </div>
               </div>
@@ -1151,9 +1170,46 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
           {/* Appointments List */}
           {loading ? (
-            <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Loading appointments...</div>
+            <div className={`text-center py-16 px-4 rounded-3xl glass-card max-w-lg mx-auto my-6 border ${
+              isDarkMode ? 'border-zinc-800/80' : 'border-slate-200/80'
+            }`}>
+              <div 
+                className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"
+                style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+              />
+              <p className={`font-black text-xs uppercase tracking-wider ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                Loading appointments...
+              </p>
+            </div>
           ) : appointments.length === 0 ? (
-            <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No appointments found</div>
+            <div className={`py-14 px-6 rounded-3xl glass-card text-center max-w-lg mx-auto my-6 border transition-all ${
+              isDarkMode ? 'border-zinc-800/80' : 'border-slate-200/80'
+            }`}>
+              <div 
+                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shadow-xs"
+                style={{ color: 'var(--brand-primary)' }}
+              >
+                <CalendarClock className="w-7 h-7" />
+              </div>
+              <h4 className={`text-base sm:text-lg font-black uppercase tracking-tight mb-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                No {currentSubTab} Appointments
+              </h4>
+              <p className={`text-xs font-semibold max-w-xs mx-auto mb-5 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                {Object.values(filters).some(Boolean)
+                  ? 'No appointments matched your search filter criteria. Try resetting the filters.'
+                  : `You have no ${currentSubTab.toLowerCase()} appointments scheduled at this moment.`
+                }
+              </p>
+              {Object.values(filters).some(Boolean) && (
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-brand-primary text-white shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer"
+                  style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
+                >
+                  Reset Filters
+                </button>
+              )}
+            </div>
           ) : currentSubTab === 'Scheduled' ? (
             (() => {
               const inProgressList = appointments.filter(a => a.status?.toLowerCase() === 'in_progress' || a.status?.toLowerCase() === 'confirmed');
@@ -1197,7 +1253,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                         <h3 className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mb-2 flex items-center gap-1.5 pl-1 ${
                           isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
                         }`}>
-                          <CalendarClock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#FF0B01]" />
+                          <CalendarClock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-brand-primary" style={{ color: 'var(--brand-primary)' }} />
                           Upcoming Scheduled Bookings ({upcomingList.length})
                         </h3>
                       )}
@@ -1213,7 +1269,34 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                         No additional upcoming bookings scheduled for today.
                       </div>
                     ) : (
-                      <div className={`text-center py-12 text-sm font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No appointments found</div>
+                      <div className={`py-14 px-6 rounded-3xl glass-card text-center max-w-lg mx-auto my-6 border transition-all ${
+                        isDarkMode ? 'border-zinc-800/80' : 'border-slate-200/80'
+                      }`}>
+                        <div 
+                          className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shadow-xs"
+                          style={{ color: 'var(--brand-primary)' }}
+                        >
+                          <CalendarClock className="w-7 h-7" />
+                        </div>
+                        <h4 className={`text-base sm:text-lg font-black uppercase tracking-tight mb-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                          No {currentSubTab} Appointments
+                        </h4>
+                        <p className={`text-xs font-semibold max-w-xs mx-auto mb-5 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                          {Object.values(filters).some(Boolean)
+                            ? 'No appointments matched your search filter criteria. Try resetting the filters.'
+                            : `You have no ${currentSubTab.toLowerCase()} appointments scheduled at this moment.`
+                          }
+                        </p>
+                        {Object.values(filters).some(Boolean) && (
+                          <button
+                            onClick={resetFilters}
+                            className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-brand-primary text-white shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer"
+                            style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
+                          >
+                            Reset Filters
+                          </button>
+                        )}
+                      </div>
                     )
                   )}
                 </div>
@@ -1290,11 +1373,12 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                         disabled={loading}
                         className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           isActive
-                            ? 'bg-[#FF0B01] text-white font-black shadow-md shadow-red-500/20 border-transparent'
+                            ? 'bg-brand-primary text-white font-black shadow-md border-transparent'
                             : isDarkMode
                               ? 'border border-zinc-800 hover:bg-zinc-800 text-zinc-300'
                               : 'border border-gray-200 hover:bg-gray-100 text-gray-700'
                         }`}
+                        style={isActive ? { backgroundColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                       >
                         {p + 1}
                       </button>
@@ -1383,7 +1467,7 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                       value={rescheduleDate}
                       min={getTodayDateString()}
                       onChange={(e) => setRescheduleDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 transition-all"
+                      className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all"
                     />
                   </div>
 
@@ -1411,9 +1495,10 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                                 slot.busy
                                   ? 'bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed opacity-60'
                                   : isSelected
-                                  ? 'bg-red-600 border-red-600 text-white shadow-md shadow-red-500/10'
+                                  ? 'bg-brand-primary border-brand-primary text-white shadow-md'
                                   : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
                               }`}
+                              style={isSelected ? { backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                             >
                               <span>{slot.displayTime}</span>
                               {slot.discountPercentage > 0 && (
@@ -1520,20 +1605,26 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             {/* Close button */}
             <button 
               onClick={() => setIsViewModalOpen(false)}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-[#FF0B01] flex items-center justify-center transition-all duration-200 focus:outline-none cursor-pointer"
+              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-brand-primary/10 text-gray-500 hover:text-brand-primary flex items-center justify-center transition-all duration-200 focus:outline-none cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-100">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
+            <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-100 dark:border-zinc-800">
+              <div 
+                className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg"
+                style={{ color: 'var(--brand-primary)' }}
+              >
                 📅
               </div>
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-600 block">
+                <span 
+                  className="text-[10px] font-extrabold uppercase tracking-widest text-brand-primary block"
+                  style={{ color: 'var(--brand-primary)' }}
+                >
                   Appointment Overview
                 </span>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">
+                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
                   Appointment #NP-{selectedAppointmentDetails.id}
                 </h3>
               </div>
@@ -1543,27 +1634,27 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             <div className="space-y-4 text-left">
               {/* Client & Booking details grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl flex flex-col justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Customer</span>
-                  <span className="text-xs font-bold text-gray-800 break-words">
+                  <span className="text-xs font-bold text-gray-800 dark:text-zinc-100 break-words">
                     {selectedAppointmentDetails.customerName || selectedAppointmentDetails.customer?.fullName || 'N/A'}
                   </span>
                 </div>
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl flex flex-col justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Customer Contact</span>
-                  <span className="text-xs font-bold text-gray-800 break-words">
+                  <span className="text-xs font-bold text-gray-800 dark:text-zinc-100 break-words">
                     {selectedAppointmentDetails.customerNumber || selectedAppointmentDetails.customerMobile || selectedAppointmentDetails.customer?.mobile || 'N/A'}
                   </span>
                 </div>
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl flex flex-col justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Stylist</span>
-                  <span className="text-xs font-bold text-gray-800 break-words">
+                  <span className="text-xs font-bold text-gray-800 dark:text-zinc-100 break-words">
                     {selectedAppointmentDetails.staffName || 'Unassigned'}
                   </span>
                 </div>
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl flex flex-col justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Duration</span>
-                  <span className="text-xs font-extrabold text-[#FF0B01] uppercase tracking-wider">
+                  <span className="text-xs font-extrabold text-brand-primary uppercase tracking-wider" style={{ color: 'var(--brand-primary)' }}>
                     {selectedAppointmentDetails.serviceDuration ? `${selectedAppointmentDetails.serviceDuration} Mins` : 'N/A'}
                   </span>
                 </div>
@@ -1571,9 +1662,9 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
 
               {/* Schedule & Status */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl md:col-span-2 flex flex-col justify-between">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl md:col-span-2 flex flex-col justify-between">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Scheduled Date & Time (IST)</span>
-                  <span className="text-xs font-semibold text-gray-800">
+                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-100">
                     {selectedAppointmentDetails.appointmentAt 
                       ? new Date(selectedAppointmentDetails.appointmentAt).toLocaleString('en-IN', { 
                           timeZone: 'Asia/Kolkata', 
@@ -1583,15 +1674,18 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
                       : 'N/A'}
                   </span>
                 </div>
-                <div className="bg-gray-50/60 border border-gray-100 p-3.5 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-gray-50/60 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl flex flex-col justify-between relative overflow-hidden">
                   <span className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Status</span>
                   <div className="flex items-center gap-2">
-                    <span className={`h-2.5 w-2.5 rounded-full ${
-                      selectedAppointmentDetails.status === 'booked' ? 'bg-[#FF0B01]' :
-                      selectedAppointmentDetails.status === 'in_progress' ? 'bg-orange-500' :
-                      selectedAppointmentDetails.status === 'completed' ? 'bg-green-500' :
-                      'bg-gray-400'
-                    }`}></span>
+                    <span 
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        selectedAppointmentDetails.status === 'booked' ? 'bg-brand-primary' :
+                        selectedAppointmentDetails.status === 'in_progress' ? 'bg-orange-500' :
+                        selectedAppointmentDetails.status === 'completed' ? 'bg-green-500' :
+                        'bg-gray-400'
+                      }`}
+                      style={selectedAppointmentDetails.status === 'booked' ? { backgroundColor: 'var(--brand-primary)' } : {}}
+                    ></span>
                     <span className="text-xs font-bold text-gray-800 uppercase tracking-wider capitalize">
                       {selectedAppointmentDetails.status || 'N/A'}
                     </span>
@@ -1680,22 +1774,22 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
               {(selectedAppointmentDetails.cancelReason || 
                 selectedAppointmentDetails.ownerRescheduleReason || 
                 selectedAppointmentDetails.customerRescheduleReason) && (
-                <div className="border border-red-100 bg-red-50/10 rounded-2xl p-4 space-y-2">
-                  <span className="text-[10px] font-black text-[#FF0B01] uppercase tracking-wider">📝 Reschedule / Cancellation Info</span>
+                <div className="border border-brand-primary/20 bg-brand-primary/5 rounded-2xl p-4 space-y-2">
+                  <span className="text-[10px] font-black text-brand-primary uppercase tracking-wider" style={{ color: 'var(--brand-primary)' }}>📝 Reschedule / Cancellation Info</span>
                   {selectedAppointmentDetails.cancelReason && (
-                    <div className="text-xs text-gray-750">
+                    <div className="text-xs text-gray-750 dark:text-zinc-300">
                       <span className="font-bold">Cancellation Reason: </span>
                       <span>{selectedAppointmentDetails.cancelReason}</span>
                     </div>
                   )}
                   {selectedAppointmentDetails.ownerRescheduleReason && (
-                    <div className="text-xs text-gray-755">
+                    <div className="text-xs text-gray-755 dark:text-zinc-300">
                       <span className="font-bold">Owner Rescheduled: </span>
                       <span>{selectedAppointmentDetails.ownerRescheduleReason}</span>
                     </div>
                   )}
                   {selectedAppointmentDetails.customerRescheduleReason && (
-                    <div className="text-xs text-gray-755">
+                    <div className="text-xs text-gray-755 dark:text-zinc-300">
                       <span className="font-bold">Customer Rescheduled: </span>
                       <span>{selectedAppointmentDetails.customerRescheduleReason}</span>
                     </div>
@@ -1705,10 +1799,11 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
             </div>
 
             {/* Footer actions */}
-            <div className="flex gap-4 pt-6 border-t border-gray-100 mt-6">
+            <div className="flex gap-4 pt-6 border-t border-gray-100 dark:border-zinc-800 mt-6">
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="flex-1 bg-[#FF0B01] hover:bg-[#d90900] transition text-white py-3.5 rounded-2xl font-bold shadow-md hover:shadow-lg text-xs tracking-wider uppercase cursor-pointer"
+                className="flex-1 bg-brand-primary hover:opacity-90 transition text-white py-3.5 rounded-2xl font-bold shadow-md hover:shadow-lg text-xs tracking-wider uppercase cursor-pointer"
+                style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
               >
                 Close Details
               </button>
@@ -1721,7 +1816,10 @@ const Schedule = ({ staffOnlyId, isStaffPortal = false, isDarkMode: isDarkModePr
       {loadingViewAppointment && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-2xl flex items-center gap-3 border`}>
-            <div className="animate-spin h-5 w-5 border-3 border-[#FF0B01] border-t-transparent rounded-full"></div>
+            <div 
+              className="animate-spin h-5 w-5 border-3 border-brand-primary border-t-transparent rounded-full"
+              style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+            ></div>
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fetching details...</span>
           </div>
         </div>

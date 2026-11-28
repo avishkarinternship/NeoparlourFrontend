@@ -191,7 +191,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-slate-100 dark:border-zinc-800 shadow-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-            <UserPlus className="w-6 h-6 text-[#FF2A14]" /> Staff Recruitment & Invitations
+            <UserPlus className="w-6 h-6 text-brand-primary" style={{ color: 'var(--brand-primary, #7C3AED)' }} /> Staff Recruitment & Invitations
           </h1>
           <p className="text-xs font-semibold text-slate-400 dark:text-zinc-400 mt-1">
             Invite new stylists, track pending response statuses, and manage staff onboarding.
@@ -201,7 +201,8 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
         <button
           type="button"
           onClick={() => setShowInviteModal(true)}
-          className="bg-[#FF2A14] hover:bg-red-700 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition shadow-md shadow-red-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          className="bg-brand-primary hover:brightness-110 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
         >
           <Plus className="w-4 h-4" /> Invite New Staff
         </button>
@@ -245,7 +246,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
             placeholder="Search by staff name or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF2A14]"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary"
           />
         </div>
 
@@ -258,9 +259,10 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
               onClick={() => setStatusFilter(st)}
               className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition cursor-pointer ${
                 statusFilter === st
-                  ? 'bg-[#FF2A14] text-white shadow-xs'
+                  ? 'bg-brand-primary text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200'
               }`}
+              style={statusFilter === st ? { backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' } : {}}
             >
               {st}
             </button>
@@ -364,7 +366,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
           <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-zinc-800 shadow-2xl space-y-6">
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-zinc-800">
               <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-[#FF2A14]" /> Invite New Staff Member
+                <UserPlus className="w-5 h-5 text-brand-primary" style={{ color: 'var(--brand-primary, #7C3AED)' }} /> Invite New Staff Member
               </h3>
               <button onClick={() => setShowInviteModal(false)} className="p-2 text-slate-400 hover:text-slate-800 dark:hover:text-white">
                 <X className="w-5 h-5" />
@@ -380,7 +382,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
                   value={formData.staffName}
                   onChange={(e) => setFormData(prev => ({ ...prev, staffName: e.target.value }))}
                   placeholder="e.g. Karan Johar"
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF2A14]"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary"
                 />
               </div>
 
@@ -392,7 +394,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
                   value={formData.mobile}
                   onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
                   placeholder="e.g. 9876543210"
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF2A14]"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary"
                 />
               </div>
 
@@ -402,7 +404,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
                   <select
                     value={formData.designation}
                     onChange={(e) => setFormData(prev => ({ ...prev, designation: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF2A14]"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary"
                   >
                     <option value="Senior Hair Stylist">Senior Hair Stylist</option>
                     <option value="Hair Dresser">Hair Dresser</option>
@@ -418,7 +420,7 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
                   <select
                     value={formData.salaryType}
                     onChange={(e) => setFormData(prev => ({ ...prev, salaryType: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#FF2A14]"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary"
                   >
                     <option value="Commission (40%)">Commission (40%)</option>
                     <option value="Commission (35%)">Commission (35%)</option>
@@ -445,7 +447,8 @@ const OwnerStaffInvitations = ({ isDarkMode: isDarkModeProp }) => {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="flex-1 py-3 bg-[#FF2A14] hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-brand-primary hover:brightness-110 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
                 >
                   {sending ? 'Sending...' : <><Send className="w-3.5 h-3.5" /> Send Invitation</>}
                 </button>

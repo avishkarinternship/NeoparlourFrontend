@@ -14,6 +14,7 @@ export const staffApi = {
 
   // 2. Staff Profile & Edit
   getStaffProfile: (staffId) => axiosInstance.get(`/staff/${staffId}`),
+  getStaffById: (staffId) => axiosInstance.get(`/staff/${staffId}`),
   updateStaffProfile: (staffUserId, profileData) => axiosInstance.put(`/staff/${staffUserId}`, profileData),
 
   // 3. User Auth Forgot Password (Staff/Owner Role)

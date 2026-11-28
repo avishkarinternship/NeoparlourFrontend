@@ -49,15 +49,18 @@ const Billing = () => {
                 <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 bg-transparent space-y-8">
                     
                     {/* Header Action Section Block Tab Trigger */}
-                    <div className="max-w-4xl mx-auto border-b border-gray-100 pb-2">
-                        <div className="inline-flex items-center space-x-2 text-[13px] font-bold text-gray-900 border-b-2 border-[#FF0B01] pb-2 cursor-pointer">
+                    <div className="max-w-4xl mx-auto border-b border-gray-100 dark:border-zinc-800 pb-2">
+                        <div 
+                            className="inline-flex items-center space-x-2 text-[13px] font-bold text-gray-900 dark:text-white border-b-2 border-brand-primary pb-2 cursor-pointer"
+                            style={{ borderColor: 'var(--brand-primary)' }}
+                        >
                             <span className="text-[15px] font-normal">+</span>
                             <span>BILLING</span>
                         </div>
                     </div>
 
                     {/* INVOICE CONSTRUCTOR CONFIGURATOR CARD PANEL */}
-                    <div className="max-w-4xl mx-auto border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
+                    <div className="max-w-4xl mx-auto rounded-2xl p-6 glass-panel">
                         <form onSubmit={handleSubmitInvoice} className="space-y-5">
                             
                             {/* Input Form Segment 1: Client Identity & Target Service Matrix */}
@@ -71,7 +74,7 @@ const Billing = () => {
                                         value={searchClient}
                                         onChange={(e) => setSearchClient(e.target.value)}
                                         placeholder="Search By Name, Number"
-                                        className="w-full pl-9 pr-4 py-2.5 bg-[#FAFAFA] text-[11px] font-medium border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+                                        className="w-full pl-9 pr-4 py-2.5 bg-[#FAFAFA] text-[11px] font-medium rounded-xl glass-input focus:outline-none focus:border-gray-400"
                                     />
                                 </div>
                                 <div className="relative">
@@ -218,7 +221,8 @@ const Billing = () => {
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <button
                                     type="submit"
-                                    className="w-full py-2.5 bg-[#FF0B01] text-white font-bold text-[12px] rounded-lg shadow-sm hover:bg-red-700 transition-colors uppercase tracking-wider"
+                                    className="w-full py-2.5 bg-brand-primary text-white font-bold text-[12px] rounded-lg shadow-sm hover:opacity-90 transition-opacity uppercase tracking-wider"
+                                    style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                 >
                                     Submit
                                 </button>

@@ -18,7 +18,7 @@ import {
   Sparkles, Bot, Sun, Moon, Bell, ChevronLeft, ChevronRight,
   ShieldCheck, LayoutDashboard, CreditCard, Activity,
   Terminal, LifeBuoy, Bug, TrendingUp, Wrench, Building2,
-  Calendar, Users, Clock, ShoppingBag
+  Calendar, Users, Clock, ShoppingBag, Settings, LogOut
 } from 'lucide-react';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 
@@ -167,6 +167,7 @@ const Sidebar = ({
         <div key={key || path || label} className="relative group">
           <button
             type="button"
+            data-active={active ? "true" : "false"}
             onClick={handleClick}
             className={`w-full flex items-center rounded-xl text-[13px] font-bold relative transition-all duration-150 cursor-pointer sidebar-btn ${
               isRail
@@ -174,26 +175,30 @@ const Sidebar = ({
                 : `space-x-3.5 px-3.5 py-2.5 text-left justify-between ${hasManageArrow ? '' : ''}`
             } ${
               active
-                ? isDarkMode ? 'bg-red-500/15 text-[#FF0B01] font-black shadow-xs' : 'bg-red-50 text-[#FF0B01] font-black shadow-xs'
+                ? isDarkMode ? 'bg-brand-primary/15 font-black border border-brand-primary/30' : 'bg-brand-primary/10 font-black border border-brand-primary/20'
                 : isDarkMode
-                  ? 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white'
-                  : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-900'
+                  ? 'text-zinc-300 hover:bg-white/5 hover:text-white'
+                  : 'text-gray-600 hover:bg-black/5 hover:text-gray-900'
             }`}
+            style={active ? { color: 'var(--brand-primary)', backgroundColor: 'rgba(var(--brand-primary-rgb), 0.1)', borderColor: 'rgba(var(--brand-primary-rgb), 0.25)' } : {}}
             title={isRail ? label : undefined}
           >
             {/* Active Left Indicator */}
             {active && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-[#FF0B01] rounded-r-full shadow-[0_0_8px_rgba(255,11,1,0.6)]"></span>
+              <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-brand-primary rounded-r-full shadow-sm" style={{ backgroundColor: 'var(--brand-primary)' }}></span>
             )}
 
             <div className={`flex items-center ${isRail ? 'justify-center' : 'space-x-3.5 min-w-0'}`}>
-              <div className={`shrink-0 transition-transform duration-150 group-hover:scale-110 ${
-                active ? 'active-icon-glow text-[#FF0B01]' : 'opacity-70 group-hover:opacity-100'
-              }`}>
+              <div 
+                className={`shrink-0 transition-transform duration-150 group-hover:scale-110 ${
+                  active ? 'active-icon-glow' : 'opacity-70 group-hover:opacity-100'
+                }`}
+                style={active ? { color: 'var(--brand-primary)' } : {}}
+              >
                 {icon}
               </div>
               {!isRail && (
-                <span className="truncate">{label}</span>
+                <span className="truncate" style={active ? { color: 'var(--brand-primary)' } : {}}>{label}</span>
               )}
             </div>
 
@@ -201,7 +206,7 @@ const Sidebar = ({
             {!isRail && hasManageArrow && (
               <span 
                 className={`ml-auto flex items-center justify-center p-1 rounded-md transition-transform duration-200 ${
-                  isManageOpen ? 'text-[#FF0B01] rotate-90' : 'text-gray-400 rotate-0'
+                  isManageOpen ? 'text-brand-primary rotate-90' : 'text-gray-400 rotate-0'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -213,7 +218,7 @@ const Sidebar = ({
             {/* Badge when expanded */}
             {!isRail && badge && (
               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ml-1.5 ${
-                badgeColor || 'bg-red-500/10 text-red-500 border border-red-500/20'
+                badgeColor || 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
               }`}>
                 {badge}
               </span>
@@ -221,7 +226,7 @@ const Sidebar = ({
 
             {/* Collapsed Badge Notification Dot */}
             {isRail && badge && (
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF0B01] ring-2 ring-white dark:ring-zinc-800"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-primary ring-2 ring-white dark:ring-zinc-800" style={{ backgroundColor: 'var(--brand-primary)' }}></span>
             )}
           </button>
 
@@ -261,7 +266,7 @@ const Sidebar = ({
               }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-colors duration-150 text-left cursor-pointer ${
                 location.pathname === '/owner/notifications'
-                  ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01]' : 'text-red-600 bg-red-50'
+                  ? isDarkMode ? 'bg-white/[0.07] text-brand-primary' : 'text-brand-primary bg-brand-primary/10'
                   : isDarkMode ? 'text-zinc-300 hover:text-white hover:bg-zinc-800/80' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -270,7 +275,7 @@ const Sidebar = ({
                 <span>{t('notifications.title', 'Notifications')}</span>
               </div>
               {unreadCount > 0 ? (
-                <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-xs">
+                <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white shadow-xs" style={{ backgroundColor: 'var(--brand-primary)' }}>
                   {unreadCount}
                 </span>
               ) : (
@@ -293,8 +298,9 @@ const Sidebar = ({
                 type="button"
                 onClick={toggleDarkMode}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                  isDarkMode ? 'bg-[#FF0B01]' : 'bg-gray-300'
+                  isDarkMode ? 'bg-brand-primary' : 'bg-gray-300'
                 }`}
+                style={isDarkMode ? { backgroundColor: 'var(--brand-primary)' } : {}}
               >
                 <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
                   isDarkMode ? 'translate-x-4' : 'translate-x-0'
@@ -312,7 +318,7 @@ const Sidebar = ({
         {
           label: 'Dashboard',
           path: '/owner/dashboard',
-          icon: <img src={homeIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
+          icon: <LayoutDashboard className="w-[18px] h-[18px] shrink-0" />,
           isActive: location.pathname === '/owner/dashboard'
         },
         {
@@ -664,23 +670,19 @@ const Sidebar = ({
       {
         label: t('owner.sidebar.dashboard', 'Dashboard'),
         path: '/owner/dashboard',
-        icon: <img src={homeIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
+        icon: <LayoutDashboard className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/dashboard'
       },
       {
         label: t('owner.sidebar.appointments', 'Appointments'),
         path: '/owner/appointments',
-        icon: (
-          <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        ),
+        icon: <Calendar className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/appointments'
       },
       {
         label: t('owner.sidebar.manage', 'Manage'),
         key: 'manage-salon-item',
-        icon: <img src={manageIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
+        icon: <Building2 className="w-[18px] h-[18px] shrink-0" />,
         isActive: isManagePath,
         onClick: () => handleManageClick(isMobile, isRail),
         hasManageArrow: true
@@ -688,17 +690,21 @@ const Sidebar = ({
       {
         label: t('owner.sidebar.customers', 'Customers'),
         path: '/owner/customers',
-        icon: (
-          <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        ),
+        icon: <Users className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/customers'
+      },
+      {
+        label: t('owner.sidebar.reminders', 'WhatsApp Reminders'),
+        path: '/owner/reminders',
+        badge: 'NEW',
+        badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+        icon: <MessageSquareQuote className="w-[18px] h-[18px] shrink-0" />,
+        isActive: location.pathname === '/owner/reminders'
       },
       {
         label: t('owner.sidebar.staff_attendance', 'Staff Attendance'),
         path: '/owner/attendance',
-        icon: <img src={attendanceIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
+        icon: <Clock className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/attendance'
       },
       {
@@ -712,17 +718,13 @@ const Sidebar = ({
       {
         label: t('owner.sidebar.orders', 'Orders'),
         path: '/owner/orders',
-        icon: <img src={ordersIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0" />,
+        icon: <ShoppingBag className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/orders'
       },
       {
         label: t('owner.sidebar.kyc', 'KYC Verification'),
         path: '/owner/kyc',
-        icon: (
-          <svg className="w-[18px] h-[18px] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-        ),
+        icon: <ShieldCheck className="w-[18px] h-[18px] shrink-0" />,
         isActive: location.pathname === '/owner/kyc'
       }
     ];
@@ -778,8 +780,8 @@ const Sidebar = ({
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left transition-all cursor-pointer ${
                           isSubActive
                             ? isDarkMode
-                              ? 'bg-red-500/15 text-[#FF0B01] font-bold shadow-xs'
-                              : 'bg-red-50 text-[#FF0B01] font-bold shadow-xs'
+                              ? 'bg-brand-primary/15 text-brand-primary font-bold shadow-xs'
+                              : 'bg-brand-primary/10 text-brand-primary font-bold shadow-xs'
                             : isDarkMode
                               ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
                               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
@@ -787,7 +789,7 @@ const Sidebar = ({
                       >
                         <span className="truncate">{sub.label}</span>
                         {isSubActive && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF0B01] shrink-0 ml-1"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0 ml-1" style={{ backgroundColor: 'var(--brand-primary)' }}></span>
                         )}
                       </button>
                     );
@@ -798,18 +800,18 @@ const Sidebar = ({
           ))}
         </div>
 
-        <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-100 bg-gray-50/50'}`}>
+        <div className={`p-2 border-t space-y-1 flex-shrink-0 mt-auto ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
           {renderNavButton({
             path: '/customer/support',
             label: t('drawer.support', 'Help'),
-            icon: <img src={helpIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0 opacity-70" />,
+            icon: <LifeBuoy className="w-[18px] h-[18px] shrink-0 opacity-70" />,
             isActive: location.pathname === '/customer/support'
           })}
 
           {renderNavButton({
             path: '/owner/settings',
             label: t('owner.sidebar.settings', 'Settings'),
-            icon: <img src={settingIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0 opacity-70" />,
+            icon: <Settings className="w-[18px] h-[18px] shrink-0 opacity-70" />,
             isActive: location.pathname === '/owner/settings'
           })}
 
@@ -819,7 +821,7 @@ const Sidebar = ({
             {renderNavButton({
               label: t('owner.sidebar.logout', 'Logout'),
               onClick: handleLogout,
-              icon: <img src={logoutIcon} alt="" className="w-[18px] h-[18px] object-contain shrink-0 opacity-70" />,
+              icon: <LogOut className="w-[18px] h-[18px] shrink-0 opacity-70" />,
               isActive: false
             })}
           </div>
@@ -846,12 +848,12 @@ const Sidebar = ({
 
       {/* Desktop Column: Dynamic Full-Height Column Docked to Viewport */}
       <aside 
-        className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 sidebar-container border-r h-full ${
+        className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 transition-all duration-300 ease-in-out relative z-30 sidebar-container h-full ${
           isDesktopOpen 
             ? 'w-64' 
             : 'w-20'
         } ${
-          isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+          isDarkMode ? 'bg-zinc-900 border-r border-zinc-800 text-zinc-100 shadow-sm' : 'bg-white border-r border-gray-200 text-gray-900 shadow-xs'
         }`}
       >
         {/* Interactive Edge Floating Toggle Pill (On the vertical border line!) */}
@@ -860,14 +862,14 @@ const Sidebar = ({
           onClick={onToggleDesktop}
           className={`absolute top-4 -right-3.5 z-50 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${
             isDarkMode 
-              ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-red-500 hover:text-red-500 shadow-black/40' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-600 shadow-gray-200/60'
+              ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:text-white shadow-black/40' 
+              : 'bg-white border-gray-200 text-gray-600 hover:text-gray-900 shadow-slate-200/60'
           }`}
           title={!isDesktopOpen ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
           aria-label={!isDesktopOpen ? "Expand sidebar" : "Collapse sidebar"}
         >
           <svg
-            className={`w-3.5 h-3.5 transition-transform duration-300 ${!isDesktopOpen ? 'rotate-180 text-red-600' : ''}`}
+            className={`w-3.5 h-3.5 transition-transform duration-300 ${!isDesktopOpen ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
@@ -889,8 +891,8 @@ const Sidebar = ({
 
       {/* Mobile Column: Slide-over drawer */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out lg:hidden
-        ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'}
+        fixed inset-y-0 left-0 z-50 w-64 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out lg:hidden
+        ${isDarkMode ? 'bg-zinc-900 border-r border-zinc-800 text-zinc-100' : 'bg-white border-r border-gray-200 text-gray-900'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {renderSidebarContent(true, false)}

@@ -233,8 +233,11 @@ const Dashboard = () => {
                                                     ₹{item.revenue.toFixed(2)}
                                                 </span>
                                                 <div 
-                                                    style={{ height: `${Math.max(pct, 4)}%` }} 
-                                                    className="w-5 bg-gradient-to-t from-[#ff0b01]/30 to-[#ff0b01] hover:to-[#d00800] rounded-t-md transition-all duration-300 shadow-sm cursor-pointer"
+                                                    style={{ 
+                                                        height: `${Math.max(pct, 4)}%`,
+                                                        background: 'linear-gradient(to top, rgba(var(--brand-primary-rgb, 124, 58, 237), 0.3), var(--brand-primary, #7C3AED))' 
+                                                    }} 
+                                                    className="w-5 rounded-t-md transition-all duration-300 shadow-sm cursor-pointer hover:opacity-90"
                                                 ></div>
                                                 <span className="text-[9px] text-gray-400 font-bold mt-2 truncate w-full text-center">
                                                     {formatLabel(item.label)}
@@ -246,7 +249,10 @@ const Dashboard = () => {
                             </div>
                             <div className="flex items-center space-x-5 mt-4 text-[11px] font-bold text-gray-500 pl-2">
                                 <span className="flex items-center">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-t from-[#ff0b01]/30 to-[#ff0b01] mr-2"></span>
+                                    <span 
+                                        className="w-2.5 h-2.5 rounded-full mr-2"
+                                        style={{ background: 'linear-gradient(to top, rgba(var(--brand-primary-rgb, 124, 58, 237), 0.3), var(--brand-primary, #7C3AED))' }}
+                                    ></span>
                                     Sales Revenue ({viewType})
                                 </span>
                             </div>

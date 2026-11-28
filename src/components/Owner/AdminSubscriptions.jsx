@@ -107,6 +107,9 @@ export default function AdminSubscriptions() {
     amountInRupees: '',
     durationMonths: '1',
     razorpayPlanId: '',
+    planType: 'SUBSCRIPTION',
+    marketingCredits: '0',
+    utilityCredits: '0',
     active: true
   });
   const [submittingPlan, setSubmittingPlan] = useState(false);
@@ -265,6 +268,9 @@ export default function AdminSubscriptions() {
       amountInRupees: '',
       durationMonths: '1',
       razorpayPlanId: '',
+      planType: 'SUBSCRIPTION',
+      marketingCredits: '0',
+      utilityCredits: '0',
       active: true
     });
     setIsPlanModalOpen(true);
@@ -278,6 +284,9 @@ export default function AdminSubscriptions() {
       amountInRupees: plan.amountInPaise ? (plan.amountInPaise / 100).toString() : '',
       durationMonths: plan.durationMonths ? plan.durationMonths.toString() : '1',
       razorpayPlanId: plan.razorpayPlanId || '',
+      planType: plan.planType || 'SUBSCRIPTION',
+      marketingCredits: (plan.marketingCredits ?? 0).toString(),
+      utilityCredits: (plan.utilityCredits ?? 0).toString(),
       active: plan.active !== undefined ? plan.active : true
     });
     setIsPlanModalOpen(true);
@@ -292,12 +301,16 @@ export default function AdminSubscriptions() {
 
     setSubmittingPlan(true);
     const amountInPaise = Math.round(parseFloat(planForm.amountInRupees) * 100);
+    const isTopUp = planForm.planType === 'WHATSAPP_TOPUP';
     const payload = {
       planCode: planForm.planCode.trim().toLowerCase(),
       planName: planForm.planName.trim(),
       amountInPaise: amountInPaise,
-      durationMonths: parseInt(planForm.durationMonths) || 1,
-      razorpayPlanId: planForm.razorpayPlanId.trim() || null,
+      durationMonths: isTopUp ? 0 : (parseInt(planForm.durationMonths) || 1),
+      razorpayPlanId: isTopUp ? null : (planForm.razorpayPlanId.trim() || null),
+      planType: planForm.planType || 'SUBSCRIPTION',
+      marketingCredits: parseInt(planForm.marketingCredits, 10) || 0,
+      utilityCredits: parseInt(planForm.utilityCredits, 10) || 0,
       active: planForm.active
     };
 
@@ -1323,6 +1336,60 @@ export default function AdminSubscriptions() {
                 />
               </div>
 
+              <div>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Plan Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'SUBSCRIPTION', label: 'Salon Subscription' },
+                    { value: 'WHATSAPP_TOPUP', label: 'WhatsApp Top-Up Pack' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPlanForm({ ...planForm, planType: opt.value })}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        planForm.planType === opt.value
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-500'
+                          : isDarkMode
+                            ? 'bg-zinc-800/80 border-zinc-700 text-zinc-400'
+                            : 'bg-gray-50 border-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Marketing Credits</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={planForm.marketingCredits}
+                    onChange={(e) => setPlanForm({ ...planForm, marketingCredits: e.target.value })}
+                    placeholder="e.g. 200"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Utility Credits</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={planForm.utilityCredits}
+                    onChange={(e) => setPlanForm({ ...planForm, utilityCredits: e.target.value })}
+                    placeholder="e.g. 100"
+                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                      isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                    }`}
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Price (₹ INR) *</label>
@@ -1339,34 +1406,38 @@ export default function AdminSubscriptions() {
                   />
                 </div>
 
+                {planForm.planType !== 'WHATSAPP_TOPUP' && (
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Duration (Months) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={planForm.durationMonths}
+                      onChange={(e) => setPlanForm({ ...planForm, durationMonths: e.target.value })}
+                      placeholder="e.g. 1, 3, 6, 12"
+                      required
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                        isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {planForm.planType !== 'WHATSAPP_TOPUP' && (
                 <div>
-                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Duration (Months) *</label>
+                  <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Razorpay Plan ID (Optional)</label>
                   <input
-                    type="number"
-                    min="1"
-                    value={planForm.durationMonths}
-                    onChange={(e) => setPlanForm({ ...planForm, durationMonths: e.target.value })}
-                    placeholder="e.g. 1, 3, 6, 12"
-                    required
-                    className={`w-full px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-red-500 transition border ${
+                    type="text"
+                    value={planForm.razorpayPlanId}
+                    onChange={(e) => setPlanForm({ ...planForm, razorpayPlanId: e.target.value })}
+                    placeholder="e.g. plan_N12345ABC"
+                    className={`w-full px-4 py-3 rounded-xl text-xs font-mono focus:outline-none focus:border-red-500 transition border ${
                       isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
                     }`}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Razorpay Plan ID (Optional)</label>
-                <input
-                  type="text"
-                  value={planForm.razorpayPlanId}
-                  onChange={(e) => setPlanForm({ ...planForm, razorpayPlanId: e.target.value })}
-                  placeholder="e.g. plan_N12345ABC"
-                  className={`w-full px-4 py-3 rounded-xl text-xs font-mono focus:outline-none focus:border-red-500 transition border ${
-                    isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400'
-                  }`}
-                />
-              </div>
+              )}
 
               <div className={`flex items-center justify-between p-3 rounded-xl border ${
                 isDarkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-gray-50 border-gray-100'

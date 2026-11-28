@@ -398,12 +398,12 @@ export default function ServerLogs() {
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4 pb-6 border-b border-slate-200 dark:border-zinc-800">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-2xl bg-red-500/10 text-[#FF0B01]">
+            <div className="p-2 rounded-2xl bg-brand-primary/10 text-brand-primary" style={{ color: 'var(--brand-primary)' }}>
               <Terminal className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-black tracking-[0.2em] text-[#FF0B01] uppercase mb-0.5 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-[#FF0B01]" /> Real-time System Diagnostics
+              <span className="text-[10px] font-black tracking-[0.2em] text-brand-primary uppercase mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--brand-primary)' }}>
+                <Zap className="w-3.5 h-3.5 text-brand-primary" style={{ color: 'var(--brand-primary)' }} /> Real-time System Diagnostics
               </span>
               <h1 className={`text-xl sm:text-2xl font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 Server Logs & Limit Event Dashboard
@@ -444,7 +444,7 @@ export default function ServerLogs() {
           onClick={() => { setSelectedLevel('ALL'); setSelectedLimitReason(''); }}
           className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] ${
             selectedLevel === 'ALL' && !selectedLimitReason 
-              ? 'ring-2 ring-[#FF0B01] border-[#FF0B01]' 
+              ? 'ring-2 ring-brand-primary border-brand-primary' 
               : isDarkMode ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white border-slate-200/80'
           }`}
         >
@@ -535,8 +535,8 @@ export default function ServerLogs() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full pl-10 pr-8 py-2.5 rounded-2xl border text-xs font-semibold outline-none transition ${
                 isDarkMode 
-                  ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:border-[#FF0B01]' 
-                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-[#FF0B01]'
+                  ? 'bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:border-brand-primary' 
+                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-brand-primary'
               }`}
             />
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
@@ -560,11 +560,12 @@ export default function ServerLogs() {
                   onClick={() => setSelectedLevel(lvl)}
                   className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase transition cursor-pointer border ${
                     isActive
-                      ? 'bg-[#FF0B01] text-white border-[#FF0B01] shadow-md shadow-red-500/20'
+                      ? 'bg-brand-primary text-white border-brand-primary shadow-md'
                       : isDarkMode
                       ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
                       : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                   }`}
+                  style={isActive ? { backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                 >
                   {lvl.replace('_', ' ')}
                 </button>
@@ -689,7 +690,8 @@ export default function ServerLogs() {
 
             <button
               onClick={handleDownloadLogs}
-              className="bg-[#FF0B01] hover:bg-red-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-500/20"
+              className="bg-brand-primary text-white hover:opacity-90 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer"
+              style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
               title="Download Logs as File"
             >
               <Download className="w-4 h-4" />
@@ -715,7 +717,7 @@ export default function ServerLogs() {
           </div>
           <div className="text-[10px] text-zinc-400 font-bold flex items-center gap-3">
             <span>Showing {filteredLogs.length} of {logs.length} entries</span>
-            {loading && <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#FF0B01]" />}
+            {loading && <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-primary" style={{ color: 'var(--brand-primary)' }} />}
           </div>
         </div>
 
@@ -908,7 +910,8 @@ export default function ServerLogs() {
 
               <button
                 onClick={() => setSelectedLog(null)}
-                className="bg-[#FF0B01] hover:bg-red-700 text-white px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-red-500/20"
+                className="bg-brand-primary text-white hover:opacity-90 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md cursor-pointer"
+                style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
               >
                 Close Inspector
               </button>

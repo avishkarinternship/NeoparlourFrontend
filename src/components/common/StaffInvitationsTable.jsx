@@ -61,7 +61,7 @@ const StaffInvitationsTable = ({
     }`}>
       {loading ? (
         <div className="p-12 text-center text-xs font-bold text-slate-400">
-          <div className="w-8 h-8 border-4 border-[#FF0B01] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}></div>
           Loading invitation data...
         </div>
       ) : !data || data.length === 0 ? (

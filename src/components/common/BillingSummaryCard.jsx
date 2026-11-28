@@ -37,7 +37,7 @@ export const BillingSummaryCard = ({
         <h4 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
           isDarkMode ? 'text-zinc-200' : 'text-gray-700'
         }`}>
-          <Receipt className="w-4 h-4 text-[#ff0b01]" />
+          <Receipt className="w-4 h-4 text-brand-primary" style={{ color: 'var(--brand-primary)' }} />
           Billing Breakdown
         </h4>
         {includeGst && (
@@ -117,7 +117,7 @@ export const BillingSummaryCard = ({
               isDarkMode ? 'text-white border-zinc-800' : 'text-gray-900 border-gray-300'
             }`}>
               <span>Total Amount Payable (incl. GST)</span>
-              <span className="font-mono text-[#ff0b01]">₹{grandTotal.toFixed(2)}</span>
+              <span className="font-mono text-brand-primary font-black" style={{ color: 'var(--brand-primary)' }}>₹{grandTotal.toFixed(2)}</span>
             </div>
           </>
         ) : (
@@ -125,7 +125,7 @@ export const BillingSummaryCard = ({
             isDarkMode ? 'text-white border-zinc-800' : 'text-gray-900 border-gray-300'
           }`}>
             <span>Total Amount Payable</span>
-            <span className="font-mono text-[#ff0b01]">₹{baseNet.toFixed(2)}</span>
+            <span className="font-mono text-brand-primary font-black" style={{ color: 'var(--brand-primary)' }}>₹{baseNet.toFixed(2)}</span>
           </div>
         )}
       </div>

@@ -223,7 +223,7 @@ const Orders = () => {
                                 >
                                     {tab.label}
                                     {activeTab === tab.key && (
-                                        <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#FF0B01] rounded-full" />
+                                        <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-brand-primary rounded-full" style={{ backgroundColor: 'var(--brand-primary)' }} />
                                     )}
                                 </button>
                             ))}
@@ -242,7 +242,7 @@ const Orders = () => {
                                         value={keyword}
                                         onChange={(e) => setKeyword(e.target.value)}
                                         placeholder="Product or Customer name..."
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -254,7 +254,7 @@ const Orders = () => {
                                         value={mobile}
                                         onChange={(e) => setMobile(e.target.value)}
                                         placeholder="Filter by mobile..."
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -266,7 +266,7 @@ const Orders = () => {
                                         value={minAmount}
                                         onChange={(e) => setMinAmount(e.target.value)}
                                         placeholder="e.g. 100"
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -277,7 +277,7 @@ const Orders = () => {
                                         value={maxAmount}
                                         onChange={(e) => setMaxAmount(e.target.value)}
                                         placeholder="e.g. 5000"
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg placeholder-gray-400 focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -288,7 +288,7 @@ const Orders = () => {
                                         type="date"
                                         value={fromDate}
                                         onChange={(e) => setFromDate(e.target.value)}
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -298,7 +298,7 @@ const Orders = () => {
                                         type="date"
                                         value={toDate}
                                         onChange={(e) => setToDate(e.target.value)}
-                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-[#FF0B01] transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
+                                        className={`w-full px-3 py-2 text-[11px] font-semibold rounded-lg focus:outline-none focus:border-brand-primary transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'} border`}
                                     />
                                 </div>
 
@@ -310,13 +310,14 @@ const Orders = () => {
                                 <button
                                     type="button"
                                     onClick={handleClearFilters}
-                                    className={`px-4 py-2 border rounded-lg text-[11px] font-bold transition-colors ${isDarkMode ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                                    className={`px-4 py-2 border rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${isDarkMode ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                                 >
                                     Clear Filters
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-[#FF0B01] text-white rounded-lg text-[11px] font-bold shadow-xs hover:bg-[#e00a00] hover:shadow-md transition-all duration-150"
+                                    className="px-5 py-2 bg-brand-primary text-white rounded-lg text-[11px] font-bold shadow-xs hover:brightness-110 hover:shadow-md transition-all duration-150 cursor-pointer"
+                                    style={{ backgroundColor: 'var(--brand-primary)' }}
                                 >
                                     Apply Search
                                 </button>
@@ -328,7 +329,7 @@ const Orders = () => {
                     <div className="max-w-6xl mx-auto">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
-                                <div className="animate-spin h-8 w-8 border-2 border-[#FF0B01] border-t-transparent rounded-full mb-3"></div>
+                                <div className="animate-spin h-8 w-8 border-2 border-brand-primary border-t-transparent rounded-full mb-3"></div>
                                 <p className={`text-[11px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} tracking-wide uppercase`}>Loading orders...</p>
                             </div>
                         ) : !Array.isArray(orders) || orders.length === 0 ? (
@@ -430,7 +431,7 @@ const Orders = () => {
                                             <div className={`border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'} pt-2.5`}>
                                                 <div className="flex items-center justify-between mb-2.5">
                                                     <span className={`text-[9px] font-black ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'} uppercase tracking-wide`}>Grand Total</span>
-                                                    <span className={`text-sm font-black ${isCompleted ? 'text-emerald-600' : 'text-[#FF0B01]'}`}>
+                                                    <span className={`text-sm font-black ${isCompleted ? 'text-emerald-600' : 'text-brand-primary'}`} style={!isCompleted ? { color: 'var(--brand-primary)' } : {}}>
                                                         ₹{parseFloat(order.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
@@ -519,9 +520,9 @@ const Orders = () => {
                                     </button>
                                     <button 
                                         onClick={handleConfirmAction}
-                                        className={`flex-1 py-2 text-white rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
+                                        className={`flex-1 py-2 text-white rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${
                                             confirmModalType === 'cancel'
-                                                ? 'bg-[#FF0B01] hover:bg-[#e00a00] hover:shadow-lg'
+                                                ? 'bg-rose-600 hover:bg-rose-700 hover:shadow-lg'
                                                 : (isDarkMode ? 'bg-slate-200 text-slate-900 hover:bg-white hover:shadow-lg' : 'bg-gray-900 hover:bg-gray-800 hover:shadow-lg')
                                         }`}
                                     >
@@ -555,7 +556,7 @@ const Orders = () => {
                                 </button>
                                 
                                 {/* Current Page Indicator Pill */}
-                                <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                <span className="px-3.5 py-1.5 bg-brand-primary text-white text-[10px] font-black rounded-lg" style={{ backgroundColor: 'var(--brand-primary)' }}>
                                     {currentPage + 1}
                                 </span>
 

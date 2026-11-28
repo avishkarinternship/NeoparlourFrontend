@@ -46,12 +46,12 @@ const SubscriptionPlans = () => {
       try {
         setLoading(true);
         const response = await axiosInstance.get('/subscriptions/plans-with-claims');
-        setPlans(response.data || []);
+        setPlans((response.data || []).filter((p) => (p.planType || 'SUBSCRIPTION') !== 'WHATSAPP_TOPUP'));
       } catch (error) {
         console.error('Failed to load subscription plans with claims', error);
         try {
           const fallbackRes = await axiosInstance.get('/subscriptions/plans');
-          setPlans(fallbackRes.data || []);
+          setPlans((fallbackRes.data || []).filter((p) => (p.planType || 'SUBSCRIPTION') !== 'WHATSAPP_TOPUP'));
         } catch (fallbackErr) {
           toast.error('Could not fetch active subscription plans. Please try again.');
         }
@@ -274,7 +274,7 @@ const SubscriptionPlans = () => {
           contact: ownerUser?.phone || storedUser?.phone || ''
         },
         theme: {
-          color: "#ff0b01"
+          color: (typeof window !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--brand-primary')?.trim() : '') || "#7C3AED"
         },
         handler: async function (transaction) {
           try {
@@ -349,7 +349,10 @@ const SubscriptionPlans = () => {
           <h2 className="text-[12px] font-black text-gray-400 tracking-[0.4em] uppercase">{t('subscriptions_page.membership_plans', 'MEMBERSHIP PLANS')}</h2>
           <div className="relative mt-2">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{t('subscriptions_page.title', 'SUBSCRIPTION PLANS')}</h1>
-            <div className="absolute -bottom-2.5 left-0 w-24 h-1 bg-[#ff0b01] rounded-full" />
+            <div 
+              className="absolute -bottom-2.5 left-0 w-24 h-1 bg-brand-primary rounded-full" 
+              style={{ backgroundColor: 'var(--brand-primary)' }}
+            />
           </div>
         </div>
         
@@ -365,7 +368,10 @@ const SubscriptionPlans = () => {
       <div className="w-full max-w-[1200px] flex-1 flex items-center justify-center">
         {loading ? (
           <div className="flex flex-col items-center gap-4 py-24">
-            <div className="h-10 w-10 border-[4px] border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+            <div 
+              className="h-10 w-10 border-[4px] border-brand-primary/10 border-t-brand-primary rounded-full animate-spin" 
+              style={{ borderTopColor: 'var(--brand-primary)' }}
+            />
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">{t('subscriptions_page.loading_plans', 'Loading Live Plans...')}</p>
           </div>
         ) : plans.length > 0 ? (
@@ -388,9 +394,10 @@ const SubscriptionPlans = () => {
                   key={plan.id}
                   className={`relative flex flex-col justify-between rounded-[32px] p-8 md:p-10 border transition-all duration-500 shadow-[0_15px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] group overflow-hidden ${
                     isFeatured 
-                      ? 'bg-[#ff0b01] border-transparent text-white' 
+                      ? 'bg-brand-primary border-transparent text-white' 
                       : 'bg-white border-gray-100 text-gray-900'
                   }`}
+                  style={isFeatured ? { backgroundColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                 >
                   {/* Subtle Pattern Backdrops */}
                   {isFeatured && (
@@ -402,8 +409,8 @@ const SubscriptionPlans = () => {
                     <div className="flex justify-between items-start mb-6">
                       {/* Icon */}
                       <div className={`p-4 rounded-2xl flex items-center justify-center ${
-                        isFeatured ? 'bg-white/10 text-white' : 'bg-[#ffebeb] text-[#ff0b01]'
-                      }`}>
+                        isFeatured ? 'bg-white/10 text-white' : 'bg-brand-primary/10 text-brand-primary'
+                      }`} style={!isFeatured ? { color: 'var(--brand-primary)' } : {}}>
                         <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M2 4l3 6 7-8 7 8 3-6v16H2V4zm18 13v-3l-2.5-3-3.5 4-3-3-4.5 5H4v3h16z" />
                         </svg>
@@ -446,7 +453,7 @@ const SubscriptionPlans = () => {
                           🎉 100% OFF — FREE SUBSCRIPTION
                         </p>
                       ) : isYearlyOrMulti && (
-                        <p className={`text-xs mt-2 font-semibold ${isFeatured ? 'text-white/80' : 'text-[#ff0b01]'}`}>
+                        <p className={`text-xs mt-2 font-semibold ${isFeatured ? 'text-white/80' : 'text-brand-primary'}`} style={!isFeatured ? { color: 'var(--brand-primary)' } : {}}>
                           ₹{monthlyCost} / Month
                         </p>
                       )}
@@ -461,7 +468,7 @@ const SubscriptionPlans = () => {
                       <ul className="space-y-3 pl-0.5 text-sm font-medium">
                         <li className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
-                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-[#ffebeb]/30 text-[#ff0b01]'
+                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-brand-primary/10 text-brand-primary'
                           }`}>
                             ✓
                           </div>
@@ -469,7 +476,7 @@ const SubscriptionPlans = () => {
                         </li>
                         <li className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
-                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-[#ffebeb]/30 text-[#ff0b01]'
+                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-brand-primary/10 text-brand-primary'
                           }`}>
                             ✓
                           </div>
@@ -477,7 +484,7 @@ const SubscriptionPlans = () => {
                         </li>
                         <li className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
-                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-[#ffebeb]/30 text-[#ff0b01]'
+                            isFeatured ? 'border-white/20 bg-white/10 text-white' : 'border-gray-100 bg-brand-primary/10 text-brand-primary'
                           }`}>
                             ✓
                           </div>
@@ -503,7 +510,7 @@ const SubscriptionPlans = () => {
                             className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider outline-none transition ${
                               isFeatured
                                 ? 'bg-white/10 border border-white/20 text-white placeholder-white/50 focus:bg-white/20'
-                                : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#ff0b01]'
+                                : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-brand-primary'
                             }`}
                           />
                           {couponState.inputCode && (
@@ -524,9 +531,10 @@ const SubscriptionPlans = () => {
                           disabled={couponState.validating || !(couponState.inputCode || '').trim()}
                           className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-sm cursor-pointer shrink-0 disabled:opacity-50 ${
                             isFeatured
-                              ? 'bg-white text-[#ff0b01] hover:bg-white/90'
+                              ? 'bg-white text-brand-primary hover:bg-white/90'
                               : 'bg-gray-900 text-white hover:bg-black'
                           }`}
+                          style={isFeatured ? { color: 'var(--brand-primary)' } : {}}
                         >
                           {couponState.validating ? '...' : 'Apply'}
                         </button>
@@ -556,14 +564,15 @@ const SubscriptionPlans = () => {
                       isFree
                         ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-[0_10px_25px_rgba(16,185,129,0.3)]'
                         : isFeatured 
-                          ? 'bg-white text-[#ff0b01] hover:bg-white/90 shadow-[0_10px_25px_rgba(255,255,255,0.1)]' 
-                          : 'bg-[#ff0b01] text-white hover:bg-[#d80800] shadow-[0_10px_25px_rgba(255,11,1,0.15)]'
+                          ? 'bg-white text-brand-primary hover:bg-white/90 shadow-[0_10px_25px_rgba(255,255,255,0.1)]' 
+                          : 'bg-brand-primary text-white hover:opacity-90 shadow-md'
                     }`}
+                    style={isFeatured ? { color: 'var(--brand-primary)' } : !isFree ? { backgroundColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                   >
                     {payingPlanCode === plan.planCode ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className={`h-4 w-4 border-2 rounded-full animate-spin ${
-                          isFree ? 'border-white/25 border-t-white' : isFeatured ? 'border-[#ff0b01]/25 border-t-[#ff0b01]' : 'border-white/25 border-t-white'
+                          isFree ? 'border-white/25 border-t-white' : isFeatured ? 'border-brand-primary/25 border-t-brand-primary' : 'border-white/25 border-t-white'
                         }`} />
                         Processing...
                       </div>
@@ -594,8 +603,10 @@ const SubscriptionPlans = () => {
             style={{ animation: 'scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1)' }}>
             
             {/* Success Checkmark Circle */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#ff0b01] to-[#d80800] flex items-center justify-center mb-8 shadow-[0_10px_30px_rgba(255,11,1,0.3)]"
-              style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both' }}>
+            <div 
+              className="w-24 h-24 rounded-full bg-brand-primary flex items-center justify-center mb-8 shadow-lg"
+              style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both', backgroundColor: 'var(--brand-primary)' }}
+            >
               <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -608,19 +619,23 @@ const SubscriptionPlans = () => {
 
             {/* Description */}
             <p className="text-sm text-gray-500 mb-2 leading-relaxed">
-              Your <span className="font-bold text-[#ff0b01]">{successPlanName}</span> plan has been successfully activated.
+              Your <span className="font-bold text-brand-primary" style={{ color: 'var(--brand-primary)' }}>{successPlanName}</span> plan has been successfully activated.
             </p>
             <p className="text-xs text-gray-400 mb-8">
               Your salon has been created and is ready to go. Welcome to NeoParlour!
             </p>
 
             {/* Divider */}
-            <div className="w-16 h-[3px] bg-gradient-to-r from-transparent via-[#ff0b01]/30 to-transparent rounded-full mb-8" />
+            <div 
+              className="w-16 h-[3px] bg-brand-primary/30 rounded-full mb-8" 
+              style={{ backgroundColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.3)' }}
+            />
 
             {/* CTA Button */}
             <button
               onClick={handleSuccessClose}
-              className="w-full py-4 bg-[#ff0b01] hover:bg-[#d80800] text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-[0_10px_25px_rgba(255,11,1,0.2)] hover:shadow-[0_15px_35px_rgba(255,11,1,0.3)] active:scale-95 cursor-pointer"
+              className="w-full py-4 bg-brand-primary text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-md hover:opacity-90 active:scale-95 cursor-pointer"
+              style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
             >
               Go to Dashboard
             </button>

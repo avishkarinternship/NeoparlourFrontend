@@ -67,6 +67,7 @@ const AdminBlogManager = React.lazy(() => import('../components/Owner/AdminBlogM
 const AdminTestimonialManager = React.lazy(() => import('../components/Owner/AdminTestimonialManager'));
 const AdminSeoDirectory = React.lazy(() => import('../components/Owner/AdminSeoDirectory'));
 const StaffAttendance = React.lazy(() => import('../components/Owner/StaffAttendance'));
+const Reminders = React.lazy(() => import('../components/Owner/Reminders'));
 const Cart = React.lazy(() => import('../components/Customer/Cart'));
 const Offers = React.lazy(() => import('../components/Customer/Offers'));
 
@@ -378,6 +379,22 @@ export let routes = createBrowserRouter([
                     },
                     {
                         path: 'terms-and-conditions',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'cancellation-policy',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/cancellation-policy',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'refund-policy',
+                        element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
+                    },
+                    {
+                        path: 'customer/refund-policy',
                         element: <CustomerRouteGuard isPublic={true}><CustomerTermsAndConditions /></CustomerRouteGuard>
                     },
                     {
@@ -711,6 +728,10 @@ export let routes = createBrowserRouter([
                     {
                         path: '/owner/customers',
                         element: <OwnerRouteGuard><Customers /></OwnerRouteGuard>
+                    },
+                    {
+                        path: '/owner/reminders',
+                        element: <OwnerRouteGuard><Reminders /></OwnerRouteGuard>
                     },
                     {
                         path: '/owner/appointments',

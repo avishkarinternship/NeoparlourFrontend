@@ -56,9 +56,7 @@ const KycDocumentCard = ({
     : null;
 
   return (
-    <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 shadow-xs flex flex-col justify-between ${
-      isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-150'
-    }`}>
+    <div className="rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 p-5 sm:p-6 transition-all duration-300 shadow-xs flex flex-col justify-between text-slate-900 dark:text-zinc-100">
       
       <div>
         {/* Document Card Header */}
@@ -66,7 +64,7 @@ const KycDocumentCard = ({
           <div className="flex items-center gap-3 min-w-0">
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
               effectiveStatus === 'REJECTED'
-                ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
                 : effectiveStatus === 'APPROVED'
                   ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                   : effectiveStatus === 'PENDING'
@@ -108,7 +106,8 @@ const KycDocumentCard = ({
             </div>
             <button
               onClick={() => onOpenUploadModal(docType, label)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md shadow-red-500/20 flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="px-4 py-2 bg-brand-primary hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+              style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
             >
               <UploadCloud className="w-3.5 h-3.5" />
               Upload File
@@ -118,14 +117,14 @@ const KycDocumentCard = ({
 
         {/* REJECTED ALERT BANNER */}
         {effectiveStatus === 'REJECTED' && (
-          <div className="mt-3.5 p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border-l-4 border-l-red-500 border border-red-200 dark:border-red-900/50 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-black text-red-800 dark:text-red-300 uppercase tracking-tight">
-              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+          <div className="mt-3.5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border-l-4 border-l-rose-500 border border-rose-200 dark:border-rose-900/50 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-black text-rose-800 dark:text-rose-300 uppercase tracking-tight">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>Document Rejected by Admin</span>
             </div>
 
             {document.rejectionReason && (
-              <p className="text-xs text-red-700 dark:text-red-400 font-medium leading-relaxed pl-6">
+              <p className="text-xs text-rose-700 dark:text-rose-400 font-medium leading-relaxed pl-6">
                 <strong>Reason:</strong> {document.rejectionReason}
               </p>
             )}
@@ -133,7 +132,8 @@ const KycDocumentCard = ({
             <div className="pt-1 pl-6 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => onOpenUploadModal(docType, label)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md shadow-red-500/20 flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-brand-primary hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+                style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
               >
                 <UploadCloud className="w-3.5 h-3.5" />
                 Re-upload {label}

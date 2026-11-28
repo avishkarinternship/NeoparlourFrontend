@@ -1,7 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logoIcon from '../../../assets/Neoparlour_logo.png';
-import { useActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../../utils/whiteLabelHelper';
+import { useActiveSalon, getSalonImageSrc, SalonLogoImage, isSalonCustomerRoute } from '../../../utils/whiteLabelHelper';
 import { MapPin, Phone } from 'lucide-react';
 import { useDarkMode } from '../../../context/DarkModeContext';
 import { useTranslation } from 'react-i18next';
@@ -11,8 +11,11 @@ import { isOwnerLoggedIn } from '../../../utils/auth';
 const Footer = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const { isDark } = useDarkMode();
     const { salon: activeSalon, isWhiteLabeled, clearActiveSalon } = useActiveSalon();
+    const isSalonRoute = isSalonCustomerRoute(location.pathname);
+    const showSalonFooter = Boolean(isWhiteLabeled && isSalonRoute);
 
     if (isOwnerLoggedIn()) {
         return <OwnerFooter isDarkMode={isDark} />;
@@ -23,9 +26,9 @@ const Footer = () => {
             {/* Main Footer Container */}
             <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-12 gap-x-4 gap-y-6 md:gap-5 items-start">
 
-                {/* Identity Column - White-labeled when salon selected */}
+                {/* Identity Column - White-labeled ONLY on active salon customer routes */}
                 <div className="col-span-2 md:col-span-3 flex flex-col justify-start">
-                    {isWhiteLabeled ? (
+                    {showSalonFooter ? (
                         <>
                             <div className="flex items-center space-x-2.5">
                                 <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="w-8 h-8 rounded-lg" />
@@ -89,9 +92,9 @@ const Footer = () => {
                 {/* Column 1: Salon / Company Info */}
                 <div className="col-span-1 md:col-span-3">
                     <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
-                        {isWhiteLabeled ? activeSalon.name : t('footer.our_company', 'Our Company')}
+                        {showSalonFooter ? activeSalon.name : t('footer.our_company', 'Our Company')}
                     </h4>
-                    {isWhiteLabeled ? (
+                    {showSalonFooter ? (
                         <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
                             <li onClick={() => navigate('/salon')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Services & Pricing</li>
                             <li onClick={() => navigate('/book-service')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Book Appointment</li>
@@ -137,9 +140,9 @@ const Footer = () => {
                 {/* Column 3: Resources / Customer Care */}
                 <div className="col-span-1 md:col-span-3">
                     <h4 className={`font-semibold text-sm mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
-                        {isWhiteLabeled ? 'Customer Care' : t('footer.our_resources', 'Our Resources')}
+                        {showSalonFooter ? 'Customer Care' : t('footer.our_resources', 'Our Resources')}
                     </h4>
-                    {isWhiteLabeled ? (
+                    {showSalonFooter ? (
                         <ul className={`space-y-1 text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
                             <li onClick={() => navigate('/customer/appointments')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• View Appointments</li>
                             <li onClick={() => navigate('/customer/my-orders')} className={`cursor-pointer transition-colors ${isDark ? 'hover:text-white' : 'hover:text-gray-900'}`}>• Orders & Purchases</li>
@@ -172,7 +175,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs sm:text-sm font-bold">
                     <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        © {new Date().getFullYear()} {isWhiteLabeled ? activeSalon.name : 'NeoParlour'}. All rights reserved.
+                        © {new Date().getFullYear()} {showSalonFooter ? activeSalon.name : 'NeoParlour'}. All rights reserved.
                     </span>
                     <span className="text-gray-400 hidden sm:inline">•</span>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 shadow-3xs">

@@ -7,7 +7,7 @@
  */
 
 import axiosInstance from '../api/axiosInstance';
-import { getSalonImageSrc } from './whiteLabelHelper';
+import { getSalonImageSrc, isThemeAllowedOnPath } from './whiteLabelHelper';
 
 export const THEME_CHANGE_EVENT = 'np_salon_theme_changed';
 
@@ -461,19 +461,19 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
   // ----------------------------------------------------
   // LIGHT MODE TOKENS (Brand-Driven Atmosphere)
   // ----------------------------------------------------
-  let lightBgHex = '#EBE0F5';
-  let lightSecBgHex = '#F0EAF6';
-  let lightSurfaceHex = '#FCFCFD';
+  let lightBgHex = '#F8FAFC';
+  let lightSecBgHex = '#F1F5F9';
+  let lightSurfaceHex = '#FFFFFF';
   let lightSurfaceElevated = '#FFFFFF';
-  let lightSidebarBg = '#F2EDF8';
-  let lightNavBg = '#F2EDF8';
-  let lightBorderHex = '#DBCBEB';
-  let lightInputBg = '#F5F1F8';
-  let lightInputBorder = '#DFD2ED';
-  let lightInputText = '#191122';
-  let lightTextPrimary = '#191122';
-  let lightTextSecondary = '#614979';
-  let lightTextParagraph = '#423253';
+  let lightSidebarBg = '#FFFFFF';
+  let lightNavBg = '#FFFFFF';
+  let lightBorderHex = '#E2E8F0';
+  let lightInputBg = '#FFFFFF';
+  let lightInputBorder = '#E2E8F0';
+  let lightInputText = '#0F172A';
+  let lightTextPrimary = '#0F172A';
+  let lightTextSecondary = '#475569';
+  let lightTextParagraph = '#334155';
 
   if (bgStyle === 'pure-white') {
     lightBgHex = '#FFFFFF';
@@ -494,46 +494,45 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     lightSecBgHex = '#F4EFE2';
     lightSurfaceHex = '#FCFBF8';
     lightSurfaceElevated = '#FFFFFF';
-    lightSidebarBg = '#F7F2E7';
-    lightNavBg = '#F7F2E7';
+    lightSidebarBg = '#FFFFFF';
+    lightNavBg = '#FFFFFF';
     lightBorderHex = '#E4DBC8';
-    lightInputBg = '#F9F6ED';
+    lightInputBg = '#FFFFFF';
     lightInputBorder = '#E2D8C3';
     lightInputText = '#241E15';
     lightTextPrimary = '#241E15';
     lightTextSecondary = '#6A5E4F';
     lightTextParagraph = '#4A4033';
   } else if (isChromatic) {
-    // Dynamic brand tint
-    const toHexStr = (rgbObj) => rgbToHex(rgbObj.r, rgbObj.g, rgbObj.b);
-    lightBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.65, 0.50), 0.92));
-    lightSecBgHex = toHexStr(hslToRgb(h, Math.min(s * 0.55, 0.42), 0.94));
-    lightSurfaceHex = toHexStr(hslToRgb(h, Math.min(s * 0.35, 0.22), 0.985));
-    lightSurfaceElevated = '#FFFFFF';
-    lightSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.38), 0.95));
-    lightNavBg = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.38), 0.95));
-    lightBorderHex = toHexStr(hslToRgb(h, Math.min(s * 0.50, 0.42), 0.86));
-    lightInputBg = toHexStr(hslToRgb(h, Math.min(s * 0.45, 0.35), 0.96));
-    lightInputBorder = toHexStr(hslToRgb(h, Math.min(s * 0.45, 0.38), 0.88));
-    lightInputText = toHexStr(hslToRgb(h, 0.35, 0.10));
-    lightTextPrimary = toHexStr(hslToRgb(h, 0.35, 0.10));
-    lightTextSecondary = toHexStr(hslToRgb(h, 0.25, 0.38));
-    lightTextParagraph = toHexStr(hslToRgb(h, 0.28, 0.25));
-  } else {
-    // Neutral monochrome
-    lightBgHex = '#F1F3F6';
-    lightSecBgHex = '#E9ECEF';
+    // Dynamic clean brand mode (Universal for any salon color)
+    lightBgHex = '#F8FAFC';
+    lightSecBgHex = '#F1F5F9';
     lightSurfaceHex = '#FFFFFF';
     lightSurfaceElevated = '#FFFFFF';
-    lightSidebarBg = '#F5F6F8';
-    lightNavBg = '#F5F6F8';
-    lightBorderHex = '#DDE0E5';
+    lightSidebarBg = '#FFFFFF';
+    lightNavBg = '#FFFFFF';
+    lightBorderHex = '#E2E8F0';
     lightInputBg = '#FFFFFF';
-    lightInputBorder = '#D1D5DB';
-    lightInputText = '#111827';
-    lightTextPrimary = '#111827';
-    lightTextSecondary = '#5A626A';
-    lightTextParagraph = '#3D4248';
+    lightInputBorder = '#E2E8F0';
+    lightInputText = '#0F172A';
+    lightTextPrimary = '#0F172A';
+    lightTextSecondary = '#475569';
+    lightTextParagraph = '#334155';
+  } else {
+    // Neutral monochrome
+    lightBgHex = '#F8FAFC';
+    lightSecBgHex = '#F1F5F9';
+    lightSurfaceHex = '#FFFFFF';
+    lightSurfaceElevated = '#FFFFFF';
+    lightSidebarBg = '#FFFFFF';
+    lightNavBg = '#FFFFFF';
+    lightBorderHex = '#E2E8F0';
+    lightInputBg = '#FFFFFF';
+    lightInputBorder = '#E2E8F0';
+    lightInputText = '#0F172A';
+    lightTextPrimary = '#0F172A';
+    lightTextSecondary = '#475569';
+    lightTextParagraph = '#334155';
   }
 
   const lightButtonText = getContrastingTextColor(primaryHex);
@@ -634,8 +633,8 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     darkSecBgHex = toHexStr(hslToRgb(h, cardS, 0.145));
     darkSurfaceHex = toHexStr(hslToRgb(h, cardS, 0.175));
     darkSurfaceElevated = toHexStr(hslToRgb(h, elevatedS, 0.23));
-    darkSidebarBg = toHexStr(hslToRgb(h, Math.min(s * 0.30, isWarmHue ? 0.10 : 0.20), 0.095));
-    darkNavBg = toHexStr(hslToRgb(h, bgS, 0.105));
+    darkSidebarBg = '#121217';
+    darkNavBg = '#121217';
     darkBorderHex = toHexStr(hslToRgb(h, borderS, 0.29));
     darkInputBg = toHexStr(hslToRgb(h, cardS, 0.14));
     darkInputBorder = toHexStr(hslToRgb(h, borderS, 0.28));
@@ -649,8 +648,8 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
     darkSecBgHex = '#171821';
     darkSurfaceHex = '#1E202B';
     darkSurfaceElevated = '#262937';
-    darkSidebarBg = '#121319';
-    darkNavBg = '#121319';
+    darkSidebarBg = '#121217';
+    darkNavBg = '#121217';
     darkBorderHex = '#2F3343';
     darkInputBg = '#1A1C25';
     darkInputBorder = '#3D4155';
@@ -738,6 +737,10 @@ export const generateBalancedPalette = (primaryHex, secondaryHex = null, bgStyle
 // ==========================================
 
 export const applyDynamicTheme = (palette) => {
+  if (typeof window !== 'undefined' && typeof isThemeAllowedOnPath === 'function' && !isThemeAllowedOnPath(window.location.pathname)) {
+    removeDynamicTheme();
+    return;
+  }
   if (!palette || !palette.primary || typeof document === 'undefined') return;
 
   try {
@@ -756,7 +759,7 @@ export const applyDynamicTheme = (palette) => {
       palette.secondary || palette.themeLight,
       palette.bgStyle || 'brand-tint'
     );
-    const light = palette.light && palette.light.background ? palette.light : balanced.light;
+    const light = balanced.light;
     const dark = balanced.dark;
 
     const lightPr = light.primaryRgb || palette.primaryRgb || '124, 58, 237';
@@ -775,12 +778,12 @@ export const applyDynamicTheme = (palette) => {
         --color-secondary: ${light.secondary || light.primary};
         --color-accent: ${light.accent || light.primary};
         --color-button-text: ${light.buttonText || '#FFFFFF'};
-        --color-background: ${light.background || '#EBE0F5'};
-        --color-secondary-background: ${light.secondaryBackground || '#F0EAF6'};
-        --color-surface: ${light.surface || '#FCFCFD'};
+        --color-background: ${light.background || '#F8FAFC'};
+        --color-secondary-background: ${light.secondaryBackground || '#F1F5F9'};
+        --color-surface: ${light.surface || '#FFFFFF'};
         --color-surface-elevated: ${light.surfaceElevated || '#FFFFFF'};
-        --color-sidebar-bg: ${light.sidebarBg || '#F2EDF8'};
-        --color-nav-bg: ${light.navBg || '#F2EDF8'};
+        --color-sidebar-bg: ${light.sidebarBg || '#FFFFFF'};
+        --color-nav-bg: ${light.navBg || '#FFFFFF'};
         --color-text-primary: ${light.textPrimary || '#191122'};
         --color-text-secondary: ${light.textSecondary || '#614979'};
         --color-text-paragraph: ${light.textParagraph || '#423253'};
@@ -791,6 +794,14 @@ export const applyDynamicTheme = (palette) => {
         --color-icon: ${light.iconColor || light.primary};
         --color-primary-rgb: ${lightPr};
         --color-secondary-rgb: ${lightSec};
+
+        /* Brand variables */
+        --brand-primary: var(--color-primary);
+        --brand-secondary: var(--color-secondary);
+        --brand-accent: var(--color-accent);
+        --brand-contrast-text: var(--color-button-text);
+        --brand-primary-rgb: ${lightPr};
+        --brand-secondary-rgb: ${lightSec};
 
         /* Legacy variables */
         --salon-primary: var(--color-primary);
@@ -803,6 +814,8 @@ export const applyDynamicTheme = (palette) => {
       /* ============================================================
          2. DARK MODE DESIGN TOKENS (.dark)
          ============================================================ */
+      :root.dark,
+      html.dark,
       .dark {
         --color-primary: ${dark.primary};
         --color-primary-hover: ${dark.primaryHover || lighten(dark.primary, 10)};
@@ -814,8 +827,8 @@ export const applyDynamicTheme = (palette) => {
         --color-secondary-background: ${dark.secondaryBackground || '#210F33'};
         --color-surface: ${dark.surface || '#29123F'};
         --color-surface-elevated: ${dark.surfaceElevated || '#33174F'};
-        --color-sidebar-bg: ${dark.sidebarBg || '#12061D'};
-        --color-nav-bg: ${dark.navBg || '#150822'};
+        --color-sidebar-bg: ${dark.sidebarBg || '#121217'};
+        --color-nav-bg: ${dark.navBg || '#121217'};
         --color-text-primary: ${dark.textPrimary || '#FAF9FB'};
         --color-text-secondary: ${dark.textSecondary || '#CCBFD9'};
         --color-text-paragraph: ${dark.textParagraph || '#DED6E7'};
@@ -826,6 +839,14 @@ export const applyDynamicTheme = (palette) => {
         --color-icon: ${dark.iconColor || dark.primary};
         --color-primary-rgb: ${darkPr};
         --color-secondary-rgb: ${darkSec};
+
+        /* Brand variables */
+        --brand-primary: var(--color-primary);
+        --brand-secondary: var(--color-secondary);
+        --brand-accent: var(--color-accent);
+        --brand-contrast-text: var(--color-button-text);
+        --brand-primary-rgb: ${darkPr};
+        --brand-secondary-rgb: ${darkSec};
 
         /* Legacy variables */
         --salon-primary: var(--color-primary);
@@ -849,18 +870,19 @@ export const applyDynamicTheme = (palette) => {
 
       /* Page & layout backgrounds (ensures all page containers use the brand-driven background) */
       html:not(.dark) body,
-      html:not(.dark) .bg-\\[\\#FAFAFA\\],
-      html:not(.dark) .bg-gray-50,
-      html:not(.dark) .bg-slate-50,
-      html:not(.dark) .bg-zinc-50,
-      html:not(.dark) main,
-      html:not(.dark) main.bg-white,
-      html:not(.dark) main.bg-\\[\\#FAFAFA\\],
-      html:not(.dark) main.bg-gray-50,
+      html:not(.dark) #root,
+      html:not(.dark) .app-container,
+      html:not(.dark) .staff-portal-canvas,
       html:not(.dark) .owner-page-canvas,
       html:not(.dark) .owner-main-content {
         background-color: var(--color-background) !important;
         color: var(--color-text-primary) !important;
+      }
+
+      /* Make sure centered mains inside canvases don't create boxed margin gutters */
+      .staff-portal-canvas main,
+      .owner-page-canvas main {
+        background-color: transparent !important;
       }
 
       /* Navigation Header */
@@ -918,21 +940,35 @@ export const applyDynamicTheme = (palette) => {
       html:not(.dark) .text-gray-900,
       html:not(.dark) .text-gray-800,
       html:not(.dark) .text-slate-900,
-      html:not(.dark) .text-slate-800,
-      html:not(.dark) h1, 
-      html:not(.dark) h2, 
-      html:not(.dark) h3, 
-      html:not(.dark) h4, 
-      html:not(.dark) h5 {
-        color: var(--color-text-primary) !important;
+      html:not(.dark) .text-slate-800 {
+        color: var(--color-text-primary);
       }
 
       html:not(.dark) .text-gray-600,
       html:not(.dark) .text-gray-500,
       html:not(.dark) .text-slate-600,
-      html:not(.dark) .text-slate-500,
-      html:not(.dark) p {
-        color: var(--color-text-secondary) !important;
+      html:not(.dark) .text-slate-500 {
+        color: var(--color-text-secondary);
+      }
+
+      /* Guarantee high contrast text readability on solid brand surfaces in ALL modes */
+      html .bg-brand-primary:not([class*="/"]),
+      html .bg-brand-primary:not([class*="/"]) :is(h1, h2, h3, h4, h5, p, span, div, label, a, button),
+      html .btn-primary, 
+      html .btn-primary *,
+      html button.bg-brand-primary:not([class*="/"]), 
+      html button.bg-brand-primary:not([class*="/"]) * {
+        color: var(--color-button-text, #FFFFFF) !important;
+      }
+
+      /* Explicitly protect text-brand-primary and active sidebar state from white text overrides */
+      .text-brand-primary,
+      [class*="text-brand-primary"],
+      .sidebar-btn[data-active="true"] span,
+      .sidebar-btn[data-active="true"] svg,
+      .sidebar-btn[data-active="true"] div {
+        color: var(--brand-primary) !important;
+        stroke: var(--brand-primary) !important;
       }
 
       html:not(.dark) .border-gray-200,
@@ -956,13 +992,12 @@ export const applyDynamicTheme = (palette) => {
 
       /* Dark page backgrounds */
       html.dark body,
+      html.dark #root,
+      html.dark .app-container,
+      html.dark .staff-portal-canvas,
       html.dark .bg-zinc-950,
       html.dark.bg-zinc-950,
       html.dark .bg-black,
-      html.dark main,
-      html.dark main.bg-white,
-      html.dark main.bg-black,
-      html.dark main.bg-zinc-950,
       html.dark .owner-page-canvas,
       html.dark .owner-main-content {
         background-color: var(--color-background) !important;
@@ -1017,20 +1052,14 @@ export const applyDynamicTheme = (palette) => {
       html.dark .text-white,
       html.dark .text-zinc-100,
       html.dark .text-zinc-200,
-      html.dark .text-slate-100,
-      html.dark h1, 
-      html.dark h2, 
-      html.dark h3, 
-      html.dark h4, 
-      html.dark h5 {
-        color: var(--color-text-primary) !important;
+      html.dark .text-slate-100 {
+        color: var(--color-text-primary);
       }
 
       html.dark .text-zinc-400,
       html.dark .text-zinc-500,
-      html.dark .text-slate-400,
-      html.dark p {
-        color: var(--color-text-secondary) !important;
+      html.dark .text-slate-400 {
+        color: var(--color-text-secondary);
       }
 
       html.dark .border-zinc-800,
@@ -1040,51 +1069,50 @@ export const applyDynamicTheme = (palette) => {
       }
 
       /* ============================================================
-         5. ACTIVE SIDEBAR TAB (Matching Reference Mockup)
+         5. ACTIVE SIDEBAR TAB (Modern Soft Brand Tint)
          ============================================================ */
+      html:not(.dark) .sidebar-btn[data-active="true"],
       html:not(.dark) .sidebar-btn.bg-red-50,
-      html:not(.dark) .sidebar-btn.bg-red-500\\/15,
-      html:not(.dark) .sidebar-btn[data-active="true"] {
-        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)) !important;
-        color: var(--color-button-text) !important;
-        box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.25) !important;
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15 {
+        background-color: rgba(var(--brand-primary-rgb), 0.1) !important;
+        border-color: rgba(var(--brand-primary-rgb), 0.25) !important;
+        color: var(--brand-primary) !important;
       }
 
+      html:not(.dark) .sidebar-btn[data-active="true"] span,
+      html:not(.dark) .sidebar-btn[data-active="true"] svg,
+      html:not(.dark) .sidebar-btn[data-active="true"] div,
       html:not(.dark) .sidebar-btn.bg-red-50 span,
       html:not(.dark) .sidebar-btn.bg-red-500\\/15 span,
       html:not(.dark) .sidebar-btn.bg-red-50 svg,
-      html:not(.dark) .sidebar-btn.bg-red-500\\/15 svg,
-      html:not(.dark) .sidebar-btn.bg-red-50 div,
-      html:not(.dark) .sidebar-btn.bg-red-500\\/15 div {
-        color: var(--color-button-text) !important;
-        stroke: var(--color-button-text) !important;
+      html:not(.dark) .sidebar-btn.bg-red-500\\/15 svg {
+        color: var(--brand-primary) !important;
+        stroke: var(--brand-primary) !important;
       }
 
-      /* Dark Mode Active Sidebar Tab: Rich, Clean, Non-Glowy */
+      /* Dark Mode Active Sidebar Tab */
+      .dark .sidebar-btn[data-active="true"],
       .dark .sidebar-btn.bg-red-50,
-      .dark .sidebar-btn.bg-red-500\\/15,
-      .dark .sidebar-btn[data-active="true"] {
-        background: var(--color-primary) !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      .dark .sidebar-btn.bg-red-500\\/15 {
+        background-color: rgba(var(--brand-primary-rgb), 0.18) !important;
+        border-color: rgba(var(--brand-primary-rgb), 0.35) !important;
+        color: var(--brand-primary) !important;
       }
 
+      .dark .sidebar-btn[data-active="true"] span,
+      .dark .sidebar-btn[data-active="true"] svg,
+      .dark .sidebar-btn[data-active="true"] div,
       .dark .sidebar-btn.bg-red-50 span,
       .dark .sidebar-btn.bg-red-500\\/15 span,
       .dark .sidebar-btn.bg-red-50 svg,
-      .dark .sidebar-btn.bg-red-500\\/15 svg,
-      .dark .sidebar-btn.bg-red-50 div,
-      .dark .sidebar-btn.bg-red-500\\/15 div {
-        color: #FFFFFF !important;
-        stroke: #FFFFFF !important;
+      .dark .sidebar-btn.bg-red-500\\/15 svg {
+        color: var(--brand-primary) !important;
+        stroke: var(--brand-primary) !important;
       }
 
-      .dark .sidebar-btn.bg-red-50 .active-icon-glow,
-      .dark .sidebar-btn.bg-red-500\\/15 .active-icon-glow,
       .dark .sidebar-btn[data-active="true"] .active-icon-glow {
         filter: none !important;
-        color: #FFFFFF !important;
+        color: var(--brand-primary) !important;
       }
 
       /* ============================================================

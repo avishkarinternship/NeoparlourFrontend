@@ -375,31 +375,31 @@ const Staff = () => {
 
     return (
         <>
-                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
-                    isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
+                <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 bg-transparent ${
+                    isDarkMode ? 'text-zinc-100' : 'text-slate-800'
                 }`}>
                     {/* Top Section Tab Navigation */}
-                    <div className={`flex items-center gap-3 border-b mb-8 pb-1 overflow-x-auto ${
-                        isDarkMode ? 'border-zinc-800' : 'border-gray-200'
-                    }`}>
+                    <div className={`flex items-center gap-2 mb-8 p-1.5 rounded-2xl glass-badge max-w-fit overflow-x-auto`}>
                         <button
                             onClick={() => setActiveTab('manage')}
-                            className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                                 activeTab === 'manage'
-                                    ? 'border-red-600 text-red-600'
-                                    : isDarkMode ? 'border-transparent text-zinc-400 hover:text-white' : 'border-transparent text-gray-400 hover:text-gray-900'
+                                    ? 'bg-brand-primary text-white shadow-md'
+                                    : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                             }`}
+                            style={activeTab === 'manage' ? { backgroundColor: 'var(--brand-primary)' } : {}}
                         >
                             <Users className="w-4 h-4" /> Staff Directory & Add Member
                         </button>
 
                         <button
                             onClick={() => setActiveTab('referrals')}
-                            className={`px-4 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                                 activeTab === 'referrals'
-                                    ? 'border-red-600 text-red-600'
-                                    : isDarkMode ? 'border-transparent text-zinc-400 hover:text-white' : 'border-transparent text-gray-400 hover:text-gray-900'
+                                    ? 'bg-brand-primary text-white shadow-md'
+                                    : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                             }`}
+                            style={activeTab === 'referrals' ? { backgroundColor: 'var(--brand-primary)' } : {}}
                         >
                             <TrendingUp className="w-4 h-4" /> My Staff Referrals & Stats
                         </button>
@@ -415,8 +415,8 @@ const Staff = () => {
                     ) : (
                         <>
                             {/* Add New Staff Form */}
-                            <div className={`max-w-3xl border rounded-2xl p-6 shadow-sm mb-8 ${
-                                isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-slate-800'
+                            <div className={`max-w-3xl rounded-2xl p-6 mb-8 glass-panel ${
+                                isDarkMode ? 'text-zinc-100' : 'text-slate-800'
                             }`}>
                                 <h2 className={`text-xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Staff</h2>
 
@@ -539,7 +539,7 @@ const Staff = () => {
                                         value={formData.address} 
                                         onChange={handleInputChange} 
                                         placeholder="Address" 
-                                        className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 ${
+                                        className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-brand-primary ${
                                             isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
                                         }`} 
                                         rows={3} 
@@ -548,7 +548,7 @@ const Staff = () => {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="submit" disabled={formLoading} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70 cursor-pointer transition-all">
+                                <button type="submit" disabled={formLoading} className="flex-1 bg-brand-primary text-white py-3 rounded-xl font-semibold hover:brightness-110 disabled:opacity-70 cursor-pointer transition-all shadow-sm" style={{ backgroundColor: 'var(--brand-primary)' }}>
                                     {formLoading ? 'Saving...' : 'Save Staff'}
                                 </button>
                                 <button type="button" onClick={resetForm} className={`flex-1 border py-3 rounded-xl font-semibold cursor-pointer transition-all ${
@@ -571,8 +571,8 @@ const Staff = () => {
                         ) : (
                             <div className="space-y-3">
                                 {staffList.map((staff) => (
-                                    <div key={staff.id} className={`flex flex-col sm:flex-row sm:items-center justify-between border rounded-xl p-4 hover:shadow-sm transition-all gap-4 ${
-                                        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-gray-200 text-slate-800'
+                                    <div key={staff.id} className={`flex flex-col sm:flex-row sm:items-center justify-between rounded-xl p-4 transition-all gap-4 glass-card-interactive ${
+                                        isDarkMode ? 'text-white' : 'text-slate-800'
                                     }`}>
                                         <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
                                             <div className={`w-12 h-12 rounded-full flex items-center justify-center border overflow-hidden flex-shrink-0 ${
@@ -685,7 +685,7 @@ const Staff = () => {
                         <div className="flex-1 overflow-y-auto p-6">
                             {editFetchLoading ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                                    <div className="animate-spin h-8 w-8 border-3 border-red-600 border-t-transparent rounded-full"></div>
+                                    <div className="animate-spin h-8 w-8 border-3 border-brand-primary border-t-transparent rounded-full"></div>
                                     <p className={`text-xs font-semibold animate-pulse ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Fetching staff details...</p>
                                 </div>
                             ) : (
@@ -825,7 +825,7 @@ const Staff = () => {
                                                 value={editFormData.address} 
                                                 onChange={(e) => setEditFormData(prev => ({ ...prev, address: e.target.value }))} 
                                                 placeholder="Address" 
-                                                className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-red-500 ${
+                                                className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' : 'bg-[#F9F9F9] border-gray-200 text-gray-900 placeholder-gray-400'
                                                 }`} 
                                                 rows={2} 
@@ -840,7 +840,8 @@ const Staff = () => {
                                         <button 
                                             type="submit" 
                                             disabled={formLoading} 
-                                            className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-70 transition-all text-sm h-11 cursor-pointer"
+                                            className="flex-1 bg-brand-primary text-white py-2.5 rounded-xl font-semibold hover:brightness-110 disabled:opacity-70 transition-all text-sm h-11 cursor-pointer shadow-sm"
+                                            style={{ backgroundColor: 'var(--brand-primary)' }}
                                         >
                                             {formLoading ? 'Saving...' : 'Update Staff'}
                                         </button>

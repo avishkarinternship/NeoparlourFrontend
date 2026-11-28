@@ -292,8 +292,8 @@ export default function StaffAttendance() {
         : '';
 
     return (
-        <main className={`flex-1 p-6 md:p-8 flex flex-col justify-between overflow-x-hidden min-h-screen transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+        <main className={`flex-1 p-6 md:p-8 flex flex-col justify-between overflow-x-hidden min-h-screen transition-colors duration-300 bg-transparent ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-800'
         }`}>
             <div>
                 {/* ── Page Header ───────────────────────────── */}
@@ -312,14 +312,14 @@ export default function StaffAttendance() {
                         onClick={() => setActiveTab('LEAVE_REQUEST')}
                         className={`pb-3 text-sm font-semibold tracking-wide transition-all relative flex items-center gap-2 cursor-pointer
                             ${activeTab === 'LEAVE_REQUEST'
-                                ? 'text-[#FF0B01] border-b-2 border-[#FF0B01]'
+                                ? 'text-brand-primary border-b-2 border-brand-primary'
                                 : isDarkMode ? 'text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent' : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
                             }`}
                     >
                         <ClipboardList className="w-4 h-4" />
                         Leave Requests
                         {pendingCount > 0 && (
-                            <span className="ml-1 bg-red-50 text-[#FF0B01] text-[10px] font-black rounded-full px-1.5 py-0.5 border border-red-100/50">
+                            <span className="ml-1 bg-brand-primary/10 text-brand-primary text-[10px] font-black rounded-full px-1.5 py-0.5 border border-red-100/50">
                                 {pendingCount}
                             </span>
                         )}
@@ -329,7 +329,7 @@ export default function StaffAttendance() {
                         onClick={() => setActiveTab('ATTENDANCE')}
                         className={`pb-3 text-sm font-semibold tracking-wide transition-all relative flex items-center gap-2 cursor-pointer
                             ${activeTab === 'ATTENDANCE'
-                                ? 'text-[#FF0B01] border-b-2 border-[#FF0B01]'
+                                ? 'text-brand-primary border-b-2 border-brand-primary'
                                 : isDarkMode ? 'text-zinc-400 hover:text-zinc-200 border-b-2 border-transparent' : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
                             }`}
                     >
@@ -388,7 +388,7 @@ export default function StaffAttendance() {
                         <div>
                             <h2 className={`text-[10px] font-extrabold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Selected Date</h2>
                             <p className={`text-sm font-bold mt-1 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                                <Calendar className="w-4 h-4 text-[#FF0B01]" />
+                                <Calendar className="w-4 h-4 text-brand-primary" />
                                 {selectedDateLabel}
                             </p>
                         </div>
@@ -455,7 +455,7 @@ export default function StaffAttendance() {
                                 >
                                     <span className={`text-[10px] font-bold uppercase tracking-wider mb-2 transition
                                         ${isToday 
-                                            ? 'text-[#FF0B01]' 
+                                            ? 'text-brand-primary' 
                                             : isDarkMode ? 'text-zinc-400 group-hover:text-zinc-200' : 'text-gray-400 group-hover:text-gray-600'
                                         }`}
                                     >
@@ -464,11 +464,12 @@ export default function StaffAttendance() {
                                     <div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all duration-200 relative cursor-pointer
                                             ${isSelected
-                                                ? isDarkMode ? 'bg-[#FF0B01] text-white shadow-md shadow-red-900/50 scale-105' : 'bg-[#FF0B01] text-white shadow-md shadow-red-100/50 scale-105'
+                                                ? 'bg-brand-primary text-white shadow-md scale-105'
                                                 : isToday
-                                                    ? isDarkMode ? 'bg-red-900/30 text-[#FF0B01] border-2 border-[#FF0B01] hover:bg-red-900/50' : 'bg-red-50 text-[#FF0B01] border-2 border-[#FF0B01] hover:bg-red-100/50'
-                                                    : isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-red-900/20 hover:text-[#FF0B01]' : 'bg-gray-50 text-gray-600 hover:bg-red-50/30 hover:text-[#FF0B01]'
+                                                    ? isDarkMode ? 'bg-brand-primary/20 text-brand-primary border-2 border-brand-primary hover:bg-brand-primary/30' : 'bg-brand-primary/10 text-brand-primary border-2 border-brand-primary hover:bg-brand-primary/20'
+                                                    : isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-brand-primary/20 hover:text-brand-primary' : 'bg-gray-50 text-gray-600 hover:bg-brand-primary/10 hover:text-brand-primary'
                                             }`}
+                                        style={isSelected ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                     >
                                         {d ? d.getDate() : ''}
                                         {/* dot indicators */}
@@ -494,7 +495,7 @@ export default function StaffAttendance() {
                             <select
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#FF0B01] focus:ring-4 focus:ring-red-100/10 transition appearance-none cursor-pointer font-bold ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-600 focus:bg-white'}`}
+                                className={`w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-red-100/10 transition appearance-none cursor-pointer font-bold ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-600 focus:bg-white'}`}
                             >
                                 <option value="">All Staff</option>
                                 {staffList.map(staff => (
@@ -569,7 +570,7 @@ export default function StaffAttendance() {
                                             {/* Card Header */}
                                             <div className="flex justify-between items-start mb-4 gap-2">
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-sm flex-shrink-0 border border-red-100/50">
+                                                    <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm flex-shrink-0 border border-brand-primary/20">
                                                         <User className="w-4 h-4" />
                                                     </div>
                                                     <div className="min-w-0">
@@ -588,7 +589,7 @@ export default function StaffAttendance() {
                                             {/* Leave Type */}
                                             {leave.leaveType && (
                                                 <div className="mb-4">
-                                                    <span className="text-[10px] bg-red-50 text-[#FF0B01] px-2.5 py-0.5 rounded-lg font-bold uppercase tracking-wider border border-red-100/30">
+                                                    <span className="text-[10px] bg-brand-primary/10 text-brand-primary px-2.5 py-0.5 rounded-lg font-bold uppercase tracking-wider border border-red-100/30">
                                                         {leave.leaveType}
                                                     </span>
                                                 </div>

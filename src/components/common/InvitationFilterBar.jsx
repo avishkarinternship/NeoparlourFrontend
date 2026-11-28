@@ -34,7 +34,7 @@ const InvitationFilterBar = ({
             placeholder="Search name, mobile, or invite code..."
             value={filters.search || ''}
             onChange={(e) => updateFilter('search', e.target.value)}
-            className={`w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs font-bold border focus:outline-none focus:border-[#FF0B01] transition-all ${
+            className={`w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs font-bold border focus:outline-none focus:border-brand-primary transition-all ${
               isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
             }`}
           />
@@ -131,7 +131,7 @@ const InvitationFilterBar = ({
       {/* Status Filter Badges */}
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
-          <Filter className="w-3 h-3 text-[#FF0B01]" /> Status:
+          <Filter className="w-3 h-3 text-brand-primary" style={{ color: 'var(--brand-primary)' }} /> Status:
         </span>
         {STATUS_OPTIONS.map(opt => {
           const isSelected = (filters.status || 'ALL') === opt.value;
@@ -141,11 +141,12 @@ const InvitationFilterBar = ({
               onClick={() => updateFilter('status', opt.value)}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-[#FF0B01] text-white shadow-xs'
+                  ? 'bg-brand-primary text-white shadow-xs'
                   : isDarkMode
                     ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
+              style={isSelected ? { backgroundColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
             >
               {opt.label}
             </button>

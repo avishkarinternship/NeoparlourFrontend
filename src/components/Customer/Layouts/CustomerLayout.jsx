@@ -6,6 +6,7 @@ import Footer from './Footer';
 import OwnerNavbar from '../../Owner/Layouts/Navbar';
 import { DarkModeProvider, useDarkMode } from '../../../context/DarkModeContext';
 import { isOwnerLoggedIn } from '../../../utils/auth';
+import { clearActiveSalon } from '../../../utils/whiteLabelHelper';
 
 function CustomerLayoutInner() {
   const location = useLocation();
@@ -13,7 +14,13 @@ function CustomerLayoutInner() {
   const [isOwner, setIsOwner] = useState(isOwnerLoggedIn);
 
   useEffect(() => {
-    setIsOwner(isOwnerLoggedIn());
+    const ownerLoggedIn = isOwnerLoggedIn();
+    setIsOwner(ownerLoggedIn);
+    const path = (location.pathname || '').toLowerCase().split('?')[0].split('#')[0];
+    const isHomeRoute = path === '/' || path === '/customer/home' || path === '/customer/dashboard';
+    if (!ownerLoggedIn && isHomeRoute) {
+      clearActiveSalon();
+    }
   }, [location.pathname]);
 
   const searchRoutes = [

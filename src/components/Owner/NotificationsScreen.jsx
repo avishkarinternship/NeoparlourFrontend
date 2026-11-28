@@ -114,17 +114,17 @@ export default function NotificationsScreen() {
         <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-5xl mx-auto w-full font-sans">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <Bell className="w-6 h-6 text-[#ff0b01]" />
+                    <Bell className="w-6 h-6 text-brand-primary" style={{ color: 'var(--brand-primary)' }} />
                     Notifications
                 </h1>
                 {notifications.length > 0 && (
                     <button
                         onClick={handleDeleteAll}
                         disabled={isDeletingAll}
-                        className="px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60 text-[#ff0b01] font-bold text-xs rounded-xl transition-all flex items-center gap-2 border border-red-100 dark:border-red-900/40 shadow-sm"
+                        className="px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs rounded-xl transition-all flex items-center gap-2 border border-rose-200 dark:border-rose-900/40 shadow-sm cursor-pointer"
                     >
                         {isDeletingAll ? (
-                            <div className="w-3.5 h-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-3.5 h-3.5 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
                         ) : (
                             <Trash2 className="w-4 h-4" />
                         )}
@@ -133,7 +133,7 @@ export default function NotificationsScreen() {
                 )}
             </div>
             
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm p-6 min-h-[500px] flex flex-col">
+            <div className="rounded-2xl p-6 min-h-[500px] flex flex-col glass-panel">
                 {loading ? (
                     <div className="space-y-4">
                         {[1, 2, 3, 4, 5].map((i) => (
@@ -157,7 +157,7 @@ export default function NotificationsScreen() {
                 ) : (
                     <div className="space-y-3 flex-1">
                         {notifications.map((notification) => (
-                            <div key={notification.id} className="border border-gray-100 dark:border-zinc-800 rounded-2xl p-4 hover:shadow-md transition-all bg-white dark:bg-zinc-900/60 flex flex-col sm:flex-row gap-4 justify-between items-start group">
+                            <div key={notification.id} className="rounded-2xl p-4 hover:shadow-lg transition-all flex flex-col sm:flex-row gap-4 justify-between items-start group glass-card-interactive">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                                         <h3 className="text-sm font-bold text-gray-900 dark:text-white">{notification.title}</h3>

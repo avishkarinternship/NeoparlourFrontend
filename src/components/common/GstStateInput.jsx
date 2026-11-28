@@ -51,14 +51,14 @@ export const StateSelector = ({ state, onChange, error, isDarkMode = false, disa
           disabled ? (isDarkMode ? 'bg-zinc-800/40 border-zinc-800 text-zinc-300 cursor-not-allowed' : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed') : ''
         } ${
           isDarkMode 
-            ? 'border-zinc-700 bg-zinc-800 text-white focus:border-[#ff0b01]' 
-            : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-[#ff0b01] focus:bg-white'
+            ? 'border-zinc-700 bg-zinc-800 text-white focus:border-brand-primary' 
+            : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-brand-primary focus:bg-white'
         }`}
       >
         <span className={selectedStateObj ? (isDarkMode ? (disabled ? 'text-zinc-300' : 'text-white') : 'text-gray-900') : (isDarkMode ? 'text-zinc-500' : 'text-gray-400')}>
           {selectedStateObj ? selectedStateObj.displayName : 'Select State / UT'}
         </span>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#ff0b01]' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-primary' : ''}`} />
       </button>
 
       {/* Downwards Dropdown Menu */}
@@ -76,8 +76,8 @@ export const StateSelector = ({ state, onChange, error, isDarkMode = false, disa
               placeholder="Search state..."
               className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl border font-bold focus:outline-none transition ${
                 isDarkMode 
-                  ? 'bg-zinc-900 border-zinc-700 text-white focus:border-[#ff0b01]' 
-                  : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-[#ff0b01]'
+                  ? 'bg-zinc-900 border-zinc-700 text-white focus:border-brand-primary' 
+                  : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-brand-primary'
               }`}
               autoFocus
             />
@@ -88,7 +88,7 @@ export const StateSelector = ({ state, onChange, error, isDarkMode = false, disa
             <div
               onClick={() => handleStateSelect('')}
               className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                !state ? 'bg-[#ff0b01]/10 text-[#ff0b01]' : isDarkMode ? 'hover:bg-zinc-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
+                !state ? 'bg-brand-primary/10 text-brand-primary' : isDarkMode ? 'hover:bg-zinc-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
               }`}
             >
               Select State / UT
@@ -102,11 +102,12 @@ export const StateSelector = ({ state, onChange, error, isDarkMode = false, disa
                     onClick={() => handleStateSelect(st.enumValue)}
                     className={`px-3 py-2.5 rounded-xl text-xs font-bold cursor-pointer flex items-center justify-between transition-colors ${
                       isSelected 
-                        ? 'bg-[#ff0b01] text-white font-black' 
+                        ? 'bg-brand-primary text-white font-black' 
                         : isDarkMode 
                           ? 'hover:bg-zinc-700 text-zinc-200' 
-                          : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                          : 'hover:bg-brand-primary/5 hover:text-brand-primary text-gray-700'
                     }`}
+                    style={isSelected ? { backgroundColor: 'var(--brand-primary)', color: '#ffffff' } : {}}
                   >
                     <span>{st.displayName}</span>
                     {isSelected && <Check className="w-4 h-4 text-white" />}
@@ -192,8 +193,8 @@ export const GstinInput = ({ gstin, state, onChange, isDarkMode = false, disable
           !isGstinValid 
             ? 'border-red-500 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-500' 
             : isDarkMode 
-              ? 'border-zinc-700 bg-zinc-800 text-white focus:border-[#ff0b01] focus:ring-1 focus:ring-[#ff0b01]' 
-              : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-[#ff0b01] focus:bg-white'
+              ? 'border-zinc-700 bg-zinc-800 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary' 
+              : 'border-gray-100 bg-[#fafafa] text-gray-900 focus:border-brand-primary focus:bg-white'
         }`}
       />
 

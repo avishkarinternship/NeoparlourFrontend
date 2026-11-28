@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 
 import axiosInstance from '../../api/axiosInstance';
+import { useWhitelabelGraphColors } from '../../utils/whiteLabelHelper';
 
 // Helper to format X-axis labels based on the view type (timezone-safe)
 const formatLabel = (label, viewType) => {
@@ -62,12 +63,12 @@ const formatLabel = (label, viewType) => {
 };
 
 // Premium Custom Tooltip for the chart
-const CustomTooltip = ({ active, payload, label, viewType }) => {
+const CustomTooltip = ({ active, payload, label, viewType, chartColor }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs border border-white/10 text-left">
                 <p className="font-semibold text-gray-400 mb-1.5 tracking-wide uppercase text-[9px]">{formatLabel(label, viewType)}</p>
-                <p className="font-black text-lg text-[#ff0b01]">₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="font-black text-lg" style={{ color: chartColor || 'var(--brand-primary, #7C3AED)' }}>₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
             </div>
         );
     }
@@ -80,6 +81,8 @@ const Analytics = () => {
   const isDarkMode = outletContext.isDarkMode !== undefined 
     ? outletContext.isDarkMode 
     : document.documentElement.classList.contains('dark');
+  const salonId = outletContext.salon?.id || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+  const graphColors = useWhitelabelGraphColors(isDarkMode, salonId);
 
   const getFirstDayOfMonth = () => {
     const date = new Date();
@@ -278,14 +281,13 @@ const Analytics = () => {
   // --- DATA GRAPH MATRICES FOR SUB-CARDS ---
   // Show same graph data of appointment revenue but in piechart format (Card 2)
   const salesRevenuePieData = Array.isArray(graphRevenueData) ? graphRevenueData.map((item, idx) => {
-    const colorPalette = [
-      '#FFA5A5', '#FFD3A5', '#FFF3A5', '#D3FFA5', '#A5FFD3', 
-      '#A5FFF3', '#A5D3FF', '#D3A5FF', '#FFA5F3', '#A0BFFE'
-    ];
+    const palette = graphColors.piePalette && graphColors.piePalette.length > 0 
+      ? graphColors.piePalette 
+      : ['#FFA5A5', '#FFD3A5', '#FFF3A5', '#D3FFA5', '#A5FFD3', '#A5FFF3', '#A5D3FF', '#D3A5FF', '#FFA5F3', '#A0BFFE'];
     return {
       name: formatLabel(item.label, graphViewType),
       value: item.revenue || 0,
-      color: colorPalette[idx % colorPalette.length]
+      color: palette[idx % palette.length]
     };
   }) : [];
 
@@ -299,11 +301,11 @@ const Analytics = () => {
 
   return (
         <div className={`flex-1 px-6 py-6 overflow-x-hidden transition-colors duration-300 ${
-          isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+          isDarkMode ? 'text-zinc-100' : 'text-gray-800'
         }`}>
           
           {/* SECTION 1: APPOINTMENTS REVENUE */}
-          <div className={`border rounded-2xl p-6 shadow-md transition-all duration-300 mt-4 ${
+          <div className={`rounded-2xl p-6 transition-all duration-300 mt-4 glass-panel ${
             isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100 shadow-slate-950/40 backdrop-blur-xl' : 'bg-white border-gray-100 text-gray-900'
           }`}>
             <div className={`flex flex-col md:flex-row md:items-center justify-between border-b pb-4 mb-6 gap-4 ${
@@ -334,7 +336,7 @@ const Analytics = () => {
                   >
                     {tab}
                     {activeTab === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF0B01] rounded-full" />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full" style={{ backgroundColor: graphColors.stroke }} />
                     )}
                   </button>
                 ))}
@@ -344,7 +346,7 @@ const Analytics = () => {
                 isDarkMode ? 'border-zinc-700' : 'border-gray-100'
               }`}>
                 <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Total Revenue</p>
-                <p className="text-2xl font-black text-[#ff0b01]">₹ {graphTotalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="text-2xl font-black" style={{ color: graphColors.stroke }}>₹ {graphTotalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
 
@@ -361,11 +363,12 @@ const Analytics = () => {
                     <button
                       key={type}
                       onClick={() => setGraphViewType(type)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                         graphViewType === type
-                          ? 'bg-[#ff0b01] text-white shadow-sm'
+                          ? 'text-white shadow-sm'
                           : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-400 hover:text-gray-600'
                       }`}
+                      style={graphViewType === type ? { backgroundColor: graphColors.stroke } : {}}
                     >
                       {type}
                     </button>
@@ -378,7 +381,7 @@ const Analytics = () => {
                     <select
                       value={selectedOfferId}
                       onChange={(e) => setSelectedOfferId(e.target.value)}
-                      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-[11px] font-bold text-gray-700 focus:outline-none focus:border-[#ff0b01] shadow-2xs cursor-pointer"
+                      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-[11px] font-bold text-gray-700 focus:outline-none focus:border-brand-primary shadow-2xs cursor-pointer"
                     >
                       <option value="">All Offers</option>
                       {offersList.map(offer => (
@@ -395,7 +398,7 @@ const Analytics = () => {
                     <select
                       value={selectedStaffId}
                       onChange={(e) => setSelectedStaffId(e.target.value)}
-                      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-[11px] font-bold text-gray-700 focus:outline-none focus:border-[#ff0b01] shadow-2xs cursor-pointer"
+                      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-[11px] font-bold text-gray-700 focus:outline-none focus:border-brand-primary shadow-2xs cursor-pointer"
                     >
                       <option value="">All Staff</option>
                       {staffList.map(staff => (
@@ -430,23 +433,25 @@ const Analytics = () => {
 
               <div className="md:hidden w-full text-right border-t border-gray-100 pt-2.5 mt-1">
                 <p className="text-[9px] text-gray-400 font-semibold uppercase">Total Revenue</p>
-                <p className="text-lg font-black text-[#ff0b01]">₹ {graphTotalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="text-lg font-black" style={{ color: graphColors.stroke }}>₹ {graphTotalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
 
             {/* Appointment Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Area Chart Container */}
-              <div className="border border-gray-100/80 rounded-xl p-4 flex flex-col justify-between min-h-[320px]">
+              <div className={`border rounded-xl p-4 flex flex-col justify-between min-h-[320px] ${
+                isDarkMode ? 'border-zinc-800' : 'border-gray-100/80'
+              }`}>
                 <div className="mb-4">
-                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Revenue Trend Curve</h3>
-                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">Timeline pattern distribution</p>
+                  <h3 className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>Revenue Trend Curve</h3>
+                  <p className={`text-[10px] font-medium mt-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Timeline pattern distribution</p>
                 </div>
 
                 <div className="w-full h-56 relative">
                   {graphRevenueLoading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                      <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full" style={{ borderColor: graphColors.stroke, borderTopColor: 'transparent' }}></div>
                     </div>
                   ) : graphRevenueData.length === 0 ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -460,40 +465,40 @@ const Analytics = () => {
                       <AreaChart data={graphRevenueData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="analyticsRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                            <stop offset="5%" stopColor={graphColors.gradientStart} stopOpacity={graphColors.isDark ? 0.35 : 0.22} />
+                            <stop offset="95%" stopColor={graphColors.gradientEnd} stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={graphColors.gridStroke} />
                         <XAxis 
                           dataKey="label" 
                           tickFormatter={(val) => formatLabel(val, graphViewType)}
-                          tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
+                          tick={{ fontSize: 8, fontWeight: 600, fill: graphColors.axisText }} 
                           axisLine={false} 
                           tickLine={false} 
                         />
                         <YAxis 
-                          tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
+                          tick={{ fontSize: 9, fontWeight: 600, fill: graphColors.axisText }} 
                           axisLine={false} 
                           tickLine={false} 
                           tickFormatter={(val) => `₹${val}`}
                         />
-                        <Tooltip content={<CustomTooltip viewType={graphViewType} />} />
+                        <Tooltip content={<CustomTooltip viewType={graphViewType} chartColor={graphColors.stroke} />} />
                         <Area
                           type="monotone"
                           dataKey="revenue"
-                          stroke="#ff0b01"
+                          stroke={graphColors.stroke}
                           strokeWidth={3}
                           fill="url(#analyticsRevenueGradient)"
-                          dot={{ r: 3, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
-                          activeDot={{ r: 5, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                          dot={{ r: 3, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 1.5 }}
+                          activeDot={{ r: 5, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 1.5 }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
                   )}
                 </div>
-                <div className="flex items-center mt-3 text-[9px] font-bold text-gray-600">
-                  <span className="w-2.5 h-0.5 bg-[#ff0b01] mr-1.5" /> Core Generated Revenue Stream
+                <div className={`flex items-center mt-3 text-[9px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+                  <span className="w-2.5 h-0.5 mr-1.5" style={{ backgroundColor: graphColors.stroke }} /> Core Generated Revenue Stream
                 </div>
               </div>
 
@@ -550,7 +555,7 @@ const Analytics = () => {
           </div>
 
           {/* SECTION 2: PRODUCT SALES */}
-          <div className={`border rounded-2xl p-6 shadow-xs mt-8 ${
+          <div className={`rounded-2xl p-6 mt-8 glass-panel ${
             isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-100'
           }`}>
             <div className={`flex flex-col md:flex-row md:items-center justify-between border-b pb-4 mb-6 gap-4 ${
@@ -575,11 +580,12 @@ const Analytics = () => {
                     <button
                       key={type}
                       onClick={() => setOrdersViewType(type)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                         ordersViewType === type
-                          ? 'bg-[#ff0b01] text-white shadow-sm'
+                          ? 'text-white shadow-sm'
                           : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-400 hover:text-gray-600'
                       }`}
+                      style={ordersViewType === type ? { backgroundColor: graphColors.stroke } : {}}
                     >
                       {type}
                     </button>
@@ -623,7 +629,7 @@ const Analytics = () => {
                 <div className="w-full h-56 relative">
                   {ordersLoading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                      <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full" style={{ borderColor: graphColors.stroke, borderTopColor: 'transparent' }}></div>
                     </div>
                   ) : ordersRevenueData.length === 0 ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -637,40 +643,40 @@ const Analytics = () => {
                       <AreaChart data={ordersRevenueData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="ordersRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
-                            <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                            <stop offset="5%" stopColor={graphColors.gradientStart} stopOpacity={graphColors.isDark ? 0.35 : 0.22} />
+                            <stop offset="95%" stopColor={graphColors.gradientEnd} stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={graphColors.gridStroke} />
                         <XAxis 
                           dataKey="label" 
                           tickFormatter={(val) => formatLabel(val, ordersViewType)}
-                          tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} 
+                          tick={{ fontSize: 8, fontWeight: 600, fill: graphColors.axisText }} 
                           axisLine={false} 
                           tickLine={false} 
                         />
                         <YAxis 
-                          tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} 
+                          tick={{ fontSize: 9, fontWeight: 600, fill: graphColors.axisText }} 
                           axisLine={false} 
                           tickLine={false} 
                           tickFormatter={(val) => `₹${val}`}
                         />
-                        <Tooltip content={<CustomTooltip viewType={ordersViewType} />} />
+                        <Tooltip content={<CustomTooltip viewType={ordersViewType} chartColor={graphColors.stroke} />} />
                         <Area
                           type="monotone"
                           dataKey="revenue"
-                          stroke="#ff0b01"
+                          stroke={graphColors.stroke}
                           strokeWidth={3}
                           fill="url(#ordersRevenueGradient)"
-                          dot={{ r: 3, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
-                          activeDot={{ r: 5, fill: '#ff0b01', stroke: '#fff', strokeWidth: 1.5 }}
+                          dot={{ r: 3, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 1.5 }}
+                          activeDot={{ r: 5, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 1.5 }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
                   )}
                 </div>
                 <div className={`flex items-center mt-3 text-[9px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
-                  <span className="w-2.5 h-0.5 bg-[#ff0b01] mr-1.5" /> Core Generated Revenue Stream
+                  <span className="w-2.5 h-0.5 mr-1.5" style={{ backgroundColor: graphColors.stroke }} /> Core Generated Revenue Stream
                 </div>
               </div>
 
@@ -686,7 +692,7 @@ const Analytics = () => {
                 <div className="w-full h-56 relative">
                   {ordersLoading ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="animate-spin h-8 w-8 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                      <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full" style={{ borderColor: graphColors.stroke, borderTopColor: 'transparent' }}></div>
                     </div>
                   ) : ordersRevenueData.length === 0 ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -698,17 +704,17 @@ const Analytics = () => {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={productSalesBarData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F3F3" />
-                        <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 600, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 9, fontWeight: 600, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val}`} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={graphColors.gridStroke} />
+                        <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 600, fill: graphColors.axisText }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 9, fontWeight: 600, fill: graphColors.axisText }} axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val}`} />
                         <Tooltip formatter={(value) => [`₹${parseFloat(value).toFixed(2)}`, 'Product Sales']} />
-                        <Bar dataKey="Product Sales" fill="#ff0b01" radius={[1, 1, 0, 0]} barSize={12} />
+                        <Bar dataKey="Product Sales" fill={graphColors.stroke} radius={[2, 2, 0, 0]} barSize={12} />
                       </BarChart>
                     </ResponsiveContainer>
                   )}
                 </div>
                 <div className={`flex items-center mt-3 text-[9px] font-bold ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
-                  <span className="w-2.5 h-0.5 bg-[#ff0b01] mr-1.5" /> Product Generated Sales Volume
+                  <span className="w-2.5 h-0.5 mr-1.5" style={{ backgroundColor: graphColors.stroke }} /> Product Generated Sales Volume
                 </div>
               </div>
             </div>

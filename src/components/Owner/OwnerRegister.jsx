@@ -292,7 +292,7 @@ const OwnerRegister = () => {
         }
 
         const stateName = result.stateEnum ? getStateDisplayName(result.stateEnum) : result.stateName;
-        const sourceName = result.source === 'olamaps' ? 'Ola Maps' : (isIpFallback ? 'Network GPS' : 'Device GPS');
+        const sourceName = result.source === 'olamaps' ? 'Ola Maps' : (result.source === 'google' ? 'Google Maps' : (result.source === 'photon' || result.source === 'openstreetmap' ? 'OpenStreetMap' : (isIpFallback ? 'Network GPS' : 'Device GPS')));
         toast.success(`📍 Salon location detected (${sourceName})! State: ${stateName || 'Detected'}, City: ${result.city || 'Detected'}, Area: ${result.area || 'Detected'}${result.landmark ? `, Landmark: ${result.landmark}` : ''}`);
       } else {
         toast.error("Could not determine your location. Please enter it manually.");

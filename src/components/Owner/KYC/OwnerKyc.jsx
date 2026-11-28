@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { useOutletContext } from 'react-router-dom';
 import { ShieldCheck, ShieldAlert, FileText, Clock, RefreshCw, AlertTriangle, CheckCircle2, UploadCloud } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useDarkMode } from '../../../context/DarkModeContext';
 import kycService from '../../../services/kycService';
 import KycDocumentCard from './KycDocumentCard';
 import KycUploadModal from './KycUploadModal';
@@ -30,7 +32,11 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
   const [activeDocType, setActiveDocType] = useState(null);
   const [activeDocLabel, setActiveDocLabel] = useState('');
 
-  const isDarkMode = isDarkModeProp !== undefined ? isDarkModeProp : document.documentElement.classList.contains('dark');
+  const { isDark } = useDarkMode();
+  const outletContext = useOutletContext() || {};
+  const isDarkMode = isDarkModeProp !== undefined 
+    ? isDarkModeProp 
+    : (outletContext.isDarkMode !== undefined ? outletContext.isDarkMode : isDark);
 
   const fetchDocuments = useCallback(async () => {
     if (!activeSalonId) {
@@ -107,29 +113,35 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
   const completionPercent = Math.round((approvedCount / (documents.length || 4)) * 100);
 
   return (
-    <div className={`p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-8 transition-colors duration-300 ${
-      isDarkMode ? 'text-zinc-100' : 'text-slate-900'
-    }`}>
+    <div className="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-8 transition-colors duration-300 text-slate-900 dark:text-zinc-100">
 
       {/* Header Banner */}
-      <div className={`p-6 sm:p-8 rounded-3xl border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${
-        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
-      }`}>
+      <div className="p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
+            <span 
+              className="p-2 rounded-2xl border"
+              style={{ 
+                backgroundColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.1)', 
+                borderColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.25)', 
+                color: 'var(--brand-primary, #7C3AED)' 
+              }}
+            >
               <ShieldCheck className="w-6 h-6" />
             </span>
             <div>
-              <span className="text-[10px] font-black text-red-500 uppercase tracking-widest block">
+              <span 
+                className="text-[10px] font-black uppercase tracking-widest block"
+                style={{ color: 'var(--brand-primary, #7C3AED)' }}
+              >
                 Verification Center
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                 Salon KYC & Compliance Verification
               </h2>
             </div>
           </div>
-          <p className="text-xs text-slate-400 dark:text-zinc-400 font-medium max-w-xl">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium max-w-xl">
             Upload and manage your salon business licenses, tax certificates, and identity verification documents.
           </p>
         </div>
@@ -137,7 +149,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
         <button
           onClick={fetchDocuments}
           disabled={loading}
-          className="px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs uppercase flex items-center gap-2 cursor-pointer transition"
+          className="px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold text-xs uppercase flex items-center gap-2 cursor-pointer transition shadow-2xs"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           Refresh Documents
@@ -146,15 +158,15 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
 
       {/* Rejection Alert Header Banner */}
       {rejectedCount > 0 && (
-        <div className="p-6 rounded-3xl bg-red-50 dark:bg-red-950/40 border-l-4 border-l-red-500 border border-red-200 dark:border-red-900/50 flex items-start gap-4 shadow-sm">
-          <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
+        <div className="p-6 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border-l-4 border-l-rose-500 border border-rose-200 dark:border-rose-900/50 flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">
             <ShieldAlert className="w-5.5 h-5.5" />
           </div>
           <div className="space-y-1 text-xs">
-            <h3 className="text-sm font-black uppercase tracking-tight text-red-800 dark:text-red-300">
+            <h3 className="text-sm font-black uppercase tracking-tight text-rose-800 dark:text-rose-300">
               Action Required: {rejectedCount} KYC {rejectedCount === 1 ? 'Document' : 'Documents'} Rejected
             </h3>
-            <p className="text-red-700 dark:text-red-400 font-medium">
+            <p className="text-rose-700 dark:text-rose-400 font-medium">
               One or more documents require your attention. Please review the admin feedback below and re-upload clear files to reactivate full verification.
             </p>
           </div>
@@ -162,9 +174,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
       )}
 
       {/* Verification Completion Progress Bar */}
-      <div className={`p-6 sm:p-7 rounded-3xl border shadow-sm space-y-3 ${
-        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
-      }`}>
+      <div className="p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs space-y-3">
         <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider">
           <span className="flex items-center gap-2 text-slate-700 dark:text-zinc-200">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
@@ -184,9 +194,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
-          isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
-        }`}>
+        <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 font-black">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -196,9 +204,7 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
           </div>
         </div>
 
-        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
-          isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
-        }`}>
+        <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 font-black">
             <Clock className="w-6 h-6" />
           </div>
@@ -208,15 +214,13 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
           </div>
         </div>
 
-        <div className={`p-6 rounded-3xl border shadow-sm flex items-center gap-4 ${
-          isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'
-        }`}>
-          <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0 font-black">
+        <div className="p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0 font-black">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Action Required</span>
-            <span className="text-xl font-black text-red-600 dark:text-red-400">{actionRequiredCount} Action Required</span>
+            <span className="text-xl font-black text-rose-600 dark:text-rose-400">{actionRequiredCount} Action Required</span>
           </div>
         </div>
       </div>
@@ -229,7 +233,10 @@ const OwnerKyc = ({ isDarkMode: isDarkModeProp }) => {
 
         {loading ? (
           <div className="p-12 text-center text-xs font-bold text-slate-400">
-            <div className="w-8 h-8 border-4 border-[#FF0B01] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <div 
+              className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"
+              style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+            ></div>
             Loading KYC document statuses...
           </div>
         ) : (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Tag, LayoutGrid, Sparkles } from 'lucide-react';
 
 import axiosInstance from '../../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -23,7 +24,7 @@ const toastStyle = {
         minWidth: '350px',
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
-    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+    iconTheme: { primary: 'var(--brand-primary, #7C3AED)', secondary: '#fff' }
 };
 
 const DISCOUNT_TYPES = [
@@ -394,32 +395,50 @@ const AddOffers = () => {
     });
 
     return (
-                <main className={`flex-1 min-w-0 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-zinc-700' : 'bg-[#FAFAFA] text-slate-800 md:border-gray-200'}`}>
+                <main className={`flex-1 min-w-0 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>
                     <div className="max-w-5xl mx-auto">
                         {/* Tabs */}
-                        <div className={`flex gap-2 p-1 rounded-2xl mb-10 max-w-md border shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-100'}`}>
+                        <div className={`flex gap-1.5 p-1.5 rounded-2xl mb-8 max-w-md border shadow-xs transition-colors ${
+                            isDarkMode ? 'bg-zinc-900/80 border-zinc-800' : 'bg-gray-100/90 border-gray-200/90'
+                        }`}>
                             <button
                                 onClick={() => setActiveTab('add')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-5 py-3 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                                    activeTab === 'add'
+                                        ? 'bg-brand-primary text-white shadow-sm'
+                                        : isDarkMode
+                                            ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/70'
+                                }`}
+                                style={activeTab === 'add' ? { backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                             >
-                                Add / Edit Offer
+                                <Tag className="w-3.5 h-3.5" />
+                                <span>{editingOfferId ? 'Edit Offer' : 'Add Offer'}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('view')}
-                                className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 px-5 py-3 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                                    activeTab === 'view'
+                                        ? 'bg-brand-primary text-white shadow-sm'
+                                        : isDarkMode
+                                            ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-white/70'
+                                }`}
+                                style={activeTab === 'view' ? { backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                             >
-                                View Offers
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                                <span>View Offers</span>
                             </button>
                         </div>
 
                         {activeTab === 'add' && (
                             <>
                                 <div className={`flex items-center gap-3 mb-8 pb-3 border-b ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
-                            <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-[#FF0B01] font-bold text-lg">
+                            <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg" style={{ color: 'var(--brand-primary)' }}>
                                 %
                             </div>
                             <div>
-                                <span className="text-[12px] font-extrabold uppercase tracking-widest text-red-600 block">
+                                <span className="text-[12px] font-extrabold uppercase tracking-widest text-brand-primary block" style={{ color: 'var(--brand-primary)' }}>
                                     {editingOfferId ? 'Edit Mode' : 'Creation Mode'}
                                 </span>
                                 <h2 className={`text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -428,7 +447,7 @@ const AddOffers = () => {
                             </div>
                         </div>
 
-                        <div className={`border rounded-3xl p-8 shadow-md hover:shadow-lg transition-all duration-300 mb-12 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                        <div className={`rounded-3xl p-8 mb-12 transition-all duration-300 glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -441,7 +460,7 @@ const AddOffers = () => {
                                             value={offerName}
                                             onChange={(e) => setOfferName(e.target.value)}
                                             placeholder="Offer Name *"
-                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -455,7 +474,7 @@ const AddOffers = () => {
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Description"
-                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         />
                                     </div>
                                 </div>
@@ -469,7 +488,7 @@ const AddOffers = () => {
                                         <select
                                             value={discountType}
                                             onChange={(e) => setDiscountType(e.target.value)}
-                                            className={`w-full pl-12 pr-10 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 appearance-none cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full pl-12 pr-10 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 appearance-none cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         >
                                             {DISCOUNT_TYPES.map(dt => (
                                                 <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -486,11 +505,11 @@ const AddOffers = () => {
                                                  value={discountValue}
                                                  onChange={(e) => handleDiscountValueChange(e.target.value)}
                                                  placeholder="Discount Value *"
-                                                 className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                                 className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                                  required
                                              />
                                          </div>
-                                         {discountError && <p className="text-red-500 text-xs mt-1 ml-1">{discountError}</p>}
+                                         {discountError && <p className="text-rose-500 text-xs mt-1 ml-1">{discountError}</p>}
                                      </div>
 
                                     <div>
@@ -501,7 +520,7 @@ const AddOffers = () => {
                                             placeholder="Usage Limit per Customer"
                                             min="1"
                                             step="1"
-                                            className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                         />
                                     </div>
                                 </div>
@@ -514,7 +533,7 @@ const AddOffers = () => {
                                         placeholder="Total Usage Limit (Optional)"
                                         min="1"
                                         step="1"
-                                        className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                        className={`w-full px-5 py-4 border rounded-2xl text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                     />
                                 </div>
 
@@ -526,7 +545,7 @@ const AddOffers = () => {
                                             type="datetime-local"
                                             value={validFrom}
                                             onChange={(e) => setValidFrom(e.target.value)}
-                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -536,7 +555,7 @@ const AddOffers = () => {
                                             type="datetime-local"
                                             value={validTo}
                                             onChange={(e) => setValidTo(e.target.value)}
-                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white'}`}
                                             required
                                         />
                                     </div>
@@ -563,7 +582,8 @@ const AddOffers = () => {
                                                             type="checkbox"
                                                             checked={selectedServices.includes(service.id)}
                                                             onChange={() => toggleService(service.id)}
-                                                            className="w-4 h-4 accent-red-600"
+                                                            className="w-4 h-4 rounded cursor-pointer"
+                                                            style={{ accentColor: 'var(--brand-primary)' }}
                                                         />
                                                         <span className="text-sm">{service.name}</span>
                                                     </div>
@@ -609,14 +629,15 @@ const AddOffers = () => {
                                     <button
                                         type="submit"
                                         disabled={loadingSubmit || loadingEdit}
-                                        className="flex-1 bg-[#FF0B01] hover:bg-red-700 disabled:opacity-70 transition-all text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-[0.985] text-sm tracking-wider uppercase"
+                                        className="flex-1 bg-brand-primary hover:brightness-110 disabled:opacity-70 transition-all text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg active:scale-[0.985] text-sm tracking-wider uppercase cursor-pointer"
+                                        style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' }}
                                     >
                                         {loadingSubmit ? 'Saving...' : editingOfferId ? 'Update Offer' : 'Create Offer'}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleCancel}
-                                        className={`flex-1 border py-4 rounded-2xl font-bold transition-all text-sm tracking-wider uppercase ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 hover:bg-gray-50'}`}
+                                        className={`flex-1 border py-4 rounded-2xl font-bold transition-all text-sm tracking-wider uppercase cursor-pointer ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 hover:bg-gray-50'}`}
                                     >
                                         Discard
                                     </button>
@@ -636,7 +657,8 @@ const AddOffers = () => {
                                     <button
                                         key={filter}
                                         onClick={() => setActiveFilter(filter)}
-                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === filter ? 'bg-red-600 text-white' : isDarkMode ? 'bg-zinc-800 border border-zinc-600 text-zinc-300 hover:bg-zinc-700' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
+                                        className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeFilter === filter ? 'bg-brand-primary text-white shadow-sm' : isDarkMode ? 'bg-zinc-800 border border-zinc-600 text-zinc-300 hover:bg-zinc-700' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
+                                        style={activeFilter === filter ? { backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                                     >
                                         {filter.charAt(0).toUpperCase() + filter.slice(1)}
                                     </button>
@@ -653,12 +675,12 @@ const AddOffers = () => {
                         ) : (
                             <div className={`grid gap-6 ${sidebarOpen ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                                 {offers.map((offer) => (
-                                    <div key={offer.id} className={`border rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                                    <div key={offer.id} className={`rounded-3xl p-6 transition-all duration-300 relative overflow-hidden group glass-card-interactive ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>
                                         {/* Subtle top indicator bar */}
-                                        <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/10 group-hover:bg-[#FF0B01] transition-colors duration-300"></div>
+                                        <div className="absolute top-0 left-0 right-0 h-1 bg-brand-primary/20 group-hover:bg-brand-primary transition-colors duration-300" style={{ backgroundColor: undefined }}></div>
                                         
                                         <div className="flex justify-between items-start mt-2">
-                                            <h4 className={`font-bold text-lg group-hover:text-[#FF0B01] transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{offer.name}</h4>
+                                            <h4 className={`font-bold text-lg group-hover:text-brand-primary transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{offer.name}</h4>
                                             <div className="flex items-center gap-3">
                                                 <span className={`px-3 py-1 text-[10px] font-extrabold rounded-full ${offer.active ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
                                                     {offer.active ? 'ACTIVE' : 'INACTIVE'}
@@ -670,7 +692,7 @@ const AddOffers = () => {
                                                         onChange={() => toggleOfferStatus(offer.id, offer.active)}
                                                         className="sr-only peer"
                                                     />
-                                                     <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200"></div>
+                                                     <div className="w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-brand-primary transition-colors duration-200"></div>
                                                 </label>
                                             </div>
                                         </div>
@@ -687,14 +709,14 @@ const AddOffers = () => {
                                         )}
                                         
                                         <div className="mt-5 flex justify-between items-center">
-                                            <div className="px-3 py-1 bg-red-50 text-[#FF0B01] rounded-xl text-xs font-black tracking-wider uppercase">
+                                            <div className="px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-xl text-xs font-black tracking-wider uppercase" style={{ color: 'var(--brand-primary)' }}>
                                                 {getDiscountDisplay(offer)}
                                             </div>
 
                                             <button
                                                 onClick={() => handleEdit(offer)}
                                                 disabled={loadingEdit}
-                                                className={`flex items-center gap-1.5 hover:text-[#FF0B01] text-xs font-bold transition-all disabled:opacity-60 hover:bg-red-50 px-3.5 py-2 rounded-xl border ${isDarkMode ? 'text-zinc-300 bg-zinc-800 border-zinc-700' : 'text-gray-700 bg-gray-50 border-gray-100'}`}
+                                                className={`flex items-center gap-1.5 hover:text-brand-primary text-xs font-bold transition-all disabled:opacity-60 hover:bg-brand-primary/10 px-3.5 py-2 rounded-xl border cursor-pointer ${isDarkMode ? 'text-zinc-300 bg-zinc-800 border-zinc-700' : 'text-gray-700 bg-gray-50 border-gray-100'}`}
                                             >
                                                 <img src={editIcon} alt="edit" className="w-3.5 h-3.5" />
                                                 {loadingEdit ? 'Loading...' : 'Edit Offer'}
@@ -728,7 +750,7 @@ const AddOffers = () => {
                                     </button>
                                     
                                     {/* Current Page Indicator Pill */}
-                                    <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                    <span className="px-3.5 py-1.5 bg-brand-primary text-white text-[10px] font-black rounded-lg" style={{ backgroundColor: 'var(--brand-primary)' }}>
                                         {totalPages === 0 ? 1 : currentPage + 1}
                                     </span>
 

@@ -110,9 +110,9 @@ const ManageSideBar = () => {
 
   return (
     <div 
-      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-20
-        ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-white text-gray-800'}
-        ${isOpen ? 'w-56 border-r border-gray-200 dark:border-zinc-700' : 'w-0 border-r-0'}`}
+      className={`min-h-full py-6 flex flex-col justify-between hidden md:flex flex-shrink-0 relative transition-all duration-300 ease-in-out z-20 ${
+        isDarkMode ? 'bg-zinc-900 border-r border-zinc-800 text-zinc-100 shadow-sm' : 'bg-white border-r border-gray-200 text-gray-800 shadow-xs'
+      } ${isOpen ? 'w-56' : 'w-0 border-r-0'}`}
     >
 
       {/* Navigation Links */}
@@ -127,20 +127,21 @@ const ManageSideBar = () => {
           return (
             <button
               key={idx}
+              data-active={isActive ? "true" : "false"}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-tight transition-all duration-150 relative sidebar-btn cursor-pointer
-              
-              ${isActive
-                  ? isDarkMode ? 'bg-white/[0.07] text-[#FF0B01] font-black' : 'bg-red-50/80 text-[#FF0B01] font-black'
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-[13px] font-bold tracking-tight transition-all duration-150 relative sidebar-btn cursor-pointer ${
+                isActive
+                  ? isDarkMode ? 'bg-brand-primary/15 font-black border border-brand-primary/30' : 'bg-brand-primary/10 font-black border border-brand-primary/20'
                   : isDarkMode
-                    ? 'text-zinc-300 hover:bg-zinc-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                    ? 'text-zinc-300 hover:bg-white/5 hover:text-white'
+                    : 'text-gray-700 hover:bg-black/5 hover:text-gray-900'
+              }`}
+              style={isActive ? { color: 'var(--brand-primary)', backgroundColor: 'rgba(var(--brand-primary-rgb), 0.1)', borderColor: 'rgba(var(--brand-primary-rgb), 0.25)' } : {}}
             >
 
               {/* Active Left Border */}
               {isActive && (
-                <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF0B01] rounded-r-md"></span>
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-brand-primary rounded-r-md" style={{ backgroundColor: 'var(--brand-primary)' }}></span>
               )}
 
               <img
@@ -150,7 +151,7 @@ const ManageSideBar = () => {
                 ${isActive ? 'active-icon-glow opacity-100' : 'opacity-60'}`}
               />
 
-              <span>{item.label}</span>
+              <span style={isActive ? { color: 'var(--brand-primary)' } : {}}>{item.label}</span>
 
             </button>
           );

@@ -11,6 +11,7 @@ import productDetailsIcon from '../../../assets/Owner/Manage/Products/product_de
 import percentageIcon from '../../../assets/Owner/Manage/Products/percentage_icon.svg';
 import rateIcon from '../../../assets/Owner/Manage/Products/rate_icon.svg';
 import editIcon from '../../../assets/Owner/Manage/Staff/edit_icon.svg';
+import { Package, PackagePlus, LayoutGrid, Sparkles, Check, Search as SearchIcon, AlertCircle, ArrowRight, Tag, Trash2, Edit3, CheckCircle2 } from 'lucide-react';
 
 const toastStyle = {
     style: { background: '#1a1a1a', color: '#fff', borderRadius: '16px', padding: '20px 24px' }
@@ -349,87 +350,144 @@ const AddPackages = () => {
     );
 
     return (
-                <main className={`flex-1 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'bg-zinc-950 text-zinc-100 md:border-zinc-700' : 'bg-[#FAFAFA] text-slate-800 md:border-gray-200'}`}>
-                    <div className={`flex gap-2 p-1 rounded-2xl mb-10 max-w-md border shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-100'}`}>
+                <main className={`flex-1 p-6 md:p-8 md:border-l overflow-auto ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>
+                    {/* Modern Segmented Navigation Tabs */}
+                    <div className={`inline-flex p-1.5 rounded-2xl mb-8 border shadow-xs ${
+                        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-100/90 border-gray-200/80'
+                    }`}>
                         <button
                             onClick={() => setActiveTab('add')}
-                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'add' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
+                            className={`px-5 py-2.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+                                activeTab === 'add'
+                                    ? 'shadow-xs'
+                                    : isDarkMode
+                                    ? 'text-zinc-400 hover:text-white'
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                            style={activeTab === 'add' ? { backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                         >
-                            Add / Edit Package
+                            <PackagePlus className="w-4 h-4" />
+                            <span>Add / Edit Package</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('view')}
-                            className={`flex-1 px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all ${activeTab === 'view' ? 'bg-[#FF0B01] text-white shadow-md' : isDarkMode ? 'text-zinc-400 hover:text-zinc-100' : 'text-gray-500 hover:text-gray-800'}`}
+                            className={`px-5 py-2.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+                                activeTab === 'view'
+                                    ? 'shadow-xs'
+                                    : isDarkMode
+                                    ? 'text-zinc-400 hover:text-white'
+                                    : 'text-gray-600 hover:text-gray-900'
+                            }`}
+                            style={activeTab === 'view' ? { backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' } : {}}
                         >
-                            View All Packages
+                            <LayoutGrid className="w-4 h-4" />
+                            <span>View All Packages ({packages.length})</span>
                         </button>
                     </div>
 
                     {activeTab === 'add' && (
-                        <div className={`max-w-4xl mx-auto border rounded-[32px] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100'}`}>
-                            <div className="bg-gradient-to-r from-[#FF0B01] via-red-650 to-orange-600 text-white px-8 py-8 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-12 -translate-y-12"></div>
-                                <h2 className="text-3xl font-black tracking-tight">
-                                    {isEditing ? 'Edit Package' : 'Create New Package'}
-                                </h2>
-                                <p className="text-red-100/90 text-sm mt-1">Fill in the details below to publish this bundle</p>
+                        <div className={`max-w-4xl mx-auto rounded-3xl transition-all duration-300 overflow-hidden border shadow-sm ${
+                            isDarkMode ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200/80 text-gray-900'
+                        }`}>
+                            {/* Subtle Brand Accent Top Line */}
+                            <div 
+                                className="h-1.5 w-full"
+                                style={{ background: 'linear-gradient(to right, var(--brand-primary), rgba(var(--brand-primary-rgb, 124, 58, 237), 0.3), transparent)' }}
+                            />
+
+                            {/* Clean, Standard Card Header */}
+                            <div className={`px-8 pt-7 pb-6 border-b flex items-start gap-4 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
+                                <div 
+                                    className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border"
+                                    style={{ 
+                                        backgroundColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.1)',
+                                        borderColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.25)',
+                                        color: 'var(--brand-primary)'
+                                    }}
+                                >
+                                    <PackagePlus className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span 
+                                        className="text-[10px] font-black uppercase tracking-widest block mb-1"
+                                        style={{ color: 'var(--brand-primary)' }}
+                                    >
+                                        {isEditing ? 'PACKAGE CONFIGURATION' : 'BUNDLE & SAVE'}
+                                    </span>
+                                    <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {isEditing ? 'Edit Package' : 'Create New Package'}
+                                    </h2>
+                                    <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                        Combine popular salon services into high-converting discounted packages for your clients.
+                                    </p>
+                                </div>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Package Name</label>
-                                        <div className="relative">
-                                            <img src={productDetailsIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleInputChange}
-                                                className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
-                                                placeholder="Premium Bridal Glow Package"
-                                                required
-                                            />
-                                        </div>
+                            <form onSubmit={handleSubmit} className="p-8 space-y-7">
+                                <div>
+                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Package Name *</label>
+                                    <div className="relative">
+                                        <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            className={`w-full pl-11 pr-4 py-3.5 border rounded-xl text-sm font-semibold focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all ${
+                                                isDarkMode 
+                                                    ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500 focus:bg-zinc-800' 
+                                                    : 'bg-slate-50/70 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white'
+                                            }`}
+                                            placeholder="e.g. Premium Bridal Glow Package"
+                                            required
+                                        />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     <div>
-                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Package Price (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Package Price (₹) *</label>
                                          <div className="relative">
-                                             <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">₹</span>
                                              <input
                                                  type="text"
                                                  inputMode="decimal"
                                                  name="packagePrice"
                                                  value={formData.packagePrice}
                                                  onChange={handleInputChange}
-                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
+                                                 className={`w-full pl-9 pr-4 py-3.5 border rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all ${
+                                                     isDarkMode 
+                                                         ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500 focus:bg-zinc-800' 
+                                                         : 'bg-slate-50/70 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white'
+                                                 }`}
                                                  placeholder="2999"
                                                  required
                                              />
-                                             {priceError && <p className="text-red-500 text-xs mt-1 ml-1">{priceError}</p>}
+                                             {priceError && <p className="text-red-500 text-xs mt-1 font-semibold">{priceError}</p>}
                                          </div>
                                     </div>
 
                                     <div>
-                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Total Services Value (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Total Services Value (₹)</label>
                                          <div className="relative">
-                                             <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">₹</span>
                                              <input
                                                  type="text"
                                                  readOnly
                                                  value={totalServicePrice.toFixed(2)}
-                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm cursor-not-allowed focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
+                                                 className={`w-full pl-9 pr-4 py-3.5 border rounded-xl text-sm font-bold cursor-not-allowed ${
+                                                     isDarkMode 
+                                                         ? 'bg-zinc-800/40 border-zinc-800 text-zinc-400' 
+                                                         : 'bg-gray-100/80 border-gray-200 text-gray-600'
+                                                 }`}
                                              />
                                          </div>
                                     </div>
 
                                     <div>
-                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Discount Price / Savings (₹)</label>
+                                         <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Discount / Savings (₹)</label>
                                          <div className="relative">
-                                              <img src={rateIcon} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40" alt="" />
+                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">₹</span>
                                              <input
                                                  type="text"
                                                  readOnly
@@ -438,82 +496,120 @@ const AddPackages = () => {
                                                          ? (totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)
                                                          : '0.00'
                                                  }
-                                                 className={`w-full pl-12 pr-4 py-4 border rounded-2xl text-sm cursor-not-allowed focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-zinc-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
+                                                 className={`w-full pl-9 pr-4 py-3.5 border rounded-xl text-sm font-bold cursor-not-allowed ${
+                                                     isDarkMode 
+                                                         ? 'bg-zinc-800/40 border-zinc-800 text-emerald-400' 
+                                                         : 'bg-emerald-50/60 border-emerald-200/80 text-emerald-700'
+                                                 }`}
                                              />
                                          </div>
                                     </div>
                                 </div>
 
                                 {totalServicePrice > 0 && formData.packagePrice && parseFloat(formData.packagePrice) < totalServicePrice && (
-                                     <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-                                         <div className="text-emerald-600 text-xl leading-none">💰</div>
+                                     <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-4 flex items-center gap-3">
+                                         <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
+                                             💰
+                                         </div>
                                          <div>
-                                             <p className="font-extrabold text-[11px] text-emerald-700 uppercase tracking-wider">Discounted Savings: ₹{(totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)}</p>
-                                             <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mt-0.5">Actual Value: ₹{totalServicePrice} → Package: ₹{formData.packagePrice}</p>
+                                             <p className="font-extrabold text-xs text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                                                 Client Savings: ₹{(totalServicePrice - parseFloat(formData.packagePrice)).toFixed(2)}
+                                             </p>
+                                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                                                 Combined regular price ₹{totalServicePrice.toFixed(0)} bundled for ₹{formData.packagePrice}
+                                             </p>
                                          </div>
                                      </div>
                                  )}
 
                                 <div>
-                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Description</label>
+                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Package Description</label>
                                     <textarea
                                         name="description"
                                         value={formData.description}
                                         onChange={handleInputChange}
-                                        rows={4}
-                                        className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
-                                        placeholder="Describe the package benefits and included services..."
+                                        rows={3}
+                                        className={`w-full border rounded-xl p-4 text-sm font-medium focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all resize-none ${
+                                            isDarkMode 
+                                                ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500 focus:bg-zinc-800' 
+                                                : 'bg-slate-50/70 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white'
+                                        }`}
+                                        placeholder="Describe the package benefits, included treatments, and recommended clients..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Select Services</label>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className={`block text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+                                            Select Included Services ({selectedServices.length} Selected)
+                                        </label>
+                                        {selectedServices.length > 0 && (
+                                            <span className="text-xs font-bold" style={{ color: 'var(--brand-primary)' }}>
+                                                Total Value: ₹{totalServicePrice.toFixed(2)}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                    <div className={`border rounded-2xl p-4 ${isDarkMode ? 'border-zinc-700 bg-zinc-800' : 'border-gray-300 bg-gray-50'}`}>
-                                        <input
-                                            type="text"
-                                            placeholder="Search services..."
-                                            value={serviceSearch}
-                                            onChange={(e) => setServiceSearch(e.target.value)}
-                                            className={`w-full mb-4 px-4 py-3 border rounded-xl focus:border-red-500 focus:outline-none ${isDarkMode ? 'bg-zinc-700 border-zinc-600 text-white placeholder-slate-500' : 'bg-white border-gray-300 text-gray-900'}`}
-                                        />
-
-                                        <div className="max-h-72 overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {filteredServices.length === 0 ? (
-                                                <p className={`py-4 text-center col-span-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No services found</p>
-                                            ) : (
-                                                filteredServices.map(service => (
-                                                    <label
-                                                        key={service.id}
-                                                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition group shadow-sm ${isDarkMode ? 'bg-zinc-700 border-zinc-600 hover:border-zinc-500' : 'bg-white border-gray-100 hover:border-gray-200'}`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedServices.includes(service.id)}
-                                                            onChange={() => toggleService(service.id)}
-                                                            className="w-5 h-5 accent-red-600 flex-shrink-0"
-                                                        />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-sm truncate">{service.name}</div>
-                                                            <div className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>₹{service.price}</div>
-                                                        </div>
-                                                    </label>
-                                                ))
-                                            )}
+                                    <div className={`border rounded-2xl p-4 ${isDarkMode ? 'border-zinc-800 bg-zinc-900/60' : 'border-gray-200 bg-gray-50/60'}`}>
+                                        <div className="relative mb-3">
+                                            <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search services to bundle..."
+                                                value={serviceSearch}
+                                                onChange={(e) => setServiceSearch(e.target.value)}
+                                                className={`w-full pl-10 pr-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary ${
+                                                    isDarkMode 
+                                                        ? 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500' 
+                                                        : 'bg-white border-gray-300 text-gray-900'
+                                                }`}
+                                            />
                                         </div>
 
-                                        {selectedServices.length > 0 && (
-                                            <div className={`mt-4 pt-4 border-t text-sm ${isDarkMode ? 'border-zinc-600 text-zinc-400' : 'border-gray-200 text-gray-600'}`}>
-                                                Selected: <span className="font-semibold text-red-600">{selectedServices.length}</span> services |
-                                                Total Value: <span className="font-semibold">₹{totalServicePrice}</span>
-                                            </div>
-                                        )}
+                                        <div className="max-h-64 overflow-y-auto pr-1 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                            {filteredServices.length === 0 ? (
+                                                <p className={`py-6 text-center text-xs col-span-2 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>No services found</p>
+                                            ) : (
+                                                filteredServices.map(service => {
+                                                    const isSelected = selectedServices.includes(service.id);
+                                                    return (
+                                                        <label
+                                                            key={service.id}
+                                                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition border ${
+                                                                isSelected 
+                                                                    ? 'border-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 shadow-xs' 
+                                                                    : isDarkMode 
+                                                                    ? 'bg-zinc-800/80 border-zinc-700/80 hover:border-zinc-600' 
+                                                                    : 'bg-white border-gray-200 hover:border-gray-300'
+                                                            }`}
+                                                            style={isSelected ? { borderColor: 'var(--brand-primary)' } : {}}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleService(service.id)}
+                                                                className="w-4 h-4 rounded cursor-pointer"
+                                                                style={{ accentColor: 'var(--brand-primary)' }}
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className={`font-bold text-xs truncate ${isSelected ? 'text-brand-primary' : isDarkMode ? 'text-zinc-200' : 'text-gray-800'}`} style={isSelected ? { color: 'var(--brand-primary)' } : {}}>
+                                                                    {service.name}
+                                                                </div>
+                                                                <div className={`text-[11px] font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                                    ₹{service.price}
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Usage Limit per Customer</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Usage Limit per Customer</label>
                                         <input
                                             type="number"
                                             name="usageLimitPerCustomer"
@@ -521,12 +617,16 @@ const AddPackages = () => {
                                             onChange={handleInputChange}
                                             min="1"
                                             step="1"
-                                            className={`w-full border rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full border rounded-xl py-3 px-4 text-sm font-semibold focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all ${
+                                                isDarkMode 
+                                                    ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' 
+                                                    : 'bg-slate-50/70 border-gray-200 text-gray-900 placeholder-gray-400'
+                                            }`}
                                             placeholder="Leave empty for unlimited"
                                         />
                                     </div>
                                     <div>
-                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Total Usage Limit</label>
+                                        <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`}>Total Usage Limit</label>
                                         <input
                                             type="number"
                                             name="totalUsageLimit"
@@ -534,33 +634,43 @@ const AddPackages = () => {
                                             onChange={handleInputChange}
                                             min="1"
                                             step="1"
-                                            className={`w-full border rounded-2xl py-4 px-4 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all duration-200 ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
+                                            className={`w-full border rounded-xl py-3 px-4 text-sm font-semibold focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all ${
+                                                isDarkMode 
+                                                    ? 'bg-zinc-800/80 border-zinc-700 text-white placeholder-zinc-500' 
+                                                    : 'bg-slate-50/70 border-gray-200 text-gray-900 placeholder-gray-400'
+                                            }`}
                                             placeholder="Leave empty for unlimited"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-start gap-3">
-                                    <span className="text-amber-500 text-lg leading-none mt-0.5">⚠️</span>
+                                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-0.5">Disclaimer</p>
-                                        <p className="text-[11px] text-amber-700/95 font-medium leading-relaxed">
-                                            This package will be available until and unless disabled manually.
+                                        <p className="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider mb-0.5">Availability Note</p>
+                                        <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80 font-medium leading-relaxed">
+                                            This package bundle will remain active and bookable by clients until toggled inactive or deleted.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 pt-6">
+                                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                                     <button
                                         type="submit"
-                                        className="flex-1 bg-[#FF0B01] hover:bg-red-700 text-white py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition active:scale-95 uppercase text-sm tracking-wider"
+                                        className="flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                                        style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--color-button-text, #ffffff)' }}
                                     >
-                                        {isEditing ? 'Update Package' : 'Create Package'}
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>{isEditing ? 'Update Package' : 'Create Package'}</span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={resetForm}
-                                        className={`flex-1 border py-4 rounded-2xl font-bold transition uppercase text-sm tracking-wider ${isDarkMode ? 'border-zinc-600 text-zinc-300 hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                        className={`px-6 py-4 rounded-xl font-bold transition uppercase text-xs tracking-wider cursor-pointer border ${
+                                            isDarkMode 
+                                                ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' 
+                                                : 'border-gray-200 text-gray-700 hover:bg-gray-100'
+                                        }`}
                                     >
                                         Discard Changes
                                     </button>
@@ -581,12 +691,12 @@ const AddPackages = () => {
                                         placeholder="Search packages..."
                                         value={filters.name}
                                         onChange={(e) => setFilters(prev => ({ ...prev, name: e.target.value }))}
-                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all w-80 shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
+                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all w-80 shadow-sm ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white placeholder-slate-500 hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                     />
                                     <select
                                         value={filters.active}
                                         onChange={(e) => setFilters(prev => ({ ...prev, active: e.target.value }))}
-                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all shadow-sm cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
+                                        className={`border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all shadow-sm cursor-pointer ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 focus:bg-zinc-800' : 'bg-gray-50/50 border-gray-200 text-gray-900 hover:bg-gray-50 focus:bg-white'}`}
                                     >
                                         <option value="">All Status</option>
                                         <option value="true">Active</option>
@@ -612,15 +722,16 @@ const AddPackages = () => {
                                         return (
                                             <div
                                                 key={pkg.id}
-                                                className={`border border-l-4 border-l-[#FF0B01] rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'}`}
+                                                className={`border border-l-4 border-l-brand-primary rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'}`}
+                                                style={{ borderLeftColor: 'var(--brand-primary)' }}
                                             >
                                                 {/* Subtle top indicator bar */}
-                                                <div className="absolute top-0 left-0 right-0 h-1 bg-[#FF0B01]/5 group-hover:bg-[#FF0B01]/10 transition-colors duration-300"></div>
+                                                <div className="absolute top-0 left-0 right-0 h-1 bg-brand-primary/10 group-hover:bg-brand-primary/20 transition-colors duration-300"></div>
 
                                                 <div>
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex-1 min-w-0 pr-4">
-                                                            <h3 className={`font-extrabold text-xl group-hover:text-[#FF0B01] transition-colors duration-300 truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`} title={pkg.name}>
+                                                            <h3 className={`font-extrabold text-xl group-hover:text-brand-primary transition-colors duration-300 truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`} title={pkg.name}>
                                                                 {pkg.name}
                                                             </h3>
                                                         </div>
@@ -635,14 +746,14 @@ const AddPackages = () => {
                                                                     onChange={() => togglePackageStatus(pkg.id, pkg.active)}
                                                                     className="sr-only peer"
                                                                 />
-                                                                <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-red-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF0B01]"></div>
+                                                                <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-brand-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-primary"></div>
                                                             </label>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex justify-between items-baseline mt-4">
                                                         <div className="flex items-baseline gap-2">
-                                                            <span className="text-3xl font-black text-[#FF0B01]">₹{pkg.packagePrice}</span>
+                                                            <span className="text-3xl font-black text-brand-primary" style={{ color: 'var(--brand-primary)' }}>₹{pkg.packagePrice}</span>
                                                             {totalServicesVal > pkg.packagePrice && (
                                                                 <span className="text-sm text-gray-400 line-through font-semibold">₹{totalServicesVal.toFixed(0)}</span>
                                                             )}
@@ -673,13 +784,24 @@ const AddPackages = () => {
                                                     )}
                                                 </div>
 
-                                                <div className={`mt-6 pt-4 border-t ${isDarkMode ? 'border-zinc-700' : 'border-gray-100'}`}>
+                                                <div className={`mt-6 pt-4 border-t flex items-center gap-2 ${isDarkMode ? 'border-zinc-800' : 'border-gray-100'}`}>
                                                      <button
                                                          onClick={() => handleEdit(pkg)}
-                                                         className={`w-full flex items-center justify-center gap-1.5 hover:text-[#FF0B01] text-xs font-bold transition-all py-3 rounded-xl border ${isDarkMode ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-red-50'}`}
+                                                         className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-bold transition-all py-2.5 rounded-xl border cursor-pointer ${
+                                                             isDarkMode ? 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:text-white hover:bg-zinc-700' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                                                         }`}
                                                      >
-                                                         <img src={editIcon} alt="edit" className="w-3.5 h-3.5 opacity-70" />
-                                                         Edit
+                                                         <Edit3 className="w-3.5 h-3.5 text-gray-400" />
+                                                         <span>Edit</span>
+                                                     </button>
+                                                     <button
+                                                         onClick={() => handleDelete(pkg.id)}
+                                                         className={`p-2.5 rounded-xl border cursor-pointer transition-colors ${
+                                                             isDarkMode ? 'border-zinc-700 text-zinc-400 hover:text-rose-400 hover:bg-rose-950/30' : 'border-gray-200 text-gray-400 hover:text-rose-600 hover:bg-rose-50'
+                                                         }`}
+                                                         title="Delete package"
+                                                     >
+                                                         <Trash2 className="w-3.5 h-3.5" />
                                                      </button>
                                                  </div>
                                             </div>
@@ -709,7 +831,7 @@ const AddPackages = () => {
                                         </button>
                                         
                                         {/* Current Page Indicator Pill */}
-                                        <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                        <span className="px-3.5 py-1.5 bg-brand-primary text-white text-[10px] font-black rounded-lg" style={{ backgroundColor: 'var(--brand-primary)' }}>
                                             {totalPages === 0 ? 1 : currentPage + 1}
                                         </span>
 

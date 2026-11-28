@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCustomerProfile } from '../../../redux/slices/customerSlice';
 import { Search, MapPin, ChevronDown, Calendar, MousePointerClick, User, Sun, Moon, X, Scissors, Sparkles, Phone } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useDarkMode } from '../../../context/DarkModeContext';
 import LanguageSwitcher from '../../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../../api/axiosInstance';
-import { useActiveSalon, getSalonImageSrc, SalonLogoImage } from '../../../utils/whiteLabelHelper';
+import { useActiveSalon, getSalonImageSrc, SalonLogoImage, isSalonCustomerRoute } from '../../../utils/whiteLabelHelper';
 
 const DEFAULT_SERVICES = [
   { id: 101, name: 'Hair Cut', category: 'Hair Services', duration: 10, price: 250 },
@@ -33,10 +33,13 @@ const SearchNavBar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { user, isAuthenticated, profile } = useSelector((state) => state.customer);
   const { isDark, toggleDark } = useDarkMode();
   const { salon: activeSalon, isWhiteLabeled, clearActiveSalon } = useActiveSalon();
+  const isSalonRoute = isSalonCustomerRoute(location.pathname);
+  const showSalonNavbar = Boolean(isWhiteLabeled && isSalonRoute);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -184,9 +187,9 @@ const SearchNavBar = () => {
         mounted ? 'opacity-100' : 'opacity-0'
     } ${isDark ? 'bg-black border-gray-700' : 'bg-white border-[#E8E8E8]'}`}>
 
-      {/* Brand Vector Identity Block - White-labeled when salon selected */}
-      {isWhiteLabeled ? (
-        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer flex-shrink-0 min-w-0" onClick={() => navigate('/salon')}>
+      {/* Brand Vector Identity Block - White-labeled ONLY on active salon customer routes */}
+      {showSalonNavbar ? (
+        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0 flex-1 md:flex-initial md:flex-shrink-0 pr-2" onClick={() => navigate('/salon')}>
           <SalonLogoImage logo={activeSalon.logo} name={activeSalon.name} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl" />
           <div className="flex flex-col min-w-0">
             <span className={`text-sm sm:text-base md:text-lg font-black tracking-tight truncate max-w-[130px] sm:max-w-[200px] md:max-w-xs ${isDark ? 'text-white' : 'text-[#242424]'}`}>
@@ -201,6 +204,18 @@ const SearchNavBar = () => {
               ) : (
                 <span className="text-red-500 font-bold">Salon Portal</span>
               )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearActiveSalon();
+                  navigate('/');
+                }}
+                className="hidden sm:inline-block text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 hover:text-red-500 transition-colors ml-1 cursor-pointer"
+                title="Return to NeoParlour Home"
+              >
+                Home
+              </button>
               <button
                 type="button"
                 onClick={(e) => {
@@ -228,12 +243,12 @@ const SearchNavBar = () => {
         </div>
       )}
 
-      {/* Global Hub Navigation Search & Filter Bar Group */}
-      <div ref={searchContainerRef} className="relative flex-1 max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-2xl mx-1.5 sm:mx-4">
+      {/* Global Hub Navigation Search & Filter Bar Group (Desktop/Tablet only) */}
+      <div ref={searchContainerRef} className="hidden md:block relative flex-1 md:max-w-md lg:max-w-2xl mx-4">
         <form onSubmit={handleSearchSubmit} className={`flex items-center border rounded-full overflow-hidden w-full h-[38px] sm:h-[46px] shadow-sm transition-all duration-300 ${
           showSearchDropdown || searchQuery ? 'border-[#FF0B01] ring-2 ring-[#FF0B01]/20' : isDark ? 'border-gray-600 bg-gray-900' : 'border-[#909090] bg-white'
         } ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
-          <div className="flex items-center flex-1 px-3 sm:px-4 lg:border-r border-gray-200 dark:border-gray-700 min-w-0">
+          <div className={`flex items-center flex-1 px-3 sm:px-4 min-w-0 ${!showSalonNavbar ? 'lg:border-r border-gray-200 dark:border-gray-700' : ''}`}>
             <Search className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
             <input 
               type="text" 
@@ -242,7 +257,7 @@ const SearchNavBar = () => {
               onFocus={() => {
                 if (searchQuery.trim()) setShowSearchDropdown(true);
               }}
-              placeholder={isWhiteLabeled && activeSalon?.name ? `Search services at ${activeSalon.name}...` : t('navbar.search_placeholder', 'Search services, salons...')} 
+              placeholder={showSalonNavbar && activeSalon?.name ? `Search services at ${activeSalon.name}...` : t('navbar.search_placeholder', 'Search services, salons...')} 
               className={`w-full text-xs sm:text-[13px] outline-none placeholder-[#8D8D8D] bg-transparent ${isDark ? 'text-white' : 'text-gray-900'}`}
             />
             {searchQuery && (
@@ -259,17 +274,21 @@ const SearchNavBar = () => {
             )}
           </div>
           
-          <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isWhiteLabeled ? 'hidden' : isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
-            <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-            <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
-            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          </div>
+          {!showSalonNavbar && (
+            <>
+              <div className={`hidden lg:flex items-center px-4 border-r cursor-pointer h-full transition-colors ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-400 hover:bg-gray-50'}`}>
+                <MapPin className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+                <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.location', 'Location')}</span>
+                <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+              </div>
 
-          <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isWhiteLabeled ? 'hidden' : isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
-            <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-            <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
-            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
-          </div>
+              <div className={`hidden lg:flex items-center px-4 cursor-pointer h-full transition-colors mr-1 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
+                <Calendar className={`w-4 h-4 mr-2 flex-shrink-0 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+                <span className={`text-[13px] font-medium mr-1.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`}>{t('navbar.date', 'Date')}</span>
+                <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-gray-400' : 'text-[#8D8D8D]'}`} />
+              </div>
+            </>
+          )}
 
           <button type="submit" className="bg-[#FF0B01] hover:bg-red-700 text-white text-[11px] sm:text-[13px] font-bold tracking-widest px-4 sm:px-6 h-full transition-all uppercase flex-shrink-0 flex items-center justify-center cursor-pointer rounded-r-full">
             <span className="hidden sm:inline">{t('buttons.search', 'SEARCH')}</span>
@@ -351,8 +370,8 @@ const SearchNavBar = () => {
       {/* Session Profiles / Control Triggers Block */}
       <div className="flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
 
-        {/* Salon Phone Call Button when white-labeled */}
-        {isWhiteLabeled && activeSalon?.phone && (
+        {/* Salon Phone Call Button when white-labeled on salon routes */}
+        {showSalonNavbar && activeSalon?.phone && (
           <a
             href={`tel:${activeSalon.phone}`}
             className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-colors ${
@@ -366,12 +385,12 @@ const SearchNavBar = () => {
         )}
 
         {/* Language Switcher (Desktop/Tablet only - mobile moved to sidebar menu) */}
-        <div className="flex items-center">
+        <div className="hidden md:flex items-center">
           <LanguageSwitcher />
         </div>
 
         {/* Dark Mode Toggle (Desktop/Tablet only - mobile moved to sidebar menu) */}
-        <div className="flex items-center">
+        <div className="hidden md:flex items-center">
           <button
             onClick={toggleDark}
           data-tooltip={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}

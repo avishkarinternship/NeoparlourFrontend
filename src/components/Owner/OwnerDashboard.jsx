@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axiosInstance from '../../api/axiosInstance';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useWhitelabelGraphColors } from '../../utils/whiteLabelHelper';
 import toast from 'react-hot-toast';
 import {
     Calendar,
@@ -131,12 +132,14 @@ const formatAppointmentTime = (dateString) => {
 };
 
 // Premium Custom Tooltip for the chart
-const CustomTooltip = ({ active, payload, label, viewType }) => {
+const CustomTooltip = ({ active, payload, label, viewType, chartColor }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-[#1a1a1a]/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs border border-white/10">
+            <div className="bg-[#1a1a1a]/95 dark:bg-zinc-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs border border-white/10 dark:border-zinc-800">
                 <p className="font-semibold text-gray-400 mb-1.5 tracking-wide uppercase text-[9px]">{formatLabel(label, viewType)}</p>
-                <p className="font-black text-lg text-[#ff0b01]">₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="font-black text-lg" style={{ color: chartColor || 'var(--brand-primary, #7C3AED)' }}>
+                    ₹ {payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </p>
             </div>
         );
     }
@@ -174,6 +177,8 @@ const OwnerDashboard = () => {
       : document.documentElement.classList.contains('dark');
 
     const user = JSON.parse(localStorage.getItem('ownerStaffUser')) || {};
+    const salonId = user.salonId || localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id');
+    const graphColors = useWhitelabelGraphColors(isDarkMode, salonId);
     const roleStr = String(user?.role || user?.userRole || '').toUpperCase();
     const isAdmin = roleStr === 'ADMIN';
 
@@ -627,8 +632,8 @@ const OwnerDashboard = () => {
         ];
 
         return (
-            <main className={`flex-1 p-3 sm:p-6 lg:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans ${
-                isDarkMode ? 'bg-zinc-950 text-white' : 'bg-[#FAFAFA] text-gray-900'
+            <main className={`flex-1 p-3 sm:p-6 lg:p-8 transition-colors duration-300 overflow-y-auto max-w-7xl mx-auto w-full font-sans bg-transparent ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
                 {/* 1. Header & Live Global Control */}
                 <div className="mb-5 sm:mb-6 space-y-3.5 sm:space-y-4">
@@ -686,8 +691,8 @@ const OwnerDashboard = () => {
                     </div>
 
                     {/* Quick Date Presets & Responsive Filter Strip */}
-                    <div className={`p-2.5 sm:p-3 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-2.5 ${
-                        isDarkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-gray-200 shadow-2xs'
+                    <div className={`p-2.5 sm:p-3 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-2.5 glass-panel ${
+                        isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                     }`}>
                         {/* Presets row */}
                         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
@@ -1145,8 +1150,8 @@ const OwnerDashboard = () => {
     // --- RENDER HELPERS FOR 6 SPACE-OPTIMIZED CARDS ---
 
     const renderRevenueCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div>
                 <div className="flex justify-between items-start mb-2">
@@ -1156,7 +1161,9 @@ const OwnerDashboard = () => {
                     </div>
                     <div className="text-right">
                         <p className={`text-[10px] font-medium ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Total Revenue</p>
-                        <p className="text-lg sm:text-xl font-black text-[#ff0b01]">₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-lg sm:text-xl font-black" style={{ color: graphColors.stroke }}>
+                            ₹ {totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </p>
                     </div>
                 </div>
 
@@ -1166,9 +1173,12 @@ const OwnerDashboard = () => {
                         <button
                             key={type}
                             onClick={() => handleViewTypeChange(type)}
+                            style={{
+                                backgroundColor: viewType === type ? graphColors.stroke : undefined
+                            }}
                             className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                                 viewType === type
-                                    ? 'bg-[#ff0b01] text-white shadow-xs'
+                                    ? 'text-white shadow-xs'
                                     : isDarkMode ? 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700/60' : 'bg-slate-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200/80 shadow-3xs'
                             }`}
                         >
@@ -1187,7 +1197,7 @@ const OwnerDashboard = () => {
                                 type="date"
                                 value={customStartDate}
                                 onChange={(e) => setCustomStartDate(e.target.value)}
-                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none focus:border-[#ff0b01] ${
+                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none ${
                                     isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
                                 }`}
                             />
@@ -1199,7 +1209,7 @@ const OwnerDashboard = () => {
                                 type="date"
                                 value={customEndDate}
                                 onChange={(e) => setCustomEndDate(e.target.value)}
-                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none focus:border-[#ff0b01] ${
+                                className={`w-full border rounded text-[11px] font-semibold px-2 py-1 focus:outline-none ${
                                     isDarkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-gray-200 text-gray-700'
                                 }`}
                             />
@@ -1212,7 +1222,7 @@ const OwnerDashboard = () => {
             <div className="h-[145px] w-full mt-1">
                 {revenueLoading ? (
                     <div className="h-full flex items-center justify-center">
-                        <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                        <div className="animate-spin h-6 w-6 border-2 border-t-transparent rounded-full" style={{ borderColor: graphColors.stroke, borderTopColor: 'transparent' }}></div>
                     </div>
                 ) : revenueData.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center py-2">
@@ -1227,34 +1237,34 @@ const OwnerDashboard = () => {
                         <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#ff0b01" stopOpacity={0.25} />
-                                    <stop offset="95%" stopColor="#ff0b01" stopOpacity={0.0} />
+                                    <stop offset="5%" stopColor={graphColors.gradientStart} stopOpacity={graphColors.startOpacity} />
+                                    <stop offset="95%" stopColor={graphColors.gradientEnd} stopOpacity={graphColors.endOpacity} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#334155' : '#f5f5f5'} vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={graphColors.gridStroke} vertical={false} />
                             <XAxis
                                 dataKey="label"
                                 tickFormatter={(val) => formatLabel(val, viewType)}
-                                tick={{ fontSize: 9, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
-                                axisLine={{ stroke: isDarkMode ? '#334155' : '#e5e7eb' }}
+                                tick={{ fontSize: 9, fill: graphColors.axisText, fontWeight: 600 }}
+                                axisLine={{ stroke: graphColors.gridStroke }}
                                 tickLine={false}
                                 interval="preserveStartEnd"
                             />
                             <YAxis
                                 tickFormatter={(val) => `₹${val}`}
-                                tick={{ fontSize: 9, fill: isDarkMode ? '#94a3b8' : '#9ca3af', fontWeight: 600 }}
+                                tick={{ fontSize: 9, fill: graphColors.axisText, fontWeight: 600 }}
                                 axisLine={false}
                                 tickLine={false}
                             />
-                            <Tooltip content={<CustomTooltip viewType={viewType} />} />
+                            <Tooltip content={<CustomTooltip viewType={viewType} chartColor={graphColors.stroke} />} />
                             <Area
                                 type="monotone"
                                 dataKey="revenue"
-                                stroke="#ff0b01"
+                                stroke={graphColors.stroke}
                                 strokeWidth={2.5}
                                 fill="url(#revenueGradient)"
-                                dot={{ r: 3, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 1.5 }}
-                                activeDot={{ r: 5, fill: '#ff0b01', stroke: isDarkMode ? '#0f172a' : '#fff', strokeWidth: 2 }}
+                                dot={{ r: 3, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 1.5 }}
+                                activeDot={{ r: 5, fill: graphColors.dotFill, stroke: graphColors.dotStroke, strokeWidth: 2 }}
                             />
                         </AreaChart>
                     </ResponsiveContainer>
@@ -1264,8 +1274,8 @@ const OwnerDashboard = () => {
     );
 
     const renderUpcomingAppointmentsCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className="flex justify-between items-start mb-3">
                 <div>
@@ -1274,7 +1284,7 @@ const OwnerDashboard = () => {
                 </div>
                 <button 
                     onClick={() => navigate('/owner/manage/schedule')}
-                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                    className="text-brand-primary hover:opacity-80 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
                 >
                     <span>More</span>
                     <span className="group-hover:translate-x-0.5 transition-transform">→</span>
@@ -1283,7 +1293,7 @@ const OwnerDashboard = () => {
 
             {upcomingLoading ? (
                 <div className="flex-1 flex items-center justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                 </div>
             ) : upcomingAppointments.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1298,7 +1308,8 @@ const OwnerDashboard = () => {
                     </p>
                     <button
                         onClick={() => navigate('/owner/manage/walk-in')}
-                        className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#ff0b01] text-white text-[11px] font-bold shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                        className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand-primary text-white text-[11px] font-bold shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                        style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
                     >
                         <span>+ Book Walk-in</span>
                     </button>
@@ -1317,11 +1328,11 @@ const OwnerDashboard = () => {
                                 </p>
                             </div>
                             <div className="text-right shrink-0">
-                                <p className="text-[12px] sm:text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                <p className="text-[12px] sm:text-[13px] font-black text-brand-primary">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
                                 <span className={`inline-block text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 capitalize ${
                                     appt.status === 'in_progress' 
                                         ? 'bg-orange-50 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400' 
-                                        : 'bg-red-50 dark:bg-red-950/70 text-[#ff0b01]'
+                                        : 'bg-brand-primary/10 text-brand-primary'
                                 }`}>
                                     {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                                 </span>
@@ -1334,8 +1345,8 @@ const OwnerDashboard = () => {
     );
 
     const renderUnallocatedAppointmentsCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className="flex justify-between items-start mb-3">
                 <div>
@@ -1353,7 +1364,7 @@ const OwnerDashboard = () => {
 
             {unallocatedLoading ? (
                 <div className="flex-1 flex items-center justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                 </div>
             ) : unallocatedAppointments.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1390,7 +1401,7 @@ const OwnerDashboard = () => {
                                     value={selectedStaffMap[appt.id] || ''}
                                     onChange={(e) => setSelectedStaffMap(prev => ({ ...prev, [appt.id]: e.target.value }))}
                                     onFocus={() => fetchAvailableStaff(appt.id, appt.appointmentAt, appt.durationMinutes)}
-                                    className={`text-[10px] border rounded-lg px-2 py-1 focus:outline-none focus:border-[#ff0b01] font-semibold min-w-[110px] h-7 ${
+                                    className={`text-[10px] border rounded-lg px-2 py-1 focus:outline-none focus:border-brand-primary font-semibold min-w-[110px] h-7 ${
                                         isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-700'
                                     }`}
                                 >
@@ -1419,7 +1430,8 @@ const OwnerDashboard = () => {
                                 <button
                                     onClick={() => handleAssignStaff(appt.id)}
                                     disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
-                                    className="bg-[#ff0b01] hover:bg-red-700 text-white text-[10px] font-bold px-2.5 h-7 rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-[#ff0b01] cursor-pointer"
+                                    className="bg-brand-primary hover:brightness-110 text-white text-[10px] font-bold px-2.5 h-7 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
+                                    style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
                                 >
                                     {assigningMap[appt.id] ? '...' : 'Assign'}
                                 </button>
@@ -1432,8 +1444,8 @@ const OwnerDashboard = () => {
     );
 
     const renderStylistAvailabilityCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className="flex justify-between items-start mb-3">
                 <div>
@@ -1442,7 +1454,7 @@ const OwnerDashboard = () => {
                 </div>
                 <button 
                     onClick={() => navigate('/owner/manage/staff')}
-                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                    className="text-brand-primary hover:opacity-80 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
                 >
                     <span>Staff</span>
                     <span className="group-hover:translate-x-0.5 transition-transform">→</span>
@@ -1451,7 +1463,7 @@ const OwnerDashboard = () => {
             
             {staffAvailabilityLoading ? (
                 <div className="flex-1 flex items-center justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                 </div>
             ) : staffStatusList.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1490,7 +1502,7 @@ const OwnerDashboard = () => {
                             <div className="shrink-0 ml-2">
                                 <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md ${
                                     staff.status === 'Available' ? (isDarkMode ? 'bg-[#E3F9EC]/10 text-[#299764]' : 'bg-[#E3F9EC] text-[#299764]') :
-                                    staff.status === 'In Session' ? (isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]') :
+                                    staff.status === 'In Session' ? 'bg-brand-primary/10 text-brand-primary' :
                                     staff.status === 'On Leave' ? (isDarkMode ? 'bg-amber-950/30 text-amber-500' : 'bg-amber-50 text-amber-600') :
                                     isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500'
                                 }`}>
@@ -1505,8 +1517,8 @@ const OwnerDashboard = () => {
     );
 
     const renderCompletedAppointmentsCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className="flex justify-between items-start mb-3">
                 <div>
@@ -1515,7 +1527,7 @@ const OwnerDashboard = () => {
                 </div>
                 <button 
                     onClick={() => navigate('/owner/appointments')}
-                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                    className="text-brand-primary hover:opacity-80 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
                 >
                     <span>All</span>
                     <span className="group-hover:translate-x-0.5 transition-transform">→</span>
@@ -1524,7 +1536,7 @@ const OwnerDashboard = () => {
 
             {completedLoading ? (
                 <div className="flex-1 flex items-center justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                 </div>
             ) : completedAppointments.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1559,8 +1571,8 @@ const OwnerDashboard = () => {
     );
 
     const renderCancelledAppointmentsCard = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className="flex justify-between items-start mb-3">
                 <div>
@@ -1569,7 +1581,7 @@ const OwnerDashboard = () => {
                 </div>
                 <button 
                     onClick={() => navigate('/owner/appointments')}
-                    className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
+                    className="text-brand-primary hover:opacity-80 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group"
                 >
                     <span>All</span>
                     <span className="group-hover:translate-x-0.5 transition-transform">→</span>
@@ -1578,7 +1590,7 @@ const OwnerDashboard = () => {
 
             {cancelledLoading ? (
                 <div className="flex-1 flex items-center justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                 </div>
             ) : cancelledAppointments.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1606,10 +1618,8 @@ const OwnerDashboard = () => {
                                 </p>
                             </div>
                             <div className="text-right shrink-0">
-                                <p className="text-[12px] sm:text-[13px] font-black text-[#ff0b01]">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
-                                <span className={`inline-block text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 capitalize ${
-                                    isDarkMode ? 'bg-red-950/40 text-red-400' : 'bg-red-50 text-[#ff0b01]'
-                                }`}>
+                                <p className="text-[12px] sm:text-[13px] font-black text-brand-primary">₹ {(appt.finalAmount || appt.totalPrice).toFixed(2)}</p>
+                                <span className="inline-block text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 capitalize bg-brand-primary/10 text-brand-primary">
                                     {appt.status}
                                 </span>
                             </div>
@@ -1621,8 +1631,8 @@ const OwnerDashboard = () => {
     );
 
     const renderUnifiedAppointmentsHub = () => (
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-sm flex flex-col justify-between min-h-[250px] transition-colors duration-300 ${
-            isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+        <div className={`p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-h-[250px] transition-colors duration-300 glass-panel ${
+            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -1633,7 +1643,7 @@ const OwnerDashboard = () => {
                     </div>
                     <button 
                         onClick={() => navigate('/owner/appointments')}
-                        className="text-[#ff0b01] hover:text-red-700 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group self-start sm:self-auto"
+                        className="text-brand-primary hover:opacity-80 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1 group self-start sm:self-auto"
                     >
                         <span>Full Bookings</span>
                         <span className="group-hover:translate-x-0.5 transition-transform">→</span>
@@ -1646,9 +1656,10 @@ const OwnerDashboard = () => {
                         onClick={() => setActiveApptTab('upcoming')}
                         className={`px-3 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                             activeApptTab === 'upcoming'
-                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                ? 'bg-brand-primary text-white shadow-xs'
                                 : isDarkMode ? 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
+                        style={activeApptTab === 'upcoming' ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' } : {}}
                     >
                         <span>Upcoming</span>
                         <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-white/20">{upcomingAppointments.length}</span>
@@ -1696,13 +1707,19 @@ const OwnerDashboard = () => {
                 {activeApptTab === 'upcoming' && (
                     upcomingLoading ? (
                         <div className="flex items-center justify-center py-6">
-                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                            <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                         </div>
                     ) : upcomingAppointments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
                             <img src={upcomingAppointmentIcon} alt="Empty" className="w-8 h-8 object-contain opacity-70 dark:invert mb-1" />
                             <h4 className="text-xs font-bold">No upcoming booked slots</h4>
-                            <button onClick={() => navigate('/owner/manage/walk-in')} className="mt-2 px-3 py-1 rounded-lg bg-[#ff0b01] text-white text-[10px] font-bold cursor-pointer">+ Book Walk-in</button>
+                            <button 
+                                onClick={() => navigate('/owner/manage/walk-in')} 
+                                className="mt-2 px-3 py-1 rounded-lg bg-brand-primary text-white text-[10px] font-bold cursor-pointer hover:brightness-110 transition-all shadow-xs"
+                                style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
+                            >
+                                + Book Walk-in
+                            </button>
                         </div>
                     ) : (
                         <div className={`divide-y overflow-y-auto max-h-[160px] pr-1 ${isDarkMode ? 'divide-zinc-800' : 'divide-gray-100'}`}>
@@ -1714,8 +1731,8 @@ const OwnerDashboard = () => {
                                         <p className="text-[9px] text-gray-500">{formatAppointmentTime(appt.appointmentAt)}</p>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <p className="text-xs font-black text-[#ff0b01]">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
-                                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-950/70 text-[#ff0b01] uppercase">{appt.status}</span>
+                                        <p className="text-xs font-black text-brand-primary">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
+                                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-brand-primary/10 text-brand-primary uppercase">{appt.status}</span>
                                     </div>
                                 </div>
                             ))}
@@ -1726,7 +1743,7 @@ const OwnerDashboard = () => {
                 {activeApptTab === 'unallocated' && (
                     unallocatedLoading ? (
                         <div className="flex items-center justify-center py-6">
-                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                            <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                         </div>
                     ) : unallocatedAppointments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1757,7 +1774,8 @@ const OwnerDashboard = () => {
                                         <button
                                             onClick={() => handleAssignStaff(appt.id)}
                                             disabled={!selectedStaffMap[appt.id] || assigningMap[appt.id]}
-                                            className="bg-[#ff0b01] text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer"
+                                            className="bg-brand-primary text-white text-[10px] font-bold px-2 py-1 rounded cursor-pointer hover:brightness-110 transition-all disabled:opacity-40"
+                                            style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
                                         >
                                             Assign
                                         </button>
@@ -1771,7 +1789,7 @@ const OwnerDashboard = () => {
                 {activeApptTab === 'completed' && (
                     completedLoading ? (
                         <div className="flex items-center justify-center py-6">
-                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                            <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                         </div>
                     ) : completedAppointments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1799,7 +1817,7 @@ const OwnerDashboard = () => {
                 {activeApptTab === 'cancelled' && (
                     cancelledLoading ? (
                         <div className="flex items-center justify-center py-6">
-                            <div className="animate-spin h-6 w-6 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+                            <div className="animate-spin h-6 w-6 border-2 border-brand-primary border-t-transparent rounded-full"></div>
                         </div>
                     ) : cancelledAppointments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center text-center py-4 my-auto">
@@ -1815,8 +1833,8 @@ const OwnerDashboard = () => {
                                         <p className="text-[10px] text-gray-400 truncate">{appt.serviceNames?.join(', ')} • {formatAppointmentTime(appt.appointmentAt)}</p>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <p className="text-xs font-black text-[#ff0b01]">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
-                                        <span className="text-[8px] font-bold text-red-500 bg-red-50 dark:bg-red-950/70 px-1.5 py-0.5 rounded">Cancelled</span>
+                                        <p className="text-xs font-black text-brand-primary">₹{(appt.finalAmount || appt.totalPrice).toFixed(0)}</p>
+                                        <span className="text-[8px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/70 px-1.5 py-0.5 rounded">Cancelled</span>
                                     </div>
                                 </div>
                             ))}
@@ -1832,8 +1850,8 @@ const OwnerDashboard = () => {
             isDarkMode ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             {/* 1. Welcome Banner & Live Quick Metric Counters */}
-            <div className={`p-4 sm:p-5 rounded-2xl border mb-5 transition-all ${
-                isDarkMode ? 'bg-zinc-900/90 border-zinc-800 text-zinc-100 shadow-xs' : 'bg-white border-gray-200 text-gray-900 shadow-2xs'
+            <div className={`p-4 sm:p-5 rounded-2xl mb-5 transition-all glass-panel ${
+                isDarkMode ? 'text-zinc-100' : 'text-gray-900'
             }`}>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
@@ -1856,34 +1874,34 @@ const OwnerDashboard = () => {
 
                     {/* Quick Metric Counters */}
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-                        <div className={`px-3 py-2 rounded-xl border text-center ${
-                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        <div className={`px-3 py-2 rounded-xl text-center glass-card ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}>
                             <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Today</p>
-                            <p className="text-sm sm:text-base font-black text-[#ff0b01]">{todaysAppointments.length}</p>
+                            <p className="text-sm sm:text-base font-black text-brand-primary">{todaysAppointments.length}</p>
                         </div>
-                        <div className={`px-3 py-2 rounded-xl border text-center ${
-                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        <div className={`px-3 py-2 rounded-xl text-center glass-card ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}>
                             <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Upcoming</p>
                             <p className="text-sm sm:text-base font-black text-blue-600 dark:text-blue-400">{upcomingAppointments.length}</p>
                         </div>
-                        <div className={`px-3 py-2 rounded-xl border text-center ${
-                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        <div className={`px-3 py-2 rounded-xl text-center glass-card ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}>
                             <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Unallocated</p>
                             <p className={`text-sm sm:text-base font-black ${unallocatedAppointments.length > 0 ? 'text-amber-500 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                 {unallocatedAppointments.length}
                             </p>
                         </div>
-                        <div className={`px-3 py-2 rounded-xl border text-center ${
-                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        <div className={`px-3 py-2 rounded-xl text-center glass-card ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}>
                             <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Completed</p>
                             <p className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{completedAppointments.length}</p>
                         </div>
-                        <div className={`px-3 py-2 rounded-xl border text-center col-span-2 sm:col-span-1 ${
-                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700/60' : 'bg-gray-50 border-gray-200/80'
+                        <div className={`px-3 py-2 rounded-xl text-center col-span-2 sm:col-span-1 glass-card ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}>
                             <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Revenue</p>
                             <p className={`text-sm sm:text-base font-black truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -1900,7 +1918,7 @@ const OwnerDashboard = () => {
                     <h2 className={`text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
-                        <Sparkles className="w-4 h-4 text-[#ff0b01]" />
+                        <Sparkles className="w-4 h-4 text-brand-primary" />
                         <span>Quick Links & Important Features</span>
                     </h2>
                     <span className={`text-[10px] sm:text-[11px] font-semibold ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
@@ -1912,27 +1930,26 @@ const OwnerDashboard = () => {
                     {/* 1. Book Walk-in (Primary highlighted action) */}
                     <div
                         onClick={() => navigate('/owner/manage/walk-in')}
-                        className="p-3 rounded-2xl bg-[#ff0b01] text-white hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-md flex flex-col justify-between group min-h-[92px]"
+                        className="p-3 rounded-2xl bg-brand-primary text-white hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-md flex flex-col justify-between group min-h-[92px]"
+                        style={{ backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
                     >
                         <div className="flex items-center justify-between">
                             <div className="p-1.5 rounded-xl bg-white/20 text-white">
-                                <CalendarPlus className="w-4 h-4" />
+                                <CalendarPlus className="w-4 h-4 text-white" />
                             </div>
-                            <ArrowRight className="w-3.5 h-3.5 text-white/80 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="w-3.5 h-3.5 text-white/90 group-hover:translate-x-1 transition-transform" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Book Walk-in</h3>
-                            <p className="text-[10px] text-white/80 font-medium truncate">New customer slot</p>
+                            <h3 className="text-xs font-black tracking-tight leading-tight !text-white" style={{ color: '#FFFFFF' }}>Book Walk-in</h3>
+                            <p className="text-[10px] !text-white/85 font-medium truncate" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>New customer slot</p>
                         </div>
                     </div>
 
                     {/* 2. Manage Services */}
                     <div
                         onClick={() => navigate('/owner/manage/services')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-pink-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-pink-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1942,18 +1959,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-pink-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Services</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Prices & catalog</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Services</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Prices & catalog</p>
                         </div>
                     </div>
 
                     {/* 3. Manage Staff */}
                     <div
                         onClick={() => navigate('/owner/manage/staff')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-blue-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-blue-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1963,18 +1978,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Manage Staff</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Team & stylists</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Manage Staff</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Team & stylists</p>
                         </div>
                     </div>
 
                     {/* 4. Salon Schedule */}
                     <div
                         onClick={() => navigate('/owner/manage/schedule')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-amber-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-amber-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1984,18 +1997,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Schedule</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Calendar & slots</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Schedule</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Calendar & slots</p>
                         </div>
                     </div>
 
                     {/* 5. Bookings / Appointments */}
                     <div
                         onClick={() => navigate('/owner/appointments')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-emerald-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-emerald-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -2005,18 +2016,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Bookings</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>All appointments</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Bookings</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>All appointments</p>
                         </div>
                     </div>
 
                     {/* 6. Customers */}
                     <div
                         onClick={() => navigate('/owner/customers')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-purple-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-purple-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -2026,18 +2035,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Customers</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Client database</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Customers</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Client database</p>
                         </div>
                     </div>
 
                     {/* 7. Inventory */}
                     <div
                         onClick={() => navigate('/owner/manage/inventory')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-cyan-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-cyan-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -2047,18 +2054,16 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-cyan-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Inventory</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Stock & supplies</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Inventory</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Stock & supplies</p>
                         </div>
                     </div>
 
                     {/* 8. Offers & Deals */}
                     <div
                         onClick={() => navigate('/owner/manage/add-offers')}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 ${
-                            isDarkMode 
-                                ? 'bg-zinc-900/90 border-zinc-800 hover:border-indigo-500/40 text-zinc-100 shadow-2xs' 
-                                : 'bg-white border-gray-200 hover:border-indigo-300 text-gray-900 shadow-2xs hover:shadow-xs'
+                        className={`p-3 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[92px] active:scale-95 glass-card-interactive ${
+                            isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -2068,8 +2073,8 @@ const OwnerDashboard = () => {
                             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
                         <div className="mt-2">
-                            <h3 className="text-xs font-black tracking-tight leading-tight">Offers & Deals</h3>
-                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Promos & combos</p>
+                            <h3 className={`text-xs font-black tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Offers & Deals</h3>
+                            <p className={`text-[10px] font-medium truncate ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`} style={{ color: isDarkMode ? '#A1A1AA' : '#6B7280' }}>Promos & combos</p>
                         </div>
                     </div>
                 </div>
@@ -2091,17 +2096,18 @@ const OwnerDashboard = () => {
                 </div>
 
                 {/* View Mode Switcher */}
-                <div className={`inline-flex items-center p-1 rounded-xl border text-xs font-bold self-start sm:self-auto ${
-                    isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200 shadow-3xs'
+                <div className={`inline-flex items-center p-1 rounded-xl text-xs font-bold self-start sm:self-auto glass-badge ${
+                    isDarkMode ? 'text-zinc-300' : 'text-gray-700'
                 }`}>
                     <button
                         type="button"
                         onClick={() => setDashboardViewMode('grid')}
                         className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
                             dashboardViewMode === 'grid'
-                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                ? 'bg-brand-primary text-white shadow-xs'
                                 : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                         }`}
+                        style={dashboardViewMode === 'grid' ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' } : {}}
                     >
                         <LayoutGrid className="w-3.5 h-3.5" />
                         <span>Compact Grid</span>
@@ -2111,9 +2117,10 @@ const OwnerDashboard = () => {
                         onClick={() => setDashboardViewMode('tabbed')}
                         className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
                             dashboardViewMode === 'tabbed'
-                                ? 'bg-[#ff0b01] text-white shadow-xs'
+                                ? 'bg-brand-primary text-white shadow-xs'
                                 : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                         }`}
+                        style={dashboardViewMode === 'tabbed' ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' } : {}}
                     >
                         <SlidersHorizontal className="w-3.5 h-3.5" />
                         <span>Unified Hub</span>

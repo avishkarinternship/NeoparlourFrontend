@@ -481,15 +481,15 @@ export const matchesQueryFuzzy = (targetText, queryText) => {
 /**
  * Rate Limiter, Cache & Circuit Breaker for Ola Maps API calls
  * Protects against 429 (Too Many Requests) and quota limits by:
- * 1. Strict Sliding Window: Maximum 4 requests per rolling 60-second window (1 minute).
- * 2. Beyond 4 req/min, seamlessly falls back to free Photon Komoot with zero user lag.
+ * 1. Strict Sliding Window: Maximum 3 requests per rolling 60-second window (1 minute).
+ * 2. Beyond 3 req/min, seamlessly falls back to free OpenStreetMap (Photon/Nominatim) with zero lag.
  * 3. Spatial caching for 2 minutes (~11m bucket) so repeat pin drops don't consume quota.
  * 4. In-flight deduplication prevents redundant simultaneous HTTP calls.
  * 5. Circuit breaker: if a 429 is received from Ola Maps, cools down for 20s.
  */
 class OlaRateLimiter {
   constructor() {
-    this.maxRequestsPerMinute = 30; // Elevated to allow smooth pin adjustments during salon location selection
+    this.maxRequestsPerMinute = 3; // Strictly limited to 3 requests within a 60-second window; OSM fallback thereafter
     this.windowMs = 60000; // 60 seconds rolling window
     this.requestTimestamps = [];
     this.minIntervalMs = 500; // Enforce at least 500ms gap between outbound calls
@@ -1218,8 +1218,9 @@ const searchService = {
   reverseGeocodeOla: async (lat, lng, apiKey) => {
     if (!apiKey) return null;
 
-    // 1. Check rate limit (max 4 req/min) & circuit breaker (fall back immediately if limit reached)
+    // 1. Check rate limit (max 3 req/min) & circuit breaker (fall back immediately if limit reached)
     if (!olaRateLimiter.canMakeRequest()) {
+      console.warn('[OlaRateLimiter] Ola Maps rate limit reached (max 3 calls/minute). Seamlessly falling back to OpenStreetMap API.');
       return null;
     }
 
@@ -1255,6 +1256,9 @@ const searchService = {
         let state = '';
         let pincode = '';
         let landmark = '';
+        let houseNumber = '';
+        let building = '';
+        let street = '';
 
         const landmarkItems = [];
         const seenTitles = new Set();
@@ -1295,10 +1299,6 @@ const searchService = {
           let compAdmin2 = ''; // District (e.g. Ahmednagar, Pune)
           let compSublocality = '';
           let compNeighborhood = '';
-          let compPremise = '';
-          let compSubpremise = '';
-          let compStreetNumber = '';
-          let compRoute = '';
 
           for (const comp of res.address_components || []) {
             const types = comp.types || [];
@@ -1307,10 +1307,9 @@ const searchService = {
             if (types.includes('administrative_area_level_2')) compAdmin2 = comp.long_name;
             if (types.includes('sublocality_level_1') || types.includes('sublocality')) compSublocality = comp.long_name;
             if (types.includes('neighborhood') || types.includes('sublocality_level_2')) compNeighborhood = comp.long_name;
-            if (types.includes('premise') || types.includes('building')) compPremise = comp.long_name;
-            if (types.includes('subpremise') || types.includes('room')) compSubpremise = comp.long_name;
-            if (types.includes('street_number')) compStreetNumber = comp.long_name;
-            if (types.includes('route') || types.includes('street_address')) compRoute = comp.long_name;
+            if (!building && (types.includes('premise') || types.includes('building'))) building = comp.long_name;
+            if (!houseNumber && (types.includes('subpremise') || types.includes('room') || types.includes('street_number'))) houseNumber = comp.long_name;
+            if (!street && (types.includes('route') || types.includes('street_address'))) street = comp.long_name;
 
             if (!state && types.includes('administrative_area_level_1')) {
               state = comp.long_name;
@@ -1346,9 +1345,9 @@ const searchService = {
           area: area.trim(),
           landmark: landmark.trim(),
           nearbyLandmarks: landmarkItems,
-          houseNumber: compStreetNumber || compSubpremise || '',
-          building: compPremise || '',
-          street: compRoute || '',
+          houseNumber: houseNumber ? houseNumber.trim() : '',
+          building: building ? building.trim() : '',
+          street: street ? street.trim() : '',
           stateName: state.trim(),
           stateEnum: stateEnum,
           pincode: pincode.trim(),
@@ -1600,7 +1599,7 @@ const searchService = {
         formattedAddress: [area, city, rawState].filter(Boolean).join(', '),
         latitude: lat,
         longitude: lng,
-        source: 'photon'
+        source: 'openstreetmap'
       };
     } catch (error) {
       console.error('Error reverse geocoding via Photon:', error);
@@ -1609,8 +1608,54 @@ const searchService = {
   },
 
   /**
+   * Reverse geocode using OpenStreetMap Nominatim API as additional fallback
+   * @param {number} lat - Latitude
+   * @param {number} lng - Longitude
+   * @returns {Promise<Object|null>}
+   */
+  reverseGeocodeNominatim: async (lat, lng) => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse`;
+      const response = await axios.get(url, {
+        params: {
+          lat: lat,
+          lon: lng,
+          format: 'json',
+          addressdetails: 1
+        },
+        headers: {
+          'Accept-Language': 'en'
+        },
+        timeout: 6000
+      });
+      const data = response.data;
+      if (!data || !data.address) return null;
+      const addr = data.address;
+      const city = addr.city || addr.town || addr.village || addr.county || addr.district || '';
+      const area = addr.suburb || addr.neighbourhood || addr.locality || addr.subdistrict || '';
+      const state = addr.state || '';
+      const stateEnum = getStateFromStateName(state) || getStateFromCityName(city) || null;
+      return {
+        city: city.trim(),
+        area: area.trim(),
+        landmark: addr.amenity || addr.building || '',
+        nearbyLandmarks: [],
+        stateName: state.trim(),
+        stateEnum: stateEnum,
+        pincode: addr.postcode || '',
+        formattedAddress: data.display_name || [area, city, state].filter(Boolean).join(', '),
+        latitude: lat,
+        longitude: lng,
+        source: 'openstreetmap'
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  /**
    * Reverse geocode coordinates to find locality, city, state and landmarks
-   * Supports provider selection: 'photon' (free, zero quota), 'olamaps', 'google', or 'auto'
+   * Supports provider selection: 'photon' / 'openstreetmap' (free, zero quota), 'olamaps', 'google', or 'auto'
    * @param {number} lat - Latitude
    * @param {number} lng - Longitude
    * @param {Object} [options] - Options e.g. { provider: 'photon' | 'olamaps' | 'google', preferGoogle: boolean }
@@ -1618,8 +1663,8 @@ const searchService = {
    */
   reverseGeocode: async (lat, lng, options = {}) => {
     try {
-      // 1. If caller explicitly requested photon (e.g. HomeScreen search bar / navbar location indicator)
-      if (options.provider === 'photon' || options.usePhoton) {
+      // 1. If caller explicitly requested photon/openstreetmap (e.g. HomeScreen search bar / navbar location indicator)
+      if (options.provider === 'photon' || options.provider === 'openstreetmap' || options.usePhoton) {
         return await searchService.reverseGeocodePhoton(lat, lng);
       }
 
@@ -1635,6 +1680,7 @@ const searchService = {
       }
 
       // 3. Try Ola Maps if key configured (preferred, requested 'olamaps', or if Google key not present or failed)
+      // Rate limited to max 3 requests per minute; falls back cleanly to OpenStreetMap if exceeded or failed
       if (olaApiKey && (options.provider === 'olamaps' || options.preferOla || !googleApiKey || !options.provider || options.provider === 'google')) {
         const olaRes = await searchService.reverseGeocodeOla(lat, lng, olaApiKey);
         if (olaRes && (olaRes.city || olaRes.area || olaRes.formattedAddress)) {
@@ -1650,15 +1696,29 @@ const searchService = {
         }
       }
 
-      // 5. Ultimate fallback to free Photon Komoot
-      return await searchService.reverseGeocodePhoton(lat, lng);
+      // 5. Ultimate fallback to free OpenStreetMap (Photon / Nominatim)
+      try {
+        const osmRes = await searchService.reverseGeocodePhoton(lat, lng);
+        if (osmRes && (osmRes.city || osmRes.area || osmRes.formattedAddress)) {
+          return osmRes;
+        }
+      } catch {
+        // try Nominatim next
+      }
+      const nomRes = await searchService.reverseGeocodeNominatim(lat, lng);
+      if (nomRes) return nomRes;
+      return { city: '', area: '', landmark: '', nearbyLandmarks: [], stateName: '', stateEnum: null, latitude: lat, longitude: lng, source: 'openstreetmap' };
     } catch (err) {
       console.error('Error in reverseGeocode:', err);
       try {
-        return await searchService.reverseGeocodePhoton(lat, lng);
+        const osmRes = await searchService.reverseGeocodePhoton(lat, lng);
+        if (osmRes) return osmRes;
       } catch {
-        return { city: '', area: '', landmark: '', nearbyLandmarks: [], stateName: '', stateEnum: null, latitude: lat, longitude: lng };
+        // ignore
       }
+      const nomRes = await searchService.reverseGeocodeNominatim(lat, lng);
+      if (nomRes) return nomRes;
+      return { city: '', area: '', landmark: '', nearbyLandmarks: [], stateName: '', stateEnum: null, latitude: lat, longitude: lng, source: 'openstreetmap' };
     }
   },
 
@@ -1836,6 +1896,7 @@ const searchService = {
     const olaApiKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_OLA_MAPS_API_KEY : null;
     if (olaApiKey && olaRateLimiter.canMakeRequest()) {
       try {
+        olaRateLimiter.recordRequest();
         let qStr = query.trim();
         if (cleanCity && !normQuery.includes(cleanCity.toLowerCase())) {
           qStr = `${qStr}, ${cleanCity}`;
@@ -1952,6 +2013,7 @@ export const formatDistance = searchService.formatDistance;
 export const reverseGeocodeGoogle = searchService.reverseGeocodeGoogle;
 export const reverseGeocodeOla = searchService.reverseGeocodeOla;
 export const reverseGeocodePhoton = searchService.reverseGeocodePhoton;
+export const reverseGeocodeNominatim = searchService.reverseGeocodeNominatim;
 export const reverseGeocode = searchService.reverseGeocode;
 export const forwardGeocode = searchService.forwardGeocode;
 

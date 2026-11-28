@@ -75,21 +75,19 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
         <button
           type="button"
           onClick={() => navigate('/staff/dashboard')}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl glass-card-interactive text-xs font-bold text-slate-700 dark:text-zinc-300 transition cursor-pointer shadow-2xs"
         >
-          <ChevronLeft className="w-4 h-4 text-[#FF2A14]" />
+          <ChevronLeft className="w-4 h-4 text-[var(--brand-primary,#7C3AED)]" />
           Back to Staff Dashboard
         </button>
       )}
 
       {/* Top Header Card */}
-      <div className={`p-6 rounded-2xl border shadow-2xs transition-all ${
-        isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
-      }`}>
+      <div className="p-6 rounded-2xl glass-card shadow-xs transition-all">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold border border-amber-500/20">
                 <Award className="w-5 h-5" />
               </div>
               <div>
@@ -110,7 +108,7 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
             type="button"
             onClick={refresh}
             disabled={loading}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+            className="p-2.5 rounded-xl glass-card-interactive transition cursor-pointer"
             title="Refresh Wallet Balance & History"
           >
             <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-zinc-300 ${loading ? 'animate-spin' : ''}`} />
@@ -118,9 +116,9 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
         </div>
 
         {/* Balance Stat Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-5 border-t border-slate-100 dark:border-zinc-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-5 border-t border-white/20 dark:border-white/10">
           
-          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center justify-between">
+          <div className="p-4 rounded-xl glass-card border border-amber-500/30 flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase block">Available Balance</span>
               <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{availablePoints} Points</span>
@@ -131,20 +129,21 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
               type="button"
               onClick={() => setShowRequestModal(true)}
               disabled={availablePoints <= 0}
-              className="px-4 py-2.5 rounded-xl bg-[#FF2A14] hover:bg-red-700 disabled:opacity-40 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 transition"
+              className="px-4 py-2.5 rounded-xl bg-[var(--brand-primary,#7C3AED)] hover:brightness-110 disabled:opacity-40 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition"
+              style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
             >
               <ArrowUpRight className="w-4 h-4" />
               Redeem Payout
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200/60 dark:border-zinc-700/60 flex items-center justify-between">
+          <div className="p-4 rounded-xl glass-card border border-white/20 dark:border-white/10 flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase block">Total Lifetime Earnings</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white">{totalEarnedPoints} Points</span>
               <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold block">Total Rewards Accumulated</span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-slate-200/60 dark:bg-zinc-700 text-slate-600 dark:text-zinc-300 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-slate-200/60 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center font-bold">
               <Wallet className="w-5 h-5" />
             </div>
           </div>
@@ -155,7 +154,7 @@ const StaffPayoutDashboard = ({ isDarkMode: isDarkModeProp, staffId: propStaffId
       {/* Payout Request Status History Timeline */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-[#FF2A14]" />
+          <History className="w-4 h-4 text-[var(--brand-primary,#7C3AED)]" />
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             Payout Request History & Status Timeline
           </h3>

@@ -472,7 +472,7 @@ const Appointments = () => {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={handleBackNavigation}
-              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-[#ff0b01] hover:scale-105 active:scale-95 transition-all shrink-0"
+              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-900 shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-700 hover:text-brand-primary hover:scale-105 active:scale-95 transition-all shrink-0"
               title="Go Back"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,7 +502,7 @@ const Appointments = () => {
               placeholder={isCustomer ? "Search services..." : "Search client, mobile..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-[#ff0b01] transition-all shadow-3xs placeholder:font-medium placeholder-gray-400"
+              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-brand-primary transition-all shadow-3xs placeholder:font-medium placeholder-gray-400"
             />
           </div>
         </div>
@@ -523,7 +523,10 @@ const Appointments = () => {
               >
                 {tab}
                 {activeTab === tab && (
-                  <div className="absolute bottom-0 left-0 w-full h-0.5 sm:h-1 bg-[#ff0b01] rounded-full animate-fade-in" />
+                  <div 
+                    className="absolute bottom-0 left-0 w-full h-0.5 sm:h-1 rounded-full animate-fade-in bg-brand-primary" 
+                    style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
+                  />
                 )}
               </button>
             ))}
@@ -570,7 +573,8 @@ const Appointments = () => {
                 {!isCustomer && (
                   <button 
                     onClick={() => navigate('/owner/manage/walk-in')}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff0b01] text-white text-xs font-bold shadow-md hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-primary text-white text-xs font-bold shadow-md hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                    style={{ backgroundColor: 'var(--brand-primary, #7C3AED)', color: 'var(--color-button-text, #ffffff)' }}
                   >
                     <span>+ Book Walk-in Appointment</span>
                   </button>

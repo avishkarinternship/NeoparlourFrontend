@@ -90,7 +90,7 @@ export default class RootErrorBoundary extends React.Component {
               style={{
                 width: '100%',
                 padding: '14px 20px',
-                backgroundColor: '#ff0b01',
+                backgroundColor: 'var(--brand-primary, #7C3AED)',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '14px',

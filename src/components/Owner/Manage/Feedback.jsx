@@ -17,7 +17,7 @@ const toastStyle = {
         minWidth: '350px',
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
-    iconTheme: { primary: '#ff0b01', secondary: '#fff' }
+    iconTheme: { primary: 'var(--brand-primary, #7C3AED)', secondary: '#fff' }
 };
 
 const Feedback = () => {
@@ -170,7 +170,8 @@ const Feedback = () => {
                                                         <button
                                                             onClick={() => handleApprove(item.id)}
                                                             disabled={processingId === item.id}
-                                                            className="bg-[#FF0B01] hover:bg-red-700 text-white text-sm font-bold px-7 py-2.5 rounded-xl transition disabled:opacity-70"
+                                                            className="bg-brand-primary hover:opacity-90 text-white text-sm font-bold px-7 py-2.5 rounded-xl transition disabled:opacity-70 shadow-sm"
+                                                            style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                                         >
                                                             {processingId === item.id ? 'Approving...' : 'Approve'}
                                                         </button>

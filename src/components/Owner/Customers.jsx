@@ -136,13 +136,13 @@ const Customers = () => {
 
     return (
                 <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
-                    isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
+                    isDarkMode ? 'text-zinc-100' : 'text-slate-800'
                 }`}>
                     {/* Page Header */}
                     <div className="mb-8">
                         <div className="flex items-center gap-3 mb-1">
-                            <div className="w-9 h-9 bg-red-50 dark:bg-red-950/40 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg className="w-5 h-5 text-[#FF0B01]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                            <div className="w-9 h-9 bg-brand-primary/10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.1)' }}>
+                                <svg className="w-5 h-5 text-brand-primary" style={{ color: 'var(--brand-primary)' }} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </div>
@@ -154,8 +154,8 @@ const Customers = () => {
                     </div>
 
                     {/* Filter Panel */}
-                    <div className={`border rounded-2xl p-5 shadow-sm mb-7 transition-all duration-300 ${
-                        isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'
+                    <div className={`rounded-2xl p-5 mb-7 transition-all duration-300 glass-panel ${
+                        isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                     }`}>
                         <h2 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>Filter Visits</h2>
 
@@ -252,7 +252,8 @@ const Customers = () => {
                         <div className="flex gap-3 mt-4">
                             <button
                                 onClick={handleSearch}
-                                className="px-5 py-2 bg-[#FF0B01] text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm hover:shadow-md"
+                                className="px-5 py-2 bg-brand-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md"
+                                style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                             >
                                 Search
                             </button>
@@ -280,7 +281,10 @@ const Customers = () => {
                     {/* Visit Cards */}
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <div className="animate-spin h-8 w-8 border-[3px] border-[#FF0B01] border-t-transparent rounded-full mb-3" />
+                            <div 
+                                className="animate-spin h-8 w-8 border-[3px] border-brand-primary border-t-transparent rounded-full mb-3" 
+                                style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+                            />
                             <p className={`text-xs font-semibold animate-pulse ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Loading customer visits...</p>
                         </div>
                     ) : visits.length === 0 ? (
@@ -296,7 +300,7 @@ const Customers = () => {
                             {visits.map((visit) => (
                                 <div
                                     key={visit.id}
-                                    className={`rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col gap-3 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 hover:border-zinc-600' : 'bg-white border-gray-100 hover:border-gray-200'}`}
+                                    className={`rounded-2xl p-5 hover:shadow-lg transition-all duration-200 flex flex-col gap-3 glass-card-interactive ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}
                                 >
                                     {/* Customer Header */}
                                     <div className="flex items-center gap-3">
@@ -325,7 +329,7 @@ const Customers = () => {
                                         </div>
                                         <div className={`flex flex-col items-center rounded-xl py-2.5 px-1 ${isDarkMode ? 'bg-zinc-800/80' : 'bg-gray-50'}`}>
                                             <span className={`text-[10px] font-black uppercase tracking-wider mb-0.5 ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Revenue</span>
-                                            <span className="text-sm font-black text-[#FF0B01]">
+                                            <span className="text-sm font-black text-brand-primary" style={{ color: 'var(--brand-primary)' }}>
                                                 ₹{parseFloat(visit.totalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                                             </span>
                                         </div>
@@ -370,7 +374,10 @@ const Customers = () => {
                                 >
                                     ‹ Prev
                                 </button>
-                                <span className="px-3.5 py-1.5 bg-[#FF0B01] text-white text-[10px] font-black rounded-lg">
+                                <span 
+                                    className="px-3.5 py-1.5 bg-brand-primary text-white text-[10px] font-black rounded-lg"
+                                    style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
+                                >
                                     {currentPage + 1}
                                 </span>
                                 <button

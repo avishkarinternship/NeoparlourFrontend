@@ -690,14 +690,14 @@ const Settings = () => {
     const isAdmin = storedUser.role === 'ADMIN';
 
     return (
-        <main className={`flex-1 p-8 overflow-y-auto transition-colors ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-gray-900'}`}>
+        <main className={`flex-1 p-8 overflow-y-auto transition-colors bg-transparent ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>
             {/* TABS */}
-            <div className={`flex space-x-4 mb-8 border-b ${isDarkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
+            <div className={`flex space-x-2 mb-8 p-1.5 rounded-2xl glass-badge max-w-fit`}>
                 <button
-                    className={`pb-3 px-4 font-semibold text-lg transition-colors ${
+                    className={`py-2 px-5 font-bold text-sm rounded-xl transition-all ${
                         activeTab === 'owner' 
-                            ? 'border-b-2 border-red-500 text-red-500' 
-                            : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'
+                            ? 'bg-red-500 text-white shadow-md' 
+                            : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                     }`}
                     onClick={() => setActiveTab('owner')}
                 >
@@ -705,10 +705,10 @@ const Settings = () => {
                 </button>
                 {!isAdmin && (
                     <button
-                        className={`pb-3 px-4 font-semibold text-lg transition-colors ${
+                        className={`py-2 px-5 font-bold text-sm rounded-xl transition-all ${
                             activeTab === 'salon' 
-                                ? 'border-b-2 border-red-500 text-red-500' 
-                                : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-red-500 text-white shadow-md' 
+                                : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                         }`}
                         onClick={() => setActiveTab('salon')}
                     >
@@ -717,14 +717,14 @@ const Settings = () => {
                 )}
                 {!isAdmin && (
                     <button
-                        className={`pb-3 px-4 font-semibold text-lg transition-colors flex items-center gap-2 ${
+                        className={`py-2 px-5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
                             activeTab === 'theme' 
-                                ? 'border-b-2 border-red-500 text-red-500' 
-                                : isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-red-500 text-white shadow-md' 
+                                : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                         }`}
                         onClick={() => setActiveTab('theme')}
                     >
-                        <Palette className="w-5 h-5" />
+                        <Palette className="w-4 h-4" />
                         <span>Branding & Theme</span>
                     </button>
                 )}
@@ -733,7 +733,7 @@ const Settings = () => {
             {activeTab === 'theme' ? (
                 <BrandingThemeSettings salon={salonProfile} isDarkMode={isDarkMode} />
             ) : (
-                <div className={`rounded-2xl shadow-md border p-8 max-w-4xl mx-auto transition-colors ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-gray-900'}`}>
+                <div className={`rounded-2xl p-8 max-w-4xl mx-auto transition-colors glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>
                 {activeTab === 'owner' && (
                     <div>
                         <div className="flex items-center justify-between mb-6">
@@ -764,7 +764,7 @@ const Settings = () => {
                                         value={ownerProfile.name || ''}
                                         disabled={!isOwnerEdit}
                                         onChange={handleOwnerChange}
-                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-[#ff0b01] ${
+                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-brand-primary ${
                                             isDarkMode 
                                                 ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300 placeholder-zinc-500' 
                                                 : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -780,7 +780,7 @@ const Settings = () => {
                                         disabled={!isOwnerEdit}
                                         max={getMax18PlusDate()}
                                         onChange={handleOwnerChange}
-                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-[#ff0b01] ${
+                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-brand-primary ${
                                             isDarkMode 
                                                 ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-950 disabled:text-zinc-500' 
                                                 : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -794,7 +794,7 @@ const Settings = () => {
                                         value={ownerProfile.gender || ''}
                                         disabled={!isOwnerEdit}
                                         onChange={handleOwnerChange}
-                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-[#ff0b01] ${
+                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-brand-primary ${
                                             isDarkMode 
                                                 ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                 : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -813,7 +813,7 @@ const Settings = () => {
                                         value={ownerProfile.phone || ''}
                                         disabled={!isOwnerEdit}
                                         onChange={handleOwnerChange}
-                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-[#ff0b01] ${
+                                        className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm transition-all focus:outline-none focus:border-brand-primary ${
                                             isDarkMode 
                                                 ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                 : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -889,7 +889,7 @@ const Settings = () => {
                                                 value={salonProfile.salonName || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
-                                                className={`w-full border rounded-xl px-4 py-3 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -949,9 +949,10 @@ const Settings = () => {
                                                             type="button"
                                                             onClick={handleDetectLocation}
                                                             disabled={isDetectingLocation}
-                                                            className={`flex-1 sm:flex-initial px-3 py-1.5 bg-[#ff0b01] hover:bg-red-700 text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 flex-shrink-0 ${
+                                                            className={`flex-1 sm:flex-initial px-3 py-1.5 bg-brand-primary text-white font-extrabold text-[10px] tracking-wider uppercase rounded-lg transition-all shadow-sm flex items-center justify-center gap-1.5 flex-shrink-0 hover:opacity-90 ${
                                                                 isDetectingLocation ? 'animate-pulse pointer-events-none opacity-80' : 'hover:-translate-y-0.5 active:translate-y-0'
                                                             }`}
+                                                            style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                                         >
                                                             {isDetectingLocation ? (
                                                                 <>
@@ -1012,7 +1013,7 @@ const Settings = () => {
                                                         }}
                                                         onFocus={() => isSalonEdit && setShowCityDropdown(true)}
                                                         placeholder="Select City / District" 
-                                                        className={`w-full pr-12 pl-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-[#ff0b01] ${
+                                                        className={`w-full pr-12 pl-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-brand-primary ${
                                                             isDarkMode 
                                                                 ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300 placeholder-zinc-500' 
                                                                 : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-100 disabled:text-gray-500'
@@ -1023,13 +1024,16 @@ const Settings = () => {
                                                             type="button"
                                                             onClick={handleDetectLocation}
                                                             disabled={isDetectingLocation}
-                                                            className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-[#ff0b01] hover:bg-[#ff0b01]/5 transition-all duration-150 flex-shrink-0 z-10 ${
+                                                            className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-all duration-150 flex-shrink-0 z-10 ${
                                                                 isDetectingLocation ? 'animate-pulse pointer-events-none' : 'hover:scale-105 active:scale-95'
                                                             }`}
                                                             title="Detect Current Location"
                                                         >
                                                             {isDetectingLocation ? (
-                                                                <div className="h-4 w-4 border-2 border-[#ff0b01]/10 border-t-[#ff0b01] rounded-full animate-spin" />
+                                                                <div 
+                                                                    className="h-4 w-4 border-2 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin" 
+                                                                    style={{ borderColor: 'rgba(var(--brand-primary-rgb, 124, 58, 237), 0.2)', borderTopColor: 'var(--brand-primary)' }}
+                                                                />
                                                             ) : (
                                                                 <NavigationIcon className="w-4 h-4 -rotate-45" />
                                                             )}
@@ -1042,7 +1046,10 @@ const Settings = () => {
                                                     }`}>
                                                         {isLoadingCities ? (
                                                             <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
-                                                                <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                                                                <div 
+                                                                    className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" 
+                                                                    style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+                                                                />
                                                                 <span>Searching...</span>
                                                             </div>
                                                         ) : citySuggestions.length > 0 ? (
@@ -1061,7 +1068,7 @@ const Settings = () => {
                                                                         setShowCityDropdown(false);
                                                                     }}
                                                                     className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm font-bold transition-colors ${
-                                                                        isDarkMode ? 'hover:bg-zinc-800 hover:text-red-400 text-zinc-200' : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                                                                        isDarkMode ? 'hover:bg-zinc-800 hover:text-brand-primary text-zinc-200' : 'hover:bg-brand-primary/10 hover:text-brand-primary text-gray-700'
                                                                     }`}
                                                                 >
                                                                     {city.name}
@@ -1092,7 +1099,7 @@ const Settings = () => {
                                                     }}
                                                     onFocus={() => isSalonEdit && setShowAreaDropdown(true)}
                                                     placeholder="Select Area" 
-                                                    className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300 placeholder-zinc-500' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-100 disabled:text-gray-500'
@@ -1104,7 +1111,10 @@ const Settings = () => {
                                                     }`}>
                                                         {isLoadingAreas ? (
                                                             <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
-                                                                <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                                                                <div 
+                                                                    className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" 
+                                                                    style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+                                                                />
                                                                 <span>Searching...</span>
                                                             </div>
                                                         ) : areaSuggestions.length > 0 ? (
@@ -1123,7 +1133,7 @@ const Settings = () => {
                                                                             setShowAreaDropdown(false);
                                                                         }}
                                                                         className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5 ${
-                                                                            isDarkMode ? 'hover:bg-zinc-800 hover:text-red-400 text-zinc-200' : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                                                                            isDarkMode ? 'hover:bg-zinc-800 hover:text-brand-primary text-zinc-200' : 'hover:bg-brand-primary/10 hover:text-brand-primary text-gray-700'
                                                                         }`}
                                                                     >
                                                                         <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{area.name}</span>
@@ -1147,7 +1157,7 @@ const Settings = () => {
                                                                             setShowAreaDropdown(false);
                                                                         }}
                                                                         className={`px-4 py-2.5 rounded-xl cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border-t mt-1 ${
-                                                                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700 text-red-400 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 text-[#ff0b01] hover:bg-[#ff0b01]/10'
+                                                                            isDarkMode ? 'bg-zinc-800/60 border-zinc-700 text-brand-primary hover:bg-zinc-800' : 'bg-brand-primary/5 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10'
                                                                         }`}
                                                                     >
                                                                         <div className="flex flex-col">
@@ -1156,7 +1166,7 @@ const Settings = () => {
                                                                             </span>
                                                                             <span className="text-[10px] text-gray-400 font-medium">Click to confirm custom village in {salonProfile.cityName}</span>
                                                                         </div>
-                                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#ff0b01]/10 font-bold uppercase tracking-wider">Select</span>
+                                                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-brand-primary/10 font-bold uppercase tracking-wider text-brand-primary">Select</span>
                                                                     </div>
                                                                 )}
                                                             </>
@@ -1174,7 +1184,7 @@ const Settings = () => {
                                                                         setShowAreaDropdown(false);
                                                                     }}
                                                                     className={`px-4 py-3 rounded-xl cursor-pointer text-xs font-bold transition-colors text-left flex items-center justify-between border ${
-                                                                        isDarkMode ? 'bg-zinc-800/80 border-red-500/30 text-red-400 hover:bg-zinc-800' : 'bg-[#ff0b01]/5 border-[#ff0b01]/20 text-[#ff0b01] hover:bg-[#ff0b01]/10'
+                                                                        isDarkMode ? 'bg-zinc-800/80 border-brand-primary/30 text-brand-primary hover:bg-zinc-800' : 'bg-brand-primary/5 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10'
                                                                     }`}
                                                                 >
                                                                     <div className="flex flex-col">
@@ -1183,7 +1193,12 @@ const Settings = () => {
                                                                         </span>
                                                                         <span className="text-[10px] text-gray-400 font-medium mt-0.5">Click to confirm custom village in {salonProfile.cityName}</span>
                                                                     </div>
-                                                                    <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#ff0b01] text-white font-bold uppercase tracking-wider">Confirm</span>
+                                                                    <span 
+                                                                        className="text-[10px] px-2.5 py-1 rounded-md bg-brand-primary text-white font-bold uppercase tracking-wider"
+                                                                        style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
+                                                                    >
+                                                                        Confirm
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -1206,7 +1221,7 @@ const Settings = () => {
                                                     }}
                                                     onFocus={() => isSalonEdit && setShowLandmarkDropdown(true)}
                                                     placeholder="Landmark (e.g. Siddhi Hospital)" 
-                                                    className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300 placeholder-zinc-500' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-100 disabled:text-gray-500'
@@ -1218,7 +1233,10 @@ const Settings = () => {
                                                     }`}>
                                                         {isLoadingLandmarks ? (
                                                             <div className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center flex items-center justify-center gap-2">
-                                                                <div className="w-4 h-4 border-2 border-[#ff0b01] border-t-transparent rounded-full animate-spin" />
+                                                                <div 
+                                                                    className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" 
+                                                                    style={{ borderColor: 'var(--brand-primary)', borderTopColor: 'transparent' }}
+                                                                />
                                                                 <span>Searching landmarks...</span>
                                                             </div>
                                                         ) : landmarkSuggestions.length > 0 ? (
@@ -1232,7 +1250,7 @@ const Settings = () => {
                                                                         setShowLandmarkDropdown(false);
                                                                     }}
                                                                     className={`px-4 py-2.5 rounded-xl cursor-pointer text-sm transition-colors text-left flex flex-col gap-0.5 ${
-                                                                        isDarkMode ? 'hover:bg-zinc-800 hover:text-red-400 text-zinc-200' : 'hover:bg-[#ff0b01]/5 hover:text-[#ff0b01] text-gray-700'
+                                                                        isDarkMode ? 'hover:bg-zinc-800 hover:text-brand-primary text-zinc-200' : 'hover:bg-brand-primary/10 hover:text-brand-primary text-gray-700'
                                                                     }`}
                                                                 >
                                                                     <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{lm.name}</span>
@@ -1262,7 +1280,7 @@ const Settings = () => {
                                                 }}
                                                 placeholder="Shop / Building Address (e.g. Shop No. 4, ABC Complex)" 
                                                 rows="2"
-                                                className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-[#ff0b01] resize-none ${
+                                                className={`w-full px-4 py-3.5 border rounded-2xl text-sm font-bold focus:outline-none focus:border-brand-primary resize-none ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300 placeholder-zinc-500' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-100 disabled:text-gray-500'
@@ -1305,7 +1323,10 @@ const Settings = () => {
 
                                             {/* Minimal Sleek Toggle Switch */}
                                             <div className="flex items-center gap-2.5 shrink-0">
-                                                <span className={`text-[11px] font-bold tracking-wider uppercase transition-colors ${salonProfile.includeGstInInvoice ? 'text-[#ff0b01]' : 'text-gray-400'}`}>
+                                                <span 
+                                                    className={`text-[11px] font-bold tracking-wider uppercase transition-colors ${salonProfile.includeGstInInvoice ? 'text-brand-primary' : 'text-gray-400'}`}
+                                                    style={salonProfile.includeGstInInvoice ? { color: 'var(--brand-primary)' } : {}}
+                                                >
                                                     {salonProfile.includeGstInInvoice ? 'Enabled' : 'Disabled'}
                                                 </span>
                                                 <label className={`relative inline-flex items-center cursor-pointer ${!isSalonEdit ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -1316,9 +1337,12 @@ const Settings = () => {
                                                         onChange={(e) => setSalonProfile(prev => ({ ...prev, includeGstInInvoice: e.target.checked }))}
                                                         className="sr-only peer" 
                                                     />
-                                                    <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-xs peer-checked:bg-[#ff0b01] transition-colors ${
-                                                        isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'
-                                                    }`}></div>
+                                                    <div 
+                                                        className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-xs peer-checked:bg-brand-primary transition-colors ${
+                                                            isDarkMode ? 'bg-zinc-700' : 'bg-gray-200'
+                                                        }`}
+                                                        style={salonProfile.includeGstInInvoice ? { backgroundColor: 'var(--brand-primary)' } : {}}
+                                                    ></div>
                                                 </label>
                                             </div>
                                         </div>
@@ -1372,7 +1396,7 @@ const Settings = () => {
                                                 value={salonProfile.phone || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
-                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1393,7 +1417,7 @@ const Settings = () => {
                                                 value={salonProfile.openingTime || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
-                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1408,7 +1432,7 @@ const Settings = () => {
                                                 value={salonProfile.closingTime || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
-                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1422,7 +1446,7 @@ const Settings = () => {
                                                 value={salonProfile.weeklyOffDay || ''}
                                                 onChange={handleSalonChange}
                                                 disabled={!isSalonEdit}
-                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1446,7 +1470,7 @@ const Settings = () => {
                                                 value={salonProfile.homeServiceCharges || ''}
                                                 disabled={!isSalonEdit}
                                                 onChange={handleSalonChange}
-                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                     isDarkMode 
                                                         ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                         : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1502,7 +1526,7 @@ const Settings = () => {
                                                     min="0"
                                                     max="100"
                                                     step="0.1"
-                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1527,7 +1551,7 @@ const Settings = () => {
                                                     min="0"
                                                     max="100"
                                                     step="0.1"
-                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1547,7 +1571,7 @@ const Settings = () => {
                                                     min="0"
                                                     max="100"
                                                     step="0.1"
-                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1567,7 +1591,7 @@ const Settings = () => {
                                                     min="0"
                                                     max="100"
                                                     step="0.1"
-                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1587,7 +1611,7 @@ const Settings = () => {
                                                     min="0"
                                                     max="100"
                                                     step="0.1"
-                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-[#ff0b01] ${
+                                                    className={`w-full border rounded-xl px-4 py-3 mt-1 font-bold text-sm focus:outline-none focus:border-brand-primary ${
                                                         isDarkMode 
                                                             ? 'bg-zinc-800 border-zinc-700 text-white disabled:bg-zinc-800/40 disabled:border-zinc-800 disabled:text-zinc-300' 
                                                             : 'bg-white border-gray-200 text-gray-800 disabled:bg-gray-50 disabled:text-gray-500'
@@ -1688,11 +1712,11 @@ const Settings = () => {
                                             {isSalonEdit && (
                                                 <label className={`aspect-square rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-2 group ${
                                                     isDarkMode 
-                                                        ? 'border-zinc-700 hover:border-[#FF0B01] hover:bg-red-500/10' 
-                                                        : 'border-gray-300 hover:border-[#FF0B01] hover:bg-red-50/5'
+                                                        ? 'border-zinc-700 hover:border-brand-primary hover:bg-brand-primary/10' 
+                                                        : 'border-gray-300 hover:border-brand-primary hover:bg-brand-primary/5'
                                                 }`}>
-                                                    <span className="text-2xl text-gray-400 group-hover:text-[#FF0B01] transition-colors">+</span>
-                                                    <span className="text-[10px] font-black text-gray-400 group-hover:text-[#FF0B01] uppercase tracking-wider transition-colors">Add Image</span>
+                                                    <span className="text-2xl text-gray-400 group-hover:text-brand-primary transition-colors">+</span>
+                                                    <span className="text-[10px] font-black text-gray-400 group-hover:text-brand-primary uppercase tracking-wider transition-colors">Add Image</span>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
@@ -1725,8 +1749,8 @@ const Settings = () => {
                         
 
                         {(salonProfile.qrCodeUrl || scanUrl) && (
-                            <div className={`mt-8 p-6 rounded-2xl border text-center max-w-md mx-auto transition-all ${
-                                isDarkMode ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'
+                            <div className={`mt-8 p-6 rounded-2xl text-center max-w-md mx-auto transition-all glass-card ${
+                                isDarkMode ? 'text-zinc-100' : 'text-gray-900'
                             }`}>
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-zinc-800">
                                     <div className="flex items-center gap-2 text-left">
@@ -1806,7 +1830,8 @@ const Settings = () => {
                                     <button
                                         type="button"
                                         onClick={() => downloadQRCode('png')}
-                                        className="w-full px-4 py-2.5 bg-[#ff0b01] hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-red-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+                                        className="w-full px-4 py-2.5 bg-brand-primary hover:opacity-90 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                                        style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                     >
                                         <Download className="w-3.5 h-3.5" />
                                         <span>Print PNG (1024px)</span>

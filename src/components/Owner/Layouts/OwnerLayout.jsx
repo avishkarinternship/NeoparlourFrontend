@@ -94,8 +94,21 @@ export default function OwnerLayout() {
 
   return (
     <div className={`h-screen max-h-screen font-sans flex flex-col overflow-hidden antialiased transition-colors duration-300 relative ${
-      isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-gray-800'
+      isDarkMode ? 'dark glass-canvas-dark text-zinc-100' : 'glass-canvas-light text-gray-800'
     }`}>
+      {/* Ambient Glassmorphism Refraction Orbs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0 select-none">
+        <div className={`absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl transition-opacity duration-500 ${
+          isDarkMode ? 'bg-red-600/10' : 'bg-red-400/10'
+        }`} />
+        <div className={`absolute top-1/2 -left-24 w-96 h-96 rounded-full blur-3xl transition-opacity duration-500 ${
+          isDarkMode ? 'bg-indigo-600/10' : 'bg-indigo-400/8'
+        }`} />
+        <div className={`absolute -bottom-24 right-1/3 w-80 h-80 rounded-full blur-3xl transition-opacity duration-500 ${
+          isDarkMode ? 'bg-emerald-600/8' : 'bg-rose-400/8'
+        }`} />
+      </div>
+
       <Navbar 
         onToggleSidebar={toggleSidebar} 
         isSidebarOpen={isDesktopSidebarOpen}
@@ -119,7 +132,10 @@ export default function OwnerLayout() {
             <SalonBanBanner salon={salon} isDarkMode={isDarkMode} />
             <Suspense fallback={
               <div className="min-h-[50vh] flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-slate-200 border-t-[#ff0b01] rounded-full animate-spin" />
+                <div 
+                  className="w-10 h-10 border-4 border-slate-200 border-t-brand-primary rounded-full animate-spin" 
+                  style={{ borderTopColor: 'var(--brand-primary)' }}
+                />
               </div>
             }>
               <Outlet context={{ isDarkMode, salon }} />

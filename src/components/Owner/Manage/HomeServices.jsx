@@ -112,7 +112,8 @@ const HomeServices = () => {
                                         <button
                                             type="button"
                                             onClick={() => setIsEditing(true)}
-                                            className="text-xs font-bold text-[#FF0B01] hover:text-red-700 transition flex items-center gap-1 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50/20"
+                                            className="text-xs font-bold text-brand-primary hover:opacity-80 transition flex items-center gap-1 border border-brand-primary/30 rounded-lg px-3 py-1.5 hover:bg-brand-primary/10"
+                                            style={{ color: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
                                         >
                                             ✏️ Edit Charge
                                         </button>
@@ -130,8 +131,8 @@ const HomeServices = () => {
                                         className={`w-full pl-14 pr-6 py-5 text-4xl font-semibold rounded-2xl border transition-all ${
                                             isEditing 
                                                 ? isDarkMode
-                                                    ? 'border-red-500 focus:border-red-600 focus:ring-0 bg-zinc-900 text-white shadow-xs'
-                                                    : 'border-red-500 focus:border-red-600 focus:ring-0 bg-white text-gray-900 shadow-xs' 
+                                                    ? 'border-brand-primary focus:border-brand-primary focus:ring-0 bg-zinc-900 text-white shadow-xs'
+                                                    : 'border-brand-primary focus:border-brand-primary focus:ring-0 bg-white text-gray-900 shadow-xs' 
                                                 : isDarkMode
                                                     ? 'border-zinc-700 bg-zinc-800/80 text-zinc-500 cursor-not-allowed'
                                                     : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
@@ -151,7 +152,8 @@ const HomeServices = () => {
                                     <button
                                         type="submit"
                                         disabled={saving || loading}
-                                        className="flex-1 bg-[#FF0B01] hover:bg-red-700 disabled:opacity-70 transition-all text-white font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm active:scale-[0.985]"
+                                        className="flex-1 bg-brand-primary hover:opacity-90 disabled:opacity-70 transition-all text-white font-bold py-4 px-6 rounded-2xl text-base tracking-wider shadow-sm active:scale-[0.985]"
+                                        style={{ backgroundColor: 'var(--brand-primary)', color: '#ffffff' }}
                                     >
                                         {saving ? 'Saving Changes...' : 'Save Changes'}
                                     </button>

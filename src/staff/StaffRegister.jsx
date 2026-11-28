@@ -16,6 +16,7 @@ const StaffRegister = () => {
   const [activeTab, setActiveTab] = useState('REGISTER');
   const [mobile, setMobile] = useState('');
 
+
   const handleVerify = () => {
     if (!mobile) {
       toast.error('Please enter a mobile number first.');
@@ -38,10 +39,9 @@ const StaffRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-8 px-6 pb-6 font-sans">
-      
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-8 px-6 pb-6 font-sans relative overflow-hidden">
       {/* Main Card Container */}
-      <div className="flex-1 max-w-[1100px] w-full mx-auto bg-white flex shadow-sm overflow-hidden mb-8 rounded-sm">
+      <div className="flex-1 max-w-[1100px] w-full mx-auto bg-white flex shadow-xl overflow-hidden mb-8 rounded-3xl border border-gray-100">
         
         {/* Left Form Side */}
         <div className="w-full lg:w-[45%] flex flex-col items-center justify-center py-8 px-8 sm:px-12 lg:px-16 overflow-y-auto">
@@ -49,28 +49,35 @@ const StaffRegister = () => {
             
             {/* Logo Section */}
             <div className="flex items-center gap-3 mb-8">
-              <img src={logoIcon} alt="NeoParlour Logo" className="w-10 h-10 object-contain" />
-              <span className="text-[26px] font-bold text-gray-900 tracking-tight">NeoParlour</span>
+              <img src={logoIcon} alt="NeoParlour Logo" className="w-10 h-10 object-contain shrink-0" />
+              <div>
+                <span className="text-[24px] font-black text-gray-900 tracking-tight block leading-tight">
+                  NeoParlour
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#ff0b01]/80 block">
+                  Staff Registration Portal
+                </span>
+              </div>
             </div>
 
             {/* Role Tabs */}
             <div className="flex gap-10 mb-6">
               <button 
                 onClick={() => navigate('/owner/login')}
-                className={`pb-2 text-[11px] font-bold tracking-widest transition-all ${
+                className={`pb-2 text-[11px] font-bold tracking-widest transition-all cursor-pointer ${
                   activeTab === 'LOGIN' 
-                  ? 'text-gray-900 border-b-2 border-[#ff0b01]' 
-                  : 'text-gray-300'
+                  ? 'text-[#ff0b01] border-b-2 border-[#ff0b01]' 
+                  : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 LOGIN
               </button>
               <button 
                 onClick={() => setActiveTab('REGISTER')}
-                className={`pb-2 text-[11px] font-bold tracking-widest transition-all ${
+                className={`pb-2 text-[11px] font-bold tracking-widest transition-all cursor-pointer ${
                   activeTab === 'REGISTER' 
-                  ? 'text-gray-900 border-b-2 border-[#ff0b01]' 
-                  : 'text-gray-300'
+                  ? 'text-[#ff0b01] border-b-2 border-[#ff0b01]' 
+                  : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 REGISTER
@@ -87,7 +94,7 @@ const StaffRegister = () => {
                 <input 
                   type="text" 
                   placeholder="User Name" 
-                  className="w-full pl-12 pr-4 py-3 bg-[#fafafa] border border-[#ff0b01] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#ff0b01] transition-colors placeholder-gray-400" 
+                  className="w-full pl-12 pr-4 py-3 bg-[#fafafa] border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#ff0b01] transition-colors placeholder-gray-400" 
                 />
               </div>
 
@@ -173,7 +180,10 @@ const StaffRegister = () => {
               </div>
 
               {/* Submit Button */}
-              <button type="submit" className="w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.15em] text-[10px] rounded-xl transition-colors mt-4 shadow-md uppercase">
+              <button 
+                type="submit" 
+                className="w-full py-4 bg-[#ff0b01] hover:bg-red-700 text-white font-bold tracking-[0.15em] text-[10px] rounded-xl transition-all mt-4 shadow-md uppercase cursor-pointer"
+              >
                 Submit
               </button>
             </form>
@@ -184,7 +194,7 @@ const StaffRegister = () => {
                 <input 
                   type="checkbox" 
                   id="terms" 
-                  className="w-[14px] h-[14px] accent-[#ff0b01] cursor-pointer" 
+                  className="w-[14px] h-[14px] cursor-pointer accent-[#ff0b01]" 
                   defaultChecked
                 />
                 <label htmlFor="terms" className="text-[10px] text-gray-400 cursor-pointer">
@@ -194,14 +204,14 @@ const StaffRegister = () => {
               
               <div className="text-[10px] space-y-1">
                 <p className="text-gray-400">
-                  Already have account? <a href="#" className="text-[#ff0b01] font-bold hover:underline">Login</a>
+                  Already have account? <Link to="/owner/login" className="text-[#ff0b01] font-bold hover:underline">Login</Link>
                 </p>
                 <p className="text-gray-400">or sign in with</p>
               </div>
             </div>
 
             {/* Owner Registration Link */}
-            <button type="button" className="w-full mt-6 py-3 border border-gray-800 hover:bg-gray-50 text-gray-900 font-bold tracking-[0.15em] text-[10px] rounded-xl transition-colors uppercase">
+            <button type="button" onClick={() => navigate('/owner/register')} className="w-full mt-6 py-3 border border-gray-800 hover:bg-gray-50 text-gray-900 font-bold tracking-[0.15em] text-[10px] rounded-xl transition-colors uppercase cursor-pointer">
               Register as Owner
             </button>
 
@@ -228,12 +238,16 @@ const StaffRegister = () => {
             alt="Staff Professional" 
             className="w-full h-full object-cover"
           />
-          {/* Circular UI Element from image_a03fb1.png / image_9fce9d.png */}
-          <div className="absolute top-[20%] left-[-30px] w-[60px] h-[60px] bg-[#ff0b01] rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+          {/* Circular UI Element */}
+          <div 
+            className="absolute top-[20%] left-[-30px] w-[60px] h-[60px] bg-[#ff0b01] rounded-full flex items-center justify-center shadow-lg border-4 border-white"
+          >
              <span className="text-white text-xl">✨</span>
           </div>
           {/* Red gradient overlay at the bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-[#cf2a25] via-[#cf2a25]/40 to-transparent opacity-90"></div>
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-[#cf2a25] via-[#cf2a25]/40 to-transparent opacity-90"
+          ></div>
         </div>
 
       </div>

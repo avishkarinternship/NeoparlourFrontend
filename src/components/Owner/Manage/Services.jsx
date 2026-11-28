@@ -45,7 +45,7 @@ const toastStyle = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
     iconTheme: {
-        primary: '#ff0b01',
+        primary: 'var(--brand-primary, #7C3AED)',
         secondary: '#fff',
     }
 };
@@ -152,6 +152,7 @@ const Service = () => {
     const [customServiceName, setCustomServiceName] = useState('');
     const [price, setPrice] = useState('');
     const [duration, setDuration] = useState('');
+    const [revisitDays, setRevisitDays] = useState('');
     const [services, setServices] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -587,6 +588,7 @@ const Service = () => {
         setCustomServiceName('');
         setPrice('');
         setDuration('');
+        setRevisitDays('');
         setFormErrors({});
         setEditingServiceId(null);
     };
@@ -620,6 +622,7 @@ const Service = () => {
 
         setPrice(service.price?.toString() || '');
         setDuration(service.duration?.toString() || '');
+        setRevisitDays(service.revisitDays ? service.revisitDays.toString() : '');
         setEditingServiceId(service.id);
         setFormErrors({});
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -656,6 +659,7 @@ const Service = () => {
                 category: finalCategory,
                 duration: parseInt(duration, 10),
                 price: parseFloat(price),
+                revisitDays: revisitDays ? parseInt(revisitDays, 10) : null,
                 active: true
             };
 
@@ -712,25 +716,23 @@ const Service = () => {
 
     return (
                  <main className={`flex-1 p-6 md:p-8 overflow-auto transition-colors duration-300 ${
-                     isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-transparent text-slate-800'
+                     isDarkMode ? 'text-zinc-100' : 'text-slate-800'
                  }`}>
                      <div className="max-w-5xl mx-auto">
 
                          {/* ==================== SERVICE TAB ==================== */}
-                         <>                                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 text-[#FF0B01] font-extrabold text-xs tracking-wider uppercase mb-5">
-                                     <span className="w-2 h-2 rounded-full bg-[#FF0B01] animate-pulse"></span>
+                         <>                                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary font-extrabold text-xs tracking-wider uppercase mb-5">
+                                     <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
                                      <span>{editingServiceId ? 'Edit Service Details' : 'Add New Service'}</span>
                                  </div>
 
-                                 <div className={`max-w-3xl border rounded-[28px] p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 mb-8 ${
-                                     isDarkMode ? 'bg-zinc-900/90 border-zinc-800 backdrop-blur-md' : 'bg-white border-gray-100/90'
-                                 }`}>
+                                 <div className={`max-w-3xl rounded-[28px] p-6 sm:p-8 transition-all duration-300 mb-8 glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}>
                                     <form onSubmit={handleServiceSave} className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             {/* Category Option (GIVEN FIRST) */}
                                             <div className="space-y-1.5">
                                                 <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Category</label>
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
                                                     isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={categoryIcon} alt="Category" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -763,7 +765,7 @@ const Service = () => {
                                             {selectedCategory && selectedCategory !== 'Other' && (
                                                 <div className="space-y-1.5">
                                                     <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Service Name</label>
-                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
                                                         isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                     }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -797,7 +799,7 @@ const Service = () => {
                                             {(selectedCategory === 'Other' || selectedServiceName === 'Other') && (
                                                 <div className="space-y-1.5">
                                                     <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Custom Service Name</label>
-                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                    <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
                                                         isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                     }`}>
                                                         <img src={serviceNameIcon} alt="Service Name" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -821,7 +823,7 @@ const Service = () => {
                                             {/* Price Input */}
                                             <div className="space-y-1.5">
                                                 <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Service Price (₹)</label>
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
                                                     isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={priceIcon} alt="Price" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -855,7 +857,7 @@ const Service = () => {
                                             {/* Duration Input */}
                                             <div className="space-y-1.5">
                                                 <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>Duration (in minutes)</label>
-                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-[#FF0B01] focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-200 ${
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
                                                     isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
                                                 }`}>
                                                     <img src={durationIcon} alt="Duration" className="w-5 h-5 mr-3 object-contain opacity-40 flex-shrink-0" />
@@ -875,6 +877,57 @@ const Service = () => {
                                                     <span className={`text-xs font-bold uppercase tracking-wider ml-2 ${isDarkMode ? 'text-zinc-500' : 'text-gray-400'}`}>mins</span>
                                                 </div>
                                                 {formErrors.duration && <p className="text-red-500 text-xs font-semibold mt-1 ml-1">{formErrors.duration}</p>}
+                                            </div>
+
+                                            {/* Follow-up Reminder Cycle (Days) */}
+                                            <div className="col-span-1 md:col-span-2 space-y-2">
+                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                    <label className={`text-[11px] font-black uppercase tracking-wider block ${isDarkMode ? 'text-zinc-400' : 'text-gray-400'}`}>
+                                                        WhatsApp Follow-up Reminder Cycle (Optional)
+                                                    </label>
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        {[
+                                                            { label: 'Off', val: '' },
+                                                            { label: '4 days (Grooming)', val: '4' },
+                                                            { label: '15 days', val: '15' },
+                                                            { label: '30 days (Haircut)', val: '30' }
+                                                        ].map((preset) => (
+                                                            <button
+                                                                key={preset.label}
+                                                                type="button"
+                                                                onClick={() => setRevisitDays(preset.val)}
+                                                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer border ${
+                                                                    revisitDays === preset.val
+                                                                        ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/40'
+                                                                        : isDarkMode
+                                                                            ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                                                                            : 'bg-gray-100 border-gray-200 text-gray-600 hover:text-gray-900'
+                                                                }`}
+                                                            >
+                                                                {preset.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className={`relative flex items-center border rounded-2xl px-4 py-3 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all duration-200 ${
+                                                    isDarkMode ? 'border-zinc-700 bg-zinc-800/60 hover:bg-zinc-800' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/60 focus-within:bg-white'
+                                                }`}>
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        placeholder="Leave blank to disable auto follow-up (e.g. 4 for beard grooming)"
+                                                        value={revisitDays}
+                                                        onChange={(e) => setRevisitDays(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+                                                        className={`w-full text-sm font-bold outline-none bg-transparent ${
+                                                            isDarkMode ? 'placeholder-zinc-500 text-white' : 'placeholder-gray-400 text-gray-900'
+                                                        }`}
+                                                    />
+                                                    {revisitDays && (
+                                                        <span className={`text-xs font-bold uppercase tracking-wider ml-2 shrink-0 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                                            days after visit
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* LIVE GST BREAKDOWN PREVIEW CARD (Visible only when GSTIN exists) */}
@@ -941,7 +994,8 @@ const Service = () => {
                                             <button
                                                 type="submit"
                                                 disabled={submitting}
-                                                className="w-full sm:flex-1 bg-gradient-to-r from-red-600 to-[#FF0B01] text-white py-4 rounded-2xl hover:brightness-110 active:scale-[0.985] transition-all shadow-md shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                                                className="w-full sm:flex-1 bg-brand-primary text-white py-4 rounded-2xl hover:brightness-110 active:scale-[0.985] transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                                                style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                                             >
                                                 {submitting ? 'Saving...' : editingServiceId ? 'Update Service' : 'Save Service'}
                                             </button>
@@ -974,7 +1028,7 @@ const Service = () => {
                                                      placeholder="Filter by Name" 
                                                      value={searchName} 
                                                      onChange={(e) => setSearchName(e.target.value)} 
-                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#FF0B01] transition-all ${
+                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-primary transition-all ${
                                                          isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus:bg-zinc-800 text-white' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-55 focus:bg-white text-gray-900'
                                                      }`} 
                                                  />
@@ -986,7 +1040,7 @@ const Service = () => {
                                                  <select 
                                                      value={searchCategory} 
                                                      onChange={(e) => setSearchCategory(e.target.value)} 
-                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#FF0B01] transition-all cursor-pointer ${
+                                                     className={`w-full border rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-brand-primary transition-all cursor-pointer ${
                                                          isDarkMode ? 'border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 focus:bg-zinc-800 text-white' : 'border-gray-200 bg-gray-50/50 hover:bg-gray-55 focus:bg-white text-gray-900'
                                                      }`}
                                                  >
@@ -1017,7 +1071,8 @@ const Service = () => {
                                              </button>
                                              <button 
                                                  type="submit" 
-                                                 className="px-8 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-[#FF0B01] rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all"
+                                                 className="px-8 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-brand-primary rounded-xl hover:brightness-110 shadow-md hover:shadow-lg transition-all"
+                                                 style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                                              >
                                                  Search
                                              </button>
@@ -1032,14 +1087,16 @@ const Service = () => {
                                              <button 
                                                  type="button" 
                                                  onClick={() => setDndMode('shift')}
-                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'shift' ? 'bg-[#FF0B01] text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'shift' ? 'bg-brand-primary text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 style={dndMode === 'shift' ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                              >
                                                  Shift Mode
                                              </button>
                                              <button 
                                                  type="button" 
                                                  onClick={() => setDndMode('swap')}
-                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'swap' ? 'bg-[#FF0B01] text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${dndMode === 'swap' ? 'bg-brand-primary text-white shadow-sm' : isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                                                 style={dndMode === 'swap' ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                              >
                                                  Swap Mode
                                              </button>
@@ -1083,7 +1140,7 @@ const Service = () => {
                                                          onDragLeave={(e) => handleCategoryDragLeave(e, cat)}
                                                          onDragEnd={handleCategoryDragEnd}
                                                          onDrop={(e) => handleCategoryDrop(e, cat)}
-                                                         className={`border rounded-3xl overflow-hidden shadow-sm transition-all duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'} ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : isDarkMode ? 'hover:border-zinc-700' : 'hover:border-gray-250'}`}
+                                                         className={`rounded-3xl overflow-hidden transition-all duration-300 glass-card ${isDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isDragOver ? 'border-2 border-brand-primary bg-brand-primary/10' : ''}`}
                                                      >
                                                          {/* Category Header Row */}
                                                          <div 
@@ -1128,8 +1185,8 @@ const Service = () => {
                                                                          disabled={catIdx === 0}
                                                                          className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer ${
                                                                              isDarkMode 
-                                                                                 ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
-                                                                                 : 'text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-50 border-gray-250 hover:border-red-200'
+                                                                                 ? 'text-zinc-400 hover:text-brand-primary bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                 : 'text-gray-400 hover:text-brand-primary bg-white hover:bg-red-50 border-gray-250 hover:border-red-200'
                                                                          }`}
                                                                          title="Move Category Up"
                                                                      >▲</button>
@@ -1138,8 +1195,8 @@ const Service = () => {
                                                                          disabled={catIdx === categories.length - 1}
                                                                          className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer ${
                                                                              isDarkMode 
-                                                                                 ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
-                                                                                 : 'text-gray-400 hover:text-[#FF0B01] bg-white hover:bg-red-55 border-gray-250 hover:border-red-200'
+                                                                                 ? 'text-zinc-400 hover:text-brand-primary bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                 : 'text-gray-400 hover:text-brand-primary bg-white hover:bg-red-55 border-gray-250 hover:border-red-200'
                                                                          }`}
                                                                          title="Move Category Down"
                                                                      >▼</button>
@@ -1170,9 +1227,9 @@ const Service = () => {
                                                                              const norm = (cat || '').toLowerCase().trim();
                                                                              if (norm.includes('hair services')) {
                                                                                  return {
-                                                                                     accent: 'bg-[#FF0B01]',
+                                                                                     accent: 'bg-brand-primary',
                                                                                      bg: isDarkMode ? 'bg-red-950/40' : 'bg-red-50/70',
-                                                                                     text: 'text-[#FF0B01]',
+                                                                                     text: 'text-brand-primary',
                                                                                      border: isDarkMode ? 'border-red-900/40' : 'border-red-100/50',
                                                                                  };
                                                                              }
@@ -1260,11 +1317,7 @@ const Service = () => {
                                                                                  onDragLeave={(e) => handleServiceDragLeave(e, service.id)}
                                                                                  onDragEnd={handleServiceDragEnd}
                                                                                  onDrop={(e) => handleServiceDrop(e, service.id)}
-                                                                                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 border rounded-3xl transition-all duration-300 relative overflow-hidden group pl-7 gap-4 cursor-grab active:cursor-grabbing ${
-                                                                                     isDarkMode 
-                                                                                         ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)]' 
-                                                                                         : 'bg-white border-gray-100 hover:border-gray-250 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
-                                                                                 } ${isSvcDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isSvcDragOver ? 'border-2 border-[#FF0B01] bg-red-50/10' : ''}`}
+                                                                                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-3xl transition-all duration-300 relative overflow-hidden group pl-7 gap-4 cursor-grab active:cursor-grabbing glass-card-interactive ${isSvcDragged ? 'opacity-40 border-dashed border-red-300 scale-[0.98]' : isSvcDragOver ? 'border-2 border-brand-primary bg-brand-primary/10' : ''} ${isDarkMode ? 'text-zinc-100' : 'text-gray-900'}`}
                                                                              >
                                                                                  {/* Sleek Vertical Accent stripe */}
                                                                                  <div className={`absolute left-0 top-0 bottom-0 w-1.25 ${theme.accent} rounded-r-md`}></div>
@@ -1339,8 +1392,8 @@ const Service = () => {
                                                                                              onClick={() => handleEditService(service)}
                                                                                              className={`w-9 h-9 flex items-center justify-center rounded-full border transition-all duration-200 flex-shrink-0 cursor-pointer ${
                                                                                                  isDarkMode 
-                                                                                                     ? 'text-zinc-400 hover:text-[#FF0B01] bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
-                                                                                                     : 'text-gray-400 hover:text-[#FF0B01] bg-gray-50/50 hover:bg-red-55 border-gray-100 hover:border-red-100'
+                                                                                                     ? 'text-zinc-400 hover:text-brand-primary bg-zinc-800 border-zinc-700 hover:bg-zinc-700' 
+                                                                                                     : 'text-gray-400 hover:text-brand-primary bg-gray-50/50 hover:bg-red-55 border-gray-100 hover:border-red-100'
                                                                                              }`}
                                                                                              title="Edit Service"
                                                                                          >
@@ -1355,7 +1408,7 @@ const Service = () => {
                                                                                                  onChange={() => toggleServiceStatus(service.id, service.active)}
                                                                                                  className="sr-only peer"
                                                                                              />
-                                                                                             <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-[#FF0B01] transition-colors duration-200 ${
+                                                                                             <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-brand-primary transition-colors duration-200 ${
                                                                                                  isDarkMode ? 'bg-zinc-800' : 'bg-gray-100'
                                                                                              }`}></div>
                                                                                          </label>

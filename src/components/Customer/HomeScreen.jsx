@@ -15,7 +15,7 @@ import axiosInstance from '../../api/axiosInstance';
 import searchService from '../../services/searchService';
 import { useTranslation } from 'react-i18next';
 import { translateServiceName } from '../../utils/serviceTranslation';
-import { setActiveSalon } from '../../utils/whiteLabelHelper';
+import { setActiveSalon, clearActiveSalon } from '../../utils/whiteLabelHelper';
 
 
 // Navbar Specific Assets (Adjusted paths to match HomeScreen folder depth)
@@ -127,6 +127,12 @@ const HomeScreen = () => {
     const [isUserTypingCity, setIsUserTypingCity] = useState(false);
     const [isUserTypingArea, setIsUserTypingArea] = useState(false);
     const { token, loading, salonResults, user, isAuthenticated, profile, defaultSalon } = useSelector((state) => state.customer);
+
+    useEffect(() => {
+        if (!isOwnerLoggedIn()) {
+            clearActiveSalon();
+        }
+    }, []);
 
     useEffect(() => {
         if (isAuthenticated && user && !profile) {
@@ -1060,7 +1066,7 @@ const HomeScreen = () => {
         <div className={`min-h-screen font-sans overflow-x-clip transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
 
             {/* 2. HERO SECTION - WITH DECORATIVE CORNER IMAGES AND GREY BACKGROUND */}
-            <section className={`relative min-h-[360px] md:min-h-[540px] w-full flex flex-col items-center justify-center py-8 sm:py-14 md:py-20 px-4 sm:px-6 text-center overflow-visible transition-colors duration-300 ${isDark ? 'bg-zinc-950' : 'bg-[#f4f4f4]'}`}>
+            <section id="hero-section" className={`relative min-h-[360px] md:min-h-[540px] w-full flex flex-col items-center justify-center py-8 sm:py-14 md:py-20 px-4 sm:px-6 text-center overflow-visible transition-colors duration-300 ${isDark ? 'bg-zinc-950' : 'bg-[#f4f4f4]'}`}>
                 {/* Absolute Wrapper to clip the decorative corner images to the grey region */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
                     {/* Left side: Blow Dryer (Top Left) */}

@@ -156,7 +156,7 @@ const StaffInvitations = ({ isStandalone = true }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tight flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-[#FF2A14]" /> Pending Salon Invitations ({invitations.length})
+            <Building2 className="w-5 h-5 text-[var(--brand-primary,#7C3AED)]" /> Pending Salon Invitations ({invitations.length})
           </h2>
           <p className="text-xs font-semibold text-slate-400 dark:text-zinc-400 mt-0.5">
             Review incoming recruitment requests from salon owners and manage your affiliations.
@@ -168,14 +168,14 @@ const StaffInvitations = ({ isStandalone = true }) => {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map(i => (
-            <div key={i} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-slate-100 dark:border-zinc-800 animate-pulse h-36"></div>
+            <div key={i} className="glass-card rounded-3xl p-6 animate-pulse h-36"></div>
           ))}
         </div>
       ) : invitations.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 border border-slate-100 dark:border-zinc-800 text-center space-y-3">
+        <div className="glass-card rounded-3xl p-12 text-center space-y-3">
           <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
           <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">No Pending Invitations</h3>
-          <p className="text-xs text-slate-400 font-semibold max-w-sm mx-auto">
+          <p className="text-xs text-slate-400 dark:text-zinc-400 font-semibold max-w-sm mx-auto">
             You have responded to all salon invitations. New recruitment requests will appear here.
           </p>
         </div>
@@ -187,13 +187,13 @@ const StaffInvitations = ({ isStandalone = true }) => {
             return (
               <div
                 key={item.id}
-                className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-100 dark:border-zinc-800/80 p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 border-t-4 border-t-[#FF2A14]"
+                className="glass-card rounded-3xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 border-t-4 border-t-[var(--brand-primary,#7C3AED)]"
               >
                 <div className="space-y-4">
                   
                   {/* Salon Header */}
                   <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 shrink-0">
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 bg-slate-100 dark:bg-zinc-800 shrink-0">
                       <img
                         src={item.salonLogo || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=300"}
                         alt={item.salonName}
@@ -201,20 +201,20 @@ const StaffInvitations = ({ isStandalone = true }) => {
                       />
                     </div>
                     <div>
-                      <span className="text-[9px] font-black text-[#FF2A14] uppercase tracking-widest bg-red-50 dark:bg-red-950/40 px-2.5 py-0.5 rounded-md border border-red-100 dark:border-red-900/50">
+                      <span className="text-[9px] font-black text-[var(--brand-primary,#7C3AED)] uppercase tracking-widest bg-[var(--brand-primary,#7C3AED)]/10 px-2.5 py-0.5 rounded-md border border-[var(--brand-primary,#7C3AED)]/20">
                         {item.offeredRole || 'Staff Member'}
                       </span>
                       <h3 className="text-base font-black text-slate-950 dark:text-white mt-1 leading-snug">
                         {item.salonName}
                       </h3>
-                      <p className="text-xs text-slate-400 dark:text-zinc-500 font-semibold flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-slate-400 dark:text-zinc-400 font-semibold flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 text-slate-400" /> {item.salonAddress || 'Pune'}
                       </p>
                     </div>
                   </div>
 
                   {/* Offered Terms Box */}
-                  <div className="bg-slate-50 dark:bg-zinc-800/50 p-3.5 rounded-2xl space-y-1.5 text-xs border border-slate-100 dark:border-zinc-800">
+                  <div className="glass-card p-3.5 rounded-2xl space-y-1.5 text-xs border border-white/20 dark:border-white/10">
                     <div className="flex justify-between items-center text-slate-600 dark:text-zinc-300 font-bold">
                       <span>Invited By:</span>
                       <span className="text-slate-900 dark:text-white font-black">{item.ownerName || 'Salon Owner'}</span>
@@ -237,7 +237,7 @@ const StaffInvitations = ({ isStandalone = true }) => {
                     type="button"
                     onClick={() => handleDecline(item)}
                     disabled={actionLoading[item.id] === 'decline'}
-                    className="flex-1 py-2.5 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-red-600 hover:bg-red-100 font-bold text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer transition disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer transition disabled:opacity-50"
                   >
                     <XCircle className="w-4 h-4" /> Decline
                   </button>

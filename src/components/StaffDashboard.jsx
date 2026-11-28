@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Package, UserPlus, LogOut, Lock, CheckCircle2, LogIn, Sparkles, FileText, Scissors, Moon, Sun, TrendingUp, Wallet } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Calendar, Clock, User, Package, UserPlus, LogOut, Lock, CheckCircle2, LogIn, Sparkles, FileText, Scissors, Moon, Sun, TrendingUp, Wallet, Building2, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { staffApi } from '../services/staffApi';
+import axiosInstance from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { performCleanLogout } from '../utils/auth';
+import { SalonLogoImage, applySalonTheme, extractPaletteFromImage, getSalonTheme } from '../utils/whiteLabelHelper';
+import { useDarkMode } from '../context/DarkModeContext';
 
 // Sub components
 import Schedule from './Owner/Manage/Schedule';
@@ -17,6 +20,9 @@ import ForgotPasswordModal from './ForgotPasswordModal';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export default function StaffDashboard() {
+  // Global Dark Mode Context
+  const { isDark, toggleDark } = useDarkMode();
+
   // Read staff ID and salon ID from localStorage
   const [staffId, setStaffId] = useState(
     localStorage.getItem('staff_id') || localStorage.getItem('user_id') || '1'
@@ -28,34 +34,16 @@ export default function StaffDashboard() {
     localStorage.getItem('activeSalonId') || localStorage.getItem('salon_id') || '1'
   );
 
-  // Dark Mode State
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('staff_dark_mode') === 'true';
-  });
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      localStorage.setItem('staff_dark_mode', String(next));
-      if (next) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+  // White-label Salon State
+  const [salonName, setSalonName] = useState(
+    localStorage.getItem('activeSalonName') || localStorage.getItem('salon_name') || 'NeoParlour'
+  );
+  const [salonLogo, setSalonLogo] = useState(
+    localStorage.getItem('activeSalonLogo') || localStorage.getItem('salon_logo') || ''
+  );
 
   // Active Tab State
-  const [activeTab, setActiveTab] = useState('appointments'); // 'appointments', 'walkin', 'attendance', 'inventory', 'profile'
+  const [activeTab, setActiveTab] = useState('appointments');
 
   // Attendance Status State
   const [todayAttendance, setTodayAttendance] = useState(null);
@@ -65,12 +53,155 @@ export default function StaffDashboard() {
   // Modals state
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
+  // Horizontal Navigation Scroll State & Ref
+  const navScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollPosition = useCallback(() => {
+    if (!navScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = navScrollRef.current;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+  }, []);
+
+  useEffect(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+
+    checkScrollPosition();
+    el.addEventListener('scroll', checkScrollPosition, { passive: true });
+    window.addEventListener('resize', checkScrollPosition);
+
+    return () => {
+      el.removeEventListener('scroll', checkScrollPosition);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, [checkScrollPosition]);
+
+  // Smooth mouse-wheel horizontal scrolling over the navigation bar
+  const handleNavWheel = (e) => {
+    if (!navScrollRef.current) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
+      navScrollRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  const scrollNav = (direction) => {
+    if (!navScrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -220 : 220;
+    navScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  // Automatically center active tab button into viewport smoothly
+  useEffect(() => {
+    if (!navScrollRef.current) return;
+    const activeBtn = navScrollRef.current.querySelector('[data-active="true"]');
+    if (activeBtn) {
+      activeBtn.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+    const timer = setTimeout(checkScrollPosition, 300);
+    return () => clearTimeout(timer);
+  }, [activeTab, checkScrollPosition]);
+
+  // Keep body and root backgrounds seamlessly synchronized with active theme to eliminate any margin gutters
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const targetBg = isDark ? 'var(--color-background, #09090b)' : 'var(--color-background, #f8fafc)';
+      document.body.style.backgroundColor = targetBg;
+      document.documentElement.style.backgroundColor = targetBg;
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+    }
+  }, [isDark]);
+
+  // Initial check for any cached active salon theme on mount
+  useEffect(() => {
+    try {
+      const globalCached = localStorage.getItem('activeSalonTheme');
+      if (globalCached && globalCached !== 'undefined' && globalCached !== 'null') {
+        const parsed = JSON.parse(globalCached);
+        if (parsed && parsed.primary) {
+          applySalonTheme(parsed);
+          document.documentElement.style.setProperty('--brand-primary', parsed.primary);
+          if (parsed.secondary || parsed.accent) {
+            document.documentElement.style.setProperty('--brand-accent', parsed.secondary || parsed.accent);
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     if (staffId) {
       loadTodayAttendance();
       loadProfileHeader();
     }
   }, [staffId]);
+
+  // Fetch and apply dynamic salon branding theme
+  useEffect(() => {
+    const sId = salonId || staffProfile?.salonId;
+    if (!sId) return;
+
+    // Check if saved theme exists
+    const saved = getSalonTheme(sId);
+    if (saved) {
+      applySalonTheme(saved);
+      if (saved.primary) {
+        document.documentElement.style.setProperty('--brand-primary', saved.primary);
+      }
+      if (saved.secondary || saved.accent) {
+        document.documentElement.style.setProperty('--brand-accent', saved.secondary || saved.accent);
+      }
+    }
+
+    const fetchSalonBranding = async () => {
+      try {
+        const res = await axiosInstance.get(`/salons/${sId}`);
+        const data = res.data?.content || res.data;
+        if (data) {
+          const resolvedName = data.salonName || data.name || 'NeoParlour';
+          const resolvedLogo = data.imageUrl || data.logo || data.logoUrl || '';
+
+          setSalonName(resolvedName);
+          localStorage.setItem('activeSalonName', resolvedName);
+          localStorage.setItem('salon_name', resolvedName);
+
+          if (resolvedLogo) {
+            setSalonLogo(resolvedLogo);
+            localStorage.setItem('activeSalonLogo', resolvedLogo);
+            localStorage.setItem('salon_logo', resolvedLogo);
+
+            // Automatically extract colors and apply theme
+            extractPaletteFromImage(resolvedLogo).then((palette) => {
+              if (palette) {
+                localStorage.setItem(`salon_theme_${sId}`, JSON.stringify(palette));
+                localStorage.setItem('activeSalonTheme', JSON.stringify(palette));
+                applySalonTheme(palette);
+                if (palette.primary) {
+                  document.documentElement.style.setProperty('--brand-primary', palette.primary);
+                }
+                if (palette.secondary || palette.accent) {
+                  document.documentElement.style.setProperty('--brand-accent', palette.secondary || palette.accent);
+                }
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch salon branding details:', err);
+      }
+    };
+
+    fetchSalonBranding();
+  }, [salonId, staffProfile?.salonId]);
 
   const loadTodayAttendance = async () => {
     try {
@@ -83,8 +214,21 @@ export default function StaffDashboard() {
 
   const loadProfileHeader = async () => {
     try {
-      const res = await staffApi.getStaffById(staffId);
-      setStaffProfile(res.data || null);
+      const res = await (staffApi.getStaffProfile ? staffApi.getStaffProfile(staffId) : staffApi.getStaffById(staffId));
+      const data = res.data?.content || res.data || null;
+      setStaffProfile(data);
+
+      if (data?.salonId) {
+        setSalonId(String(data.salonId));
+        localStorage.setItem('activeSalonId', String(data.salonId));
+        localStorage.setItem('salon_id', String(data.salonId));
+      }
+      if (data?.salonName) {
+        setSalonName(data.salonName);
+      }
+      if (data?.salonLogo || data?.salonImageUrl) {
+        setSalonLogo(data.salonLogo || data.salonImageUrl);
+      }
     } catch (err) {
       console.warn('Could not fetch staff profile:', err);
     }
@@ -126,92 +270,144 @@ export default function StaffDashboard() {
 
   const isCheckedIn = todayAttendance && todayAttendance.checkInTime && !todayAttendance.checkOutTime;
 
+  const navTabs = [
+    { id: 'appointments', label: 'Appointments', icon: Calendar },
+    { id: 'walkin', label: 'Walk-In Booking', icon: Scissors },
+    { id: 'attendance', label: 'Attendance & Leaves', icon: FileText },
+    { id: 'inventory', label: 'My Inventory', icon: Package },
+    { id: 'referrals', label: 'My Referrals', icon: TrendingUp },
+    { id: 'payouts', label: 'Reward Payouts', icon: Wallet },
+    { id: 'invitations', label: 'Salon Invitations', icon: UserPlus },
+    { id: 'profile', label: 'Staff Profile', icon: User },
+  ];
+
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${
-      isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-[#fafafa] text-slate-800'
-    }`}>
-      {/* Brand Header Bar */}
-      <header className={`border-b sticky top-0 z-30 shadow-xs transition-colors duration-300 ${
-        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
+    <div 
+      className={`min-h-screen w-full font-sans relative overflow-x-hidden transition-colors duration-300 staff-portal-canvas ${
+        isDark ? 'dark text-zinc-100' : 'text-slate-800'
+      }`}
+      style={{
+        backgroundColor: isDark ? 'var(--color-background, #09090b)' : 'var(--color-background, #f8fafc)',
+        color: isDark ? 'var(--color-text-primary, #faf4ff)' : 'var(--color-text-primary, #1e293b)'
+      }}
+    >
+      {/* Ambient Decorative Glass Refraction Orbs */}
+      <div 
+        className="fixed top-[-10%] left-[20%] w-[550px] h-[550px] rounded-full blur-[160px] pointer-events-none -z-10 opacity-20"
+        style={{ background: 'radial-gradient(circle, var(--brand-primary, #7C3AED) 0%, transparent 70%)' }}
+      />
+      <div 
+        className="fixed bottom-[-10%] right-[10%] w-[650px] h-[650px] rounded-full blur-[180px] pointer-events-none -z-10 opacity-15"
+        style={{ background: 'radial-gradient(circle, var(--brand-accent, #A78BFA) 0%, transparent 70%)' }}
+      />
+
+      {/* Brand Header Bar (Full width edge-to-edge background) */}
+      <header className={`w-full sticky top-0 z-30 transition-all duration-300 border-b shadow-xs ${
+        isDark 
+          ? 'bg-zinc-900 border-zinc-800 shadow-black/20' 
+          : 'bg-white border-slate-200 shadow-slate-200/30'
       }`}>
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
           
-          {/* Logo & Staff Info */}
+          {/* Logo & White-Labeled Branding Info */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
             <div className="flex items-center gap-3">
-              <div className="relative flex-shrink-0">
-                <img
-                  src={staffProfile?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(staffProfile?.name || 'Staff')}&background=FF0B01&color=fff`}
-                  alt={staffProfile?.name || 'Staff Avatar'}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl object-cover border-2 border-[#FF0B01] shadow-md"
+              {/* Salon Brand Logo & Identity */}
+              <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-2xl border transition-all ${
+                isDark 
+                  ? 'bg-zinc-800/70 border-zinc-700/60 shadow-xs' 
+                  : 'bg-white border-slate-200/90 shadow-xs'
+              }`}>
+                <SalonLogoImage
+                  logo={salonLogo}
+                  name={salonName}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-xs border border-white/40 dark:border-white/10 shrink-0"
                 />
-                <span className={`absolute -bottom-1 -right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 ${
-                  isDarkMode ? 'border-slate-900' : 'border-white'
-                } ${isCheckedIn ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <div className="min-w-0 pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <h2 className={`text-xs sm:text-sm font-black tracking-tight truncate max-w-[120px] sm:max-w-[180px] ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      {salonName}
+                    </h2>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Active Salon" />
+                  </div>
+                  <span 
+                    className="text-[9px] font-black uppercase tracking-widest block text-brand-primary"
+                    style={{ color: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
+                  >
+                    Staff Portal
+                  </span>
+                </div>
               </div>
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className={`text-base sm:text-xl font-black tracking-tight leading-none truncate max-w-[140px] sm:max-w-none ${
-                    isDarkMode ? 'text-white' : 'text-slate-900'
+              {/* Staff Member Avatar & Status */}
+              <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200/70 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <img
+                    src={staffProfile?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(staffProfile?.name || 'Staff')}&background=7C3AED&color=fff`}
+                    alt={staffProfile?.name || 'Staff Avatar'}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border-2 shadow-xs"
+                    style={{ borderColor: 'var(--brand-primary, var(--color-primary, #7C3AED))' }}
+                  />
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
+                    isDark ? 'border-zinc-900' : 'border-white'
+                  } ${isCheckedIn ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                </div>
+
+                <div className="min-w-0 hidden sm:block">
+                  <h1 className={`text-xs sm:text-sm font-black tracking-tight leading-none truncate max-w-[140px] ${
+                    isDark ? 'text-white' : 'text-slate-900'
                   }`}>
                     {staffProfile?.name || 'Staff Member'}
                   </h1>
-                  <span className="px-2 py-0.5 bg-red-50 dark:bg-red-950/60 text-[#FF0B01] text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-lg border border-red-100 dark:border-red-900/50 flex items-center gap-1 flex-shrink-0">
-                    <Sparkles className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-[#FF0B01]" /> Portal
-                  </span>
+                  <p className="text-[10px] font-semibold text-slate-400 dark:text-zinc-400 mt-0.5 truncate">
+                    {staffProfile?.role || 'Service Specialist'}
+                  </p>
                 </div>
-                <p className={`text-[10px] sm:text-xs font-semibold mt-0.5 truncate ${
-                  isDarkMode ? 'text-slate-400' : 'text-slate-400'
-                }`}>
-                  {staffProfile?.salonName || 'NeoParlour Staff'} • {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                </p>
               </div>
             </div>
 
             {/* Mobile quick checkin status pill */}
-            <span className={`md:hidden px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-lg flex-shrink-0 ${
+            <span className={`md:hidden px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-xl shrink-0 border ${
               isCheckedIn 
-                ? isDarkMode ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : isDarkMode ? 'bg-amber-950/80 text-amber-400 border border-amber-800' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
             }`}>
               {isCheckedIn ? 'Checked In' : 'Checked Out'}
             </span>
           </div>
 
           {/* Header Controls */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-end w-full md:w-auto">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-center sm:justify-end w-full md:w-auto">
             {/* Language Switcher */}
             <LanguageSwitcher />
 
-            {/* Dark Mode Toggle Button */}
+            {/* Dark/Light Mode Toggle Button */}
             <button
-              onClick={toggleDarkMode}
-              className={`w-11 h-11 rounded-2xl transition border flex items-center justify-center cursor-pointer relative overflow-hidden ${
-                isDarkMode 
-                  ? 'bg-zinc-800 text-amber-400 border-zinc-700 hover:bg-zinc-700' 
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              onClick={toggleDark}
+              className={`w-10 h-10 rounded-xl transition-all border flex items-center justify-center cursor-pointer shadow-xs ${
+                isDark 
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-amber-400 border-zinc-700' 
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
               }`}
-              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Sun className={`w-4 h-4 text-amber-400 absolute ${
-                  isDarkMode ? 'animate-sun-enter' : 'animate-sun-exit'
-                }`} />
-                <Moon className={`w-4 h-4 text-slate-600 absolute ${
-                  !isDarkMode ? 'animate-moon-enter' : 'animate-moon-exit'
-                }`} />
-              </div>
+              {isDark ? (
+                <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700 transition-transform hover:-rotate-12" />
+              )}
             </button>
 
             {/* Attendance Status Badge & Toggle Button */}
-            <div className={`flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-2xl border transition-colors ${
-              isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+            <div className={`flex items-center gap-1.5 p-1 rounded-2xl border transition-colors shadow-xs ${
+              isDark ? 'bg-zinc-800/80 border-zinc-700/80' : 'bg-white/90 border-slate-200/80'
             }`}>
               <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-wider rounded-xl ${
                 isCheckedIn 
-                  ? isDarkMode ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                  : isDarkMode ? 'bg-amber-950/80 text-amber-400 border border-amber-800' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
               }`}>
                 {isCheckedIn ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                 {isCheckedIn ? 'Checked In' : 'Checked Out'}
@@ -239,162 +435,171 @@ export default function StaffDashboard() {
             {/* Password Reset Modal Button */}
             <button
               onClick={() => setForgotPasswordModalOpen(true)}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl text-[11px] sm:text-xs font-bold transition border flex items-center gap-1 cursor-pointer ${
-                isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+              className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition border flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                isDark 
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700' 
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
               }`}
               title="Reset Password"
             >
-              <Lock className="w-3.5 h-3.5 text-slate-400" /> <span className="hidden sm:inline">Password</span> Reset
+              <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-400" /> <span className="hidden sm:inline">Password</span>
             </button>
 
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className={`p-2 sm:p-2.5 rounded-2xl transition border border-transparent cursor-pointer ${
-                isDarkMode ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-950/40' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+              className={`p-2.5 rounded-xl transition border cursor-pointer shadow-xs ${
+                isDark 
+                  ? 'bg-zinc-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border-zinc-700' 
+                  : 'bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border-slate-200'
               }`}
               title="Logout"
             >
-              <LogOut className="w-4 sm:w-4.5 h-4 sm:h-4.5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Brand Nav Tabs */}
-        <div className={`max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 border-t flex items-center gap-1 sm:gap-3 overflow-x-auto pt-1 scrollbar-none transition-colors duration-300 ${
-          isDarkMode ? 'border-slate-800' : 'border-slate-100'
+        {/* Brand Nav Tabs (Edge-to-edge scroll navigation bar with arrow controls & hidden scrollbars) */}
+        <div className={`w-full border-t transition-colors relative ${
+          isDark ? 'border-zinc-800 bg-zinc-900' : 'border-slate-200 bg-slate-50'
         }`}>
-          <button
-            onClick={() => setActiveTab('appointments')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'appointments'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <Calendar className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Appointments
-          </button>
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 relative flex items-center">
+            
+            {/* Left Scroll Arrow Button */}
+            {canScrollLeft && (
+              <div className="absolute left-1 sm:left-4 z-20 flex items-center h-full">
+                <button
+                  type="button"
+                  onClick={() => scrollNav('left')}
+                  className={`p-1.5 sm:p-2 rounded-xl border shadow-md transition-all active:scale-90 cursor-pointer ${
+                    isDark 
+                      ? 'bg-zinc-900/95 text-zinc-200 border-zinc-700/80 hover:bg-zinc-800 hover:text-white' 
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                  aria-label="Scroll navigation left"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              </div>
+            )}
 
-          <button
-            onClick={() => setActiveTab('walkin')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'walkin'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <Scissors className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Walk-In Booking
-          </button>
+            {/* Left Edge Gradient Fade Mask */}
+            {canScrollLeft && (
+              <div className={`absolute left-0 top-0 bottom-0 w-8 sm:w-16 z-10 pointer-events-none transition-opacity duration-300 ${
+                isDark 
+                  ? 'bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent' 
+                  : 'bg-gradient-to-r from-slate-100/90 via-slate-100/60 to-transparent'
+              }`} />
+            )}
 
-          <button
-            onClick={() => setActiveTab('attendance')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'attendance'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <FileText className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Attendance & Leaves
-          </button>
+            {/* Horizontal Scrollable Tabs */}
+            <div
+              ref={navScrollRef}
+              id="staff-nav-scroll"
+              data-no-scrollbar="true"
+              onWheel={handleNavWheel}
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+              className="w-full flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 px-6 sm:px-8 no-scrollbar scrollbar-none scroll-smooth select-none"
+            >
+              {navTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    data-active={isActive ? "true" : "false"}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                      isActive
+                        ? 'bg-brand-primary text-white shadow-md scale-[1.02]'
+                        : isDark
+                          ? 'bg-zinc-900/70 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800/80 shadow-2xs'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-2xs'
+                    }`}
+                    style={isActive ? { backgroundColor: 'var(--brand-primary, var(--color-primary, #7C3AED))', color: '#ffffff' } : {}}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'inventory'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <Package className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> My Inventory
-          </button>
+            {/* Right Edge Gradient Fade Mask */}
+            {canScrollRight && (
+              <div className={`absolute right-0 top-0 bottom-0 w-8 sm:w-16 z-10 pointer-events-none transition-opacity duration-300 ${
+                isDark 
+                  ? 'bg-gradient-to-l from-zinc-950 via-zinc-950/80 to-transparent' 
+                  : 'bg-gradient-to-l from-slate-100/90 via-slate-100/60 to-transparent'
+              }`} />
+            )}
 
-          <button
-            onClick={() => setActiveTab('referrals')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'referrals'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <TrendingUp className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> My Referrals
-          </button>
-
-          <button
-            onClick={() => setActiveTab('payouts')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'payouts'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <Wallet className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Reward Payouts
-          </button>
-
-          <button
-            onClick={() => setActiveTab('invitations')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'invitations'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <UserPlus className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Salon Invitations
-          </button>
-
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'profile'
-                ? 'border-[#FF0B01] text-[#FF0B01]'
-                : isDarkMode ? 'border-transparent text-slate-400 hover:text-slate-200' : 'border-transparent text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <User className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> Staff Profile
-          </button>
+            {/* Right Scroll Arrow Button */}
+            {canScrollRight && (
+              <div className="absolute right-1 sm:right-4 z-20 flex items-center h-full">
+                <button
+                  type="button"
+                  onClick={() => scrollNav('right')}
+                  className={`p-1.5 sm:p-2 rounded-xl border shadow-md transition-all active:scale-90 cursor-pointer ${
+                    isDark 
+                      ? 'bg-zinc-900/95 text-zinc-200 border-zinc-700/80 hover:bg-zinc-800 hover:text-white' 
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                  aria-label="Scroll navigation right"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Tab Content */}
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 relative z-10">
         {activeTab === 'appointments' && (
-          <Schedule staffOnlyId={staffId} isStaffPortal={true} isDarkMode={isDarkMode} />
+          <Schedule staffOnlyId={staffId} isStaffPortal={true} isDarkMode={isDark} />
         )}
 
         {activeTab === 'walkin' && (
           <WalkInBooking 
             onBookingSuccess={() => setActiveTab('appointments')} 
-            isDarkMode={isDarkMode}
+            isDarkMode={isDark}
             isStaffPortal={true}
             staffOnlyId={staffId}
           />
         )}
 
         {activeTab === 'attendance' && (
-          <StaffLeaveManagement staffId={staffId} isDarkMode={isDarkMode} />
+          <StaffLeaveManagement staffId={staffId} isDarkMode={isDark} />
         )}
 
         {activeTab === 'inventory' && (
-          <StaffInventoryView staffId={staffId} isDarkMode={isDarkMode} />
+          <StaffInventoryView staffId={staffId} isDarkMode={isDark} />
         )}
 
         {activeTab === 'referrals' && (
           <StaffReferralStatsView 
             staffId={staffId} 
-            isDarkMode={isDarkMode} 
+            isDarkMode={isDark} 
             onNavigateToPayouts={() => setActiveTab('payouts')}
           />
         )}
 
         {activeTab === 'payouts' && (
-          <StaffPayoutDashboard staffId={staffId} isDarkMode={isDarkMode} />
+          <StaffPayoutDashboard staffId={staffId} isDarkMode={isDark} />
         )}
 
         {activeTab === 'invitations' && (
-          <StaffInvitations isStandalone={false} />
+          <StaffInvitations isStandalone={false} isDarkMode={isDark} />
         )}
 
         {activeTab === 'profile' && (
-          <StaffProfileView staffId={staffId} staffUserId={staffUserId} isDarkMode={isDarkMode} />
+          <StaffProfileView staffId={staffId} staffUserId={staffUserId} isDarkMode={isDark} />
         )}
       </main>
 

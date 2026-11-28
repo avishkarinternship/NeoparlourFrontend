@@ -54,7 +54,7 @@ const Footer = ({ isDarkMode = false }) => {
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Platform:</span>
                                     <div className="flex items-center gap-1.5">
                                         <img src={logoIcon} alt="NeoParlour" className="w-5 h-5 object-contain" />
-                                        <span className="text-sm font-black text-[#ff0b01] tracking-tight">Powered by NeoParlour</span>
+                                        <span className="text-sm font-black text-brand-primary tracking-tight" style={{ color: 'var(--brand-primary)' }}>Powered by NeoParlour</span>
                                     </div>
                                 </div>
                             </div>
@@ -78,7 +78,7 @@ const Footer = ({ isDarkMode = false }) => {
                                 All-in-one salon operating system for appointments, inventory, staff payouts, and verified customer growth.
                             </p>
                             <div className="flex items-center gap-1.5 pt-1">
-                                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-xs font-bold text-[#ff0b01]">
+                                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-xs font-bold text-brand-primary" style={{ color: 'var(--brand-primary)' }}>
                                     <span>Enterprise Salon OS</span>
                                 </div>
                             </div>
@@ -191,9 +191,9 @@ const Footer = ({ isDarkMode = false }) => {
                         © {new Date().getFullYear()} {!isSystemAdmin && activeSalonName ? activeSalonName : 'NeoParlour'}. All rights reserved.
                     </span>
                     <span className="text-gray-400 hidden sm:inline">•</span>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 shadow-3xs">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/25 shadow-3xs">
                         <img src={logoIcon} alt="NeoParlour" className="w-4 h-4 object-contain" />
-                        <span className="text-xs sm:text-sm font-black text-[#ff0b01] tracking-tight">
+                        <span className="text-xs sm:text-sm font-black text-brand-primary tracking-tight" style={{ color: 'var(--brand-primary)' }}>
                             Powered by NeoParlour
                         </span>
                     </div>

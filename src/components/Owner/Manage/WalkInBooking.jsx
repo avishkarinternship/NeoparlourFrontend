@@ -118,15 +118,15 @@ const AsyncImage = ({ imagePath, alt, className, fallbackText }) => {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[#ffebeb] text-[#ff0b01]">
-        <div className="animate-spin h-3.5 w-3.5 border-2 border-[#ff0b01] border-t-transparent rounded-full"></div>
+      <div className="w-full h-full flex items-center justify-center bg-brand-primary/10 text-brand-primary">
+        <div className="animate-spin h-3.5 w-3.5 border-2 border-brand-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   if (error || !src) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 font-extrabold text-sm uppercase">
+      <div className="w-full h-full flex items-center justify-center bg-brand-primary/10 text-brand-primary font-extrabold text-sm uppercase">
         {fallbackText}
       </div>
     );
@@ -1035,32 +1035,34 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
     if (loading) {
         return (
-            <div className={`flex-1 flex flex-col items-center justify-center py-32 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : ''}`}>
-                <div className="animate-spin h-12 w-12 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-4 shadow-sm"></div>
+            <div className={`flex-1 flex flex-col items-center justify-center py-32 bg-transparent ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>
+                <div className="animate-spin h-12 w-12 border-4 border-brand-primary border-t-transparent rounded-full mb-4 shadow-sm"></div>
                 <p className={`text-xs font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Syncing Booking Portal...</p>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-[#FAFAFA] text-slate-800'} flex flex-col font-sans antialiased transition-colors duration-300`}>
+        <div className="w-full min-h-screen bg-transparent flex flex-col font-sans antialiased transition-colors duration-300">
 
             {/* ==================== BREADCRUMBS ==================== */}
-            <nav className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border-b py-3.5 shadow-sm`}>
-                <div className={`max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-400'} flex items-center gap-1.5 font-bold uppercase tracking-widest`}>
-                    <span className={`cursor-pointer ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`} onClick={() => navigate('/owner/dashboard')}>Dashboard</span>
-                    <span>&gt;</span>
-                    <span className={`cursor-pointer ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`} onClick={() => navigate('/owner/manage/schedule')}>Manage</span>
-                    <span>&gt;</span>
-                    <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} font-black`}>Walk-in Booking</span>
-                </div>
-            </nav>
+            {!isStaffPortal && (
+                <nav className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border-b py-3.5 shadow-sm`}>
+                    <div className={`max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-[10px] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-400'} flex items-center gap-1.5 font-bold uppercase tracking-widest`}>
+                        <span className={`cursor-pointer ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`} onClick={() => navigate('/owner/dashboard')}>Dashboard</span>
+                        <span>&gt;</span>
+                        <span className={`cursor-pointer ${isDarkMode ? 'hover:text-white' : 'hover:text-slate-900'} transition-colors`} onClick={() => navigate('/owner/manage/schedule')}>Manage</span>
+                        <span>&gt;</span>
+                        <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} font-black`}>Walk-in Booking</span>
+                    </div>
+                </nav>
+            )}
 
             {/* ==================== MAIN CONTENT ==================== */}
-            <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
+            <main className={`${isStaffPortal ? 'w-full py-2 sm:py-4 flex-1' : 'max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1'}`}>
 
                 {/* Header Block */}
-                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm`}>
+                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 p-6 rounded-3xl glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
                     <div className="min-w-0 flex-1 space-y-2.5">
                         <h1 className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-white' : 'text-slate-950'} tracking-tight uppercase`}>
                             {salon?.name || salon?.salonName || 'Salon Details'}
@@ -1106,24 +1108,24 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                     <div className="w-full lg:w-[60%] shrink-0 space-y-8">
 
                         {/* Services Picker Section */}
-                        <section ref={servicesSectionRef} id="walkin-services-section" className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm min-h-[180px]`}>
+                        <section ref={servicesSectionRef} id="walkin-services-section" className={`p-6 sm:p-8 rounded-3xl min-h-[180px] glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
                             {!servicesLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-12">
-                                    <div className="animate-spin h-8 w-8 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                    <div className="animate-spin h-8 w-8 border-4 border-brand-primary border-t-transparent rounded-full mb-3 shadow-sm"></div>
                                     <p className={`text-xs font-black uppercase tracking-wider ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Loading catalog...</p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                         <h3 className={`text-sm font-black uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'} flex items-center gap-2`}>
-                                            <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Services
+                                            <Scissors className="w-4.5 h-4.5 text-brand-primary" /> Select Services
                                         </h3>
                                         {/* Gender filter dropdown */}
                                         <div className="relative">
                                             <select 
                                                 value={selectedGender} 
                                                 onChange={(e) => setSelectedGender(e.target.value)}
-                                                className={`appearance-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'} border rounded-xl px-4 py-2.5 pr-10 text-xs font-bold outline-none focus:border-red-500 cursor-pointer shadow-sm transition-all`}
+                                                className={`appearance-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'} border rounded-xl px-4 py-2.5 pr-10 text-xs font-bold outline-none focus:border-brand-primary cursor-pointer shadow-sm transition-all`}
                                             >
                                                 <option value="All">All Genders</option>
                                                 <option value="Male">Male Only</option>
@@ -1141,9 +1143,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 onClick={() => setSelectedCategory('All')}
                                                 className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 min-w-[90px] h-[90px] transition-all duration-300 cursor-pointer transform hover:scale-105 ${
                                                     selectedCategory.toLowerCase() === 'all'
-                                                        ? 'border-[#FF0B01] bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                        ? 'border-brand-primary bg-brand-primary text-white shadow-md'
                                                         : (isDarkMode ? 'border-zinc-800 bg-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800' : 'border-slate-100 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-sm')
                                                 }`}
+                                                style={selectedCategory.toLowerCase() === 'all' ? { backgroundColor: 'var(--brand-primary, #7C3AED)', borderColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                             >
                                                 <Sparkles
                                                     className={`w-7 h-7 mb-1.5 ${selectedCategory.toLowerCase() === 'all' ? 'text-white' : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`}
@@ -1162,9 +1165,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                         onClick={() => setSelectedCategory(catName)}
                                                         className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 min-w-[90px] h-[90px] transition-all duration-300 cursor-pointer transform hover:scale-105 ${
                                                             isActive
-                                                                ? 'border-[#FF0B01] bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                                ? 'border-brand-primary bg-brand-primary text-white shadow-md'
                                                                 : (isDarkMode ? 'border-zinc-800 bg-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800' : 'border-slate-100 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-sm')
                                                         }`}
+                                                        style={isActive ? { backgroundColor: 'var(--brand-primary, #7C3AED)', borderColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                                     >
                                                         <img
                                                             src={catIcon}
@@ -1182,13 +1186,13 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
                                     {/* Selected Offer Services Section */}
                                     {selectedOffer && selectedOffer.services && selectedOffer.services.length > 0 && (
-                                        <div className={`mb-8 p-5 ${isDarkMode ? 'bg-zinc-800/90 border-red-900/50' : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-150'} rounded-3xl border shadow-sm relative overflow-hidden`}>
+                                        <div className={`mb-8 p-5 ${isDarkMode ? 'bg-zinc-800/90 border-brand-primary/40' : 'bg-brand-primary/5 border-brand-primary/20'} rounded-3xl border shadow-sm relative overflow-hidden`}>
                                             {/* Decorative background accent */}
-                                            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full" />
+                                            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-brand-primary/10 rounded-full" />
                                             
-                                            <div className={`flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-700' : 'border-red-100'} pb-3 mb-4`}>
+                                            <div className={`flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-700' : 'border-brand-primary/15'} pb-3 mb-4`}>
                                                 <div className="flex items-center gap-2">
-                                                    <Sparkles className="w-5 h-5 text-[#FF0B01] animate-pulse shrink-0" />
+                                                    <Sparkles className="w-5 h-5 text-brand-primary animate-pulse shrink-0" />
                                                     <div>
                                                         <h4 className={`text-sm font-black ${isDarkMode ? 'text-white' : 'text-slate-900'} uppercase tracking-tight`}>
                                                             {selectedOffer.name} Special Bundle
@@ -1203,8 +1207,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                             <span className={`px-2.5 py-1 ${isDarkMode ? 'bg-green-950/40 border-green-800/50 text-green-400' : 'bg-green-50/80 border-green-100 text-green-700'} border rounded-lg shadow-sm`}>
                                                                 Discount: <span className="font-black ml-1">-₹{offerDiscount}</span>
                                                             </span>
-                                                            <span className={`px-2.5 py-1 ${isDarkMode ? 'bg-red-950/40 border-red-800/50 text-white' : 'bg-red-50/80 border-red-100 text-slate-900'} border rounded-lg shadow-sm`}>
-                                                                Difference/Final: <span className="text-[#FF0B01] font-black ml-1">₹{offerFinalTotal}</span>
+                                                            <span className={`px-2.5 py-1 ${isDarkMode ? 'bg-brand-primary/20 border-brand-primary/40 text-white' : 'bg-brand-primary/10 border-brand-primary/20 text-slate-900'} border rounded-lg shadow-sm`}>
+                                                                Difference/Final: <span className="text-brand-primary font-black ml-1">₹{offerFinalTotal}</span>
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1212,7 +1216,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 <button 
                                                     type="button"
                                                     onClick={handleDiscardOffer}
-                                                    className="px-3.5 py-1.5 bg-[#FF0B01] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm shadow-red-500/10 shrink-0"
+                                                    className="px-3.5 py-1.5 bg-brand-primary hover:brightness-110 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm shrink-0"
+                                                    style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                                                 >
                                                     Discard Offer
                                                 </button>
@@ -1229,7 +1234,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                             key={service.id}
                                                             className={`p-4 rounded-2xl ${isDarkMode ? 'bg-zinc-900' : 'bg-white'} border transition-all duration-300 flex items-center justify-between gap-3 shadow-sm ${
                                                                 isAdded 
-                                                                    ? 'border-[#FF0B01] bg-[#FF0B01]/[0.01]' 
+                                                                    ? 'border-brand-primary bg-brand-primary/5' 
                                                                     : (isDarkMode ? 'border-zinc-800 opacity-65 hover:opacity-100 hover:border-zinc-700' : 'border-slate-100 opacity-65 hover:opacity-100 hover:border-slate-200')
                                                             }`}
                                                         >
@@ -1245,7 +1250,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                                     <span>•</span>
                                                                     <span className="flex items-center gap-1.5 font-bold">
                                                                         <span className="line-through text-zinc-400 font-semibold">₹{originalPrice}</span>
-                                                                        <span className="text-[#FF0B01] font-black">₹{discountedPrice}</span>
+                                                                        <span className="text-brand-primary font-black">₹{discountedPrice}</span>
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -1254,7 +1259,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                                 onClick={() => handleServiceToggle(service.id)}
                                                                 className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
                                                                     isAdded 
-                                                                        ? (isDarkMode ? 'bg-red-950/60 text-[#FF0B01] border border-red-900/50' : 'bg-red-50 text-[#FF0B01] border border-red-100')
+                                                                        ? (isDarkMode ? 'bg-brand-primary/20 text-brand-primary border border-brand-primary/40' : 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20')
                                                                         : (isDarkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')
                                                                 }`}
                                                             >
@@ -1277,7 +1282,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                     key={service.id}
                                                     className={`flex gap-4 p-5 rounded-2xl border transition-all duration-300 ${
                                                         isAdded 
-                                                            ? 'border-[#FF0B01] bg-[#FF0B01]/[0.02] shadow-sm shadow-[#FF0B01]/5 ring-1 ring-[#FF0B01]/10' 
+                                                            ? 'border-brand-primary bg-brand-primary/5 shadow-sm ring-1 ring-brand-primary/20' 
                                                             : isDarkMode 
                                                               ? 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:shadow-md' 
                                                               : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/50'
@@ -1299,9 +1304,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                                 {service.category}
                                                             </span>
                                                             {isOfferIncluded && (
-                                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm ${
-                                                                    isDarkMode ? 'bg-red-950/40 text-[#FF0B01]' : 'bg-red-50 text-[#FF0B01]'
-                                                                }`}>
+                                                                <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm bg-brand-primary/10 text-brand-primary">
                                                                     <Sparkles className="w-2.5 h-2.5 animate-pulse shrink-0" /> Offer Included
                                                                 </span>
                                                             )}
@@ -1318,13 +1321,14 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                         <button
                                                             type="button"
                                                             onClick={() => handleServiceToggle(service.id)}
-                                                            className={`flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-300 w-24 hover:scale-105 active:scale-95 shadow-sm ${
+                                                            className={`flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl text-xs font-black tracking-wider uppercase transition-all duration-300 w-24 hover:scale-105 active:scale-95 shadow-sm cursor-pointer ${
                                                                 isAdded
-                                                                    ? 'bg-[#FF0B01] text-white hover:bg-red-700 shadow-red-500/10'
+                                                                    ? 'bg-brand-primary text-white hover:brightness-110'
                                                                     : isDarkMode 
                                                                       ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' 
                                                                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                             }`}
+                                                            style={isAdded ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                                         >
                                                             {isAdded ? (
                                                                 <>
@@ -1354,11 +1358,11 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                         </section>
 
                         {/* Calendar Selector Component */}
-                        <section ref={dateTimeSectionRef} id="walkin-datetime-section" className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 sm:p-8 rounded-3xl border shadow-sm`}>
+                        <section ref={dateTimeSectionRef} id="walkin-datetime-section" className={`p-6 sm:p-8 rounded-3xl glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
                             <h3 className={`text-sm font-black uppercase tracking-wider mb-5 flex items-center gap-2 ${
                                 isDarkMode ? 'text-white' : 'text-slate-900'
                             }`}>
-                                <Calendar className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Date and Time
+                                <Calendar className="w-4.5 h-4.5 text-brand-primary" /> Select Date and Time
                             </h3>
                             
                             {/* Months Indicator header */}
@@ -1367,9 +1371,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                             }`}>
                                 <span className={`uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{selectedDateObj?.month || 'Date'}</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider ${
-                                        isDarkMode ? 'bg-red-950/40 text-red-400 border border-red-900/50' : 'bg-red-50 text-[#FF0B01]'
-                                    }`}>
+                                    <span className="text-[9.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider bg-brand-primary/10 text-brand-primary">
                                         Year {selectedDateObj?.year || '2026'}
                                     </span>
                                 </div>
@@ -1392,11 +1394,12 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                             }}
                                             className={`flex flex-col items-center justify-center py-3.5 px-4.5 rounded-2xl min-w-[62px] cursor-pointer transition-all duration-300 transform hover:-translate-y-0.5 ${
                                                 isSelectedDate
-                                                    ? 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] text-white shadow-md shadow-red-500/10'
+                                                    ? 'bg-brand-primary text-white shadow-md'
                                                     : isDarkMode 
                                                       ? 'text-zinc-400 bg-zinc-800 border border-zinc-700/60 hover:bg-zinc-700 hover:text-zinc-200' 
                                                       : 'text-zinc-400 bg-slate-50 border border-slate-100 hover:bg-white hover:text-slate-700 hover:shadow-sm'
                                             }`}
+                                            style={isSelectedDate ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                         >
                                             <span className="text-[10px] font-extrabold uppercase mb-1">{d.day}</span>
                                             <span className={`text-sm font-black ${isSelectedDate ? 'text-white' : (isDarkMode ? 'text-zinc-100' : 'text-slate-900')}`}>{d.num}</span>
@@ -1408,7 +1411,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                             {/* Time Slots grid */}
                             {slotsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8 mt-5">
-                                    <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                    <div className="animate-spin h-7 w-7 border-4 border-brand-primary border-t-transparent rounded-full mb-3 shadow-sm"></div>
                                     <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Loading available slots...</p>
                                 </div>
                             ) : displayedSlots.length === 0 ? (
@@ -1451,7 +1454,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 ? 'bg-red-950/40 border-red-800 text-red-400 cursor-not-allowed ring-2 ring-red-900 ring-offset-zinc-950 animate-pulse' 
                                                 : 'bg-red-100 border-red-400 text-red-600 cursor-not-allowed ring-2 ring-red-300 ring-offset-1 animate-pulse';
                                         } else if (isSelectedTime) {
-                                            slotClass = 'bg-gradient-to-b from-[#FF0B01] to-[#D00600] border-transparent text-white shadow-md shadow-red-500/10 hover:scale-105 active:scale-95';
+                                            slotClass = 'bg-brand-primary border-transparent text-white shadow-md hover:scale-105 active:scale-95';
                                         } else if (isInWindow) {
                                             slotClass = isDarkMode 
                                                 ? 'bg-amber-950/30 border-amber-850 text-amber-450 cursor-not-allowed ring-1 ring-amber-900' 
@@ -1468,7 +1471,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 key={slot.startTime || idx}
                                                 disabled={slot.busy || isInWindow}
                                                 onClick={() => handleSlotSelect(slot)}
-                                                className={`py-3 px-2 rounded-xl border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center min-h-[4rem] ${slotClass}`}
+                                                className={`py-3 px-2 rounded-xl border text-center text-xs font-bold transition-all duration-300 shadow-sm flex flex-col items-center justify-center min-h-[4rem] cursor-pointer ${slotClass}`}
+                                                style={isSelectedTime ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                                 title={isConflict ? 'Conflict: This slot overlaps with an existing appointment' : isInWindow ? `Occupied by your ${durationMinutes}-min appointment` : ''}
                                             >
                                                 <span>{slot.displayTime}</span>
@@ -1489,7 +1493,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                  {!isInWindow && !isConflict && slot.discountPercentage > 0 && slot.discountMessage && (
                                                      <span className={`text-[9px] font-extrabold mt-1 px-1.5 py-0.5 rounded-full ${
                                                          isSelectedTime 
-                                                             ? 'bg-white text-[#FF0B01]' 
+                                                             ? 'bg-white text-brand-primary' 
                                                              : isDarkMode 
                                                                ? 'bg-emerald-950/50 text-emerald-400' 
                                                                : 'bg-green-100 text-green-700'
@@ -1509,7 +1513,8 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                             <button
                                 type="button"
                                 onClick={handleBookClick}
-                                className="w-full max-w-md bg-gradient-to-b from-[#FF0B01] to-[#D00600] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-red-500/15"
+                                className="w-full max-w-md bg-brand-primary hover:brightness-110 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+                                style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                             >
                                 Book and Pay After Services
                             </button>
@@ -1527,11 +1532,11 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                     <div className="w-full lg:w-[40%] space-y-6 lg:sticky lg:top-6">
 
                         {/* Real-time Booking Summary Card */}
-                        <section className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} p-6 rounded-3xl border shadow-sm space-y-4`}>
+                        <section className={`p-6 rounded-3xl space-y-4 glass-panel ${isDarkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
                             <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
                                 isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
                             }`}>
-                                <Scissors className="w-4.5 h-4.5 text-[#FF0B01]" /> Booking Summary
+                                <Scissors className="w-4.5 h-4.5 text-brand-primary" /> Booking Summary
                             </h3>
                             {selectedServiceObjects.length === 0 ? (
                                 <div className="text-center py-6 text-xs text-zinc-400 font-bold uppercase tracking-wider">
@@ -1544,21 +1549,21 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         {/* Group 1: Offer Services */}
                                         {selectedOffer ? (
                                             <div className="space-y-2">
-                                                <div className="flex items-center justify-between bg-red-50/50 border border-red-100/50 rounded-xl p-2.5">
-                                                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-[#FF0B01] tracking-wider">
+                                                <div className="flex items-center justify-between bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-2.5">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-brand-primary tracking-wider">
                                                         <Sparkles className="w-3.5 h-3.5" />
                                                         <span className="line-clamp-1">{selectedOffer.name} ({selectedOffer.percentage}% OFF)</span>
                                                     </div>
                                                     <button 
                                                         type="button" 
                                                         onClick={handleDiscardOffer}
-                                                        className="text-[9px] font-black uppercase text-red-500 hover:text-red-700 bg-red-100/50 hover:bg-red-100 px-2 py-1 rounded-lg transition-colors shrink-0"
+                                                        className="text-[9px] font-black uppercase text-rose-500 hover:text-rose-700 bg-rose-100/50 hover:bg-rose-100 px-2 py-1 rounded-lg transition-colors shrink-0"
                                                         title="Discard offer and related services"
                                                     >
                                                         Discard
                                                     </button>
                                                 </div>
-                                                <div className="pl-2 border-l-2 border-red-200 space-y-2">
+                                                <div className="pl-2 border-l-2 border-brand-primary/30 space-y-2">
                                                     {selectedServiceObjects.filter(s => offerServiceIds.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-xs">
                                                             <span className={`font-bold uppercase leading-tight line-clamp-1 ${isDarkMode ? 'text-zinc-200' : 'text-slate-700'}`}>{s.name}</span>
@@ -1599,7 +1604,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         {discountAmount > 0 && (
                                             <div className="flex justify-between text-green-600">
                                                 <span className="flex items-center gap-1">
-                                                    <Sparkles className="w-3 h-3 text-[#FF0B01]" /> Offer Discount
+                                                    <Sparkles className="w-3 h-3 text-brand-primary" /> Offer Discount
                                                 </span>
                                                 <span className="font-bold">-₹{discountAmount}</span>
                                             </div>
@@ -1618,13 +1623,13 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                     onChange={handleHomeServiceToggle}
                                                     className="sr-only peer" 
                                                 />
-                                                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF0B01]"></div>
+                                                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-primary" style={{ '--tw-peer-checked-bg': 'var(--brand-primary, #7C3AED)' }}></div>
                                             </label>
                                         </div>
 
                                         {fetchingHomeCharges && (
                                             <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 pl-1">
-                                                <span className="w-3 h-3 border-2 border-[#FF0B01] border-t-transparent rounded-full animate-spin"></span>
+                                                <span className="w-3 h-3 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></span>
                                                 Fetching home charges...
                                             </div>
                                         )}
@@ -1632,19 +1637,19 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         {homeService && !fetchingHomeCharges && (
                                             <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                                                 {homeServiceCharges > 0 && (
-                                                    <div className={`flex justify-between text-xs font-bold p-2.5 rounded-xl border ${isDarkMode ? 'text-zinc-200 bg-red-950/30 border-red-900/40' : 'text-slate-700 bg-red-50/50 border-red-100/50'}`}>
+                                                    <div className={`flex justify-between text-xs font-bold p-2.5 rounded-xl border ${isDarkMode ? 'text-zinc-200 bg-brand-primary/10 border-brand-primary/20' : 'text-slate-700 bg-brand-primary/5 border-brand-primary/15'}`}>
                                                         <span>Home Charges</span>
-                                                        <span className="text-[#FF0B01]">₹{homeServiceCharges}</span>
+                                                        <span className="text-brand-primary">₹{homeServiceCharges}</span>
                                                     </div>
                                                 )}
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider pl-0.5">Delivery Address <span className="text-[#FF0B01] font-black">*</span></label>
+                                                    <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider pl-0.5">Delivery Address <span className="text-brand-primary font-black">*</span></label>
                                                     <textarea
                                                         value={customerAddress}
                                                         onChange={(e) => setCustomerAddress(e.target.value)}
                                                         placeholder="Enter complete home address"
                                                         rows="2"
-                                                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-500 transition-all resize-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white'}`}
+                                                        className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-primary transition-all resize-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-700 focus:bg-white'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -1667,7 +1672,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
                         {/* Promo Download App callout
                         <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} rounded-3xl p-6 border shadow-sm text-center`}>
-                            <Smartphone className="w-8 h-8 text-[#FF0B01] mx-auto mb-3" />
+                            <Smartphone className="w-8 h-8 text-brand-primary mx-auto mb-3" />
                             <h4 className="text-sm font-black text-slate-900 tracking-tight uppercase">
                                 Get Into Neoparlour App Today!
                             </h4>
@@ -1689,7 +1694,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
 
                                 <a
                                     href="#"
-                                    className="flex items-center bg-[#FF0B01] text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
+                                    className="flex items-center bg-brand-primary text-white px-4 py-2 rounded-xl hover:opacity-90 transition-all justify-center h-12 shadow-sm"
                                 >
                                     <img src={playstoreIcon} alt="Google Play" className="w-5 h-5 mr-2" />
                                     <div className="text-left leading-none">
@@ -1707,22 +1712,22 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                 <h3 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b pb-3 mb-2 ${
                                     isDarkMode ? 'text-white border-zinc-800' : 'text-slate-900 border-slate-100'
                                 }`}>
-                                    <Sparkles className="w-4.5 h-4.5 text-[#FF0B01]" /> Select Expert
+                                    <Sparkles className="w-4.5 h-4.5 text-brand-primary" /> Select Expert
                                 </h3>
                                 {firstSelected === 'slot' && availableStaffLoading ? (
                                     <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <div className="animate-spin h-7 w-7 border-4 border-brand-primary border-t-transparent rounded-full mb-3 shadow-sm"></div>
                                         <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Finding available stylists...</p>
                                     </div>
                                 ) : !staffLoaded ? (
                                     <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="animate-spin h-7 w-7 border-4 border-[#FF0B01] border-t-transparent rounded-full mb-3 shadow-sm"></div>
+                                        <div className="animate-spin h-7 w-7 border-4 border-brand-primary border-t-transparent rounded-full mb-3 shadow-sm"></div>
                                         <p className="text-xs font-black uppercase tracking-wider text-zinc-400">Loading roster...</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
                                         {displayedStaffList.length === 0 ? (
-                                            <div className="text-center py-8 text-xs text-red-500 font-bold uppercase tracking-wider bg-red-50/50 rounded-2xl border border-red-100 p-4">
+                                            <div className="text-center py-8 text-xs text-rose-500 font-bold uppercase tracking-wider bg-rose-50/50 rounded-2xl border border-rose-100 p-4">
                                                 No stylists available for the selected slot. Please select a different slot.
                                             </div>
                                         ) : (
@@ -1735,7 +1740,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                     }}
                                                     className={`relative border-2 rounded-2xl p-4 shadow-sm flex items-center gap-4 cursor-pointer transition-all duration-300 ${
                                                         selectedExpert === 'any' 
-                                                            ? 'border-[#FF0B01] bg-red-50/[0.01]' 
+                                                            ? 'border-brand-primary bg-brand-primary/5' 
                                                             : isDarkMode 
                                                               ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
                                                               : 'bg-white border-slate-100 hover:border-slate-200'
@@ -1743,10 +1748,10 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                 >
                                                     <div className={`w-20 h-24 rounded-xl flex flex-col items-center justify-center border-2 transition-all shrink-0 ${
                                                         selectedExpert === 'any' 
-                                                            ? (isDarkMode ? 'border-[#FF0B01] bg-red-950/40 text-red-400' : 'border-[#FF0B01] bg-red-50 text-[#FF0B01]') 
+                                                            ? (isDarkMode ? 'border-brand-primary bg-brand-primary/20 text-brand-primary' : 'border-brand-primary bg-brand-primary/10 text-brand-primary') 
                                                             : (isDarkMode ? 'border-dashed border-zinc-700 bg-zinc-850 text-zinc-500' : 'border-dashed border-slate-300 bg-slate-50 text-zinc-400')
                                                     }`}>
-                                                        <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-[#FF0B01] animate-pulse' : 'text-zinc-400'}`} />
+                                                        <Sparkles className={`w-6 h-6 ${selectedExpert === 'any' ? 'text-brand-primary animate-pulse' : 'text-zinc-400'}`} />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className={`text-xs font-black uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>No Preference</h4>
@@ -1758,11 +1763,13 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                         </span>
                                                         <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 w-16 text-center ${
                                                             selectedExpert === 'any' 
-                                                                ? 'bg-[#FF0B01] text-white shadow-sm' 
+                                                                ? 'bg-brand-primary text-white shadow-sm' 
                                                                 : isDarkMode 
                                                                   ? 'bg-zinc-800 text-zinc-350 hover:bg-zinc-700' 
                                                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-250'
-                                                        }`}>
+                                                        }`}
+                                                        style={selectedExpert === 'any' ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
+                                                        >
                                                             {selectedExpert === 'any' ? 'Selected' : 'Select'}
                                                         </span>
                                                     </div>
@@ -1777,7 +1784,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                             key={staff.id} 
                                                             className={`relative rounded-2xl p-4 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all duration-300 border ${
                                                                 isSelectedExp 
-                                                                    ? 'ring-1 ring-[#FF0B01]/30 border-[#FF0B01]/50 bg-red-500/[0.01]' 
+                                                                    ? 'ring-1 ring-brand-primary/30 border-brand-primary/50 bg-brand-primary/5' 
                                                                     : isDarkMode 
                                                                       ? 'bg-zinc-900 border-zinc-805 hover:border-zinc-700' 
                                                                       : 'bg-white border-slate-100 hover:border-slate-200'
@@ -1866,13 +1873,14 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setSelectedExpert(staff.id)}
-                                                                    className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all duration-300 w-16 shadow-sm ${
+                                                                    className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all duration-300 w-16 shadow-sm cursor-pointer ${
                                                                         isSelectedExp
-                                                                            ? 'bg-[#FF0B01] text-white hover:bg-red-700'
+                                                                            ? 'bg-brand-primary text-white hover:brightness-110'
                                                                             : isDarkMode 
                                                                               ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' 
                                                                               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
+                                                                    style={isSelectedExp ? { backgroundColor: 'var(--brand-primary, #7C3AED)' } : {}}
                                                                 >
                                                                     {isSelectedExp ? 'Added' : 'Add'}
                                                                 </button>
@@ -1944,17 +1952,17 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                 <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
                     <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} rounded-[32px] border shadow-2xl p-8 max-w-md w-full relative overflow-hidden transition-all duration-300 transform scale-100`}>
                         {/* Decorative background accent */}
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-[80px]" />
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/10 rounded-bl-[80px]" />
                         
                         <div className="flex flex-col items-center text-center space-y-6">
                             {/* Icon container */}
-                            <div className="w-16 h-16 bg-red-50 rounded-[24px] flex items-center justify-center shadow-lg shadow-red-500/10 shrink-0">
-                                <Sparkles className="w-8 h-8 text-[#FF0B01]" />
+                            <div className="w-16 h-16 bg-brand-primary/10 rounded-[24px] flex items-center justify-center shadow-lg shadow-brand-primary/10 shrink-0">
+                                <Sparkles className="w-8 h-8 text-brand-primary" />
                             </div>
 
                             <div className="space-y-2 w-full">
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Walk-In Customer Details</h3>
-                                <p className="text-xs text-zinc-500 font-medium leading-relaxed mb-4">
+                                <h3 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'} uppercase tracking-tight`}>Walk-In Customer Details</h3>
+                                <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'} font-medium leading-relaxed mb-4`}>
                                     Please enter the customer's name and mobile number to proceed with the booking.
                                 </p>
                                 
@@ -1966,7 +1974,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                             placeholder="Enter Customer Name"
                                             value={walkInName}
                                             onChange={(e) => setWalkInName(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-zinc-400 focus:bg-white focus:border-[#FF0B01] focus:ring-1 focus:ring-[#FF0B01]/30 outline-none transition-all"
+                                            className={`w-full border rounded-xl px-4 py-3 text-sm font-semibold placeholder:text-zinc-400 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'}`}
                                         />
                                     </div>
                                     <div>
@@ -1976,7 +1984,7 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                             placeholder="Enter Mobile Number"
                                             value={walkInPhone}
                                             onChange={(e) => setWalkInPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-zinc-400 focus:bg-white focus:border-[#FF0B01] focus:ring-1 focus:ring-[#FF0B01]/30 outline-none transition-all"
+                                            className={`w-full border rounded-xl px-4 py-3 text-sm font-semibold placeholder:text-zinc-400 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-white focus:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'}`}
                                         />
                                     </div>
                                 </div>
@@ -2009,14 +2017,15 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         setIsWalkInPopupOpen(false);
                                         setIsBillOpen(true);
                                     }}
-                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15 cursor-pointer"
+                                    className="w-full py-3.5 bg-brand-primary hover:brightness-110 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer"
+                                    style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                                 >
                                     Book
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsWalkInPopupOpen(false)}
-                                    className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
+                                    className={`w-full py-2.5 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-300 border cursor-pointer ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-150'}`}
                                 >
                                     Cancel
                                 </button>
@@ -2045,19 +2054,19 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                 <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fade-in">
                     <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} rounded-[32px] border shadow-2xl p-8 max-w-md w-full relative overflow-hidden transition-all duration-300 transform scale-100`}>
                         {/* Decorative background accent */}
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-[80px]" />
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/10 rounded-bl-[80px]" />
                         
                         <div className="flex flex-col items-center text-center space-y-6">
                             {/* Icon container */}
-                            <div className="w-16 h-16 bg-red-50 rounded-[24px] flex items-center justify-center shadow-lg shadow-red-500/10 shrink-0">
-                                <svg className="w-8 h-8 text-[#FF0B01]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-brand-primary/10 rounded-[24px] flex items-center justify-center shadow-lg shadow-brand-primary/10 shrink-0">
+                                <svg className="w-8 h-8 text-brand-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
 
                             <div className="space-y-2">
-                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Discard Offer?</h3>
-                                <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                                <h3 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'} uppercase tracking-tight`}>Discard Offer?</h3>
+                                <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'} font-medium leading-relaxed`}>
                                     Deselecting this service will remove your currently selected offer and its associated services. Do you want to proceed?
                                 </p>
                             </div>
@@ -2070,14 +2079,15 @@ const WalkInBooking = ({ onBookingSuccess, isDarkMode: isDarkModeProp, isStaffPo
                                         handleDiscardOffer();
                                         setShowDiscardOfferModal(false);
                                     }}
-                                    className="w-full py-3.5 bg-gradient-to-r from-[#FF0B01] to-[#FF4D3A] hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-red-500/15 cursor-pointer"
+                                    className="w-full py-3.5 bg-brand-primary hover:brightness-110 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer"
+                                    style={{ backgroundColor: 'var(--brand-primary, #7C3AED)' }}
                                 >
                                     Yes, Discard Offer
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowDiscardOfferModal(false)}
-                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border border-slate-150 cursor-pointer"
+                                    className={`w-full py-3.5 font-black text-xs uppercase tracking-widest rounded-xl transition-all duration-300 border cursor-pointer ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-150'}`}
                                 >
                                     No, Keep Offer
                                 </button>
