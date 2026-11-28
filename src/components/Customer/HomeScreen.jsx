@@ -1134,8 +1134,8 @@ const HomeScreen = () => {
                             highlightSearch ? 'ring-4 ring-[#FF2A14] ring-offset-2 scale-[1.01] shadow-2xl shadow-[#FF2A14]/20' : ''
                         }`}
                     >
-                        <div className={`p-2 sm:p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] flex flex-col md:flex-row items-center gap-1.5 md:gap-2 border transition-colors duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
-                            <div className={`relative city-dropdown-container flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
+                        <div className={`p-1.5 sm:p-2.5 rounded-2xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.12)] grid grid-cols-2 md:flex md:flex-row items-center gap-1 md:gap-2 border transition-colors duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                            <div className={`col-span-2 md:flex-1 relative city-dropdown-container flex items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-1 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
                                 <img src={searchIcon} alt="Search" className="w-4 h-4 sm:w-5 sm:h-5 object-contain flex-shrink-0" />
                                 <input
                                     type="text"
@@ -1209,9 +1209,9 @@ const HomeScreen = () => {
                                     )}
                             </div>
 
-                            <div className={`relative area-dropdown-container flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-2`}>
-                                <div className="flex items-center gap-2.5 sm:gap-3 w-full">
-                                    <img src={locationIcon} alt="Location" className="w-4 h-4 sm:w-5 sm:h-5 object-contain flex-shrink-0" />
+                            <div className={`col-span-1 md:flex-1 relative area-dropdown-container flex items-center justify-between px-2.5 sm:px-4 py-1 sm:py-2 md:py-2.5 w-full border-b border-r md:border-b-0 transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-1.5 sm:gap-2`}>
+                                <div className="flex items-center gap-2 sm:gap-3 w-full min-w-0">
+                                    <img src={locationIcon} alt="Location" className="w-3.5 h-3.5 sm:w-5 sm:h-5 object-contain flex-shrink-0" />
                                     <input
                                         type="text"
                                         placeholder={t('home.select_area', 'SELECT AREA')}
@@ -1228,12 +1228,12 @@ const HomeScreen = () => {
                                             setShowSearchDropdown(false);
                                         }}
                                         onFocus={() => setShowAreaDropdown(true)}
-                                        className={`w-full outline-none text-xs sm:text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
+                                        className={`w-full min-w-0 outline-none text-xs sm:text-sm font-medium bg-transparent ${isDark ? 'text-white placeholder-gray-400' : 'text-gray-700 placeholder-gray-400'}`}
                                     />
                                 </div>
-                                <img src={dropdownIcon} alt="Select" className="w-4 h-4 object-contain cursor-pointer opacity-60" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
+                                <img src={dropdownIcon} alt="Select" className="w-3.5 h-3.5 sm:w-4 sm:h-4 object-contain cursor-pointer opacity-60 shrink-0" onClick={() => setShowAreaDropdown(!showAreaDropdown)} />
                                 {showAreaDropdown && searchData.areaName && (
-                                    <div className={`absolute left-0 top-full z-45 w-full mt-2 border rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                                    <div className={`absolute left-0 top-full z-45 w-[200%] md:w-full mt-2 border rounded-xl shadow-2xl max-h-52 overflow-y-auto custom-scrollbar p-2 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
                                         {isLoadingAreas ? (
                                             <div className="flex items-center justify-center py-4 text-xs font-bold text-gray-400 uppercase tracking-widest gap-2">
                                                 <div className="h-4 w-4 border-2 border-[#FF2A14]/10 border-t-[#FF2A14] rounded-full animate-spin" />
@@ -1266,9 +1266,9 @@ const HomeScreen = () => {
                             </div>
 
                             {/* Category/Service Select Dropdown */}
-                            <div className={`relative flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-2`}>
-                                <div className="flex items-center gap-2.5 sm:gap-3 w-full pointer-events-none">
-                                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
+                            <div className={`col-span-1 md:flex-1 relative flex items-center justify-between px-2.5 sm:px-4 py-1 sm:py-2 md:py-2.5 w-full border-b md:border-b-0 md:border-r transition-colors duration-300 ${isDark ? 'border-zinc-800' : 'border-gray-200'} gap-1.5 sm:gap-2`}>
+                                <div className="flex items-center gap-1.5 sm:gap-3 w-full min-w-0 pointer-events-none">
+                                    <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                                     <select
                                         value={searchData.category}
                                         onChange={(e) => {
@@ -1278,7 +1278,7 @@ const HomeScreen = () => {
                                             }));
                                             setShowSearchDropdown(false);
                                         }}
-                                        className={`w-full outline-none text-xs sm:text-sm font-medium bg-transparent cursor-pointer appearance-none ${isDark ? 'text-gray-200' : 'text-gray-700'}`}
+                                        className={`w-full min-w-0 truncate outline-none text-xs sm:text-sm font-medium bg-transparent cursor-pointer appearance-none ${isDark ? 'text-gray-200' : 'text-gray-700'}`}
                                     >
                                         <option value="" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.select_service', 'SELECT SERVICE')}</option>
                                         <option value="Hair Services" className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-gray-900'}>{t('home.services_grid.hair_services', 'Hair Services')}</option>
@@ -1320,7 +1320,7 @@ const HomeScreen = () => {
 
                             <button
                                 onClick={handleLocationSearch}
-                                className="w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl font-black text-xs sm:text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
+                                className="col-span-2 w-full md:w-auto bg-[#FF2A14] hover:bg-[#E01E0A] text-white px-6 sm:px-10 py-2 sm:py-3.5 rounded-xl font-black text-xs sm:text-sm tracking-widest shadow-md hover:shadow-lg transition-all duration-150 flex-shrink-0 cursor-pointer"
                             >
                                 {searchDropdownLoading ? t('buttons.searching', 'SEARCHING...') : t('buttons.search', 'SEARCH')}
                             </button>
